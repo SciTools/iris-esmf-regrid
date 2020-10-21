@@ -1,4 +1,4 @@
-from ._esmf_regridder import GridInfo, Regridder
+from .esmf_regridder import GridInfo, Regridder
 
 
 class ESMFAreaWeighted:
