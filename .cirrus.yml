@@ -1,5 +1,7 @@
 # Reference:
 #   - https://cirrus-ci.org/guide/writing-tasks/
+#   - https://cirrus-ci.org/guide/linux/
+#   - https://cirrus-ci.org/guide/macOS/
 #   - https://hub.docker.com/_/gcc/
 #   - https://hub.docker.com/_/python/
 
