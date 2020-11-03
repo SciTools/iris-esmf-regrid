@@ -1,4 +1,6 @@
-# global default
+# reference: see https://cirrus-ci.org/guide/writing-tasks/
+
+# global defaults
 container:
   image: python:3.8
 
