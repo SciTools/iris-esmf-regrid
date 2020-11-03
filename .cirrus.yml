@@ -4,22 +4,48 @@ container:
 
 
 lint_task:
-  name: Flake8 Linting
   auto_cancellation: true
+  name: Flake8 Linting
   install_script:
     - python -m pip install --retries 3 --upgrade pip
     - pip install nox
   lint_script:
     - nox --session lint 
-    - ls -l .nox
 
 
 style_task:
-  name: Black Formatting
   auto_cancellation: true
+  name: Black Formatting
   install_script:
     - python -m pip install --retries 3 --upgrade pip
     - pip install nox
   style_script:
     - nox --session style
-    - ls -l .nox
+
+
+linux_task:
+  auto_cancellation: true
+  matrix:
+    env:
+      PY_VER: "3.6"
+    env:
+      PY_VER: "3.7"
+    env:
+      PY_VER: "3.8"
+  name: Linux ${PY_VER}
+  env:
+    PATH: ${HOME}/miniconda/bin:${PATH}
+  install_script:
+    - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+    - bash miniconda.sh -b -p ${HOME}/miniconda
+    - conda config --set always_yes yes --set changeps1 no
+    - conda config --set show_channel_urls True
+    - conda config --add channels conda-forge
+    - conda update --quiet conda
+    - conda install --quiet nox pip
+  check_script:
+    - conda list -n base
+    - conda list -n base --explicit
+    - conda info -a
+  test_script:
+    - nox --sessions tests
