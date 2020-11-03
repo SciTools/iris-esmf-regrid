@@ -1,0 +1,12 @@
+# global default
+container:
+  image: python:3.8
+
+
+lint_task:
+  auto_cancellation: true
+  install_script:
+    - python -m pip install --retries 3 --upgrade pip
+    - pip install nox
+  lint_script:
+    - nox --session lint 
