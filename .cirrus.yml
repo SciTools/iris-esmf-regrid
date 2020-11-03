@@ -47,12 +47,12 @@ linux_task:
       - conda config --set always_yes yes --set changeps1 no
       - conda config --set show_channel_urls True
       - conda config --add channels conda-forge
-      - conda update --quiet conda
-      - conda install --quiet nox pip
+      - conda update --quiet --name base conda
+      - conda install --quiet --name base nox pip
   check_script:
-    - conda info -a
-    - conda list -n base
-    - conda list -n base --explicit
+    - conda info --all
+    - conda list --name base
+    - conda list --name base --explicit
   nox_cache:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     fingerprint_script:
