@@ -25,6 +25,7 @@ class GridInfo:
     as an ESMF Field containing that Grid. This ESMF Field is designed to
     contain enough information for area weighted regridding and may be
     inappropriate for other ESMF regridding schemes.
+
     """
 
     # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
@@ -65,6 +66,7 @@ class GridInfo:
         areas : array_line, optional
             either None or a numpy array describing the areas associated with
             each face. If None, then ESMF will use its own calculated areas.
+
         """
         self.lons = lons
         self.lats = lats
@@ -286,6 +288,7 @@ class Regridder:
         -------
         array_like
             A numpy array whose shape is compatible with self.tgt.
+
         """
         # TODO implement masked array handling similar to other iris regridders.
 
