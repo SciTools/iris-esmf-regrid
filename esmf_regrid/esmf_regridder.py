@@ -1,14 +1,22 @@
-"""
-Provides ESMF representations of grids/UGRID meshes and a modified regridder.
-"""
+"""Provides ESMF representations of grids/UGRID meshes and a modified regridder."""
+
+import cartopy.crs as ccrs
 import ESMF
 import numpy as np
 from numpy import ma
 import scipy.sparse
-import cartopy.crs as ccrs
+
+
+__all__ = [
+    "GridInfo",
+    "Regridder",
+]
+
 
 class GridInfo:
     """
+    TBD: public class docstring summary (one line).
+
     This class holds information about lat-lon type grids. That is, grids
     defined by lists of latitude and longitude values for points/bounds
     (with respect to some coordinate reference system i.e. rotated pole).
@@ -32,28 +40,29 @@ class GridInfo:
         areas=None,
     ):
         """
-        Creates a GridInfo object describing the a grid.
-        Args:
-        * lons
+        Create a GridInfo object describing the grid.
+
+        Parameters
+        ----------
+        lons : array_like
             A 1D numpy array or list describing the longitudes of the
             grid points.
-        * lats
+        lats : array_like
             A 1D numpy array or list describing the latitudes of the
             grid points.
-        * lonbounds
+        lonbounds : array_like
             A 1D numpy array or list describing the longitude bounds of
-            the grid. Should have length one greater than lons
-        * latbounds
+            the grid. Should have length one greater than lons.
+        latbounds : array_like
             A 1D numpy array or list describing the latitude bounds of
-            the grid. Should have length one greater than lats
-        Kwargs:
-        * crs
+            the grid. Should have length one greater than lats.
+        crs : cartopy projection, optional
             None or a cartopy.crs projection describing how to interpret the
             above arguments. If None, defaults to Geodetic().
-        * circular
+        circular : bool, optional
             A boolean value describing if the final longitude bounds should
             be considered contiguous with the first. Defaults to False.
-        * areas
+        areas : array_line, optional
             either None or a numpy array describing the areas associated with
             each face. If None, then ESMF will use its own calculated areas.
         """
@@ -79,12 +88,8 @@ class GridInfo:
         centerlons, centerlats = np.meshgrid(self.lons, self.lats)
         cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
 
-        truecenters = ccrs.Geodetic().transform_points(
-            self.crs, centerlons, centerlats
-        )
-        truecorners = ccrs.Geodetic().transform_points(
-            self.crs, cornerlons, cornerlats
-        )
+        truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
+        truecorners = ccrs.Geodetic().transform_points(self.crs, cornerlons, cornerlats)
 
         # The following note in xESMF suggests that the arrays passed to ESMPy ought to
         # be fortran ordered:
@@ -144,9 +149,7 @@ class GridInfo:
         # grid_center_y[:] = truecenterlats
 
         if areas is not None:
-            grid.add_item(
-                ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER
-            )
+            grid.add_item(ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER)
             grid_areas = grid.get_item(
                 ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER
             )
@@ -155,11 +158,13 @@ class GridInfo:
         return grid
 
     def make_esmf_field(self):
+        """TBD: public method docstring."""
         grid = self._make_esmf_grid()
         field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
         return field
 
     def size(self):
+        """TBD: public method docstring."""
         return len(self.lons) * len(self.lats)
 
     def _index_offset(self):
@@ -208,21 +213,26 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 
 
 class Regridder:
+    """TBD: public class docstring."""
+
     def __init__(self, src, tgt, precomputed_weights=None):
         """
-        Creates a regridder designed to regrid data from a specified
+        TBD: public method docstring summary (one line).
+
+        Create a regridder designed to regrid data from a specified
         source mesh/grid to a specified target mesh/grid.
-        Args:
-        * src
-            A MeshInfo or GridInfo oject describing the source mesh/grid.
+
+        Parameters
+        ----------
+        src : object
+            A MeshInfo or GridInfo object describing the source mesh/grid.
             Data supplied to this regridder should be in a numpy array
             whose shape is compatible with src.
-        * tgt
+        tgt : object
             A MeshInfo or GridInfo oject describing the target mesh/grid.
             Data output by this regridder will be a numpy array whose
             shape is compatible with tgt.
-        Kwargs:
-        * precomputed_weights
+        precomputed_weights : sparse-matix object, optional
             None or a scipy.sparse matrix. If None, ESMF will be used to
             calculate regridding weights. Otherwise, ESMF will be bypassed
             and precomputed_weights will be used as the regridding weights.
@@ -257,11 +267,12 @@ class Regridder:
     def regrid(self, src_array, mdtol=1):
         """
         Perform regridding on an array of data.
-        Args:
-        * src_array
+
+        Parameters
+        ----------
+        src_array : array_like
             A numpy array whose shape is compatible with self.src
-        Kwargs:
-        * mdtol
+        mdtol : int, optional
             A number between 0 and 1 describing the missing data tolerance.
             Depending on the value of mdtol, if an element in the target mesh/grid
             is not sufficiently covered by elements of the source mesh/grid, then
@@ -270,7 +281,10 @@ class Regridder:
             an mdtol of 0 means that only target elements which are completely
             covered will be unmasked and an mdtol of 0.5 means that target elements
             whose area is at least half uncovered by source elements will be masked.
-        Returns:
+
+        Returns
+        -------
+        array_like
             A numpy array whose shape is compatible with self.tgt.
         """
         # TODO implement masked array handling similar to other iris regridders.
@@ -290,12 +304,8 @@ class Regridder:
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums >= 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask.astype(int)
-        normalisations = np.where(
-            masked_weight_sums == 0, 0, 1 / masked_weight_sums
-        )
-        normalisations = ma.array(
-            normalisations, mask=np.logical_not(tgt_mask)
-        )
+        normalisations = np.where(masked_weight_sums == 0, 0, 1 / masked_weight_sums)
+        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._flatten_array(src_array)
         flat_tgt = self.weight_matrix * flat_src
