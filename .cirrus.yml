@@ -20,10 +20,10 @@ lint_task:
     folder: ~/.cache/pip
     fingerprint_script:
       - echo "${CIRRUS_OS} py${PYTHON_VERSION} ${PACKAGES}"
-    populate_script:
-      - python -m pip install --retries 3 --upgrade ${PACKAGES}
   lint_script:
-    - nox --session lint 
+    - pip list
+    - python -m pip install --retries 3 --upgrade ${PACKAGES}
+    - nox --session lint
 
 
 style_task:
@@ -35,9 +35,9 @@ style_task:
     folder: ~/.cache/pip
     fingerprint_script:
       - echo "${CIRRUS_OS} py${PYTHON_VERSION} ${PACKAGES}"
-    populate_script:
-      - python -m pip install --retries 3 --upgrade ${PACKAGES}
   style_script:
+    - pip list
+    - python -m pip install --retries 3 --upgrade ${PACKAGES}
     - nox --session style
 
 
