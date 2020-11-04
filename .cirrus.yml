@@ -125,13 +125,8 @@ windows_task:
     ANACONDA_LOCATION: $USERPROFILE\anaconda
     PATH: $ANACONDA_LOCATION\Scripts;$ANACONDA_LOCATION;$PATH
     PYTHON_ARCH: 64
-  echo_script:
-    - echo %CIRRUS_WORKING_DIR%
-    - echo %ANACONDA_LOCATION%
-    - echo %PATH%
-    - echo %PYTHON_ARCH%
-    - echo %PY_VER%
   install_script:
+    - choco install -y openssl.light
     - choco install -y miniconda3 --params="'/D:%ANACONDA_LOCATION%'"
   conda_script:
     - conda config --set always_yes yes --set changeps1 no
