@@ -2,6 +2,7 @@
 #   - https://cirrus-ci.org/guide/writing-tasks/
 #   - https://cirrus-ci.org/guide/linux/
 #   - https://cirrus-ci.org/guide/macOS/
+#   - https://cirrus-ci.org/guide/windows/
 #   - https://hub.docker.com/_/gcc/
 #   - https://hub.docker.com/_/python/
 
@@ -102,3 +103,30 @@ linux_task:
       - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
   test_script:
     - nox --session tests
+
+
+windows_task:
+  auto_cancellation: true
+  matrix:
+    env:
+      PY_VER: "3.8"
+  name: "Windows: py${PY_VER}"
+  windows_container:
+    image: cirrusci/windowsservercore:2019
+  env:
+    ANACONDA_LOCATION: $USERPROFILE\anaconda
+    PATH: $ANACONDA_LOCATION\Scripts;$ANACONDA_LOCATION;$PATH
+    PYTHON_ARCH: 64
+  echo_script:
+    - echo %CIRRUS_WORKING_DIR%
+    - echo %ANACONDA_LOCATION%
+    - echo %PATH%
+    - echo %PYTHON_ARCH%
+    - echo %PY_VER%
+  conda_script:
+    - choco install -y miniconda3 --params="'/D:%ANACONDA_LOCATION%'"
+    - conda config --set always_yes yes --set changeps1 no
+    - conda config --set show_channel_urls True
+    - conda config --add channels conda-forge
+    - conda update --quiet --name base conda
+    - conda install --quiet --name base nox pip
