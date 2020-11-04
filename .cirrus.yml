@@ -14,12 +14,14 @@ container:
 lint_task:
   auto_cancellation: true
   name: "Lint: flake8"
+  env:
+    PACKAGES: "pip setuptools wheel nox"
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script:
-      - echo ${PYTHON_VERSION}
+      - echo "${CIRRUS_OS} py${PYTHON_VERSION} ${PACKAGES}"
     populate_script:
-      - python -m pip install --retries 3 --upgrade pip setuptools wheel nox
+      - python -m pip install --retries 3 --upgrade ${PACKAGES}
   lint_script:
     - nox --session lint 
 
@@ -27,12 +29,14 @@ lint_task:
 style_task:
   auto_cancellation: true
   name: "Format: black"
+  env:
+    PACKAGES: "pip setuptools wheel nox"
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script:
-      - echo ${PYTHON_VERSION}
+      - echo "${CIRRUS_OS} py${PYTHON_VERSION} ${PACKAGES}"
     populate_script:
-      - python -m pip install --retries 3 --upgrade pip setuptools wheel nox
+      - python -m pip install --retries 3 --upgrade ${PACKAGES}
   style_script:
     - nox --session style
 
@@ -111,25 +115,28 @@ osx_task:
     - nox --session tests
 
 
-windows_task:
-  auto_cancellation: true
-  matrix:
-    env:
-      PY_VER: "3.8"
-  name: "Windows: py${PY_VER}"
-  windows_container:
-    image: cirrusci/windowsservercore:2019
-  env:
-    ANACONDA_LOCATION: $USERPROFILE\anaconda
-    PATH: $ANACONDA_LOCATION\Scripts;$ANACONDA_LOCATION;$PATH
-    PYTHON_ARCH: 64
-  install_script:
-    - choco install -y openssl.light
-    - choco install -y miniconda3 --params="'/D:%ANACONDA_LOCATION%'"
-  conda_script:
-    - conda config --set always_yes yes --set changeps1 no
-    - conda config --set show_channel_urls True
-    - conda config --add channels conda-forge
-    - conda install --quiet --name base nox pip
-  test_script:
-    - nox --session tests
+#
+# esmpy is unavailable from conda-forge for win
+#
+# windows_task:
+#   auto_cancellation: true
+#   matrix:
+#     env:
+#       PY_VER: "3.8"
+#   name: "Windows: py${PY_VER}"
+#   windows_container:
+#     image: cirrusci/windowsservercore:2019
+#   env:
+#     ANACONDA_LOCATION: $USERPROFILE\anaconda
+#     PATH: $ANACONDA_LOCATION\Scripts;$ANACONDA_LOCATION;$PATH
+#     PYTHON_ARCH: 64
+#   install_script:
+#     - choco install -y openssl.light
+#     - choco install -y miniconda3 --params="'/D:%ANACONDA_LOCATION%'"
+#   conda_script:
+#     - conda config --set always_yes yes --set changeps1 no
+#     - conda config --set show_channel_urls True
+#     - conda config --add channels conda-forge
+#     - conda install --quiet --name base nox pip
+#   test_script:
+#     - nox --session tests
