@@ -6,41 +6,54 @@
 #   - https://hub.docker.com/_/gcc/
 #   - https://hub.docker.com/_/python/
 
+#
 # Global defaults.
+#
 container:
   image: python:3.8
 
+env:
+  PIP_CACHE_VERSION: "1"
+  PIP_CACHE_PACKAGES: "pip setuptools wheel nox"
 
+
+#
+# Linting
+#
 lint_task:
   auto_cancellation: true
   name: "Lint: flake8"
-  env:
-    PACKAGES: "pip setuptools wheel nox"
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script:
-      - echo "${CIRRUS_OS} py${PYTHON_VERSION} ${PACKAGES}"
+      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
+      - echo "v${PIP_CACHE_VERSION} ${PIP_CACHE_PACKAGES}"
   lint_script:
     - pip list
-    - python -m pip install --retries 3 --upgrade ${PACKAGES}
+    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
     - nox --session lint
 
 
+#
+# Formatting
+#
 style_task:
   auto_cancellation: true
   name: "Format: black"
-  env:
-    PACKAGES: "pip setuptools wheel nox"
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script:
-      - echo "${CIRRUS_OS} py${PYTHON_VERSION} ${PACKAGES}"
+      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
+      - echo "v${PIP_CACHE_VERSION} ${PIP_CACHE_PACKAGES}"
   style_script:
     - pip list
-    - python -m pip install --retries 3 --upgrade ${PACKAGES}
+    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
     - nox --session style
 
 
+#
+# Testing (Linux)
+#
 linux_task:
   auto_cancellation: true
   matrix:
@@ -80,6 +93,9 @@ linux_task:
     - nox --session tests
 
 
+#
+# Testing (macOS)
+#
 osx_task:
   auto_cancellation: true
   matrix:
