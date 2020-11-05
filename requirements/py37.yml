@@ -1,0 +1,25 @@
+name: esmf-regrid-dev
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.7
+
+# Setup dependencies.
+  - setuptools>=40.8.0
+
+# Core dependencies.
+  - cartopy>=0.18
+  - numpy>=1.14
+  - scipy
+  - esmpy>=7.0
+
+# Test dependencies.
+  - black=20.8b1
+  - flake8
+  - flake8-docstrings
+  - flake8-import-order
+  - nox
+  - pre-commit
+  - pytest

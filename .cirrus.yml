@@ -1,0 +1,158 @@
+# Reference:
+#   - https://cirrus-ci.org/guide/writing-tasks/
+#   - https://cirrus-ci.org/guide/linux/
+#   - https://cirrus-ci.org/guide/macOS/
+#   - https://cirrus-ci.org/guide/windows/
+#   - https://hub.docker.com/_/gcc/
+#   - https://hub.docker.com/_/python/
+
+#
+# Global defaults.
+#
+container:
+  image: python:3.8
+
+env:
+  PIP_CACHE_VERSION: "1"
+  PIP_CACHE_PACKAGES: "pip setuptools wheel nox"
+
+
+#
+# Linting
+#
+lint_task:
+  auto_cancellation: true
+  name: "Lint: flake8"
+  pip_cache:
+    folder: ~/.cache/pip
+    fingerprint_script:
+      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
+      - echo "v${PIP_CACHE_VERSION} ${PIP_CACHE_PACKAGES}"
+  lint_script:
+    - pip list
+    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
+    - nox --session lint
+
+
+#
+# Formatting
+#
+style_task:
+  auto_cancellation: true
+  name: "Format: black"
+  pip_cache:
+    folder: ~/.cache/pip
+    fingerprint_script:
+      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
+      - echo "v${PIP_CACHE_VERSION} ${PIP_CACHE_PACKAGES}"
+  style_script:
+    - pip list
+    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
+    - nox --session style
+
+
+#
+# Testing (Linux)
+#
+linux_task:
+  auto_cancellation: true
+  matrix:
+    env:
+      PY_VER: "3.6"
+    env:
+      PY_VER: "3.7"
+    env:
+      PY_VER: "3.8"
+  name: "Linux: py${PY_VER}"
+  container:
+    image: gcc:latest
+  env:
+    PATH: ${HOME}/miniconda/bin:${PATH}
+  conda_cache:
+    folder: ${HOME}/miniconda
+    fingerprint_script:
+      - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+      - echo "${CIRRUS_OS} $(sha256sum miniconda.sh)"
+    populate_script:
+      - bash miniconda.sh -b -p ${HOME}/miniconda
+      - conda config --set always_yes yes --set changeps1 no
+      - conda config --set show_channel_urls True
+      - conda config --add channels conda-forge
+      - conda update --quiet --name base conda
+      - conda install --quiet --name base nox pip
+  check_script:
+    - conda info --all
+    - conda list --name base
+    - conda list --name base --explicit
+  nox_cache:
+    folder: ${CIRRUS_WORKING_DIR}/.nox
+    fingerprint_script:
+      - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+  test_script:
+    - nox --session tests
+
+
+#
+# Testing (macOS)
+#
+osx_task:
+  auto_cancellation: true
+  matrix:
+    env:
+      PY_VER: "3.8"
+  name: "OSX: py${PY_VER}"
+  osx_instance:
+    image: catalina-xcode
+  env:
+    PATH: ${HOME}/miniconda/bin:${PATH}
+  conda_cache:
+    folder: ${HOME}/miniconda
+    fingerprint_script:
+      - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
+      - echo "${CIRRUS_OS} $(shasum -a 256 miniconda.sh)"
+    populate_script:
+      - bash miniconda.sh -b -p ${HOME}/miniconda
+      - conda config --set always_yes yes --set changeps1 no
+      - conda config --set show_channel_urls True
+      - conda config --add channels conda-forge
+      - conda update --quiet --name base conda
+      - conda install --quiet --name base nox pip
+  check_script:
+    - conda info --all
+    - conda list --name base
+    - conda list --name base --explicit
+  nox_cache:
+    folder: ${CIRRUS_WORKING_DIR}/.nox
+    fingerprint_script:
+      - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+  test_script:
+    - nox --session tests
+
+
+#
+# esmpy is unavailable from conda-forge for win
+#
+# windows_task:
+#   auto_cancellation: true
+#   matrix:
+#     env:
+#       PY_VER: "3.8"
+#   name: "Windows: py${PY_VER}"
+#   windows_container:
+#     image: cirrusci/windowsservercore:2019
+#   env:
+#     ANACONDA_LOCATION: $USERPROFILE\anaconda
+#     PATH: $ANACONDA_LOCATION\Scripts;$ANACONDA_LOCATION;$PATH
+#     PYTHON_ARCH: 64
+#   install_script:
+#     - choco install -y openssl.light
+#     - choco install -y miniconda3 --params="'/D:%ANACONDA_LOCATION%'"
+#   conda_script:
+#     - conda config --set always_yes yes --set changeps1 no
+#     - conda config --set show_channel_urls True
+#     - conda config --add channels conda-forge
+#     - conda install --quiet --name base nox pip
+#   test_script:
+#     - nox --session tests
