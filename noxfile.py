@@ -87,5 +87,4 @@ def tests(session):
         "--prune",
     )
     session._run(*command, silent=True, external="error")
-    # TBD: replace with some genuine tests.
-    session.run("python", "--version")
+    session.run("pytest", "-v", "./esmf_regrid/tests")

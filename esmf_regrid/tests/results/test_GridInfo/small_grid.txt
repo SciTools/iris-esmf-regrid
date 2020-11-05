@@ -1,0 +1,22 @@
+Field:
+    name = None
+    type = <TypeKind.R8: 6>
+    rank = 2
+    extra dimensions = 0
+    staggerloc = <StaggerLoc.CENTER: 0>
+    lower bounds = array([0, 0], dtype=int32)
+    upper bounds = array([3, 2], dtype=int32)
+    extra bounds = None
+    data = array([[0., 0.],
+       [0., 0.],
+       [0., 0.]])
+    grid = 
+Grid:
+    type = <TypeKind.R8: 6>    areatype = <TypeKind.R8: 6>    rank = 2    num_peri_dims = 0    periodic_dim = None    pole_dim = None    pole_kind = array([1, 1], dtype=int32)    coord_sys = None    staggerloc = [False, False, False, True]    lower bounds = [None, None, None, array([0, 0], dtype=int32)]    upper bounds = [None, None, None, array([4, 3], dtype=int32)]    coords = [[None, None], [None, None], [None, None], [array([[0.        , 0.33333333, 0.66666667],
+       [0.        , 0.33333333, 0.66666667],
+       [0.        , 0.33333333, 0.66666667],
+       [0.        , 0.33333333, 0.66666667]]), array([[0. , 0. , 0. ],
+       [0.5, 0.5, 0.5],
+       [1. , 1. , 1. ],
+       [1.5, 1.5, 1.5]])]]    mask = [None, None, None, None]    area = [None, None, None, None]
+)
