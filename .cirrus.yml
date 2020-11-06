@@ -13,7 +13,15 @@ container:
   image: python:3.8
 
 env:
-  PIP_CACHE_VERSION: "1"
+  # Maximum cache period (in weeks) before forcing a new cache upload.
+  CACHE_PERIOD: "2"
+  # Increment the build number to force new conda cache upload.
+  CONDA_CACHE_BUILD: "0"
+  # Increment the build number to force new nox cache upload.
+  NOX_CACHE_BUILD: "0"
+  # Increment the build number to force new pip cache upload.
+  PIP_CACHE_BUILD: "0"
+  # Pip package to be upgraded/installed.
   PIP_CACHE_PACKAGES: "pip setuptools wheel nox"
 
 
@@ -27,10 +35,11 @@ lint_task:
     folder: ~/.cache/pip
     fingerprint_script:
       - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
-      - echo "v${PIP_CACHE_VERSION} ${PIP_CACHE_PACKAGES}"
+      - echo "$(date +%Y).$(($(date +%U) / ${CACHE_PERIOD})):${PIP_CACHE_BUILD} ${PIP_CACHE_PACKAGES}"
   lint_script:
     - pip list
     - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
+    - pip list
     - nox --session lint
 
 
@@ -44,10 +53,11 @@ style_task:
     folder: ~/.cache/pip
     fingerprint_script:
       - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
-      - echo "v${PIP_CACHE_VERSION} ${PIP_CACHE_PACKAGES}"
+      - echo "$(date +%Y).$(($(date +%U) / ${CACHE_PERIOD})):${PIP_CACHE_BUILD} ${PIP_CACHE_PACKAGES}"
   style_script:
     - pip list
     - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
+    - pip list
     - nox --session style
 
 
@@ -77,6 +87,7 @@ linux_task:
     fingerprint_script:
       - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
       - echo "${CIRRUS_OS} $(sha256sum miniconda.sh)"
+      - echo "$(date +%Y).$(($(date +%U) / ${CACHE_PERIOD})):${CONDA_CACHE_BUILD}"
     populate_script:
       - bash miniconda.sh -b -p ${HOME}/miniconda
       - conda config --set always_yes yes --set changeps1 no
@@ -92,6 +103,7 @@ linux_task:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     fingerprint_script:
       - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - echo "$(date +%Y).$(($(date +%U) / ${CACHE_PERIOD})):${NOX_CACHE_BUILD}"
       - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
       - if [ -n "${COVERAGE}" ]; then echo "${COVERAGE}"; fi
   test_script:
@@ -116,6 +128,7 @@ osx_task:
     fingerprint_script:
       - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
       - echo "${CIRRUS_OS} $(shasum -a 256 miniconda.sh)"
+      - echo "$(date +%Y).$(($(date +%U) / ${CACHE_PERIOD})):${CONDA_CACHE_BUILD}"
     populate_script:
       - bash miniconda.sh -b -p ${HOME}/miniconda
       - conda config --set always_yes yes --set changeps1 no
@@ -131,6 +144,7 @@ osx_task:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     fingerprint_script:
       - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - echo "$(date +%Y).$(($(date +%U) / ${CACHE_PERIOD})):${NOX_CACHE_BUILD}"
       - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
   test_script:
     - nox --session tests
