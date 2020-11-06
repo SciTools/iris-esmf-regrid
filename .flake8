@@ -9,6 +9,7 @@
 
 docstring-convention = numpy
 import-order-style = google
+application-import-names = esmf_regrid
 select = C,D,E,F,I,W,B,B950
 ignore =
     # E203: whitespace before ':'
@@ -29,3 +30,4 @@ ignore =
     W504
 exclude = 
     esmf_regrid/__init__.py
+    esmf_regrid/tests/results
