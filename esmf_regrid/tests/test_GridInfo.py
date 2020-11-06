@@ -3,7 +3,6 @@
 import os
 
 from esmf_regrid.esmf_regridder import GridInfo
-
 import numpy as np
 
 
