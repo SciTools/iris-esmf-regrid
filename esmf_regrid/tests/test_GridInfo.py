@@ -1,9 +1,13 @@
+"""Unit tests for :class:`esmf_regrid.esmf_regridder.GridInfo`."""
+
 import os
-import numpy as np
+
 from esmf_regrid.esmf_regridder import GridInfo
 
+import numpy as np
 
-def make_small_grid_args():
+
+def _make_small_grid_args():
     small_x = 2
     small_y = 3
     small_grid_lon = np.array(range(small_x)) / (small_x + 1)
@@ -20,7 +24,8 @@ def make_small_grid_args():
 
 
 def test_make_grid():
-    lon, lat, lon_bounds, lat_bounds = make_small_grid_args()
+    """Basic test for :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
+    lon, lat, lon_bounds, lat_bounds = _make_small_grid_args()
     grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
     esmf_grid = grid.make_esmf_field()
     esmf_grid.data[:] = 0
