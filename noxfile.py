@@ -10,14 +10,17 @@ import os
 import nox
 
 
-#: default to reusing any pre-existing nox environments.
+#: Default to reusing any pre-existing nox environments.
 nox.options.reuse_existing_virtualenvs = True
 
-#: name of the package to test.
+#: Name of the package to test.
 PACKAGE = "esmf_regrid"
 
-#: cirrus-ci environment variable hook.
+#: Cirrus-CI environment variable hook.
 PY_VER = os.environ.get("PY_VER", "3.8")
+
+#: Cirrus-CI environment variable hook.
+COVERAGE = os.environ.get("COVERAGE", False)
 
 
 @nox.session
@@ -31,11 +34,11 @@ def lint(session):
         A `nox.sessions.Session` object.
 
     """
-    # pip install the session requirements.
+    # Pip install the session requirements.
     session.install("flake8", "flake8-docstrings", "flake8-import-order")
-    # execute the flake8 linter on the package.
+    # Execute the flake8 linter on the package.
     session.run("flake8", PACKAGE)
-    # execute the flake8 linter on this file.
+    # Execute the flake8 linter on this file.
     session.run("flake8", __file__)
 
 
@@ -50,11 +53,11 @@ def style(session):
         A `nox.sessions.Session` object.
 
     """
-    # pip install the session requirements.
+    # Pip install the session requirements.
     session.install("black==20.8b1")
-    # execute the black format checker on the package.
+    # Execute the black format checker on the package.
     session.run("black", "--check", PACKAGE)
-    # execute the black format checker on this file.
+    # Execute the black format checker on this file.
     session.run("black", "--check", __file__)
 
 
@@ -75,9 +78,9 @@ def tests(session):
       - https://github.com/theacodes/nox/issues/260
 
     """
-    # determine the conda requirements yaml file.
+    # Determine the conda requirements yaml file.
     fname = f"requirements/py{PY_VER.replace('.', '')}.yml"
-    # back-door approach to force nox to use "conda env update".
+    # Back-door approach to force nox to use "conda env update".
     command = (
         "conda",
         "env",
@@ -87,4 +90,11 @@ def tests(session):
         "--prune",
     )
     session._run(*command, silent=True, external="error")
-    session.run("pytest", "-v", "./esmf_regrid/tests")
+    if COVERAGE:
+        # Execute the tests with code coverage.
+        session.conda_install("--channel=conda-forge", *COVERAGE.split())
+        session.run("pytest", "--cov-report=xml", "--cov")
+        session.run("codecov")
+    else:
+        # Execute the tests.
+        session.run("pytest")

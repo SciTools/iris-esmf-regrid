@@ -1,9 +1,9 @@
 """Unit tests for :class:`esmf_regrid.esmf_regridder.GridInfo`."""
 
-import os
+import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo
-import numpy as np
+import esmf_regrid.tests as tests
 
 
 def _make_small_grid_args():
@@ -29,9 +29,9 @@ def test_make_grid():
     esmf_grid = grid.make_esmf_field()
     esmf_grid.data[:] = 0
 
-    relative_path = os.path.join("results", "test_GridInfo", "small_grid.txt")
-    abs_path = os.path.join(os.path.dirname(__file__), relative_path)
-    with open(abs_path) as file:
-        expected_repr = file.read()
+    relative_path = ("esmf_regridder", "test_GridInfo", "small_grid.txt")
+    fname = tests.get_result_path(relative_path)
+    with open(fname) as fi:
+        expected_repr = fi.read()
 
     assert esmf_grid.__repr__() == expected_repr
