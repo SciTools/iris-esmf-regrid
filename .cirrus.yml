@@ -63,11 +63,15 @@ linux_task:
       PY_VER: "3.7"
     env:
       PY_VER: "3.8"
+      COVERAGE: "pytest-cov codecov"
   name: "Linux: py${PY_VER}"
   container:
     image: gcc:latest
   env:
     PATH: ${HOME}/miniconda/bin:${PATH}
+    CODECOV_TOKEN: "ENCRYPTED\
+      [1ed538b97a8d005bdd5ab729de009ac38a2b53389edb0912\
+      d2e76f5ce1e71c5f7bdea80a79492b57af54691c8936bdc7]"
   conda_cache:
     folder: ${HOME}/miniconda
     fingerprint_script:
@@ -89,6 +93,7 @@ linux_task:
     fingerprint_script:
       - echo "${CIRRUS_OS} tests ${PY_VER}"
       - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+      - if [ -n "${COVERAGE}" ]; then echo "${COVERAGE}"; fi
   test_script:
     - nox --session tests
 

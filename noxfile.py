@@ -19,6 +19,9 @@ PACKAGE = "esmf_regrid"
 #: Cirrus-CI environment variable hook.
 PY_VER = os.environ.get("PY_VER", "3.8")
 
+#: Cirrus-CI environment variable hook.
+COVERAGE = os.environ.get("COVERAGE", False)
+
 
 @nox.session
 def lint(session):
@@ -87,5 +90,11 @@ def tests(session):
         "--prune",
     )
     session._run(*command, silent=True, external="error")
-    # Execute the tests.
-    session.run("pytest")
+    if COVERAGE:
+        # Execute the tests with code coverage.
+        session.conda_install("--channel=conda-forge", *COVERAGE.split())
+        session.run("pytest", "--cov-report=xml", "--cov")
+        session.run("codecov")
+    else:
+        # Execute the tests.
+        session.run("pytest")
