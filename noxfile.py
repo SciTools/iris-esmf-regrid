@@ -6,6 +6,7 @@ For further details, see https://nox.thea.codes/en/stable/#
 """
 
 import os
+from pathlib import Path
 
 import nox
 
@@ -78,18 +79,23 @@ def tests(session):
       - https://github.com/theacodes/nox/issues/260
 
     """
-    # Determine the conda requirements yaml file.
-    fname = f"requirements/py{PY_VER.replace('.', '')}.yml"
-    # Back-door approach to force nox to use "conda env update".
-    command = (
-        "conda",
-        "env",
-        "update",
-        f"--prefix={session.virtualenv.location}",
-        f"--file={fname}",
-        "--prune",
-    )
-    session._run(*command, silent=True, external="error")
+    # Determine whether pytest is installed as part of
+    # our conda requirements.
+    pytest = Path(session.virtualenv.location) / "bin" / "pytest"
+    if not pytest.is_file():
+        # Determine the conda requirements yaml file.
+        fname = f"requirements/py{PY_VER.replace('.', '')}.yml"
+        # Back-door approach to force nox to use "conda env update".
+        command = (
+            "conda",
+            "env",
+            "update",
+            f"--prefix={session.virtualenv.location}",
+            f"--file={fname}",
+            "--prune",
+        )
+        session._run(*command, silent=True, external="error")
+
     if COVERAGE:
         # Execute the tests with code coverage.
         session.conda_install("--channel=conda-forge", *COVERAGE.split())
