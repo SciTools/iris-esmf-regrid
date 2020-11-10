@@ -81,7 +81,7 @@ def tests(session):
     """
     # Determine whether pytest is installed as part of
     # our conda requirements.
-    pytest = Path(session.virtualenv.location) / "bin" / "pytest"
+    pytest = Path(session.bin) / "pytest"
     if not pytest.is_file():
         # Determine the conda requirements yaml file.
         fname = f"requirements/py{PY_VER.replace('.', '')}.yml"
