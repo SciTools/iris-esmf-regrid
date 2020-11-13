@@ -266,7 +266,7 @@ class Regridder:
                 )
             self.weight_matrix = precomputed_weights
 
-    def regrid(self, src_array, mdtol=1):
+    def regrid(self, src_array, norm_type="FRACAREA", mdtol=1):
         """
         Perform regridding on an array of data.
 
@@ -290,16 +290,8 @@ class Regridder:
             A numpy array whose shape is compatible with self.tgt.
 
         """
-        # A rudimentary filter is applied to mask data which is mapped from an
-        # insufficiently large source. This currently only accounts for discrepancies
-        # between the source and target grid/mesh geometries and does not account for
-        # masked data, though it ought to be possible to extend the functionality to
-        # handle masked data.
-        #
-        # Note that ESMPy is also able to handle masked data. It is worth investigating
-        # how this affects the mathematics and if it can be replicated after the fact
-        # using just the weights or if ESMF is doing something we want access to.
         src_inverted_mask = np.where(ma.getmaskarray(src_array), 0, 1)
+        src_inverted_mask = self.src._flatten_array(src_inverted_mask)
         src_mask_matrix = scipy.sparse.diags(src_inverted_mask)
         masked_weights = self.weight_matrix * src_mask_matrix
         weight_sums = np.array(masked_weights.sum(axis=1)).flatten()
@@ -308,11 +300,16 @@ class Regridder:
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums >= 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask.astype(int)
-        normalisations = np.where(masked_weight_sums == 0, 0, 1 / masked_weight_sums)
+        if norm_type == "FRACAREA":
+            normalisations = np.where(masked_weight_sums == 0, 0, 1 / masked_weight_sums)
+        elif norm_type == "DSTAREA":
+            normalisations = np.ones(self.tgt.size())
+        else:
+            raise ValueError(f"Normalisation type \"{norm_type}\" is not supported")
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._flatten_array(ma.getdata(src_array))
-        flat_tgt = self.weight_matrix * flat_src
+        flat_tgt = masked_weights * flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._unflatten_array(flat_tgt)
         return tgt_array
