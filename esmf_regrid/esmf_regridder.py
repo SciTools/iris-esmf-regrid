@@ -298,7 +298,7 @@ class Regridder:
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
-        tgt_mask = weight_sums >= 1 - mdtol
+        tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask.astype(int)
         if norm_type == "FRACAREA":
             normalisations = np.where(masked_weight_sums == 0, 0, 1 / masked_weight_sums)
