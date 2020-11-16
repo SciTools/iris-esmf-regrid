@@ -31,7 +31,14 @@ class GridInfo:
     # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
 
     def __init__(
-        self, lons, lats, lonbounds, latbounds, crs=None, circular=False, areas=None,
+        self,
+        lons,
+        lats,
+        lonbounds,
+        latbounds,
+        crs=None,
+        circular=False,
+        areas=None,
     ):
         """
         Create a GridInfo object describing the grid.
@@ -120,7 +127,11 @@ class GridInfo:
 
         if circular:
             grid = ESMF.Grid(
-                shape, pole_kind=[1, 1], num_peri_dims=1, periodic_dim=1, pole_dim=0,
+                shape,
+                pole_kind=[1, 1],
+                num_peri_dims=1,
+                periodic_dim=1,
+                pole_dim=0,
             )
         else:
             grid = ESMF.Grid(shape, pole_kind=[1, 1])
@@ -249,7 +260,8 @@ class Regridder:
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
                     msg.format(
-                        (self.tgt.size(), self.src.size()), precomputed_weights.shape,
+                        (self.tgt.size(), self.src.size()),
+                        precomputed_weights.shape,
                     )
                 )
             self.weight_matrix = precomputed_weights
