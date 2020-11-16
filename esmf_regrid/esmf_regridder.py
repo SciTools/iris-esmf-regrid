@@ -31,14 +31,7 @@ class GridInfo:
     # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
 
     def __init__(
-        self,
-        lons,
-        lats,
-        lonbounds,
-        latbounds,
-        crs=None,
-        circular=False,
-        areas=None,
+        self, lons, lats, lonbounds, latbounds, crs=None, circular=False, areas=None,
     ):
         """
         Create a GridInfo object describing the grid.
@@ -127,11 +120,7 @@ class GridInfo:
 
         if circular:
             grid = ESMF.Grid(
-                shape,
-                pole_kind=[1, 1],
-                num_peri_dims=1,
-                periodic_dim=1,
-                pole_dim=0,
+                shape, pole_kind=[1, 1], num_peri_dims=1, periodic_dim=1, pole_dim=0,
             )
         else:
             grid = ESMF.Grid(shape, pole_kind=[1, 1])
@@ -260,8 +249,7 @@ class Regridder:
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
                     msg.format(
-                        (self.tgt.size(), self.src.size()),
-                        precomputed_weights.shape,
+                        (self.tgt.size(), self.src.size()), precomputed_weights.shape,
                     )
                 )
             self.weight_matrix = precomputed_weights
@@ -301,11 +289,13 @@ class Regridder:
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask.astype(int)
         if norm_type == "FRACAREA":
-            normalisations = np.where(masked_weight_sums == 0, 0, 1 / masked_weight_sums)
+            normalisations = np.where(
+                masked_weight_sums == 0, 0, 1 / masked_weight_sums
+            )
         elif norm_type == "DSTAREA":
             normalisations = np.ones(self.tgt.size())
         else:
-            raise ValueError(f"Normalisation type \"{norm_type}\" is not supported")
+            raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._flatten_array(ma.getdata(src_array))

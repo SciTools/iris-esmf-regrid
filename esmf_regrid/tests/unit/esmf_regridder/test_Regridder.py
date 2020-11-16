@@ -1,11 +1,10 @@
 """Unit tests for :class:`esmf_regrid.esmf_regridder.Regridder`."""
 
 import numpy as np
-
-from esmf_regrid.esmf_regridder import GridInfo, Regridder
-import esmf_regrid.tests as tests
 from numpy import ma
 import scipy.sparse
+
+from esmf_regrid.esmf_regridder import GridInfo, Regridder
 
 
 def _make_small_grid_args(x, y):
