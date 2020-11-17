@@ -5,20 +5,20 @@ from numpy import ma
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
+from esmf_regrid.tests import make_grid_args
 
-
-def _make_small_grid_args(x, y):
-    small_grid_lon = np.array(range(x)) * 10 / x
-    small_grid_lat = np.array(range(y)) * 10 / y
-
-    small_grid_lon_bounds = np.array(range(x + 1)) * 10 / x
-    small_grid_lat_bounds = np.array(range(y + 1)) * 10 / y
-    return (
-        small_grid_lon,
-        small_grid_lat,
-        small_grid_lon_bounds,
-        small_grid_lat_bounds,
-    )
+# def _make_grid_args(x, y):
+#     small_grid_lon = np.array(range(x)) * 10 / x
+#     small_grid_lat = np.array(range(y)) * 10 / y
+#
+#     small_grid_lon_bounds = np.array(range(x + 1)) * 10 / x
+#     small_grid_lat_bounds = np.array(range(y + 1)) * 10 / y
+#     return (
+#         small_grid_lon,
+#         small_grid_lat,
+#         small_grid_lon_bounds,
+#         small_grid_lat_bounds,
+#     )
 
 
 def _expected_weights():
@@ -53,10 +53,10 @@ def _expected_weights():
 
 def test_Regridder_init():
     """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
-    lon, lat, lon_bounds, lat_bounds = _make_small_grid_args(2, 3)
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
     src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
 
-    lon, lat, lon_bounds, lat_bounds = _make_small_grid_args(3, 2)
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
     tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
 
     rg = Regridder(src_grid, tgt_grid)
@@ -69,10 +69,10 @@ def test_Regridder_init():
 
 def test_Regridder_regrid():
     """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`."""
-    lon, lat, lon_bounds, lat_bounds = _make_small_grid_args(2, 3)
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
     src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
 
-    lon, lat, lon_bounds, lat_bounds = _make_small_grid_args(3, 2)
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
     tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
 
     # Set up the regridder with precomputed weights.
@@ -127,3 +127,6 @@ def test_Regridder_regrid():
         ]
     )
     assert ma.allclose(result_dstarea, expected_dstarea)
+
+
+test_Regridder_init()

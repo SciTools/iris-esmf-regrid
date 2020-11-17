@@ -1,6 +1,7 @@
 """Common testing infrastructure."""
 
 import pathlib
+import numpy as np
 
 
 # Base directory of the test results.
@@ -37,3 +38,17 @@ def get_result_path(relative_path, unit=True):
     result = _RESULT_PATH / relative_path
 
     return result.resolve(strict=True)
+
+
+def make_grid_args(x, y):
+    small_grid_lon = np.array(range(x)) * 10 / x
+    small_grid_lat = np.array(range(y)) * 10 / y
+
+    small_grid_lon_bounds = np.array(range(x + 1)) * 10 / x
+    small_grid_lat_bounds = np.array(range(y + 1)) * 10 / y
+    return (
+        small_grid_lon,
+        small_grid_lat,
+        small_grid_lon_bounds,
+        small_grid_lat_bounds,
+    )
