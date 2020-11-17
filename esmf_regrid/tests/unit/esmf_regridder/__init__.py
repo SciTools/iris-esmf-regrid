@@ -1,1 +1,1 @@
-"""Unit tests for esmf_regrid.esmf_regridder"""
+"""Unit tests for :mod:`esmf_regrid.esmf_regridder`."""

@@ -1,1 +1,1 @@
-"""Integration tests for esmf_regrid.esmf_regridder"""
+"""Integration tests for :mod:`esmf_regrid.esmf_regridder`."""
