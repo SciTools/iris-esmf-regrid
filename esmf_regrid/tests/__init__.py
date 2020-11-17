@@ -1,6 +1,7 @@
 """Common testing infrastructure."""
 
 import pathlib
+
 import numpy as np
 
 
@@ -41,6 +42,21 @@ def get_result_path(relative_path, unit=True):
 
 
 def make_grid_args(x, y):
+    """
+    Return arguments for a small grid
+    Parameters
+    ----------
+    x : int
+        The number of cells spanned by the longitude.
+    y : int
+        The number of cells spanned by the latutude
+
+    Returns
+    -------
+    Tuple
+        Arguments which can be passed to
+        :class:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`
+    """
     small_grid_lon = np.array(range(x)) * 10 / x
     small_grid_lat = np.array(range(y)) * 10 / y
 

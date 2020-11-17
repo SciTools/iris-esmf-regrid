@@ -11,7 +11,8 @@ from esmf_regrid.tests import make_grid_args
 def test_esmpy_normalisation():
     """
     Itegration test for :meth:`~esmf_regrid.esmf_regridder.Regridder`.
-    Checks against ESMF.
+
+    Checks against ESMF to ensure results are consistent.
     """
     src_data = np.array(
         [
