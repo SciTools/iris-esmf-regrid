@@ -44,7 +44,7 @@ def get_result_path(relative_path, unit=True):
 def make_grid_args(x, y):
     """
     Return arguments for a small grid.
-    
+
     Parameters
     ----------
     x : int
