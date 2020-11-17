@@ -292,9 +292,7 @@ class Regridder:
         """
         src_inverted_mask = np.where(ma.getmaskarray(src_array), 0, 1)
         src_inverted_mask = self.src._flatten_array(src_inverted_mask)
-        src_mask_matrix = scipy.sparse.diags(src_inverted_mask)
-        masked_weights = self.weight_matrix * src_mask_matrix
-        weight_sums = np.array(masked_weights.sum(axis=1)).flatten()
+        weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
@@ -310,8 +308,8 @@ class Regridder:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
-        flat_src = self.src._flatten_array(ma.getdata(src_array))
-        flat_tgt = masked_weights * flat_src
+        flat_src = self.src._flatten_array(ma.getdata(src_array)) * src_inverted_mask
+        flat_tgt = self.weight_matrix * flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._unflatten_array(flat_tgt)
         return tgt_array

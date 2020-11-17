@@ -127,6 +127,3 @@ def test_Regridder_regrid():
         ]
     )
     assert ma.allclose(result_dstarea, expected_dstarea)
-
-
-test_Regridder_init()
