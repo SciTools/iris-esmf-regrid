@@ -7,19 +7,6 @@ import scipy.sparse
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.tests import make_grid_args
 
-# def _make_grid_args(x, y):
-#     small_grid_lon = np.array(range(x)) * 10 / x
-#     small_grid_lat = np.array(range(y)) * 10 / y
-#
-#     small_grid_lon_bounds = np.array(range(x + 1)) * 10 / x
-#     small_grid_lat_bounds = np.array(range(y + 1)) * 10 / y
-#     return (
-#         small_grid_lon,
-#         small_grid_lat,
-#         small_grid_lon_bounds,
-#         small_grid_lat_bounds,
-#     )
-
 
 def _expected_weights():
     weight_list = np.array(
