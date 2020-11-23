@@ -29,8 +29,6 @@ class GridInfo:
 
     """
 
-    # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
-
     def __init__(self, grid, shape):
         self.grid = grid
         self.shape = shape
@@ -171,9 +169,3 @@ class GridInfo:
 
     def _index_offset(self):
         return 1
-
-    def _flatten_array(self, array):
-        return array.flatten()
-
-    def _unflatten_array(self, array):
-        return array.reshape(self.shape)

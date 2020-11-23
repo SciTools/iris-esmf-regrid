@@ -3,7 +3,7 @@
 import ESMF
 import numpy as np
 from numpy import ma
-import scipy.sparse
+import sparse
 
 from ._grid import GridInfo
 
@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 
-def _get_regrid_weights_dict(src_field, tgt_field):
+def _get_regrid_weights(src_field, tgt_field):
     regridder = ESMF.Regrid(
         src_field,
         tgt_field,
@@ -26,27 +26,13 @@ def _get_regrid_weights_dict(src_field, tgt_field):
         norm_type=ESMF.NormType.DSTAREA,
         factors=True,
     )
-    # Without specifying deep_copy=true, the information in weights_dict
+    # Without specifying deep_copy=true, the information in weights
     # would be corrupted when the ESMF regridder is destoyed.
-    weights_dict = regridder.get_weights_dict(deep_copy=True)
-    # The weights_dict contains all the information needed for regridding,
+    weights = regridder.get_factors(deep_copy=True)
+    # The weights contains all the information needed for regridding,
     # the ESMF objects can be safely removed.
     regridder.destroy()
-    return weights_dict
-
-
-def _weights_dict_to_sparse_array(weights, shape, index_offsets):
-    matrix = scipy.sparse.csr_matrix(
-        (
-            weights["weights"],
-            (
-                weights["row_dst"] - index_offsets[0],
-                weights["col_src"] - index_offsets[1],
-            ),
-        ),
-        shape=shape,
-    )
-    return matrix
+    return weights
 
 
 class Regridder:
@@ -78,28 +64,26 @@ class Regridder:
         self.tgt = tgt
 
         if precomputed_weights is None:
-            weights_dict = _get_regrid_weights_dict(
-                src.make_esmf_field(), tgt.make_esmf_field()
-            )
-            self.weight_matrix = _weights_dict_to_sparse_array(
-                weights_dict,
-                (self.tgt.size(), self.src.size()),
-                (self.tgt._index_offset(), self.src._index_offset()),
-            )
+            src_field = src.make_esmf_field()
+            tgt_field = tgt.make_esmf_field()
+            factors, factors_index = _get_regrid_weights(src_field, tgt_field)
+            src_shape = tuple(i - 1 for i in reversed(src_field.grid.size[ESMF.StaggerLoc.CORNER]))
+            tgt_shape = tuple(i - 1 for i in reversed(tgt_field.grid.size[ESMF.StaggerLoc.CORNER]))
+            tensor_shape = src_shape + tgt_shape
+            src_inds = np.unravel_index(factors_index[:, 0]-1, src_shape)
+            tgt_inds = np.unravel_index(factors_index[:, 1]-1, tgt_shape)
+            inds = np.vstack(src_inds + tgt_inds)
+            self.weights = sparse.COO(inds, factors.astype('d'), shape=tensor_shape)
         else:
-            if not scipy.sparse.isspmatrix(precomputed_weights):
-                raise ValueError(
-                    "Precomputed weights must be given as a sparse matrix."
-                )
-            if precomputed_weights.shape != (self.tgt.size(), self.src.size()):
+            if precomputed_weights.shape != self.tgt.shape + self.src.shape:
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
                     msg.format(
-                        (self.tgt.size(), self.src.size()),
+                        self.tgt.shape + self.src.shape,
                         precomputed_weights.shape,
                     )
                 )
-            self.weight_matrix = precomputed_weights
+            self.weights = precomputed_weights
 
     def regrid(self, src_array, norm_type="fracarea", mdtol=1):
         """
@@ -129,24 +113,20 @@ class Regridder:
             A numpy array whose shape is compatible with self.tgt.
 
         """
-        src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
-        weight_sums = self.weight_matrix * src_inverted_mask
+        filled_src = ma.filled(src_array, 0.)
+        tgt_array = np.tensordot(filled_src, self.weights)
+
+        weight_sums = np.tensordot(~ma.getmaskarray(src_array), self.weights)
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
-        tgt_mask = weight_sums > 1 - mdtol
-        masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones(self.tgt.size())
+        tgt_mask = weight_sums > 1. - mdtol
         if norm_type == "fracarea":
-            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
+            tgt_array[tgt_mask] /= weight_sums[tgt_mask]
         elif norm_type == "dstarea":
             pass
         else:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')
-        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
-        flat_src = self.src._flatten_array(ma.filled(src_array, 0.0))
-        flat_tgt = self.weight_matrix * flat_src
-        flat_tgt = flat_tgt * normalisations
-        tgt_array = self.tgt._unflatten_array(flat_tgt)
-        return tgt_array
+        result = ma.masked_array(tgt_array, tgt_mask)
+        return result

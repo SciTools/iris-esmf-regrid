@@ -3,40 +3,42 @@
 import numpy as np
 from numpy import ma
 import pytest
-import scipy.sparse
+import sparse
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.tests import make_grid_args
 
 
 def _expected_weights():
-    weight_list = np.array(
+    weights = np.array(
         [
             0.6674194025656819,
+            0.33363933739884066,
             0.3325805974343169,
             0.3351257294386341,
-            0.6648742705613656,
-            0.33363933739884066,
             0.1663606626011589,
-            0.333639337398841,
-            0.1663606626011591,
             0.16742273275056854,
+            0.6648742705613656,
             0.33250863479149745,
-            0.16742273275056876,
-            0.33250863479149767,
+            0.333639337398841,
             0.6674194025656823,
+            0.1663606626011591,
+            0.16742273275056876,
             0.3325805974343174,
             0.3351257294386344,
+            0.33250863479149767,
             0.6648742705613663,
         ]
     )
-    rows = np.array([0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 5, 5])
-    columns = np.array([0, 1, 1, 2, 0, 1, 3, 4, 1, 2, 4, 5, 3, 4, 4, 5])
+    coords = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+                       [0, 0, 1, 1, 1, 1, 2, 2, 0, 0, 1, 1, 1, 1, 2, 2],
+                       [0, 1, 0, 0, 1, 1, 0, 1, 1, 2, 1, 1, 2, 2, 1, 2],
+                       [0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1]])
 
-    shape = (6, 6)
+    shape = (2, 3, 3, 2)
 
-    weights = scipy.sparse.csr_matrix((weight_list, (rows, columns)), shape=shape)
-    return weights
+    weights_tensor = sparse.COO(coords, weights, shape=shape)
+    return weights_tensor
 
 
 def test_Regridder_init():
@@ -49,10 +51,10 @@ def test_Regridder_init():
 
     rg = Regridder(src_grid, tgt_grid)
 
-    result = rg.weight_matrix
+    result = rg.weights
     expected = _expected_weights()
 
-    assert np.allclose(result.toarray(), expected.toarray())
+    assert np.allclose(result.todense(), expected.todense())
 
 
 def test_Regridder_regrid():
