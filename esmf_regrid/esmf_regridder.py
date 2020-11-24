@@ -15,7 +15,7 @@ __all__ = [
 
 class GridInfo:
     """
-    TBD: public class docstring summary (one line).
+    Class for handling structured grids
 
     This class holds information about lat-lon type grids. That is, grids
     defined by lists of latitude and longitude values for points/bounds
@@ -160,13 +160,13 @@ class GridInfo:
         return grid
 
     def make_esmf_field(self):
-        """TBD: public method docstring."""
+        """Return an ESMF field representing the grid."""
         grid = self._make_esmf_grid()
         field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
         return field
 
     def size(self):
-        """TBD: public method docstring."""
+        """Return the number of cells in the grid."""
         return len(self.lons) * len(self.lats)
 
     def _index_offset(self):

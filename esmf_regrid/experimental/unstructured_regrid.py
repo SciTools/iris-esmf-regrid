@@ -2,11 +2,12 @@
 
 import ESMF
 import numpy as np
-import cartopy.crs as ccrs
 
 
 class MeshInfo:
     """
+    Class for handling unstructured meshes.
+
     This class holds information about Meshes in a form similar to UGRID.
     It contains methods for translating this information into ESMF objects.
     In particular, there are methods for representing as an ESMF Mesh and
@@ -24,36 +25,35 @@ class MeshInfo:
         areas=None,
     ):
         """
-        Creates a MeshInfo object describing the geometry/topology of a UGRID
-        mesh.
+        Creates a MeshInfo object describing a UGRID-like mesh.
 
-        Args:
+        Parameters
+        ----------
 
-        * node_coords
+        node_coords: array_like
             An Nx2 numpy array describing the location of the nodes of the mesh.
             node_coords[:,0] describes the longitudes in degrees and
             node_coords[:,1] describes the latitides in degrees
-        * face_node_connectivity
+        face_node_connectivity: array_like
             A numpy masked array describing the face node connectivity of the
             mesh. The unmasked points of face_node_connectivity[i] describe
             which nodes are connected to the i'th face.
-        * node_start_index
+        node_start_index: int
             An integer the value which, appearing in the face_node_connectivity
             array, indicates the first node in the node_coords array.
             UGRID supports both 0 based and 1 based indexing, so both must be
             accounted for here:
             https://ugrid-conventions.github.io/ugrid-conventions/#zero-or-one
-
-        Kwargs:
-
-        * elem_start_index
+        elem_start_index: int, optional
             An integer describing what index should be considered by ESMF to be
             the start index for describing its elements. This makes no
             difference to the regridding calculation and will only affect the
             intermediate ESMF objects, should the user need access to them.
-        * areas
-            either None or a numpy array describing the areas associated with
+            Defaults to 0.
+        areas: array_like, optional
+            Either None or a numpy array describing the areas associated with
             each face. If None, then ESMF will use its own calculated areas.
+            Defaults to None.
         """
         self.node_coords = node_coords
         self.fnc = face_node_connectivity
@@ -110,11 +110,13 @@ class MeshInfo:
         return emesh
 
     def make_esmf_field(self):
+        """Return an ESMF field representing the grid."""
         mesh = self._make_esmf_mesh()
         field = ESMF.Field(mesh, meshloc=ESMF.MeshLoc.ELEMENT)
         return field
 
     def size(self):
+        """Return the number of cells in the mesh."""
         return self.fnc.shape[0]
 
     def _index_offset(self):
