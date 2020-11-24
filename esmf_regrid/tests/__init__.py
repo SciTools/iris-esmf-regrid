@@ -41,15 +41,15 @@ def get_result_path(relative_path, unit=True):
     return result.resolve(strict=True)
 
 
-def make_grid_args(x, y):
+def make_grid_args(nx, ny):
     """
     Return arguments for a small grid.
 
     Parameters
     ----------
-    x : int
+    nx : int
         The number of cells spanned by the longitude.
-    y : int
+    ny : int
         The number of cells spanned by the latutude
 
     Returns
@@ -58,11 +58,11 @@ def make_grid_args(x, y):
         Arguments which can be passed to
         :class:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`
     """
-    small_grid_lon = np.array(range(x)) * 10 / x
-    small_grid_lat = np.array(range(y)) * 10 / y
+    small_grid_lon = np.array(range(nx)) * 10 / nx
+    small_grid_lat = np.array(range(ny)) * 10 / ny
 
-    small_grid_lon_bounds = np.array(range(x + 1)) * 10 / x
-    small_grid_lat_bounds = np.array(range(y + 1)) * 10 / y
+    small_grid_lon_bounds = np.array(range(nx + 1)) * 10 / nx
+    small_grid_lat_bounds = np.array(range(ny + 1)) * 10 / ny
     return (
         small_grid_lon,
         small_grid_lat,

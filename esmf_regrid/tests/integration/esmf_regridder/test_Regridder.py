@@ -10,14 +10,14 @@ from esmf_regrid.tests import make_grid_args
 
 def test_esmpy_normalisation():
     """
-    Itegration test for :meth:`~esmf_regrid.esmf_regridder.Regridder`.
+    Integration test for :meth:`~esmf_regrid.esmf_regridder.Regridder`.
 
     Checks against ESMF to ensure results are consistent.
     """
     src_data = np.array(
         [
-            [1, 1, 1],
-            [1, 0, 0],
+            [1.0, 1.0, 1.0],
+            [1.0, 0.0, 0.0],
         ],
     )
     src_mask = np.array(
@@ -42,33 +42,26 @@ def test_esmpy_normalisation():
 
     regridder = Regridder(src_grid, tgt_grid)
 
+    regridding_kwargs = {
+        "ignore_degenerate": True,
+        "regrid_method": ESMF.RegridMethod.CONSERVE,
+        "unmapped_action": ESMF.UnmappedAction.IGNORE,
+        "factors": True,
+        "src_mask_values": [1],
+    }
     esmpy_fracarea_regridder = ESMF.Regrid(
-        src_field,
-        tgt_field,
-        ignore_degenerate=True,
-        regrid_method=ESMF.RegridMethod.CONSERVE,
-        unmapped_action=ESMF.UnmappedAction.IGNORE,
-        norm_type=ESMF.NormType.FRACAREA,
-        factors=True,
-        src_mask_values=[1],
+        src_field, tgt_field, norm_type=ESMF.NormType.FRACAREA, **regridding_kwargs
     )
     esmpy_dstarea_regridder = ESMF.Regrid(
-        src_field,
-        tgt_field,
-        ignore_degenerate=True,
-        regrid_method=ESMF.RegridMethod.CONSERVE,
-        unmapped_action=ESMF.UnmappedAction.IGNORE,
-        norm_type=ESMF.NormType.DSTAREA,
-        factors=True,
-        src_mask_values=[1],
+        src_field, tgt_field, norm_type=ESMF.NormType.DSTAREA, **regridding_kwargs
     )
 
     tgt_field_dstarea = esmpy_dstarea_regridder(src_field, tgt_field)
     result_esmpy_dstarea = tgt_field_dstarea.data
-    result_dstarea = regridder.regrid(src_array, norm_type="DSTAREA").T
+    result_dstarea = regridder.regrid(src_array, norm_type="dstarea").T
     assert ma.allclose(result_esmpy_dstarea, result_dstarea)
 
     tgt_field_fracarea = esmpy_fracarea_regridder(src_field, tgt_field)
     result_esmpy_fracarea = tgt_field_fracarea.data
-    result_fracarea = regridder.regrid(src_array, norm_type="FRACAREA").T
+    result_fracarea = regridder.regrid(src_array, norm_type="fracarea").T
     assert ma.allclose(result_esmpy_fracarea, result_fracarea)

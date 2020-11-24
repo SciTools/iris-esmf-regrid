@@ -65,7 +65,7 @@ def test_Regridder_regrid():
     # Set up the regridder with precomputed weights.
     rg = Regridder(src_grid, tgt_grid, precomputed_weights=_expected_weights())
 
-    src_array = np.array([[1, 1, 1], [1, 0, 0]])
+    src_array = np.array([[1.0, 1.0, 1.0], [1.0, 0.0, 0.0]])
     src_masked = ma.array(src_array, mask=[[1, 0, 0], [0, 0, 0]])
 
     # Regrid with unmasked data.
@@ -104,8 +104,8 @@ def test_Regridder_regrid():
     expected_half_mdtol = ma.array(expected_withmask, mask=[[1, 0], [0, 0], [1, 0]])
     assert ma.allclose(result_half_mdtol, expected_half_mdtol)
 
-    # Regrid with norm_type="DSTAREA".
-    result_dstarea = rg.regrid(src_masked, norm_type="DSTAREA")
+    # Regrid with norm_type="dstarea".
+    result_dstarea = rg.regrid(src_masked, norm_type="dstarea")
     expected_dstarea = ma.array(
         [
             [0.3325805974343169, 0.9999999999999998],
