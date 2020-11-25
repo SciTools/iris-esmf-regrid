@@ -12,11 +12,11 @@ def _make_small_mesh_args():
         [[0.0, 0.0], [0.0, 10.0], [10.0, 0.0], [10.0, 10.0], [10.0, 20.0]]
     )
     ugrid_face_node_connectivity = ma.array(
-        [[0, 2, 3, -1], [3, 0, 1, 4]],
-        mask=np.array([[0, 0, 0, 1], [0, 0, 0, 0]]),
+        [[0, 2, 3, -1], [3, 0, 1, 4]], mask=np.array([[0, 0, 0, 1], [0, 0, 0, 0]]),
     )
     node_start_index = 0
     return ugrid_node_coords, ugrid_face_node_connectivity, node_start_index
+
 
 def test_make_mesh():
     coords, nodes, _ = _make_small_mesh_args()
@@ -24,7 +24,12 @@ def test_make_mesh():
     esmf_mesh_0 = mesh_0.make_esmf_field()
     esmf_mesh_0.data[:] = 0
 
-    relative_path = ("experimental", "unstructured_regrid", "test_MeshInfo", "small_mesh.txt")
+    relative_path = (
+        "experimental",
+        "unstructured_regrid",
+        "test_MeshInfo",
+        "small_mesh.txt",
+    )
     fname = get_result_path(relative_path)
     with open(fname) as file:
         expected_repr = file.read()
@@ -35,6 +40,7 @@ def test_make_mesh():
     esmf_mesh_1.data[:] = 0
 
     assert esmf_mesh_0.__repr__() == esmf_mesh_1.__repr__() == expected_repr
+
 
 def test_regrid_with_mesh():
     mesh_args = _make_small_mesh_args()
