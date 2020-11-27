@@ -33,7 +33,7 @@ class MeshInfo:
         node_coords: array_like
             An Nx2 numpy array describing the location of the nodes of the mesh.
             node_coords[:,0] describes the longitudes in degrees and
-            node_coords[:,1] describes the latitides in degrees
+            node_coords[:,1] describes the latitudes in degrees
         face_node_connectivity: array_like
             A numpy masked array describing the face node connectivity of the
             mesh. The unmasked points of face_node_connectivity[i] describe
