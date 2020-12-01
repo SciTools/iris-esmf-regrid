@@ -15,7 +15,7 @@ __all__ = [
 
 class GridInfo:
     """
-    Class for handling structured grids
+    Class for handling structured grids.
 
     This class holds information about lat-lon type grids. That is, grids
     defined by lists of latitude and longitude values for points/bounds

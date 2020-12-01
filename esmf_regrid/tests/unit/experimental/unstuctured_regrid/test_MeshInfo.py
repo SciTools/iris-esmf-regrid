@@ -2,9 +2,10 @@
 
 import numpy as np
 from numpy import ma
+
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.tests import make_grid_args, get_result_path
+from esmf_regrid.tests import get_result_path, make_grid_args
 
 
 def _make_small_mesh_args():
@@ -12,13 +13,15 @@ def _make_small_mesh_args():
         [[0.0, 0.0], [0.0, 10.0], [10.0, 0.0], [10.0, 10.0], [10.0, 20.0]]
     )
     ugrid_face_node_connectivity = ma.array(
-        [[0, 2, 3, -1], [3, 0, 1, 4]], mask=np.array([[0, 0, 0, 1], [0, 0, 0, 0]]),
+        [[0, 2, 3, -1], [3, 0, 1, 4]],
+        mask=np.array([[0, 0, 0, 1], [0, 0, 0, 0]]),
     )
     node_start_index = 0
     return ugrid_node_coords, ugrid_face_node_connectivity, node_start_index
 
 
 def test_make_mesh():
+    """Basic test for creating :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
     coords, nodes, _ = _make_small_mesh_args()
     mesh_0 = MeshInfo(coords, nodes, 0)
     esmf_mesh_0 = mesh_0.make_esmf_field()
@@ -43,6 +46,7 @@ def test_make_mesh():
 
 
 def test_regrid_with_mesh():
+    """Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
     mesh_args = _make_small_mesh_args()
     mesh = MeshInfo(*mesh_args)
 

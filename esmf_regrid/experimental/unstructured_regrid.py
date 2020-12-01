@@ -25,11 +25,10 @@ class MeshInfo:
         areas=None,
     ):
         """
-        Creates a MeshInfo object describing a UGRID-like mesh.
+        Create a MeshInfo object describing a UGRID-like mesh.
 
         Parameters
         ----------
-
         node_coords: array_like
             An Nx2 numpy array describing the location of the nodes of the mesh.
             node_coords[:,0] describes the longitudes in degrees and
