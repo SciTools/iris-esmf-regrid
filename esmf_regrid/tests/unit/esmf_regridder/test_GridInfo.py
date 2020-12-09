@@ -25,7 +25,7 @@ def _make_small_grid_args():
 def test_make_grid():
     """Basic test for :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
     lon, lat, lon_bounds, lat_bounds = _make_small_grid_args()
-    grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    grid = GridInfo.from_1d_coords(lon, lat, lon_bounds, lat_bounds)
     esmf_grid = grid.make_esmf_field()
     esmf_grid.data[:] = 0
 
@@ -33,5 +33,7 @@ def test_make_grid():
     fname = tests.get_result_path(relative_path)
     with open(fname) as fi:
         expected_repr = fi.read()
+
+    print(esmf_grid.__repr__())
 
     assert esmf_grid.__repr__() == expected_repr

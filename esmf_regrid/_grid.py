@@ -22,8 +22,13 @@ class GridInfo:
 
     # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
 
-    def __init__(
-        self,
+    def __init__(self, grid, shape):
+        self.grid = grid
+        self.shape = shape
+
+    @classmethod
+    def from_1d_coords(
+        cls,
         lons,
         lats,
         lonbounds,
@@ -60,30 +65,21 @@ class GridInfo:
             each face. If None, then ESMF will use its own calculated areas.
 
         """
-        self.lons = lons
-        self.lats = lats
-        self.lonbounds = lonbounds
-        self.latbounds = latbounds
         if crs is None:
-            self.crs = ccrs.Geodetic()
+            crs = ccrs.Geodetic()
+
+        shape = (len(lats), len(lons))
+
+        if circular:
+            adjustedlonbounds = lonbounds[:-1]
         else:
-            self.crs = crs
-        self.circular = circular
-        self.areas = areas
+            adjustedlonbounds = lonbounds
 
-    def _as_esmf_info(self):
-        shape = np.array([len(self.lats), len(self.lons)])
+        centerlons, centerlats = np.meshgrid(lons, lats)
+        cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, latbounds)
 
-        if self.circular:
-            adjustedlonbounds = self.lonbounds[:-1]
-        else:
-            adjustedlonbounds = self.lonbounds
-
-        centerlons, centerlats = np.meshgrid(self.lons, self.lats)
-        cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
-
-        truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
-        truecorners = ccrs.Geodetic().transform_points(self.crs, cornerlons, cornerlats)
+        truecenters = ccrs.Geodetic().transform_points(crs, centerlons, centerlats)
+        truecorners = ccrs.Geodetic().transform_points(crs, cornerlons, cornerlats)
 
         # The following note in xESMF suggests that the arrays passed to ESMPy ought to
         # be fortran ordered:
@@ -94,39 +90,16 @@ class GridInfo:
         truecornerlons = np.asfortranarray(truecorners[..., 0])
         truecornerlats = np.asfortranarray(truecorners[..., 1])
 
-        info = (
-            shape,
-            truecenterlons,
-            truecenterlats,
-            truecornerlons,
-            truecornerlats,
-            self.circular,
-            self.areas,
-        )
-        return info
-
-    def _make_esmf_grid(self):
-        info = self._as_esmf_info()
-        (
-            shape,
-            truecenterlons,
-            truecenterlats,
-            truecornerlons,
-            truecornerlats,
-            circular,
-            areas,
-        ) = info
-
         if circular:
             grid = ESMF.Grid(
-                shape,
+                np.array(shape),
                 pole_kind=[1, 1],
                 num_peri_dims=1,
                 periodic_dim=1,
                 pole_dim=0,
             )
         else:
-            grid = ESMF.Grid(shape, pole_kind=[1, 1])
+            grid = ESMF.Grid(np.array(shape), pole_kind=[1, 1])
 
         grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER)
         grid_corner_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CORNER)
@@ -134,13 +107,11 @@ class GridInfo:
         grid_corner_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CORNER)
         grid_corner_y[:] = truecornerlats
 
-        # Grid center points would be added here, this is not necessary for
-        # conservative area weighted regridding
-        # grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER)
-        # grid_center_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CENTER)
-        # grid_center_x[:] = truecenterlons
-        # grid_center_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CENTER)
-        # grid_center_y[:] = truecenterlats
+        grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER)
+        grid_center_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CENTER)
+        grid_center_x[:] = truecenterlons
+        grid_center_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CENTER)
+        grid_center_y[:] = truecenterlats
 
         if areas is not None:
             grid.add_item(ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER)
@@ -149,17 +120,16 @@ class GridInfo:
             )
             grid_areas[:] = areas.T
 
-        return grid
+        return cls(grid, shape)
 
     def make_esmf_field(self):
         """TBD: public method docstring."""
-        grid = self._make_esmf_grid()
-        field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
+        field = ESMF.Field(self.grid, staggerloc=ESMF.StaggerLoc.CENTER)
         return field
 
     def size(self):
         """TBD: public method docstring."""
-        return len(self.lons) * len(self.lats)
+        return np.prod(self.shape)
 
     def _index_offset(self):
         return 1
@@ -168,4 +138,4 @@ class GridInfo:
         return array.flatten()
 
     def _unflatten_array(self, array):
-        return array.reshape((len(self.lons), len(self.lats)))
+        return array.reshape(reversed(self.shape))
