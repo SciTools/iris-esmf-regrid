@@ -2,6 +2,7 @@
 
 import numpy as np
 from numpy import ma
+import pytest
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
@@ -114,3 +115,6 @@ def test_Regridder_regrid():
         ]
     )
     assert ma.allclose(result_dstarea, expected_dstarea)
+
+    with pytest.raises(ValueError):
+        _ = rg.regrid(src_masked, norm_type="INVALID")

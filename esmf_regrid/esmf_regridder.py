@@ -301,12 +301,11 @@ class Regridder:
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
+        normalisations = np.ones(self.tgt.size())
         if norm_type == "fracarea":
-            normalisations = 1 / np.where(
-                masked_weight_sums == 0.0, 1.0, masked_weight_sums
-            )
+            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == "dstarea":
-            normalisations = np.ones(self.tgt.size())
+            pass
         else:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))

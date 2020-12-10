@@ -22,8 +22,8 @@ def test_esmpy_normalisation():
     )
     src_mask = np.array(
         [
-            [1, 0, 0],
-            [0, 0, 0],
+            [True, False, False],
+            [False, False, False],
         ]
     )
     src_array = ma.array(src_data, mask=src_mask)
