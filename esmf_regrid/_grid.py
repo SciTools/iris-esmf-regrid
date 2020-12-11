@@ -176,4 +176,4 @@ class GridInfo:
         return array.flatten()
 
     def _unflatten_array(self, array):
-        return array.reshape(reversed(self.shape))
+        return array.reshape(self.shape)
