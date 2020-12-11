@@ -2,7 +2,16 @@
 
 import cartopy.crs as ccrs
 import ESMF
+from iris.exceptions import CellMeasureNotFoundError
 import numpy as np
+
+
+def _bounds_cf_to_simple_1d(cf_bounds):
+    assert (cf_bounds[1:, 0] == cf_bounds[:-1, 1]).all()
+    simple_bounds = np.empty((cf_bounds.shape[0]+1,), dtype=np.float64)
+    simple_bounds[:-1] = cf_bounds[:, 0]
+    simple_bounds[-1] = cf_bounds[-1, 1]
+    return simple_bounds
 
 
 class GridInfo:
@@ -25,6 +34,35 @@ class GridInfo:
     def __init__(self, grid, shape):
         self.grid = grid
         self.shape = shape
+
+    @classmethod
+    def from_cube(cls, cube):
+        lat = cube.coord('latitude')
+        lon = cube.coord('longitude')
+        assert lat.ndim == lon.ndim
+        ndim = lat.ndim
+        assert lat.coord_system == lon.coord_system
+        coord_sys = lat.coord_system
+        if coord_sys:
+            crs = coord_sys.as_cartopy_crs()
+        else:
+            crs = None
+        if ndim == 1:
+            try:
+                areas = cube.cell_measure('cell_area')
+            except CellMeasureNotFoundError:
+                areas = None
+            return GridInfo.from_1d_coords(
+                lon.points,
+                lat.points,
+                _bounds_cf_to_simple_1d(lon.bounds),
+                _bounds_cf_to_simple_1d(lat.bounds),
+                crs,
+                lon.circular,
+                areas,
+            )
+        else:
+            raise NotImplementedError
 
     @classmethod
     def from_1d_coords(
