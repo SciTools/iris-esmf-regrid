@@ -29,15 +29,15 @@ def test_esmpy_normalisation():
     src_array = ma.array(src_data, mask=src_mask)
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
-    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
-    src_esmpy_grid = src_grid._make_esmf_grid()
+    src_grid = GridInfo.from_1d_coords(lon, lat, lon_bounds, lat_bounds)
+    src_esmpy_grid = src_grid.grid
     src_esmpy_grid.add_item(ESMF.GridItem.MASK, staggerloc=ESMF.StaggerLoc.CENTER)
     src_esmpy_grid.mask[0][...] = src_mask.T
     src_field = ESMF.Field(src_esmpy_grid)
     src_field.data[...] = src_data.T
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
-    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    tgt_grid = GridInfo.from_1d_coords(lon, lat, lon_bounds, lat_bounds)
     tgt_field = tgt_grid.make_esmf_field()
 
     regridder = Regridder(src_grid, tgt_grid)
