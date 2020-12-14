@@ -30,5 +30,5 @@ class _ESMFRegridder:
         self.mdtol = mdtol
 
     def __call__(self, src):
-        data = self.regridder.regrid(src.core_data()[0], self.mdtol)
+        data = self.regridder.regrid(src.core_data()[0], mdtol=self.mdtol)
         return iris.cube.Cube(data)
