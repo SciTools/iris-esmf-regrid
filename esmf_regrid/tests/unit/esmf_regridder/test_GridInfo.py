@@ -82,12 +82,12 @@ def test_from_cube_1d():
                                                            lat_points_simple)
     lon_points = grid_info.grid.get_coords(ESMF_LON, ESMF.StaggerLoc.CENTER)
     lat_points = grid_info.grid.get_coords(ESMF_LAT, ESMF.StaggerLoc.CENTER)
-    nt.assert_allclose(lon_points, lon_points_expected)
-    nt.assert_allclose(lat_points, lat_points_expected)
+    nt.assert_allclose(lon_points, lon_points_expected.T)
+    nt.assert_allclose(lat_points, lat_points_expected.T)
 
     lon_bounds_expected, lat_bounds_expected = np.meshgrid(lon_bounds_simple,
                                                            lat_bounds_simple)
     lon_bounds = grid_info.grid.get_coords(ESMF_LON, ESMF.StaggerLoc.CORNER)
     lat_bounds = grid_info.grid.get_coords(ESMF_LAT, ESMF.StaggerLoc.CORNER)
-    nt.assert_allclose(lon_bounds, lon_bounds_expected)
-    nt.assert_allclose(lat_bounds, lat_bounds_expected)
+    nt.assert_allclose(lon_bounds, lon_bounds_expected.T)
+    nt.assert_allclose(lat_bounds, lat_bounds_expected.T)

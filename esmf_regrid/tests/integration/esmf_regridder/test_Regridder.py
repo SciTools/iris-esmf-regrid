@@ -32,9 +32,9 @@ def test_esmpy_normalisation():
     src_grid = GridInfo.from_1d_coords(lon, lat, lon_bounds, lat_bounds)
     src_esmpy_grid = src_grid.grid
     src_esmpy_grid.add_item(ESMF.GridItem.MASK, staggerloc=ESMF.StaggerLoc.CENTER)
-    src_esmpy_grid.mask[0][...] = src_mask.T
+    src_esmpy_grid.mask[ESMF.StaggerLoc.CENTER][...] = src_mask
     src_field = ESMF.Field(src_esmpy_grid)
-    src_field.data[...] = src_data.T
+    src_field.data[...] = src_data
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
     tgt_grid = GridInfo.from_1d_coords(lon, lat, lon_bounds, lat_bounds)
@@ -46,7 +46,6 @@ def test_esmpy_normalisation():
         "ignore_degenerate": True,
         "regrid_method": ESMF.RegridMethod.CONSERVE,
         "unmapped_action": ESMF.UnmappedAction.IGNORE,
-        "factors": True,
         "src_mask_values": [1],
     }
     esmpy_fracarea_regridder = ESMF.Regrid(
@@ -58,10 +57,10 @@ def test_esmpy_normalisation():
 
     tgt_field_dstarea = esmpy_dstarea_regridder(src_field, tgt_field)
     result_esmpy_dstarea = tgt_field_dstarea.data
-    result_dstarea = regridder.regrid(src_array, norm_type="dstarea").T
+    result_dstarea = regridder.regrid(src_array.T, norm_type="dstarea").T
     assert ma.allclose(result_esmpy_dstarea, result_dstarea)
 
     tgt_field_fracarea = esmpy_fracarea_regridder(src_field, tgt_field)
     result_esmpy_fracarea = tgt_field_fracarea.data
-    result_fracarea = regridder.regrid(src_array, norm_type="fracarea").T
+    result_fracarea = regridder.regrid(src_array.T, norm_type="fracarea").T
     assert ma.allclose(result_esmpy_fracarea, result_fracarea)

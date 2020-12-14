@@ -67,11 +67,9 @@ class Regridder:
             src_field = src.make_esmf_field()
             tgt_field = tgt.make_esmf_field()
             factors, factors_index = _get_regrid_weights(src_field, tgt_field)
-            src_shape = tuple(i - 1 for i in reversed(src_field.grid.size[ESMF.StaggerLoc.CORNER]))
-            tgt_shape = tuple(i - 1 for i in reversed(tgt_field.grid.size[ESMF.StaggerLoc.CORNER]))
-            tensor_shape = src_shape + tgt_shape
-            src_inds = np.unravel_index(factors_index[:, 0]-1, src_shape)
-            tgt_inds = np.unravel_index(factors_index[:, 1]-1, tgt_shape)
+            tensor_shape = src.shape + tgt.shape
+            src_inds = np.unravel_index(factors_index[:, 0]-1, src.shape)
+            tgt_inds = np.unravel_index(factors_index[:, 1]-1, tgt.shape)
             inds = np.vstack(src_inds + tgt_inds)
             self.weights = sparse.COO(inds, factors.astype('d'), shape=tensor_shape)
         else:

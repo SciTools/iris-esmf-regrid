@@ -121,21 +121,17 @@ class GridInfo:
         # be fortran ordered:
         # https://xesmf.readthedocs.io/en/latest/internal_api.html#xesmf.backend.warn_f_contiguous
         # It is yet to be determined what effect this has on performance.
-        truecenterlons = np.asfortranarray(truecenters[..., 0])
-        truecenterlats = np.asfortranarray(truecenters[..., 1])
-        truecornerlons = np.asfortranarray(truecorners[..., 0])
-        truecornerlats = np.asfortranarray(truecorners[..., 1])
+        truecenterlons = np.asfortranarray(truecenters[..., 0].T)
+        truecenterlats = np.asfortranarray(truecenters[..., 1].T)
+        truecornerlons = np.asfortranarray(truecorners[..., 0].T)
+        truecornerlats = np.asfortranarray(truecorners[..., 1].T)
 
+        esmf_shape = np.array(tuple(reversed(shape)))
         if circular:
-            grid = ESMF.Grid(
-                np.array(shape),
-                pole_kind=[1, 1],
-                num_peri_dims=1,
-                periodic_dim=1,
-                pole_dim=0,
-            )
+            num_peri_dims = 1
         else:
-            grid = ESMF.Grid(np.array(shape), pole_kind=[1, 1])
+            num_peri_dims = 0
+        grid = ESMF.Grid(esmf_shape, num_peri_dims=num_peri_dims, pole_kind=[1, 1])
 
         grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER)
         grid_corner_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CORNER)

@@ -52,7 +52,7 @@ def test_Regridder_init():
     rg = Regridder(src_grid, tgt_grid)
 
     result = rg.weights
-    expected = _expected_weights()
+    expected = np.transpose(_expected_weights(), axes=(1, 0, 3, 2))
 
     assert np.allclose(result.todense(), expected.todense())
 
