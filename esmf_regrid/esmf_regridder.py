@@ -266,7 +266,7 @@ class Regridder:
                 )
             self.weight_matrix = precomputed_weights
 
-    def regrid(self, src_array, mdtol=1):
+    def regrid(self, src_array, norm_type="fracarea", mdtol=1):
         """
         Perform regridding on an array of data.
 
@@ -274,15 +274,19 @@ class Regridder:
         ----------
         src_array : array_like
             A numpy array whose shape is compatible with self.src
-        mdtol : int, optional
+        norm_type : string
+            Either "fracarea" or "dstarea", defaults to "fracarea". Determines the
+            type of normalisation applied to the weights. Normalisations correspond
+            to ESMF constants ESMF.NormType.FRACAREA and ESMF.NormType.DSTAREA.
+        mdtol : float, optional
             A number between 0 and 1 describing the missing data tolerance.
-            Depending on the value of mdtol, if an element in the target mesh/grid
-            is not sufficiently covered by elements of the source mesh/grid, then
-            the corresponding data point will be masked. An mdtol of 1 means that
-            only target elements which are completely uncovered will be masked,
-            an mdtol of 0 means that only target elements which are completely
-            covered will be unmasked and an mdtol of 0.5 means that target elements
-            whose area is at least half uncovered by source elements will be masked.
+            Depending on the value of `mdtol`, if a cell in the target grid is not
+            sufficiently covered by unmasked cells of the source grid, then it will
+            be masked. An `mdtol` of 1 means that only target cells which are not
+            covered at all will be masked, an `mdtol` of 0 means that all target
+            cells that are not entirely covered will be masked, and an `mdtol` of
+            0.5 means that all target cells that are less than half covered will
+            be masked.
 
         Returns
         -------
@@ -290,27 +294,23 @@ class Regridder:
             A numpy array whose shape is compatible with self.tgt.
 
         """
-        # TODO implement masked array handling similar to other iris regridders.
-
-        # A rudimentary filter is applied to mask data which is mapped from an
-        # insufficiently large source. This currently only accounts for discrepancies
-        # between the source and target grid/mesh geometries and does not account for
-        # masked data, though it ought to be possible to extend the functionality to
-        # handle masked data.
-        #
-        # Note that ESMPy is also able to handle masked data. It is worth investigating
-        # how this affects the mathematics and if it can be replicated after the fact
-        # using just the weights or if ESMF is doing something we want access to.
-        weight_sums = np.array(self.weight_matrix.sum(axis=1)).flatten()
+        src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
+        weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
-        tgt_mask = weight_sums >= 1 - mdtol
-        masked_weight_sums = weight_sums * tgt_mask.astype(int)
-        normalisations = np.where(masked_weight_sums == 0, 0, 1 / masked_weight_sums)
+        tgt_mask = weight_sums > 1 - mdtol
+        masked_weight_sums = weight_sums * tgt_mask
+        normalisations = np.ones(self.tgt.size())
+        if norm_type == "fracarea":
+            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
+        elif norm_type == "dstarea":
+            pass
+        else:
+            raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
-        flat_src = self.src._flatten_array(src_array)
+        flat_src = self.src._flatten_array(ma.filled(src_array, 0.0))
         flat_tgt = self.weight_matrix * flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._unflatten_array(flat_tgt)

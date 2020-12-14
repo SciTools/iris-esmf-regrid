@@ -2,6 +2,8 @@
 
 import pathlib
 
+import numpy as np
+
 
 # Base directory of the test results.
 _RESULT_PATH = pathlib.Path(__file__).parent.resolve() / "results"
@@ -37,3 +39,33 @@ def get_result_path(relative_path, unit=True):
     result = _RESULT_PATH / relative_path
 
     return result.resolve(strict=True)
+
+
+def make_grid_args(nx, ny):
+    """
+    Return arguments for a small grid.
+
+    Parameters
+    ----------
+    nx : int
+        The number of cells spanned by the longitude.
+    ny : int
+        The number of cells spanned by the latutude
+
+    Returns
+    -------
+    Tuple
+        Arguments which can be passed to
+        :class:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`
+    """
+    small_grid_lon = np.array(range(nx)) * 10 / nx
+    small_grid_lat = np.array(range(ny)) * 10 / ny
+
+    small_grid_lon_bounds = np.array(range(nx + 1)) * 10 / nx
+    small_grid_lat_bounds = np.array(range(ny + 1)) * 10 / ny
+    return (
+        small_grid_lon,
+        small_grid_lat,
+        small_grid_lon_bounds,
+        small_grid_lat_bounds,
+    )
