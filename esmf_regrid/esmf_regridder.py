@@ -62,8 +62,6 @@ class Regridder:
         """
 
         self.src_rank = src.rank
-        self.src = src
-        self.tgt = tgt
 
         if precomputed_weights is None:
             src_field = src.make_esmf_field()
@@ -76,11 +74,11 @@ class Regridder:
             weights = sparse.COO(inds, factors.astype('d'), shape=tensor_shape)
             self.weights = da.from_array(weights)
         else:
-            if precomputed_weights.shape != self.tgt.shape + self.src.shape:
+            if precomputed_weights.shape != tgt.shape + src.shape:
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
                     msg.format(
-                        self.tgt.shape + self.src.shape,
+                        tgt.shape + src.shape,
                         precomputed_weights.shape,
                     )
                 )
