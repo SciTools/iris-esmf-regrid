@@ -1,8 +1,8 @@
 """Provides ESMF representations of grids/UGRID meshes and a modified regridder."""
 
 import ESMF
+import dask.array as da
 import numpy as np
-from numpy import ma
 import sparse
 
 from ._grid import GridInfo
@@ -60,6 +60,8 @@ class Regridder:
             calculate regridding weights. Otherwise, ESMF will be bypassed
             and precomputed_weights will be used as the regridding weights.
         """
+
+        self.src_rank = src.rank
         self.src = src
         self.tgt = tgt
 
@@ -71,7 +73,8 @@ class Regridder:
             src_inds = np.unravel_index(factors_index[:, 0]-1, src.shape)
             tgt_inds = np.unravel_index(factors_index[:, 1]-1, tgt.shape)
             inds = np.vstack(src_inds + tgt_inds)
-            self.weights = sparse.COO(inds, factors.astype('d'), shape=tensor_shape)
+            weights = sparse.COO(inds, factors.astype('d'), shape=tensor_shape)
+            self.weights = da.from_array(weights)
         else:
             if precomputed_weights.shape != self.tgt.shape + self.src.shape:
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
@@ -83,7 +86,10 @@ class Regridder:
                 )
             self.weights = precomputed_weights
 
-    def regrid(self, src_array, norm_type="fracarea", mdtol=1):
+    def _apply(self, src_array):
+        return da.tensordot(src_array, self.weights, self.src_rank)
+
+    def regrid(self, src_array, norm_type="fracarea", mdtol=1.):
         """
         Perform regridding on an array of data.
 
@@ -111,20 +117,21 @@ class Regridder:
             A numpy array whose shape is compatible with self.tgt.
 
         """
-        filled_src = ma.filled(src_array, 0.)
-        tgt_array = np.tensordot(filled_src, self.weights)
+        filled_src = da.ma.filled(src_array, 0.)
+        tgt_array = self._apply(filled_src)
 
-        weight_sums = np.tensordot(~ma.getmaskarray(src_array), self.weights)
+        weight_sums = self._apply(~da.ma.getmaskarray(src_array))
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
-        mdtol = max(mdtol, 1e-8)
-        tgt_mask = weight_sums > 1. - mdtol
+        mdtol = min(max(mdtol, 1.e-8), 1. - 1.e-8)
+        tgt_mask = weight_sums < mdtol
         if norm_type == "fracarea":
-            tgt_array[tgt_mask] /= weight_sums[tgt_mask]
+            weight_sums[weight_sums == 0.] = 1.
+            tgt_array /= weight_sums
         elif norm_type == "dstarea":
             pass
         else:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')
 
-        result = ma.masked_array(tgt_array, tgt_mask)
+        result = da.ma.masked_array(tgt_array, tgt_mask)
         return result

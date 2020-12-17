@@ -32,6 +32,7 @@ class GridInfo:
     def __init__(self, grid, shape):
         self.grid = grid
         self.shape = shape
+        self.rank = len(shape)
 
     @classmethod
     def from_cube(cls, cube):
