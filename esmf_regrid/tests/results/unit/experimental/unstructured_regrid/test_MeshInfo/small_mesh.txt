@@ -1,0 +1,18 @@
+Field:
+    name = None
+    type = <TypeKind.R8: 6>
+    rank = 1
+    extra dimensions = 0
+    staggerloc = 1
+    lower bounds = array([0], dtype=int32)
+    upper bounds = array([2], dtype=int32)
+    extra bounds = None
+    data = array([0., 0.])
+    grid = 
+Mesh:
+    rank = 1
+    size = [5, 2]
+    size_owned = [5, 2]
+    coords = [[array([ 0.,  0., 10., 10., 10.]), array([ 0., 10.,  0., 10., 20.])], [None, None]]
+
+)
