@@ -124,7 +124,7 @@ class MeshInfo:
         return self.esi
 
     def _flatten_array(self, array):
-        return array
+        return array.reshape(-1, (self.size()), order="F").T
 
-    def _unflatten_array(self, array):
-        return array
+    def _unflatten_array(self, array, extra_dims):
+        return array.T.reshape(extra_dims + self.shape, order="F")
