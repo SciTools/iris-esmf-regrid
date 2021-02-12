@@ -20,14 +20,14 @@ def test_esmpy_normalisation():
             [1.0, 0.0],
             [1.0, 0.0],
         ],
-    )
+    ).T
     src_mask = np.array(
         [
             [True, False],
             [False, False],
             [False, False],
         ]
-    )
+    ).T
     src_array = ma.array(src_data, mask=src_mask)
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
