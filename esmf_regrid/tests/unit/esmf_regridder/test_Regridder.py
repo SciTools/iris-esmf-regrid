@@ -102,7 +102,9 @@ def test_Regridder_regrid():
 
     # Regrid while setting mdtol.
     result_half_mdtol = rg.regrid(src_masked, mdtol=0.5)
-    expected_half_mdtol = ma.array(expected_withmask, mask=np.array([[1, 0], [0, 0], [1, 0]]).T)
+    expected_half_mdtol = ma.array(
+        expected_withmask, mask=np.array([[1, 0], [0, 0], [1, 0]]).T
+    )
     assert ma.allclose(result_half_mdtol, expected_half_mdtol)
 
     # Regrid with norm_type="dstarea".

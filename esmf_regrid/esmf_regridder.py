@@ -297,7 +297,7 @@ class Regridder:
 
         """
         array_shape = src_array.shape
-        extra_shape = array_shape[:-self.src.dims]
+        extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, sum(extra_shape))
         src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix * src_inverted_mask

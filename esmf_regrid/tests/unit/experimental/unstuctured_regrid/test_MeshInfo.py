@@ -72,10 +72,14 @@ def test_regrid_with_mesh():
 
     double_mesh_input = np.stack([mesh_input, mesh_input + 1])
     double_grid_output = mesh_to_grid_regridder.regrid(double_mesh_input)
-    double_expected_grid_output = np.stack([expected_grid_output, expected_grid_output + 1])
+    double_expected_grid_output = np.stack(
+        [expected_grid_output, expected_grid_output + 1]
+    )
     assert ma.allclose(double_expected_grid_output, double_grid_output)
 
     double_grid_input = np.stack([grid_input, grid_input + 1])
     double_mesh_output = grid_to_mesh_regridder.regrid(double_grid_input)
-    double_expected_mesh_output = np.stack([expected_mesh_output, expected_mesh_output + 1])
+    double_expected_mesh_output = np.stack(
+        [expected_mesh_output, expected_mesh_output + 1]
+    )
     assert ma.allclose(double_expected_mesh_output, double_mesh_output)
