@@ -62,10 +62,10 @@ def test_regrid_with_mesh():
             [3.0, 2.9222786250561574, 2.3397940801753307],
         ]
     )
-    assert ma.allclose(expected_grid_output, grid_output)
+    assert ma.allclose(expected_grid_output.T, grid_output)
 
     grid_to_mesh_regridder = Regridder(grid, mesh)
     grid_input = np.array([[0, 1, 2], [0, 0, 1]])
-    mesh_output = grid_to_mesh_regridder.regrid(grid_input)
+    mesh_output = grid_to_mesh_regridder.regrid(grid_input.T)
     expected_mesh_output = np.array([0.1408245341331448, 1.19732762534643])
     assert ma.allclose(expected_mesh_output, mesh_output)

@@ -70,7 +70,7 @@ def test_Regridder_regrid():
     src_masked = ma.array(src_array, mask=[[1, 0, 0], [0, 0, 0]])
 
     # Regrid with unmasked data.
-    result_nomask = rg.regrid(src_array)
+    result_nomask = rg.regrid(src_array.T)
     expected_nomask = ma.array(
         [
             [1.0, 1.0],
@@ -78,19 +78,19 @@ def test_Regridder_regrid():
             [0.6674194025656824, 0.0],
         ]
     )
-    assert ma.allclose(result_nomask, expected_nomask)
+    assert ma.allclose(result_nomask, expected_nomask.T)
 
     # Regrid with an masked array with no masked points.
-    result_ma_nomask = rg.regrid(ma.array(src_array))
-    assert ma.allclose(result_ma_nomask, expected_nomask)
+    result_ma_nomask = rg.regrid(ma.array(src_array.T))
+    assert ma.allclose(result_ma_nomask, expected_nomask.T)
 
     # Regrid with a fully masked array.
-    result_fullmask = rg.regrid(ma.array(src_array, mask=True))
+    result_fullmask = rg.regrid(ma.array(src_array, mask=True).T)
     expected_fulmask = ma.array(np.zeros([3, 2]), mask=True)
-    assert ma.allclose(result_fullmask, expected_fulmask)
+    assert ma.allclose(result_fullmask, expected_fulmask.T)
 
     # Regrid with a masked array containing a masked point.
-    result_withmask = rg.regrid(src_masked)
+    result_withmask = rg.regrid(src_masked.T)
     expected_withmask = ma.array(
         [
             [0.9999999999999999, 1.0],
@@ -98,15 +98,15 @@ def test_Regridder_regrid():
             [0.6674194025656824, 0.0],
         ]
     )
-    assert ma.allclose(result_withmask, expected_withmask)
+    assert ma.allclose(result_withmask, expected_withmask.T)
 
     # Regrid while setting mdtol.
-    result_half_mdtol = rg.regrid(src_masked, mdtol=0.5)
+    result_half_mdtol = rg.regrid(src_masked.T, mdtol=0.5)
     expected_half_mdtol = ma.array(expected_withmask, mask=[[1, 0], [0, 0], [1, 0]])
-    assert ma.allclose(result_half_mdtol, expected_half_mdtol)
+    assert ma.allclose(result_half_mdtol, expected_half_mdtol.T)
 
     # Regrid with norm_type="dstarea".
-    result_dstarea = rg.regrid(src_masked, norm_type="dstarea")
+    result_dstarea = rg.regrid(src_masked.T, norm_type="dstarea")
     expected_dstarea = ma.array(
         [
             [0.3325805974343169, 0.9999999999999998],
@@ -114,7 +114,13 @@ def test_Regridder_regrid():
             [0.6674194025656823, 0.0],
         ]
     )
-    assert ma.allclose(result_dstarea, expected_dstarea)
+    assert ma.allclose(result_dstarea, expected_dstarea.T)
+
+    double_src = np.stack([src_array.T, src_array.T + 1])
+    double_expected = np.stack([expected_nomask.T, expected_nomask.T + 1])
+
+    double_result = rg.regrid(double_src)
+    assert ma.allclose(double_result, double_expected)
 
     with pytest.raises(ValueError):
         _ = rg.regrid(src_masked, norm_type="INVALID")
