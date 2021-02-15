@@ -124,5 +124,9 @@ def test_Regridder_regrid():
     double_result = rg.regrid(double_src)
     assert ma.allclose(double_result, double_expected)
 
+    assert src_array.T.shape != src_array.shape
+    with pytest.raises(ValueError):
+        _ = rg.regrid(src_array.T)
+
     with pytest.raises(ValueError):
         _ = rg.regrid(src_masked, norm_type="INVALID")

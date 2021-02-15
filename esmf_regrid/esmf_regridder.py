@@ -297,6 +297,12 @@ class Regridder:
 
         """
         array_shape = src_array.shape
+        main_shape = array_shape[-self.src.dims :]
+        if main_shape != self.src.shape:
+            raise ValueError(
+                f"Expected an array with whose shape ends in {self.src.shape}, "
+                f"got an array with shape ending in {main_shape}."
+            )
         extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, sum(extra_shape))
         src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
