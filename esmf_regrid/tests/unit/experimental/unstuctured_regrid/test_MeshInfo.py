@@ -58,14 +58,15 @@ def test_regrid_with_mesh():
     grid_output = mesh_to_grid_regridder.regrid(mesh_input)
     expected_grid_output = np.array(
         [
-            [2.671294712940605, 2.0885553467353097, 2.0],
-            [3.0, 2.9222786250561574, 2.3397940801753307],
+            [2.671294712940605, 3.0],
+            [2.0885553467353097, 2.9222786250561574],
+            [2.0, 2.3397940801753307],
         ]
-    ).T
+    )
     assert ma.allclose(expected_grid_output, grid_output)
 
     grid_to_mesh_regridder = Regridder(grid, mesh)
-    grid_input = np.array([[0, 1, 2], [0, 0, 1]]).T
+    grid_input = np.array([[0, 0], [1, 0], [2, 1]])
     mesh_output = grid_to_mesh_regridder.regrid(grid_input)
     expected_mesh_output = np.array([0.1408245341331448, 1.19732762534643])
     assert ma.allclose(expected_mesh_output, mesh_output)
