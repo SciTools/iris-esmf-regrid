@@ -175,10 +175,10 @@ class GridInfo:
         return 1
 
     def _flatten_array(self, array):
-        return array.reshape(-1, (self.size()), order="F").T
+        return array.flatten(order="F")
 
-    def _unflatten_array(self, array, extra_dims):
-        return array.T.reshape(extra_dims + self.shape, order="F")
+    def _unflatten_array(self, array):
+        return array.reshape(self.shape, order="F")
 
 
 def _get_regrid_weights_dict(src_field, tgt_field):
@@ -303,8 +303,6 @@ class Regridder:
                 f"Expected an array with whose shape ends in {self.src.shape}, "
                 f"got an array with shape ending in {main_shape}."
             )
-        extra_shape = array_shape[: -self.src.dims]
-        extra_size = max(1, sum(extra_shape))
         src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
@@ -312,7 +310,7 @@ class Regridder:
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones([self.tgt.size(), extra_size])
+        normalisations = np.ones(self.tgt.size())
         if norm_type == "fracarea":
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == "dstarea":
@@ -324,5 +322,5 @@ class Regridder:
         flat_src = self.src._flatten_array(ma.filled(src_array, 0.0))
         flat_tgt = self.weight_matrix * flat_src
         flat_tgt = flat_tgt * normalisations
-        tgt_array = self.tgt._unflatten_array(flat_tgt, extra_shape)
+        tgt_array = self.tgt._unflatten_array(flat_tgt)
         return tgt_array
