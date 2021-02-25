@@ -9,6 +9,10 @@ from esmf_regrid.esmf_regridder import GridInfo, Regridder
 
 def _get_mesh_and_dim(cube):
     # Returns the cube's mesh and the dimension that mesh belongs to.
+    # Likely to be of the form:
+    # mesh = cube.mesh
+    # mesh_dim = cube.mesh_dim(mesh)
+    # return mesh, mesh_dim
     pass
 
 
@@ -19,6 +23,7 @@ def _cube_to_MeshInfo(cube):
 
 def _cube_to_GridInfo(cube):
     # Returns a GridInfo object describing the horizontal grid of the cube.
+    # This may be inherited from code written for the rectilinear regridding scheme.
     pass
 
 
@@ -44,24 +49,25 @@ def _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y):
 
 
 def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube):
-    # TODO: Record information about the identity of the mesh.
-
-    # TODO: Perform checks on the arguments. e.g. contiguity, spherical coords...
+    # TODO: Perform checks on the arguments. (grid coords are contiguous,
+    #  spherical and monotonic. Mesh is defined on faces)
 
     # TODO: Account for differences in units.
+
+    # TODO: Account for differences in coord systems.
 
     # TODO: Record appropriate dimensions (i.e. which dimension the mesh belongs to)
 
     grid_x, grid_y = get_xy_coords(target_grid_cube)
 
-    mesh = _cube_to_MeshInfo(src_mesh_cube)
-    grid = _cube_to_GridInfo(target_grid_cube)
+    meshinfo = _cube_to_MeshInfo(src_mesh_cube)
+    gridinfo = _cube_to_GridInfo(target_grid_cube)
 
-    regridder = Regridder(mesh, grid)
+    regridder = Regridder(meshinfo, gridinfo)
 
-    regrid_info = (grid_x, grid_y, regridder)
+    partial_regrid_info = (grid_x, grid_y, regridder)
 
-    return regrid_info
+    return partial_regrid_info
 
 
 def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
@@ -91,16 +97,23 @@ class MeshToGridESMFRegridder:
     """
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
-        # TODO: Perform checks on arguments.
+        # TODO: Record information about the identity of the mesh. This would
+        #  typically be a copy of the mesh, though given the potential size of
+        #  the mesh, it may make sense to either retain a reference to the actual
+        #  mesh or else something like a hash of the mesh.
 
+        # Missing data tolerance.
+        if not (0 <= mdtol <= 1):
+            msg = "Value for mdtol must be in range 0 - 1, got {}."
+            raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
 
-        regrid_info = _regrid_unstructured_to_rectilinear__prepare(
+        partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
             src_mesh_cube, target_grid_cube
         )
 
         # Store regrid info.
-        self.grid_x, self.grid_y, self.regridder = regrid_info
+        self.grid_x, self.grid_y, self.regridder = partial_regrid_info
 
     def __call__(self, cube):
         # TODO: Ensure cube has the same mesh as that of the recorded mesh.
