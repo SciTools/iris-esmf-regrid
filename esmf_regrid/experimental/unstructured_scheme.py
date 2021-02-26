@@ -119,7 +119,6 @@ class MeshToGridESMFRegridder:
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
         """TODO: write docstring."""
-
         # TODO: Record information about the identity of the mesh. This would
         #  typically be a copy of the mesh, though given the potential size of
         #  the mesh, it may make sense to either retain a reference to the actual
@@ -141,7 +140,6 @@ class MeshToGridESMFRegridder:
 
     def __call__(self, cube):
         """TODO: write docstring."""
-
         # TODO: Ensure cube has the same mesh as that of the recorded mesh.
 
         # mesh is probably an iris Mesh object, though it could also be a MeshCoord
