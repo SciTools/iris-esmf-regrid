@@ -5,8 +5,9 @@ from iris.analysis._interpolation import get_xy_coords
 
 # from numpy import ma
 
-from esmf_regrid.esmf_regridder import GridInfo, Regridder
+from esmf_regrid.esmf_regridder import Regridder
 
+# from esmf_regrid.esmf_regridder import GridInfo
 # from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
 
