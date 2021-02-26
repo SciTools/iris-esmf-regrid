@@ -46,12 +46,12 @@ def _cube_to_GridInfo(cube):
 
 def _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y):
     # Here we expect the args to be as follows:
-    # data: a masked array containing the redult of the regridding operation
+    # data: a masked array containing the result of the regridding operation
     # src_cube: the source cube which data is regrid from
     # mesh_dim: the dimension on src_cube which the mesh belongs to
     # mesh: the Mesh (or MeshCoord) object belonging to src_cube
-    # grid_x: the coordinateon the target cube representing the x axis
-    # grid_y: the coordinateon the target cube representing the y axis
+    # grid_x: the coordinate on the target cube representing the x axis
+    # grid_y: the coordinate on the target cube representing the y axis
 
     new_cube = iris.cube.Cube(data)
 
