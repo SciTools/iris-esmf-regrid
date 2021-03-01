@@ -2,13 +2,21 @@
 
 import iris
 from iris.analysis._interpolation import get_xy_coords
+import numpy as np
 
 # from numpy import ma
 
-from esmf_regrid.esmf_regridder import Regridder
+from esmf_regrid.esmf_regridder import GridInfo, Regridder
 
-# from esmf_regrid.esmf_regridder import GridInfo
 # from esmf_regrid.experimental.unstructured_regrid import MeshInfo
+
+# Taken from PR #26
+def _bounds_cf_to_simple_1d(cf_bounds):
+    assert (cf_bounds[1:, 0] == cf_bounds[:-1, 1]).all()
+    simple_bounds = np.empty((cf_bounds.shape[0] + 1,), dtype=np.float64)
+    simple_bounds[:-1] = cf_bounds[:, 0]
+    simple_bounds[-1] = cf_bounds[-1, 1]
+    return simple_bounds
 
 
 def _get_mesh_and_dim(cube):
@@ -28,7 +36,17 @@ def _cube_to_MeshInfo(cube):
 def _cube_to_GridInfo(cube):
     # Returns a GridInfo object describing the horizontal grid of the cube.
     # This may be inherited from code written for the rectilinear regridding scheme.
-    pass
+    lat = cube.coord("latitude")
+    lon = cube.coord("longitude")
+    # TODO: accomodate other x/y coords.
+    # TODO: perform checks on lat/lon.
+    return GridInfo(
+        lon.points,
+        lat.points,
+        _bounds_cf_to_simple_1d(lon.bounds),
+        _bounds_cf_to_simple_1d(lat.bounds),
+        circular=lon.circular,
+    )
 
 
 # def _regrid_along_dims(regridder, data, src_dim, mdtol):
