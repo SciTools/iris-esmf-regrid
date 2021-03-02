@@ -67,9 +67,8 @@ def test_cube_to_GridInfo():
 
     # The following test ensures there are no overlapping cells.
     rg = Regridder(gridinfo, gridinfo)
-    expected_weights = scipy.sparse.identity(n_lats*n_lons)
-    # The following code provides efficient sparse array comparison.
-    assert (expected_weights != rg.weight_matrix).nnz == 0
+    expected_weights = scipy.sparse.identity(n_lats * n_lons)
+    assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
 
     cube = _grid_cube_local(n_lats, n_lons)
     gridinfo = _cube_to_GridInfo(cube)
@@ -78,4 +77,4 @@ def test_cube_to_GridInfo():
     # The following test ensures there are no overlapping cells.
     # Note that this test fails when longitude is circular.
     rg = Regridder(gridinfo, gridinfo)
-    assert (expected_weights != rg.weight_matrix).nnz == 0
+    assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
