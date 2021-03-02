@@ -54,10 +54,7 @@ def _grid_cube_local(n_lats, n_lons):
 
 
 def test_cube_to_GridInfo():
-    """
-    Basic test for converting cubes to Gridinfo with
-    :func:`~esmf_regrid.experimental.unstructured_scheme._cube_to_GridInfo`.
-    """
+    """Basic test for :func:`~esmf_regrid.experimental.unstructured_scheme._cube_to_GridInfo`."""
     n_lats = 5
     n_lons = 6
 
