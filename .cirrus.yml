@@ -11,8 +11,14 @@
 #
 container:
   image: python:3.8
+  cpu: 2
+  memory: 4G
 
 env:
+  # Skip specific tasks by name. Set to a non-empty string to skip.
+  SKIP_LINT_TASK: ""
+  SKIP_LINUX_TEST_TASK: ""
+  SKIP_OSX_TEST_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
   CACHE_PERIOD: "2"
   # Increment the build number to force new conda cache upload.
@@ -29,42 +35,27 @@ env:
 # Linting
 #
 lint_task:
+  only_if: ${SKIP_LINT_TASK} == ""
   auto_cancellation: true
-  name: "Lint: flake8"
+  name: "${CIRRUS_OS}: flake8 and black"
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script:
-      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
+      - echo "${CIRRUS_TASK_NAME} py${PYTHON_VERSION}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${PIP_CACHE_BUILD} ${PIP_CACHE_PACKAGES}"
   lint_script:
     - pip list
     - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
     - pip list
-    - nox --session lint
-
-
-#
-# Formatting
-#
-style_task:
-  auto_cancellation: true
-  name: "Format: black"
-  pip_cache:
-    folder: ~/.cache/pip
-    fingerprint_script:
-      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${PIP_CACHE_BUILD} ${PIP_CACHE_PACKAGES}"
-  style_script:
-    - pip list
-    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
-    - pip list
-    - nox --session style
+    - nox --session flake8
+    - nox --session black
 
 
 #
 # Testing (Linux)
 #
-linux_task:
+linux_test_task:
+  only_if: ${SKIP_LINUX_TEST_TASK} == ""
   auto_cancellation: true
   matrix:
     env:
@@ -73,8 +64,8 @@ linux_task:
       PY_VER: "3.7"
     env:
       PY_VER: "3.8"
-      COVERAGE: "pytest-cov codecov"
-  name: "Linux: py${PY_VER}"
+      COVERAGE_PACKAGES: "pytest-cov codecov"
+  name: "${CIRRUS_OS}: py${PY_VER} tests"
   container:
     image: gcc:latest
   env:
@@ -102,10 +93,11 @@ linux_task:
   nox_cache:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     fingerprint_script:
-      - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - echo "${CIRRUS_TASK_NAME}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${NOX_CACHE_BUILD}"
-      - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
-      - if [ -n "${COVERAGE}" ]; then echo "${COVERAGE}"; fi
+      - sha256sum ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+      - if [ -n "${COVERAGE_PACKAGES}" ]; then echo "${COVERAGE_PACKAGES}"; fi
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   test_script:
     - nox --session tests
 
@@ -113,12 +105,13 @@ linux_task:
 #
 # Testing (macOS)
 #
-osx_task:
+osx_test_task:
+  only_if: ${SKIP_OSX_TEST_TASK} == ""
   auto_cancellation: true
   matrix:
     env:
       PY_VER: "3.8"
-  name: "OSX: py${PY_VER}"
+  name: "${CIRRUS_OS}: py${PY_VER} tests"
   osx_instance:
     image: catalina-xcode
   env:
@@ -143,9 +136,10 @@ osx_task:
   nox_cache:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     fingerprint_script:
-      - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - echo "${CIRRUS_TASK_NAME}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${NOX_CACHE_BUILD}"
-      - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+      - shasum -a 256 ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   test_script:
     - nox --session tests
 

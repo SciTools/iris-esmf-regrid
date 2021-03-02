@@ -5,6 +5,7 @@ For further details, see https://nox.thea.codes/en/stable/#
 
 """
 
+import hashlib
 import os
 from pathlib import Path
 
@@ -18,16 +19,66 @@ nox.options.reuse_existing_virtualenvs = True
 PACKAGE = "esmf_regrid"
 
 #: Cirrus-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", "3.8")
+PY_VER = os.environ.get("PY_VER", ["3.6", "3.7", "3.8"])
 
 #: Cirrus-CI environment variable hook.
-COVERAGE = os.environ.get("COVERAGE", False)
+COVERAGE_PACKAGES = os.environ.get("COVERAGE_PACKAGES", False)
+
+
+def venv_cached(session):
+    """
+    Determine whether the nox session environment has been cached.
+
+    Parameters
+    ----------
+    session: object
+        A `nox.sessions.Session` object.
+
+    Returns
+    -------
+    bool
+        Whether the session has been cached.
+
+    """
+    result = False
+    yml = Path(f"requirements/py{session.python.replace('.', '')}.yml")
+    tmp_dir = Path(session.create_tmp())
+    cache = tmp_dir / yml.name
+    if cache.is_file():
+        with open(yml, "rb") as fi:
+            expected = hashlib.sha256(fi.read()).hexdigest()
+        with open(cache, "r") as fi:
+            actual = fi.read()
+        result = actual == expected
+    return result
+
+
+def cache_venv(session):
+    """
+    Cache the nox session environment.
+
+    This consists of saving a hexdigest (sha256) of the associated
+    conda requirements YAML file.
+
+    Parameters
+    ----------
+    session: object
+        A `nox.sessions.Session` object.
+
+    """
+    yml = Path(f"requirements/py{session.python.replace('.', '')}.yml")
+    with open(yml, "rb") as fi:
+        hexdigest = hashlib.sha256(fi.read()).hexdigest()
+    tmp_dir = Path(session.create_tmp())
+    cache = tmp_dir / yml.name
+    with open(cache, "w") as fo:
+        fo.write(hexdigest)
 
 
 @nox.session
-def lint(session):
+def flake8(session):
     """
-    Perform linting of the code-base.
+    Perform flake8 linting of the code-base.
 
     Parameters
     ----------
@@ -44,9 +95,9 @@ def lint(session):
 
 
 @nox.session
-def style(session):
+def black(session):
     """
-    Perform format checking of the code-base.
+    Perform black format checking of the code-base.
 
     Parameters
     ----------
@@ -62,10 +113,10 @@ def style(session):
     session.run("black", "--check", __file__)
 
 
-@nox.session(python=[PY_VER], venv_backend="conda")
+@nox.session(python=PY_VER, venv_backend="conda")
 def tests(session):
     """
-    Support for conda in nox is relatively new and maturing.
+    Perform esmf-regrid integration and unit tests.
 
     Parameters
     ----------
@@ -79,12 +130,9 @@ def tests(session):
       - https://github.com/theacodes/nox/issues/260
 
     """
-    # Determine whether pytest is installed as part of
-    # our conda requirements.
-    pytest = Path(session.bin) / "pytest"
-    if not pytest.is_file():
+    if not venv_cached(session):
         # Determine the conda requirements yaml file.
-        fname = f"requirements/py{PY_VER.replace('.', '')}.yml"
+        fname = f"requirements/py{session.python.replace('.', '')}.yml"
         # Back-door approach to force nox to use "conda env update".
         command = (
             "conda",
@@ -95,10 +143,11 @@ def tests(session):
             "--prune",
         )
         session._run(*command, silent=True, external="error")
+        cache_venv(session)
 
-    if COVERAGE:
+    if COVERAGE_PACKAGES:
         # Execute the tests with code coverage.
-        session.conda_install("--channel=conda-forge", *COVERAGE.split())
+        session.conda_install("--channel=conda-forge", *COVERAGE_PACKAGES.split())
         session.run("pytest", "--cov-report=xml", "--cov")
         session.run("codecov")
     else:
