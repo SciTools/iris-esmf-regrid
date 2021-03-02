@@ -4,8 +4,8 @@ from iris.coords import DimCoord
 from iris.cube import Cube
 import numpy as np
 
-from esmf_regrid.experimental.unstructured_scheme import _cube_to_GridInfo
 from esmf_regrid.esmf_regridder import Regridder
+from esmf_regrid.experimental.unstructured_scheme import _cube_to_GridInfo
 
 
 def _grid_cube():
@@ -34,6 +34,10 @@ def _grid_cube():
 
 
 def test_cube_to_GridInfo():
+    """
+    Basic test for converting cubes to Gridinfo with
+    :func:`~esmf_regrid.experimental.unstructured_scheme._cube_to_GridInfo`.
+    """
     cube = _grid_cube()
     gridinfo = _cube_to_GridInfo(cube)
     _ = gridinfo.make_esmf_field()
