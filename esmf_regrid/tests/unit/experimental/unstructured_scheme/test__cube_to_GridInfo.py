@@ -53,25 +53,56 @@ def _grid_cube_local(n_lats, n_lons):
     return cube
 
 
-def test_cube_to_GridInfo():
-    """Basic test for :func:`~esmf_regrid.experimental.unstructured_scheme._cube_to_GridInfo`."""
+def test_global_grid():
+    """Test conversion of a global grid."""
     n_lats = 5
     n_lons = 6
 
     cube = _grid_cube_global(n_lats, n_lons)
     gridinfo = _cube_to_GridInfo(cube)
+    # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
 
     # The following test ensures there are no overlapping cells.
+    # This catches geometric/topological abnormalities that would arise from,
+    # for example: switching lat/lon values, using euclidean coords vs spherical.
     rg = Regridder(gridinfo, gridinfo)
     expected_weights = scipy.sparse.identity(n_lats * n_lons)
     assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
 
+
+def test_local_grid():
+    """Test conversion of a local grid."""
+    n_lats = 5
+    n_lons = 6
+
     cube = _grid_cube_local(n_lats, n_lons)
     gridinfo = _cube_to_GridInfo(cube)
+    # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
 
     # The following test ensures there are no overlapping cells.
     # Note that this test fails when longitude is circular.
     rg = Regridder(gridinfo, gridinfo)
+    expected_weights = scipy.sparse.identity(n_lats * n_lons)
+    assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
+
+
+def test_grid_with_scalars():
+    """Test conversion of a grid with scalar coords."""
+    n_lats = 5
+    n_lons = 1
+
+    cube = _grid_cube_local(n_lats, n_lons)
+    # Convert longitude to a scalar
+    cube = cube[:, 0]
+    assert len(cube.shape) == 1
+
+    gridinfo = _cube_to_GridInfo(cube)
+    # Ensure conversion to ESMF works without error
+    _ = gridinfo.make_esmf_field()
+
+    # The following test ensures there are no overlapping cells.
+    rg = Regridder(gridinfo, gridinfo)
+    expected_weights = scipy.sparse.identity(n_lats * n_lons)
     assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())

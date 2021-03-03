@@ -35,12 +35,16 @@ def _cube_to_MeshInfo(cube):
 
 
 def _cube_to_GridInfo(cube):
+    # This is a simplified version of an equivalent function/method in PR #26.
+    # It is anticipated that this function will be replaced by the one in PR #26.
+    #
     # Returns a GridInfo object describing the horizontal grid of the cube.
     # This may be inherited from code written for the rectilinear regridding scheme.
     lat = cube.coord("latitude")
     lon = cube.coord("longitude")
     # TODO: accomodate other x/y coords.
     # TODO: perform checks on lat/lon.
+    #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
     return GridInfo(
         lon.points,
         lat.points,
