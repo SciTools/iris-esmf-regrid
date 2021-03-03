@@ -9,14 +9,7 @@ from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_scheme import _cube_to_GridInfo
 
 
-def _grid_cube(n_lats, n_lons, lat_bounds, lon_bounds, circular=False):
-    lat_lower, lat_upper = lat_bounds
-    lat_span = np.linspace(lat_lower, lat_upper, n_lats * 2 + 1)
-    lat_points = lat_span[1::2]
-    lat_bound_span = lat_span[::2]
-    lat_bounds = np.stack([lat_bound_span[:-1], lat_bound_span[1:]], axis=-1)
-    lat = DimCoord(lat_points, "latitude", units="degrees", bounds=lat_bounds)
-
+def _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=False):
     lon_lower, lon_upper = lon_bounds
     lon_span = np.linspace(lon_lower, lon_upper, n_lons * 2 + 1)
     lon_points = lon_span[1::2]
@@ -26,21 +19,28 @@ def _grid_cube(n_lats, n_lons, lat_bounds, lon_bounds, circular=False):
         lon_points, "longitude", units="degrees", bounds=lon_bounds, circular=circular
     )
 
+    lat_lower, lat_upper = lat_bounds
+    lat_span = np.linspace(lat_lower, lat_upper, n_lats * 2 + 1)
+    lat_points = lat_span[1::2]
+    lat_bound_span = lat_span[::2]
+    lat_bounds = np.stack([lat_bound_span[:-1], lat_bound_span[1:]], axis=-1)
+    lat = DimCoord(lat_points, "latitude", units="degrees", bounds=lat_bounds)
+
     data = np.zeros([n_lats, n_lons])
     cube = Cube(data)
-    cube.add_dim_coord(lat, 0)
     cube.add_dim_coord(lon, 1)
+    cube.add_dim_coord(lat, 0)
     return cube
 
 
 def test_global_grid():
     """Test conversion of a global grid."""
-    n_lats = 5
     n_lons = 6
-    lat_bounds = (-90, 90)
+    n_lats = 5
     lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
 
-    cube = _grid_cube(n_lats, n_lons, lat_bounds, lon_bounds, circular=True)
+    cube = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
     gridinfo = _cube_to_GridInfo(cube)
     # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
@@ -55,12 +55,12 @@ def test_global_grid():
 
 def test_local_grid():
     """Test conversion of a local grid."""
-    n_lats = 5
     n_lons = 6
-    lat_bounds = (20, 60)
+    n_lats = 5
     lon_bounds = (-20, 20)
+    lat_bounds = (20, 60)
 
-    cube = _grid_cube(n_lats, n_lons, lat_bounds, lon_bounds)
+    cube = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds)
     gridinfo = _cube_to_GridInfo(cube)
     # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
@@ -74,12 +74,12 @@ def test_local_grid():
 
 def test_grid_with_scalars():
     """Test conversion of a grid with scalar coords."""
-    n_lats = 5
     n_lons = 1
-    lat_bounds = (20, 60)
+    n_lats = 5
     lon_bounds = (-20, 20)
+    lat_bounds = (20, 60)
 
-    cube = _grid_cube(n_lats, n_lons, lat_bounds, lon_bounds)
+    cube = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds)
     # Convert longitude to a scalar
     cube = cube[:, 0]
     assert len(cube.shape) == 1
