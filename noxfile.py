@@ -32,7 +32,7 @@ COVERAGE_PACKAGES = ["pytest-cov", "codecov"]
 IRIS_GITHUB = "https://github.com/scitools/iris.git"
 
 
-def cache_venv(session, fname):
+def _cache_venv(session, fname):
     """
     Cache the nox session environment.
 
@@ -56,7 +56,7 @@ def cache_venv(session, fname):
         fo.write(hexdigest)
 
 
-def combine_requirements(primary, secondary):
+def _combine_requirements(primary, secondary, ignore=None):
     """
     Combine the conda environment YAML files together into one.
 
@@ -66,6 +66,9 @@ def combine_requirements(primary, secondary):
         The filename of the primary YAML conda environment.
     secondary: str
         The filename of the subordinate YAML conda environment.
+    ignore: str, optional
+        The prefix of any package name to be ignored from the
+        combined dependency requirements.
 
     Returns
     -------
@@ -80,14 +83,15 @@ def combine_requirements(primary, secondary):
     # Combine the channels and dependencies only.
     for key in ["channels", "dependencies"]:
         result[key] = sorted(set(result[key]).union(secondary[key]))
-    # Filter out iris as a dependency as this is dealt with separately.
-    result["dependencies"] = [
-        spec for spec in result["dependencies"] if not spec.startswith("iris")
-    ]
+    if ignore:
+        # Filter out any specific prefixed package dependencies.
+        result["dependencies"] = [
+            spec for spec in result["dependencies"] if not spec.startswith(ignore)
+        ]
     return result
 
 
-def get_iris_github_artifact(session):
+def _get_iris_github_artifact(session):
     """
     Determine whether an Iris source artifact from GitHub is required.
 
@@ -126,7 +130,7 @@ def get_iris_github_artifact(session):
     return result
 
 
-def venv_cached(session, fname):
+def _venv_cached(session, fname):
     """
     Determine whether the nox session environment has been cached.
 
@@ -149,10 +153,10 @@ def venv_cached(session, fname):
     cache = tmp_dir / f"py{python_version}.sha"
     if cache.is_file():
         with open(fname, "rb") as fi:
-            expected = hashlib.sha256(fi.read()).hexdigest()
+            hexdigest = hashlib.sha256(fi.read()).hexdigest()
         with open(cache, "r") as fi:
-            actual = fi.read()
-        result = actual == expected
+            cached = fi.read()
+        result = cached == hexdigest
     return result
 
 
@@ -211,9 +215,9 @@ def tests(session):
       - https://github.com/theacodes/nox/issues/260
 
     """
-    artifact = get_iris_github_artifact(session)
+    artifact = _get_iris_github_artifact(session)
     python_version = session.python.replace(".", "")
-    requirements = f"requirements/py{python_version}.yml"
+    requirements_fname = f"requirements/py{python_version}.yml"
 
     if artifact:
         tmp_dir = Path(session.create_tmp())
@@ -224,26 +228,30 @@ def tests(session):
         session.cd(artifact_dir)
         session.run("git", "fetch", "origin", external=True)
         session.run("git", "checkout", artifact, external=True)
-        session.cd(cwd)
-        iris_requirements = f"{artifact_dir}/requirements/ci/py{python_version}.yml"
-        yaml_requirements = combine_requirements(requirements, iris_requirements)
-        requirements = tmp_dir / "requirements.yml"
-        with open(requirements, "w") as fo:
-            yaml.dump(yaml_requirements, fo)
+        session.cd(str(cwd))
+        iris_requirements_fname = (
+            f"{artifact_dir}/requirements/ci/py{python_version}.yml"
+        )
+        requirements_yaml = _combine_requirements(
+            requirements_fname, iris_requirements_fname, ignore="iris"
+        )
+        requirements_fname = tmp_dir / "requirements.yml"
+        with open(requirements_fname, "w") as fo:
+            yaml.dump(requirements_yaml, fo)
 
     # Install the package requirements.
-    if not venv_cached(session, requirements):
+    if not _venv_cached(session, requirements_fname):
         # Back-door approach to force nox to use "conda env update".
         command = (
             "conda",
             "env",
             "update",
             f"--prefix={session.virtualenv.location}",
-            f"--file={requirements}",
+            f"--file={requirements_fname}",
             "--prune",
         )
         session._run(*command, silent=True, external="error")
-        cache_venv(session, requirements)
+        _cache_venv(session, requirements_fname)
 
     if artifact:
         # Install the iris source in develop mode.
