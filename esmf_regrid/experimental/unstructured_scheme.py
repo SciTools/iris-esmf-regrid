@@ -42,6 +42,9 @@ def _cube_to_GridInfo(cube):
     # This may be inherited from code written for the rectilinear regridding scheme.
     lat = cube.coord("latitude")
     lon = cube.coord("longitude")
+    # Ensure coords come from a proper grid.
+    assert isinstance(lat, iris.coords.DimCoord)
+    assert isinstance(lon, iris.coords.DimCoord)
     # TODO: accomodate other x/y coords.
     # TODO: perform checks on lat/lon.
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
