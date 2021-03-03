@@ -9,21 +9,22 @@ from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_scheme import _cube_to_GridInfo
 
 
-def _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=False):
-    lon_lower, lon_upper = lon_bounds
-    lon_span = np.linspace(lon_lower, lon_upper, n_lons * 2 + 1)
-    lon_points = lon_span[1::2]
-    lon_bound_span = lon_span[::2]
-    lon_bounds = np.stack([lon_bound_span[:-1], lon_bound_span[1:]], axis=-1)
+def _generate_points_and_bounds(n, outer_bounds):
+    lower, upper = outer_bounds
+    full_span = np.linspace(lower, upper, n * 2 + 1)
+    points = full_span[1::2]
+    bound_span = full_span[::2]
+    bounds = np.stack([bound_span[:-1], bound_span[1:]], axis=-1)
+    return points, bounds
+
+
+def _grid_cube(n_lons, n_lats, lon_outer_bounds, lat_outer_bounds, circular=False):
+    lon_points, lon_bounds = _generate_points_and_bounds(n_lons, lon_outer_bounds)
     lon = DimCoord(
         lon_points, "longitude", units="degrees", bounds=lon_bounds, circular=circular
     )
 
-    lat_lower, lat_upper = lat_bounds
-    lat_span = np.linspace(lat_lower, lat_upper, n_lats * 2 + 1)
-    lat_points = lat_span[1::2]
-    lat_bound_span = lat_span[::2]
-    lat_bounds = np.stack([lat_bound_span[:-1], lat_bound_span[1:]], axis=-1)
+    lat_points, lat_bounds = _generate_points_and_bounds(n_lats, lat_outer_bounds)
     lat = DimCoord(lat_points, "latitude", units="degrees", bounds=lat_bounds)
 
     data = np.zeros([n_lats, n_lons])
