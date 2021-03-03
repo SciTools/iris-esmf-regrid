@@ -23,7 +23,6 @@ def _grid_cube(n_lons, n_lats, lon_outer_bounds, lat_outer_bounds, circular=Fals
     lon = DimCoord(
         lon_points, "longitude", units="degrees", bounds=lon_bounds, circular=circular
     )
-
     lat_points, lat_bounds = _generate_points_and_bounds(n_lats, lat_outer_bounds)
     lat = DimCoord(lat_points, "latitude", units="degrees", bounds=lat_bounds)
 
