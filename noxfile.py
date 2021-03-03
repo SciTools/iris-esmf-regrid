@@ -117,8 +117,12 @@ def get_iris_github_artifact(session):
         result = None
         if len(parts) == 2:
             repo, artifact = parts
+            if repo.startswith("'") or repo.startswith('"'):
+                repo = repo[1:]
             if repo.lower() == "github":
                 result = artifact
+                if result.endswith("'") or result.endswith('"'):
+                    result = result[:-1]
     return result
 
 
