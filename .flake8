@@ -29,5 +29,7 @@ ignore =
     # W504: line break after binary operator
     W504
 exclude = 
+    .eggs
+    build
     esmf_regrid/__init__.py
     esmf_regrid/tests/results

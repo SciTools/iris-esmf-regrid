@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+"""iris-esmf-regrid setuptools packaging."""
+
 
 from setuptools import setup
 
 
-if __name__ == "__main__":
-    setup()
+setup()
