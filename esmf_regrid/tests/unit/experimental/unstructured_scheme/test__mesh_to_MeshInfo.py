@@ -1,9 +1,9 @@
 """Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
 
-from iris.experimental.ugrid import Connectivity, Mesh
 from iris.coords import AuxCoord
-from numpy import ma
+from iris.experimental.ugrid import Connectivity, Mesh
 import numpy as np
+from numpy import ma
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
@@ -11,6 +11,7 @@ from esmf_regrid.experimental.unstructured_scheme import _mesh_to_MeshInfo
 
 
 def _example_mesh():
+    """Generate a global mesh with a square pyramid topology."""
     fnc_array = [
         [0, 1, 2, 3],
         [0, 1, 4, -1],
@@ -39,12 +40,16 @@ def _example_mesh():
     return mesh
 
 
-def test_mesh_info():
+def test__mesh_to_MeshInfo():
     """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
     mesh = _example_mesh()
     meshinfo = _mesh_to_MeshInfo(mesh)
+    # Ensure conversion to ESMF works without error
     _ = meshinfo.make_esmf_field()
 
+    # The following test ensures there are no overlapping cells.
+    # This catches geometric/topological abnormalities that would arise from,
+    # for example: switching lat/lon values, using euclidean coords vs spherical.
     rg = Regridder(meshinfo, meshinfo)
     expected_weights = scipy.sparse.identity(5)
     assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
