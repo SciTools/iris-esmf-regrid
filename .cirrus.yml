@@ -11,8 +11,13 @@
 #
 container:
   image: python:3.8
+  cpu: 2
+  memory: 4G
 
 env:
+  # Skip specific tasks by name. Set to a non-empty string to skip.
+  SKIP_LINT_TASK: ""
+  SKIP_TEST_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
   CACHE_PERIOD: "2"
   # Increment the build number to force new conda cache upload.
@@ -21,50 +26,38 @@ env:
   NOX_CACHE_BUILD: "0"
   # Increment the build number to force new pip cache upload.
   PIP_CACHE_BUILD: "0"
-  # Pip package to be upgraded/installed.
-  PIP_CACHE_PACKAGES: "pip setuptools wheel nox"
+  # Pip package to be installed.
+  PIP_CACHE_PACKAGES: "pip setuptools wheel nox pyyaml"
+  # Conda packages to be installed.
+  CONDA_CACHE_PACKAGES: "nox pip pyyaml"
 
 
 #
 # Linting
 #
 lint_task:
+  only_if: ${SKIP_LINT_TASK} == ""
   auto_cancellation: true
-  name: "Lint: flake8"
+  name: "${CIRRUS_OS}: flake8 and black"
   pip_cache:
     folder: ~/.cache/pip
     fingerprint_script:
-      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${PIP_CACHE_BUILD} ${PIP_CACHE_PACKAGES}"
+      - echo "${CIRRUS_TASK_NAME} py${PYTHON_VERSION}"
+      - echo "${PIP_CACHE_PACKAGES}"
+      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${PIP_CACHE_BUILD}"
   lint_script:
     - pip list
     - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
     - pip list
-    - nox --session lint
-
-
-#
-# Formatting
-#
-style_task:
-  auto_cancellation: true
-  name: "Format: black"
-  pip_cache:
-    folder: ~/.cache/pip
-    fingerprint_script:
-      - echo "${CIRRUS_OS} py${PYTHON_VERSION}"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${PIP_CACHE_BUILD} ${PIP_CACHE_PACKAGES}"
-  style_script:
-    - pip list
-    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
-    - pip list
-    - nox --session style
+    - nox --session flake8
+    - nox --session black
 
 
 #
 # Testing (Linux)
 #
-linux_task:
+test_task:
+  only_if: ${SKIP_TEST_TASK} == ""
   auto_cancellation: true
   matrix:
     env:
@@ -73,20 +66,18 @@ linux_task:
       PY_VER: "3.7"
     env:
       PY_VER: "3.8"
-      COVERAGE: "pytest-cov codecov"
-  name: "Linux: py${PY_VER}"
+      COVERAGE: "true"
+  name: "${CIRRUS_OS}: py${PY_VER} tests"
   container:
     image: gcc:latest
   env:
     PATH: ${HOME}/miniconda/bin:${PATH}
-    CODECOV_TOKEN: "ENCRYPTED\
-      [1ed538b97a8d005bdd5ab729de009ac38a2b53389edb0912\
-      d2e76f5ce1e71c5f7bdea80a79492b57af54691c8936bdc7]"
   conda_cache:
     folder: ${HOME}/miniconda
     fingerprint_script:
       - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
       - echo "${CIRRUS_OS} $(sha256sum miniconda.sh)"
+      - echo "${CONDA_CACHE_PACKAGES}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${CONDA_CACHE_BUILD}"
     populate_script:
       - bash miniconda.sh -b -p ${HOME}/miniconda
@@ -94,84 +85,13 @@ linux_task:
       - conda config --set show_channel_urls True
       - conda config --add channels conda-forge
       - conda update --quiet --name base conda
-      - conda install --quiet --name base nox pip
-  check_script:
-    - conda info --all
-    - conda list --name base
-    - conda list --name base --explicit
+      - conda install --quiet --name base ${CONDA_CACHE_PACKAGES}
   nox_cache:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     fingerprint_script:
-      - echo "${CIRRUS_OS} tests ${PY_VER}"
+      - echo "${CIRRUS_TASK_NAME}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${NOX_CACHE_BUILD}"
-      - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
-      - if [ -n "${COVERAGE}" ]; then echo "${COVERAGE}"; fi
+      - sha256sum ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   test_script:
-    - nox --session tests
-
-
-#
-# Testing (macOS)
-#
-osx_task:
-  auto_cancellation: true
-  matrix:
-    env:
-      PY_VER: "3.8"
-  name: "OSX: py${PY_VER}"
-  osx_instance:
-    image: catalina-xcode
-  env:
-    PATH: ${HOME}/miniconda/bin:${PATH}
-  conda_cache:
-    folder: ${HOME}/miniconda
-    fingerprint_script:
-      - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O miniconda.sh
-      - echo "${CIRRUS_OS} $(shasum -a 256 miniconda.sh)"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${CONDA_CACHE_BUILD}"
-    populate_script:
-      - bash miniconda.sh -b -p ${HOME}/miniconda
-      - conda config --set always_yes yes --set changeps1 no
-      - conda config --set show_channel_urls True
-      - conda config --add channels conda-forge
-      - conda update --quiet --name base conda
-      - conda install --quiet --name base nox pip
-  check_script:
-    - conda info --all
-    - conda list --name base
-    - conda list --name base --explicit
-  nox_cache:
-    folder: ${CIRRUS_WORKING_DIR}/.nox
-    fingerprint_script:
-      - echo "${CIRRUS_OS} tests ${PY_VER}"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${NOX_CACHE_BUILD}"
-      - cat ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
-  test_script:
-    - nox --session tests
-
-
-#
-# esmpy is unavailable from conda-forge for win
-#
-# windows_task:
-#   auto_cancellation: true
-#   matrix:
-#     env:
-#       PY_VER: "3.8"
-#   name: "Windows: py${PY_VER}"
-#   windows_container:
-#     image: cirrusci/windowsservercore:2019
-#   env:
-#     ANACONDA_LOCATION: $USERPROFILE\anaconda
-#     PATH: $ANACONDA_LOCATION\Scripts;$ANACONDA_LOCATION;$PATH
-#     PYTHON_ARCH: 64
-#   install_script:
-#     - choco install -y openssl.light
-#     - choco install -y miniconda3 --params="'/D:%ANACONDA_LOCATION%'"
-#   conda_script:
-#     - conda config --set always_yes yes --set changeps1 no
-#     - conda config --set show_channel_urls True
-#     - conda config --add channels conda-forge
-#     - conda install --quiet --name base nox pip
-#   test_script:
-#     - nox --session tests
+    - nox --session tests -- --verbose
