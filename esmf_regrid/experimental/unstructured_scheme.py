@@ -1,5 +1,7 @@
 """Provides an iris interface for unstructured regridding."""
 
+import copy
+
 import iris
 from iris.analysis._interpolation import get_xy_coords
 import numpy as np
@@ -86,7 +88,13 @@ def _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y):
 
     new_cube = iris.cube.Cube(data)
 
-    # TODO: add coords and metadata.
+    new_cube.add_dim_coord(grid_x, mesh_dim + 1)
+    new_cube.add_dim_coord(grid_y, mesh_dim)
+
+    new_cube.metadata = copy.deepcopy(src_cube.metadata)
+
+    for coord in src_cube.coords(dimensions=()):
+        new_cube.add_aux_coord(coord.copy())
 
     return new_cube
 
