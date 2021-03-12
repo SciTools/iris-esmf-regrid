@@ -1,12 +1,13 @@
 """Unit tests for miscellaneous helper functions in `esmf_regrid.experimental.unstructured_scheme`."""
 
-import numpy as np
 import iris
+import numpy as np
 
 from esmf_regrid.experimental.unstructured_scheme import _create_cube
 
+
 def test_create_cube_2D():
-    """test creation of 2D output grid"""
+    """Test creation of 2D output grid."""
     data = np.ones([2, 3])
 
     # Create a source cube with metadata and scalar coords
