@@ -29,8 +29,11 @@ def test_create_cube_2D():
 
     cube = _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y)
     src_metadata = src_cube.metadata
-    src_scalars = src_cube.coords(dimensions=())
-    assert src_metadata == cube.metadata
-    assert src_scalars == cube.coords(dimensions=())
-    assert cube.coord_dims(grid_x) == (1,)
-    assert cube.coord_dims(grid_y) == (0,)
+
+    expected_cube = iris.cube.Cube(data)
+    expected_cube.metadata = src_metadata
+    expected_cube.add_dim_coord(grid_x, 1)
+    expected_cube.add_dim_coord(grid_y, 0)
+    expected_cube.add_aux_coord(scalar_height)
+    expected_cube.add_aux_coord(scalar_time)
+    assert expected_cube == cube
