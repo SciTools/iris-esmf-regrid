@@ -29,6 +29,7 @@ def _get_mesh_and_dim(cube):
 
 
 def _mesh_to_MeshInfo(mesh):
+    # Returns a MeshInfo object describing the mesh of the cube.
     assert mesh.topology_dimension == 2
     meshinfo = MeshInfo(
         np.stack([coord.points for coord in mesh.node_coords], axis=-1),
