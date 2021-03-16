@@ -41,27 +41,15 @@ def _example_mesh():
         cf_role="face_node_connectivity",
         start_index=0,
     )
-    # The geometry is designed so that this only produces a valid ESMF object
-    # when the orientation is correct. This is due to the base of the pyramid
-    # being convex.
+    # The geometry is designed so that a valid ESMF object is only produced when
+    # the orientation is correct (the face nodes are visited in an anticlockwise
+    # order). This sensitivity is due to the base of the pyramid being convex.
     lon_values = [120, 120, -120, -120, 180, 0]
     lat_values = [60, -60, -60, 60, 10, 0]
     lons = AuxCoord(lon_values, standard_name="longitude")
     lats = AuxCoord(lat_values, standard_name="latitude")
     mesh = Mesh(2, ((lons, "x"), (lats, "y")), fnc)
     return mesh
-
-
-def _check_equivalence(src_info, tgt_info):
-    """
-    Check that two objects describe the same physical space.
-
-    This effectively checks that the ESMF mapping from src_info to tgt_info is identity.
-    """
-    assert src_info.size() == tgt_info.size()
-    rg = Regridder(src_info, tgt_info)
-    expected_weights = scipy.sparse.identity(src_info.size())
-    assert np.allclose(expected_weights.todense(), rg.weight_matrix.todense())
 
 
 def test__mesh_to_MeshInfo():
@@ -99,4 +87,6 @@ def test_anticlockwise_validity():
     # The following test ensures there are no overlapping cells.
     # This catches geometric/topological abnormalities that would arise from,
     # for example: switching lat/lon values, using euclidean coords vs spherical.
-    _check_equivalence(meshinfo, meshinfo)
+    rg = Regridder(meshinfo, meshinfo)
+    expected_weights = scipy.sparse.identity(meshinfo.size())
+    assert np.allclose(expected_weights.todense(), rg.weight_matrix.todense())
