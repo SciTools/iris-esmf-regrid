@@ -77,7 +77,7 @@ def _cube_to_GridInfo(cube):
 #     return result
 
 
-def _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y):
+def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     # Here we expect the args to be as follows:
     # data: a masked array containing the result of the regridding operation
     # src_cube: the source cube which data is regrid from
@@ -119,13 +119,13 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
 
     regridder = Regridder(meshinfo, gridinfo)
 
-    regrid_info = (mesh, mesh_dim, grid_x, grid_y, regridder)
+    regrid_info = (mesh_dim, grid_x, grid_y, regridder)
 
     return regrid_info
 
 
 def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
-    mesh, mesh_dim, grid_x, grid_y, regridder = regrid_info
+    mesh_dim, grid_x, grid_y, regridder = regrid_info
 
     # Perform regridding with realised data for the moment. This may be changed
     # in future to handle src_cube.lazy_data.
@@ -137,7 +137,6 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         new_data,
         src_cube,
         mesh_dim,
-        mesh,
         grid_x,
         grid_y,
     )

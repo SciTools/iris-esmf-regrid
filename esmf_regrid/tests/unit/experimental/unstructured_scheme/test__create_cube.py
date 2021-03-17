@@ -21,13 +21,11 @@ def test_create_cube_2D():
     src_cube.add_aux_coord(scalar_time)
 
     mesh_dim = 0
-    # TODO: replace this with an actual mesh.
-    mesh = None
 
     grid_x = iris.coords.DimCoord(np.arange(3), standard_name="longitude")
     grid_y = iris.coords.DimCoord(np.arange(2), standard_name="latitude")
 
-    cube = _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y)
+    cube = _create_cube(data, src_cube, mesh_dim, grid_x, grid_y)
     src_metadata = src_cube.metadata
 
     expected_cube = iris.cube.Cube(data)
