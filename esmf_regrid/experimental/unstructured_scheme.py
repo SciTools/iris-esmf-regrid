@@ -7,8 +7,7 @@ import numpy as np
 # from numpy import ma
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
-
-# from esmf_regrid.experimental.unstructured_regrid import MeshInfo
+from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
 
 # Taken from PR #26
@@ -29,9 +28,15 @@ def _get_mesh_and_dim(cube):
     pass
 
 
-def _cube_to_MeshInfo(cube):
+def _mesh_to_MeshInfo(mesh):
     # Returns a MeshInfo object describing the mesh of the cube.
-    pass
+    assert mesh.topology_dimension == 2
+    meshinfo = MeshInfo(
+        np.stack([coord.points for coord in mesh.node_coords], axis=-1),
+        mesh.face_node_connectivity.indices,
+        mesh.face_node_connectivity.start_index,
+    )
+    return meshinfo
 
 
 def _cube_to_GridInfo(cube):
@@ -97,13 +102,14 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
     # TODO: Record appropriate dimensions (i.e. which dimension the mesh belongs to)
 
     grid_x, grid_y = get_xy_coords(target_grid_cube)
+    # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
+    # mesh belongs to (mesh_dim).
+    mesh, mesh_dim = _get_mesh_and_dim(src_mesh_cube)
 
-    meshinfo = _cube_to_MeshInfo(src_mesh_cube)
+    meshinfo = _mesh_to_MeshInfo(mesh)
     gridinfo = _cube_to_GridInfo(target_grid_cube)
 
     regridder = Regridder(meshinfo, gridinfo)
-
-    mesh, mesh_dim = _get_mesh_and_dim(src_mesh_cube)
 
     regrid_info = (mesh, mesh_dim, grid_x, grid_y, regridder)
 
