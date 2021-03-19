@@ -43,12 +43,12 @@ def _example_mesh():
     """Generate a global mesh with a pentagonal pyramid topology."""
     # The base of the pyramid is the following pentagon.
     #
-    # 60     0           3
-    #        |  \    /   |
-    # 10     |    4      |
-    #        |           |
-    #        |           |
-    # -60    1-----------2
+    # 60     0          3
+    #        |  \    /  |
+    # 10     |    4     |
+    #        |          |
+    #        |          |
+    # -60    1----------2
     #
     #      120   180  -120
     #
