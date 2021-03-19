@@ -102,6 +102,8 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
     # TODO: Record appropriate dimensions (i.e. which dimension the mesh belongs to)
 
     grid_x, grid_y = get_xy_coords(target_grid_cube)
+    # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
+    # mesh belongs to (mesh_dim).
     mesh, mesh_dim = _get_mesh_and_dim(src_mesh_cube)
 
     meshinfo = _mesh_to_MeshInfo(mesh)

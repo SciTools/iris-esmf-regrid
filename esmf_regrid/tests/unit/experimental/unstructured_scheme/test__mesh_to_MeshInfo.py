@@ -11,7 +11,14 @@ from esmf_regrid.experimental.unstructured_scheme import _mesh_to_MeshInfo
 
 
 def _pyramid_topology_connectivity_array():
-    """Generate the face_node_connectivity array for a topological pyramid."""
+    """
+    Generate the face_node_connectivity array for a topological pyramid.
+
+    The mesh described is a topological pyramid in the sense that there
+    exists a polygonal base (described by the indices [0, 1, 2, 3, 4])
+    and all other faces are triangles connected to a single node (the node
+    with index 5).
+    """
     fnc_array = [
         [0, 1, 2, 3, 4],
         [1, 0, 5, -1, -1],
@@ -34,6 +41,22 @@ def _pyramid_topology_connectivity_array():
 
 def _example_mesh():
     """Generate a global mesh with a pentagonal pyramid topology."""
+    # The base of the pyramid is the following pentagon.
+    #
+    # 60     0           3
+    #        |  \    /   |
+    # 10     |    4      |
+    #        |           |
+    #        |           |
+    # -60    1-----------2
+    #
+    #      120   180  -120
+    #
+    # The point of the pyramid is at the coordinate (0, 0).
+    # The geometry is designed so that a valid ESMF object is only produced when
+    # the orientation is correct (the face nodes are visited in an anticlockwise
+    # order). This sensitivity is due to the base of the pyramid being convex.
+
     # Generate face_node_connectivity (fnc).
     fnc_ma = _pyramid_topology_connectivity_array()
     fnc = Connectivity(
@@ -41,9 +64,6 @@ def _example_mesh():
         cf_role="face_node_connectivity",
         start_index=0,
     )
-    # The geometry is designed so that a valid ESMF object is only produced when
-    # the orientation is correct (the face nodes are visited in an anticlockwise
-    # order). This sensitivity is due to the base of the pyramid being convex.
     lon_values = [120, 120, -120, -120, 180, 0]
     lat_values = [60, -60, -60, 60, 10, 0]
     lons = AuxCoord(lon_values, standard_name="longitude")
