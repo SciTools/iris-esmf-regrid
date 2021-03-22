@@ -88,6 +88,9 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 
     new_cube = iris.cube.Cube(data)
 
+    # TODO: The following code assumes a 1D source cube and mesh_dim = 0.
+    #  This is therefore simple code which should be updated when we start
+    #  supporting the regridding of extra dimensions.
     new_cube.add_dim_coord(grid_x, mesh_dim + 1)
     new_cube.add_dim_coord(grid_y, mesh_dim)
 
