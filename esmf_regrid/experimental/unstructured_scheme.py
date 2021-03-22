@@ -91,6 +91,11 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     # TODO: The following code assumes a 1D source cube and mesh_dim = 0.
     #  This is therefore simple code which should be updated when we start
     #  supporting the regridding of extra dimensions.
+
+    # TODO: The following code is rigid with respect to which dimensions
+    #  the x coord and y coord are assigned to. We should decide if it is
+    #  appropriate to copy the dimension ordering from the target cube
+    #  instead.
     new_cube.add_dim_coord(grid_x, mesh_dim + 1)
     new_cube.add_dim_coord(grid_y, mesh_dim)
 
