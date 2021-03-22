@@ -3,7 +3,7 @@
 import copy
 
 import iris
-from iris.analysis._interpolation import get_xy_coords
+from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
 # from numpy import ma
@@ -19,15 +19,6 @@ def _bounds_cf_to_simple_1d(cf_bounds):
     simple_bounds[:-1] = cf_bounds[:, 0]
     simple_bounds[-1] = cf_bounds[-1, 1]
     return simple_bounds
-
-
-def _get_mesh_and_dim(cube):
-    # Returns the cube's mesh and the dimension that mesh belongs to.
-    # Likely to be of the form:
-    # mesh = cube.mesh
-    # mesh_dim = cube.mesh_dim(mesh)
-    # return mesh, mesh_dim
-    pass
 
 
 def _mesh_to_MeshInfo(mesh):
@@ -117,10 +108,12 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
 
     # TODO: Record appropriate dimensions (i.e. which dimension the mesh belongs to)
 
-    grid_x, grid_y = get_xy_coords(target_grid_cube)
+    grid_x, grid_y = get_xy_dim_coords(target_grid_cube)
+    mesh = src_mesh_cube.mesh
+    assert mesh is not None
     # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
-    # mesh belongs to (mesh_dim).
-    mesh, mesh_dim = _get_mesh_and_dim(src_mesh_cube)
+    # mesh belongs to.
+    mesh_dim = src_mesh_cube.mesh_dim()
 
     meshinfo = _mesh_to_MeshInfo(mesh)
     gridinfo = _cube_to_GridInfo(target_grid_cube)
@@ -189,8 +182,9 @@ class MeshToGridESMFRegridder:
         """TODO: write docstring."""
         # TODO: Ensure cube has the same mesh as that of the recorded mesh.
 
-        # mesh is probably an iris Mesh object, though it could also be a MeshCoord
-        mesh, mesh_dim = _get_mesh_and_dim(cube)
+        mesh = cube.mesh
+        assert mesh is not None
+        mesh_dim = cube.mesh_dim()
 
         regrid_info = (mesh, mesh_dim, self.grid_x, self.grid_y, self.regridder)
 
