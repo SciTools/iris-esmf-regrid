@@ -1,5 +1,7 @@
 """Provides an iris interface for unstructured regridding."""
 
+import copy
+
 import iris
 from iris.analysis._interpolation import get_xy_coords
 import numpy as np
@@ -75,7 +77,7 @@ def _cube_to_GridInfo(cube):
 #     return result
 
 
-def _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y):
+def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     # Here we expect the args to be as follows:
     # data: a masked array containing the result of the regridding operation
     # src_cube: the source cube which data is regrid from
@@ -86,7 +88,21 @@ def _create_cube(data, src_cube, mesh_dim, mesh, grid_x, grid_y):
 
     new_cube = iris.cube.Cube(data)
 
-    # TODO: add coords and metadata.
+    # TODO: The following code assumes a 1D source cube and mesh_dim = 0.
+    #  This is therefore simple code which should be updated when we start
+    #  supporting the regridding of extra dimensions.
+
+    # TODO: The following code is rigid with respect to which dimensions
+    #  the x coord and y coord are assigned to. We should decide if it is
+    #  appropriate to copy the dimension ordering from the target cube
+    #  instead.
+    new_cube.add_dim_coord(grid_x, mesh_dim + 1)
+    new_cube.add_dim_coord(grid_y, mesh_dim)
+
+    new_cube.metadata = copy.deepcopy(src_cube.metadata)
+
+    for coord in src_cube.coords(dimensions=()):
+        new_cube.add_aux_coord(coord.copy())
 
     return new_cube
 
@@ -111,13 +127,13 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
 
     regridder = Regridder(meshinfo, gridinfo)
 
-    regrid_info = (mesh, mesh_dim, grid_x, grid_y, regridder)
+    regrid_info = (mesh_dim, grid_x, grid_y, regridder)
 
     return regrid_info
 
 
 def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
-    mesh, mesh_dim, grid_x, grid_y, regridder = regrid_info
+    mesh_dim, grid_x, grid_y, regridder = regrid_info
 
     # Perform regridding with realised data for the moment. This may be changed
     # in future to handle src_cube.lazy_data.
@@ -129,7 +145,6 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         new_data,
         src_cube,
         mesh_dim,
-        mesh,
         grid_x,
         grid_y,
     )
