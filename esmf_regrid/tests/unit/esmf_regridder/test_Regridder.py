@@ -176,12 +176,16 @@ def test_Regridder_init_small():
     weights_dict["col_src"] = (
         np.array([1, 2, 4, 5, 2, 3, 5, 6], dtype=np.int32) - tgt_grid._index_offset()
     )
+    # The following weights are calculated from grids on a sphere with great circles
+    # defining the lines. Because of this, weights are not exactly the same as they
+    # would be in euclidean geometry and there are some small additional weights
+    # where the cells would not ordinarily overlap in a euclidean grid.
     weights_dict["weights"] = np.array(
         [
             0.4962897,
-            0.0037103,
+            0.0037103,  # Small weight due to using great circle lines
             0.4962897,
-            0.0037103,
+            0.0037103,  # Small weight due to using great circle lines
             0.25484249,
             0.24076863,
             0.25484249,
