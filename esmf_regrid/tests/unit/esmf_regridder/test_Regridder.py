@@ -121,3 +121,75 @@ def test_Regridder_regrid():
 
     with pytest.raises(ValueError):
         _ = rg.regrid(src_masked, norm_type="INVALID")
+
+
+def test_Regridder_init_small():
+    """
+    Simplified test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
+
+    This test is designed to be simple enough to generate predictable weights.
+    With predictable weights it is easier to check that the weights are
+    associated with the correct indices.
+    """
+    # The following ASCII visualisation describes the source and target grids
+    # and the indices which ESMF assigns to their cells.
+    # Analysis of the weights dict returned by ESMF confirms that this is
+    # indeed the indexing which ESMF assigns these grids.
+    #
+    # 30  +---+---+       +-------+
+    #     | 3 | 6 |       |       |
+    # 20  +---+---+       |   2   |
+    #     | 2 | 5 |       |       |
+    # 10  +---+---+       +-------+
+    #     | 1 | 4 |       |   1   |
+    #  0  +---+---+       +-------+
+    #     0  10  20       0       20
+    def _get_points(bounds):
+        points = (bounds[:-1] + bounds[1:]) / 2
+        return points
+
+    lon_bounds = np.array([0, 10, 20])
+    lat_bounds = np.array([0, 10, 20, 30])
+    lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
+    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    assert src_grid.shape == (3, 2)
+    assert src_grid._index_offset() == 1
+
+    lon_bounds = np.array([0, 20])
+    lat_bounds = np.array([0, 10, 30])
+    lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
+    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    assert tgt_grid.shape == (
+        2,
+        1,
+    )
+    assert tgt_grid._index_offset() == 1
+
+    rg = Regridder(src_grid, tgt_grid)
+
+    result = rg.weight_matrix
+
+    weights_dict = {}
+    weights_dict["row_dst"] = (
+        np.array([1, 1, 1, 1, 2, 2, 2, 2], dtype=np.int32) - src_grid._index_offset()
+    )
+    weights_dict["col_src"] = (
+        np.array([1, 2, 4, 5, 2, 3, 5, 6], dtype=np.int32) - tgt_grid._index_offset()
+    )
+    weights_dict["weights"] = np.array(
+        [
+            0.4962897,
+            0.0037103,
+            0.4962897,
+            0.0037103,
+            0.25484249,
+            0.24076863,
+            0.25484249,
+            0.24076863,
+        ]
+    )
+
+    expected_weights = scipy.sparse.csr_matrix(
+        (weights_dict["weights"], (weights_dict["row_dst"], weights_dict["col_src"]))
+    )
+    assert np.allclose(result.toarray(), expected_weights.toarray())
