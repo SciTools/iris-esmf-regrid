@@ -159,10 +159,7 @@ def test_Regridder_init_small():
     lat_bounds = np.array([0, 10, 30])
     lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
     tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
-    assert tgt_grid.shape == (
-        2,
-        1,
-    )
+    assert tgt_grid.shape == (2, 1)
     assert tgt_grid._index_offset() == 1
 
     rg = Regridder(src_grid, tgt_grid)
