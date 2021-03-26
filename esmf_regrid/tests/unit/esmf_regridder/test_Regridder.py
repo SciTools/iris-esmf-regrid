@@ -119,6 +119,7 @@ def test_Regridder_regrid():
         result = np.stack([array, array + 1])
         result = np.stack([result, result + 10, result + 100])
         return result
+
     extra_dim_src = _give_extra_dims(src_array)
     extra_dim_expected = _give_extra_dims(expected_nomask)
 
