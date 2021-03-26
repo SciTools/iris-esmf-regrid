@@ -174,10 +174,25 @@ class GridInfo:
     def _index_offset(self):
         return 1
 
-    def _flatten_array(self, array):
+    def _array_to_matrix(self, array):
+        """
+        Reshape data to a form that is compatible with weight matrices.
+
+        The data should be presented in the form of a matrix (i.e. 2D) in order
+        to be compatible with the weight matrix.
+        Weight matrices deriving from ESMF use fortran ordering when flattening
+        grids to determine cell indices so we use the same order for reshaping.
+        We then take the transpose so that matrix multiplication happens over
+        the appropriate axes.
+        """
         return array.reshape(-1, (self.size()), order="F").T
 
-    def _unflatten_array(self, array, extra_dims):
+    def _matrix_to_array(self, array, extra_dims):
+        """
+        Reshape data to restore original dimensions.
+
+        This is the inverse operation of `_array_to_matrix`.
+        """
         return array.T.reshape(extra_dims + self.shape, order="F")
 
 
@@ -305,7 +320,7 @@ class Regridder:
             )
         extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, np.prod(extra_shape))
-        src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
+        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
@@ -321,8 +336,8 @@ class Regridder:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
-        flat_src = self.src._flatten_array(ma.filled(src_array, 0.0))
+        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
         flat_tgt = self.weight_matrix * flat_src
         flat_tgt = flat_tgt * normalisations
-        tgt_array = self.tgt._unflatten_array(flat_tgt, extra_shape)
+        tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array
