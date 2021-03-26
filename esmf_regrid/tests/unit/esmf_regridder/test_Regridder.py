@@ -120,11 +120,19 @@ def test_Regridder_regrid():
         result = np.stack([result, result + 10, result + 100])
         return result
 
+    # Regrid with multiple extra dimensions.
     extra_dim_src = _give_extra_dims(src_array)
     extra_dim_expected = _give_extra_dims(expected_nomask)
 
     extra_dim_result = rg.regrid(extra_dim_src)
     assert ma.allclose(extra_dim_result, extra_dim_expected)
+
+    # Regrid extra dimensions with different masks.
+    mixed_mask_src = np.stack([src_array, src_masked])
+    mixed_mask_expected = np.stack([expected_nomask, expected_withmask])
+
+    mixed_mask_result = rg.regrid(mixed_mask_src)
+    assert ma.allclose(mixed_mask_result, mixed_mask_expected)
 
     assert src_array.T.shape != src_array.shape
     with pytest.raises(ValueError):
