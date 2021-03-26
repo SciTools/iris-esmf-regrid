@@ -1,4 +1,4 @@
-"""Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme._regrid_unstructured_to_rectilinear__prepare`."""
+"""Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`."""
 
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
