@@ -128,7 +128,7 @@ def test_Regridder_regrid():
     assert ma.allclose(extra_dim_result, extra_dim_expected)
 
     # Regrid extra dimensions with different masks.
-    mixed_mask_src = np.stack([src_array, src_masked])
+    mixed_mask_src = ma.stack([src_array, src_masked])
     mixed_mask_expected = np.stack([expected_nomask, expected_withmask])
 
     mixed_mask_result = rg.regrid(mixed_mask_src)
