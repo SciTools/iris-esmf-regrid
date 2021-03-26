@@ -304,7 +304,7 @@ class Regridder:
                 f"got an array with shape ending in {main_shape}."
             )
         extra_shape = array_shape[: -self.src.dims]
-        extra_size = max(1, sum(extra_shape))
+        extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding

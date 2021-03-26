@@ -115,11 +115,15 @@ def test_Regridder_regrid():
     )
     assert ma.allclose(result_dstarea, expected_dstarea)
 
-    double_src = np.stack([src_array, src_array + 1])
-    double_expected = np.stack([expected_nomask, expected_nomask + 1])
+    def _give_extra_dims(array):
+        result = np.stack([array, array + 1])
+        result = np.stack([result, result + 10, result + 100])
+        return result
+    extra_dim_src = _give_extra_dims(src_array)
+    extra_dim_expected = _give_extra_dims(expected_nomask)
 
-    double_result = rg.regrid(double_src)
-    assert ma.allclose(double_result, double_expected)
+    extra_dim_result = rg.regrid(extra_dim_src)
+    assert ma.allclose(extra_dim_result, extra_dim_expected)
 
     assert src_array.T.shape != src_array.shape
     with pytest.raises(ValueError):
