@@ -59,6 +59,8 @@ class MeshInfo:
         self.nsi = node_start_index
         self.esi = elem_start_index
         self.areas = areas
+        self.shape = (len(face_node_connectivity),)
+        self.dims = 1
 
     def _as_esmf_info(self):
         # ESMF uses a slightly different format to UGRID,
@@ -116,7 +118,7 @@ class MeshInfo:
 
     def size(self):
         """Return the number of cells in the mesh."""
-        return self.fnc.shape[0]
+        return self.shape[0]
 
     def _index_offset(self):
         return self.esi

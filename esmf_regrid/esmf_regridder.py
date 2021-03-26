@@ -78,9 +78,11 @@ class GridInfo:
             self.crs = crs
         self.circular = circular
         self.areas = areas
+        self.shape = (len(lats), len(lons))
+        self.dims = 2
 
     def _as_esmf_info(self):
-        shape = np.array([len(self.lats), len(self.lons)])
+        shape = np.array(self.shape)
 
         if self.circular:
             adjustedlonbounds = self.lonbounds[:-1]
@@ -173,10 +175,10 @@ class GridInfo:
         return 1
 
     def _flatten_array(self, array):
-        return array.flatten()
+        return array.flatten(order="F")
 
     def _unflatten_array(self, array):
-        return array.reshape((len(self.lons), len(self.lats)))
+        return array.reshape(self.shape, order="F")
 
 
 def _get_regrid_weights_dict(src_field, tgt_field):
@@ -294,6 +296,13 @@ class Regridder:
             A numpy array whose shape is compatible with self.tgt.
 
         """
+        array_shape = src_array.shape
+        main_shape = array_shape[-self.src.dims :]
+        if main_shape != self.src.shape:
+            raise ValueError(
+                f"Expected an array whose shape ends in {self.src.shape}, "
+                f"got an array with shape ending in {main_shape}."
+            )
         src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
