@@ -71,16 +71,17 @@ def test_regrid_with_mesh():
     expected_mesh_output = np.array([0.1408245341331448, 1.19732762534643])
     assert ma.allclose(expected_mesh_output, mesh_output)
 
-    double_mesh_input = np.stack([mesh_input, mesh_input + 1])
-    double_grid_output = mesh_to_grid_regridder.regrid(double_mesh_input)
-    double_expected_grid_output = np.stack(
-        [expected_grid_output, expected_grid_output + 1]
-    )
-    assert ma.allclose(double_expected_grid_output, double_grid_output)
+    def _give_extra_dims(array):
+        result = np.stack([array, array + 1])
+        result = np.stack([result, result + 10, result + 100])
+        return result
 
-    double_grid_input = np.stack([grid_input, grid_input + 1])
-    double_mesh_output = grid_to_mesh_regridder.regrid(double_grid_input)
-    double_expected_mesh_output = np.stack(
-        [expected_mesh_output, expected_mesh_output + 1]
-    )
-    assert ma.allclose(double_expected_mesh_output, double_mesh_output)
+    extra_dim_mesh_input = _give_extra_dims(mesh_input)
+    extra_dim_grid_output = mesh_to_grid_regridder.regrid(extra_dim_mesh_input)
+    extra_dim_expected_grid_output = _give_extra_dims(expected_grid_output)
+    assert ma.allclose(extra_dim_expected_grid_output, extra_dim_grid_output)
+
+    extra_dim_grid_input = _give_extra_dims(grid_input)
+    extra_dim_mesh_output = grid_to_mesh_regridder.regrid(extra_dim_grid_input)
+    extra_dim_expected_mesh_output = _give_extra_dims(expected_mesh_output)
+    assert ma.allclose(extra_dim_expected_mesh_output, extra_dim_mesh_output)
