@@ -1,7 +1,6 @@
 """Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`."""
 
 from iris.coords import AuxCoord, DimCoord
-from iris.cube import Cube
 import numpy as np
 
 from esmf_regrid.experimental.unstructured_scheme import (

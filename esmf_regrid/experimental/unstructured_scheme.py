@@ -176,7 +176,7 @@ class MeshToGridESMFRegridder:
         )
 
         # Store regrid info.
-        _, _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
+        _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
 
     def __call__(self, cube):
         """TODO: write docstring."""
