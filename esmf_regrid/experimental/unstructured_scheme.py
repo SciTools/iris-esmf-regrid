@@ -88,7 +88,10 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 
     new_cube.metadata = copy.deepcopy(src_cube.metadata)
 
-    coord_mapping = {}
+    # TODO: Handle derived coordinates. The following code is taken from
+    #  iris, the parts dealing with derived coordinates have been
+    #  commented out for the time being.
+    # coord_mapping = {}
 
     def copy_coords(src_coords, add_method):
         for coord in src_coords:
@@ -98,21 +101,21 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
             dims = [dim if dim < mesh_dim else dim + 1 for dim in dims]
             result_coord = coord.copy()
             add_method(result_coord, dims)
-            coord_mapping[id(coord)] = result_coord
+            # coord_mapping[id(coord)] = result_coord
 
     copy_coords(src_cube.dim_coords, new_cube.add_dim_coord)
     copy_coords(src_cube.aux_coords, new_cube.add_aux_coord)
 
-    for factory in src_cube.aux_factories:
-        # TODO: Regrid dependant coordinates which span mesh_dim.
-        try:
-            result.add_aux_factory(factory.updated(coord_mapping))
-        except KeyError:
-            msg = (
-                "Cannot update aux_factory {!r} because of dropped"
-                " coordinates.".format(factory.name())
-            )
-            warnings.warn(msg)
+    # for factory in src_cube.aux_factories:
+    #     # TODO: Regrid dependant coordinates which span mesh_dim.
+    #     try:
+    #         result.add_aux_factory(factory.updated(coord_mapping))
+    #     except KeyError:
+    #         msg = (
+    #             "Cannot update aux_factory {!r} because of dropped"
+    #             " coordinates.".format(factory.name())
+    #         )
+    #         warnings.warn(msg)
 
     return new_cube
 
