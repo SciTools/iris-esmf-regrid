@@ -34,6 +34,11 @@ def _flat_mesh_cube():
 
 
 def test_flat_cubes():
+    """
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+
+    Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
+    """
     src = _flat_mesh_cube()
 
     n_lons = 6
