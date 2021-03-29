@@ -186,7 +186,7 @@ class MeshToGridESMFRegridder:
         assert mesh is not None
         mesh_dim = cube.mesh_dim()
 
-        regrid_info = (mesh, mesh_dim, self.grid_x, self.grid_y, self.regridder)
+        regrid_info = (mesh_dim, self.grid_x, self.grid_y, self.regridder)
 
         return _regrid_unstructured_to_rectilinear__perform(
             cube, regrid_info, self.mdtol
