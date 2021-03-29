@@ -20,6 +20,8 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshI
 def _full_mesh():
     mesh = _example_mesh()
 
+    # In order to add a mesh to a cube, face locations must be added.
+    # These are not used in calculations and are here given a value of zero.
     mesh_length = mesh.connectivity(contains_face=True).shape[0]
     dummy_face_lon = AuxCoord(np.zeros(mesh_length), standard_name="longitude")
     dummy_face_lat = AuxCoord(np.zeros(mesh_length), standard_name="latitude")
@@ -29,6 +31,7 @@ def _full_mesh():
 
 
 def _flat_mesh_cube():
+    """Return a 1D cube with a mesh attached."""
     mesh = _full_mesh()
     mesh_length = mesh.connectivity(contains_face=True).shape[0]
 
@@ -42,7 +45,7 @@ def _flat_mesh_cube():
 def test_flat_cubes():
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._regrid_unstructured_to_rectilinear__prepare`.
-    
+
     Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
     """
     src = _flat_mesh_cube()

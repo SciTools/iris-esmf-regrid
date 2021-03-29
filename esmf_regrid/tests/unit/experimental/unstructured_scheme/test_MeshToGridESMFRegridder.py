@@ -1,11 +1,11 @@
-"""Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`."""
+"""Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`."""
 
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
 
 from esmf_regrid.experimental.unstructured_scheme import (
-    regrid_unstructured_to_rectilinear,
+    MeshToGridESMFRegridder,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
     _grid_cube,
@@ -17,7 +17,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstru
 
 def test_flat_cubes():
     """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
     """
@@ -42,7 +42,8 @@ def test_flat_cubes():
         return result
 
     src = _add_metadata(src)
-    result = regrid_unstructured_to_rectilinear(src, tgt)
+    regridder = MeshToGridESMFRegridder(src, tgt)
+    result = regridder(src)
 
     expected_data = np.ones([5, 6])
     expected_cube = _add_metadata(tgt)
