@@ -31,7 +31,12 @@ def _full_mesh():
 
 
 def _flat_mesh_cube():
-    """Return a 1D cube with a mesh attached."""
+    """
+    Return a 1D cube with a mesh attached.
+
+    Returned cube has no metadata except for the mesh and two MeshCoords.
+    Returned cube has data consisting of an array of ones.
+    """
     mesh = _full_mesh()
     mesh_length = mesh.connectivity(contains_face=True).shape[0]
 

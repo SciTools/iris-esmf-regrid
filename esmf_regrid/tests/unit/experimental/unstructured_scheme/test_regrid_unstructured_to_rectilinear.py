@@ -27,6 +27,8 @@ def test_flat_cubes():
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    # Ensure data in the target grid is different to the expected data.
+    # i.e. target grid data is all zero, expected data is all one
     tgt.data[:] = 0
 
     def _add_metadata(cube):
@@ -43,7 +45,8 @@ def test_flat_cubes():
     src = _add_metadata(src)
     result = regrid_unstructured_to_rectilinear(src, tgt)
 
-    expected_data = np.ones([5, 6])
+    expected_data = np.ones([n_lats, n_lons])
+    src.data[:] = 1  # Ensure all data in the source is one.
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.

@@ -110,6 +110,8 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
 
     grid_x, grid_y = get_xy_dim_coords(target_grid_cube)
     mesh = src_mesh_cube.mesh
+    # TODO: Improve the checking of mesh validity. Check the mesh location and
+    #  raise appropriate error messages.
     assert mesh is not None
     # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
     # mesh belongs to.
@@ -180,9 +182,9 @@ class MeshToGridESMFRegridder:
 
     def __call__(self, cube):
         """TODO: write docstring."""
-        # TODO: Ensure cube has the same mesh as that of the recorded mesh.
-
         mesh = cube.mesh
+        # TODO: Ensure cube has the same mesh as that of the recorded mesh.
+        #  For the time being, we simply check that the mesh exists.
         assert mesh is not None
         mesh_dim = cube.mesh_dim()
 
