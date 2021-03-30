@@ -38,6 +38,7 @@ def test_create_cube_2D():
     expected_cube.add_aux_coord(scalar_time)
     assert expected_cube == cube
 
+
 def test_create_cube_4D():
     """Test creation of 2D output grid."""
     data = np.ones([4, 2, 3, 5])
