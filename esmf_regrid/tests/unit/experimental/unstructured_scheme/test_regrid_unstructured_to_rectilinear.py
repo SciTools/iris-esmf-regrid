@@ -43,10 +43,10 @@ def test_flat_cubes():
         return result
 
     src = _add_metadata(src)
+    src.data[:] = 1  # Ensure all data in the source is one.
     result = regrid_unstructured_to_rectilinear(src, tgt)
 
     expected_data = np.ones([n_lats, n_lons])
-    src.data[:] = 1  # Ensure all data in the source is one.
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
