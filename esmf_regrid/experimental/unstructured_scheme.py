@@ -174,17 +174,71 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
-    """TODO: write docstring."""
+    """
+    Return a new cube with data values calculated using the area weighted
+    mean of data values from unstructured cube src_cube regridded onto the
+    horizontal grid of grid_cube.
+
+    This function requires that the horizontal dimension of src_cube is
+    described by a 2D mesh with data located on the faces of that mesh.
+    This function requires that the horizontal grid of grid_cube is
+    rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
+    This function also requires that the coordinates describing the
+    horizontal grid have bounds.
+
+    Parameters
+    ----------
+    src_cube : cube
+        An unstructured instance of iris.cube.Cube that supplies the data,
+        metadata and coordinates.
+    grid_cube : cube
+        A rectilinear instance of iris.cube.Cube that supplies the desired
+        horizontal grid definition.
+    mdtol : float, optional
+        Tolerance of missing data. The value returned in each element of the
+        returned cube's data array will be masked if the fraction of masked
+        data in the overlapping cells of the source cube exceeds mdtol. This
+        fraction is calculated based on the area of masked cells within each
+        target cell. mdtol=0 means no missing data is tolerated while mdtol=1
+        will mean the resulting element will be masked if and only if all the
+        overlapping cells of the source cube are masked. Defaults to 0.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(src_cube, grid_cube)
     result = _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
 
 
 class MeshToGridESMFRegridder:
-    """TODO: write docstring."""
+    """
+    This class provides support for area weighted regridding from
+    unstructured cubes to rectilinear cubes.
+    """
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
-        """TODO: write docstring."""
+        """
+        Create an area-weighted regridder for conversions between the source
+        mesh and target grid.
+
+        Parameters
+        ----------
+        src_grid_cube : cube
+            The unstructured iris cube providing the source grid.
+        target_grid_cube : cube
+            The rectilinear iris cube providing the target grid.
+        mdtol : float, optional
+            Tolerance of missing data. The value returned in each element of
+            the returned array will be masked if the fraction of masked data
+            exceeds mdtol. mdtol=0 means no missing data is tolerated while
+            mdtol=1 will mean the resulting element will be masked if and only
+            if all the contributing elements of data are masked.
+            Defaults to 1.
+        """
         # TODO: Record information about the identity of the mesh. This would
         #  typically be a copy of the mesh, though given the potential size of
         #  the mesh, it may make sense to either retain a reference to the actual
@@ -205,7 +259,23 @@ class MeshToGridESMFRegridder:
         _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
 
     def __call__(self, cube):
-        """TODO: write docstring."""
+        """
+        Regrid this cube onto the target grid of this regridder instance.
+
+        The given cube must be defined with the same mesh as the source
+        cube used to create this MeshToGridESMFRegridder instance.
+        Parameters
+        ----------
+        cube : cube
+            A iris.cube.Cube instance to be regridded.
+
+        Returns
+        -------
+            A cube defined with the horizontal dimensions of the target
+            and the other dimensions from this cube. The data values of
+            this cube will be converted to values on the new grid using
+            area-weighted regridding via ESMF generated weights.
+        """
         mesh = cube.mesh
         # TODO: Ensure cube has the same mesh as that of the recorded mesh.
         #  For the time being, we simply check that the mesh exists.
