@@ -43,7 +43,7 @@ def _cube_to_GridInfo(cube):
     # Ensure coords come from a proper grid.
     assert isinstance(lon, iris.coords.DimCoord)
     assert isinstance(lat, iris.coords.DimCoord)
-    # TODO: accomodate other x/y coords.
+    # TODO: accommodate other x/y coords.
     # TODO: perform checks on lat/lon.
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
     return GridInfo(
@@ -238,6 +238,7 @@ class MeshToGridESMFRegridder:
             mdtol=1 will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
             Defaults to 1.
+
         """
         # TODO: Record information about the identity of the mesh. This would
         #  typically be a copy of the mesh, though given the potential size of
@@ -275,6 +276,7 @@ class MeshToGridESMFRegridder:
             and the other dimensions from this cube. The data values of
             this cube will be converted to values on the new grid using
             area-weighted regridding via ESMF generated weights.
+
         """
         mesh = cube.mesh
         # TODO: Ensure cube has the same mesh as that of the recorded mesh.
