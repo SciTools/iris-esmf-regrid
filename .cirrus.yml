@@ -82,6 +82,7 @@ test_task:
       - echo "${CONDA_CACHE_PACKAGES}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${CONDA_CACHE_BUILD}"
     populate_script:
+      - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
       - bash miniconda.sh -b -p ${HOME}/miniconda
       - conda config --set always_yes yes --set changeps1 no
       - conda config --set show_channel_urls True
@@ -96,4 +97,5 @@ test_task:
       - sha256sum ${CIRRUS_WORKING_DIR}/requirements/py$(echo ${PY_VER} | tr -d ".").yml
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   test_script:
+    - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session tests -- --verbose
