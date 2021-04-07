@@ -30,8 +30,6 @@ env:
   PIP_CACHE_PACKAGES: "pip setuptools wheel nox pyyaml"
   # Conda packages to be installed.
   CONDA_CACHE_PACKAGES: "nox pip pyyaml"
-  # fix for conda error on string "5.4.89"
-  CONDA_OVERRIDE_LINUX: "5.4.89" 
 
 
 #
