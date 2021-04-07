@@ -116,6 +116,7 @@ class MeshInfo:
         field = ESMF.Field(mesh, meshloc=ESMF.MeshLoc.ELEMENT)
         return field
 
+    @property
     def size(self):
         """Return the number of cells in the mesh."""
         return self.shape[0]
@@ -134,7 +135,7 @@ class MeshInfo:
         We then take the transpose so that matrix multiplication happens over
         the appropriate axes.
         """
-        return array.reshape(-1, (self.size()), order="F").T
+        return array.reshape(-1, (self.size), order="F").T
 
     def _matrix_to_array(self, array, extra_dims):
         """

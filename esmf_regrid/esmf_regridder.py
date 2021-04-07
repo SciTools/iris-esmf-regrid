@@ -167,6 +167,7 @@ class GridInfo:
         field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
         return field
 
+    @property
     def size(self):
         """Return the number of cells in the grid."""
         return len(self.lons) * len(self.lats)
@@ -185,7 +186,7 @@ class GridInfo:
         We then take the transpose so that matrix multiplication happens over
         the appropriate axes.
         """
-        return array.reshape(-1, (self.size()), order="F").T
+        return array.reshape(-1, (self.size), order="F").T
 
     def _matrix_to_array(self, array, extra_dims):
         """
@@ -265,7 +266,7 @@ class Regridder:
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
-                (self.tgt.size(), self.src.size()),
+                (self.tgt.size, self.src.size),
                 (self.tgt._index_offset(), self.src._index_offset()),
             )
         else:
@@ -273,11 +274,11 @@ class Regridder:
                 raise ValueError(
                     "Precomputed weights must be given as a sparse matrix."
                 )
-            if precomputed_weights.shape != (self.tgt.size(), self.src.size()):
+            if precomputed_weights.shape != (self.tgt.size, self.src.size):
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
                     msg.format(
-                        (self.tgt.size(), self.src.size()),
+                        (self.tgt.size, self.src.size),
                         precomputed_weights.shape,
                     )
                 )
@@ -327,7 +328,7 @@ class Regridder:
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones([self.tgt.size(), extra_size])
+        normalisations = np.ones([self.tgt.size, extra_size])
         if norm_type == "fracarea":
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == "dstarea":
