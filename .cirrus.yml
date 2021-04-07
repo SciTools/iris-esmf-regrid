@@ -79,6 +79,7 @@ test_task:
       - echo "${CIRRUS_OS} $(sha256sum miniconda.sh)"
       - echo "${CONDA_CACHE_PACKAGES}"
       - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${CONDA_CACHE_BUILD}"
+      - uname -r
     populate_script:
       - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
       - bash miniconda.sh -b -p ${HOME}/miniconda
