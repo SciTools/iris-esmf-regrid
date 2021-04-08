@@ -108,5 +108,5 @@ def test_anticlockwise_validity():
     # This catches geometric/topological abnormalities that would arise from,
     # for example: switching lat/lon values, using euclidean coords vs spherical.
     rg = Regridder(meshinfo, meshinfo)
-    expected_weights = scipy.sparse.identity(meshinfo.size())
+    expected_weights = scipy.sparse.identity(meshinfo.size)
     assert np.allclose(expected_weights.todense(), rg.weight_matrix.todense())
