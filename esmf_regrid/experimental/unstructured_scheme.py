@@ -73,7 +73,6 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     # data: a masked array containing the result of the regridding operation
     # src_cube: the source cube which data is regrid from
     # mesh_dim: the dimension on src_cube which the mesh belongs to
-    # mesh: the Mesh (or MeshCoord) object belonging to src_cube
     # grid_x: the coordinate on the target cube representing the x axis
     # grid_y: the coordinate on the target cube representing the y axis
 
@@ -98,8 +97,11 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
             dims = src_cube.coord_dims(coord)
             if hasattr(coord, "mesh") or mesh_dim in dims:
                 continue
+            # Since the mesh will be replaced by a 2D grid, dims which are
+            # beyond the mesh_dim are increased by one.
             dims = [dim if dim < mesh_dim else dim + 1 for dim in dims]
             result_coord = coord.copy()
+            # Add result_coord to the owner of add_method.
             add_method(result_coord, dims)
             # coord_mapping[id(coord)] = result_coord
 
