@@ -167,6 +167,7 @@ class GridInfo:
         field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
         return field
 
+    @property
     def size(self):
         """Return the number of cells in the grid."""
         return len(self.lons) * len(self.lats)
@@ -174,11 +175,26 @@ class GridInfo:
     def _index_offset(self):
         return 1
 
-    def _flatten_array(self, array):
-        return array.flatten(order="F")
+    def _array_to_matrix(self, array):
+        """
+        Reshape data to a form that is compatible with weight matrices.
 
-    def _unflatten_array(self, array):
-        return array.reshape(self.shape, order="F")
+        The data should be presented in the form of a matrix (i.e. 2D) in order
+        to be compatible with the weight matrix.
+        Weight matrices deriving from ESMF use fortran ordering when flattening
+        grids to determine cell indices so we use the same order for reshaping.
+        We then take the transpose so that matrix multiplication happens over
+        the appropriate axes.
+        """
+        return array.reshape(-1, self.size, order="F").T
+
+    def _matrix_to_array(self, array, extra_dims):
+        """
+        Reshape data to restore original dimensions.
+
+        This is the inverse operation of `_array_to_matrix`.
+        """
+        return array.T.reshape(extra_dims + self.shape, order="F")
 
 
 def _get_regrid_weights_dict(src_field, tgt_field):
@@ -250,7 +266,7 @@ class Regridder:
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
-                (self.tgt.size(), self.src.size()),
+                (self.tgt.size, self.src.size),
                 (self.tgt._index_offset(), self.src._index_offset()),
             )
         else:
@@ -258,11 +274,11 @@ class Regridder:
                 raise ValueError(
                     "Precomputed weights must be given as a sparse matrix."
                 )
-            if precomputed_weights.shape != (self.tgt.size(), self.src.size()):
+            if precomputed_weights.shape != (self.tgt.size, self.src.size):
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
                     msg.format(
-                        (self.tgt.size(), self.src.size()),
+                        (self.tgt.size, self.src.size),
                         precomputed_weights.shape,
                     )
                 )
@@ -303,14 +319,16 @@ class Regridder:
                 f"Expected an array whose shape ends in {self.src.shape}, "
                 f"got an array with shape ending in {main_shape}."
             )
-        src_inverted_mask = self.src._flatten_array(~ma.getmaskarray(src_array))
+        extra_shape = array_shape[: -self.src.dims]
+        extra_size = max(1, np.prod(extra_shape))
+        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix * src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones(self.tgt.size())
+        normalisations = np.ones([self.tgt.size, extra_size])
         if norm_type == "fracarea":
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == "dstarea":
@@ -319,8 +337,8 @@ class Regridder:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
-        flat_src = self.src._flatten_array(ma.filled(src_array, 0.0))
+        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
         flat_tgt = self.weight_matrix * flat_src
         flat_tgt = flat_tgt * normalisations
-        tgt_array = self.tgt._unflatten_array(flat_tgt)
+        tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array
