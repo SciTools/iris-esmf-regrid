@@ -69,13 +69,37 @@ def _cube_to_GridInfo(cube):
 
 
 def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
-    # Here we expect the args to be as follows:
-    # data: a masked array containing the result of the regridding operation
-    # src_cube: the source cube which data is regrid from
-    # mesh_dim: the dimension on src_cube which the mesh belongs to
-    # grid_x: the coordinate on the target cube representing the x axis
-    # grid_y: the coordinate on the target cube representing the y axis
+    """
+    Return a new cube for the result of regridding the source cube onto
+    the new grid.
 
+    All the metadata and coordinates of the result cube are copied from
+    the source cube, with two exceptions:
+        - Grid dimension coordinates are copied from the grid cube.
+        - Auxiliary coordinates which span the grid dimensions are
+          ignored.
+
+    Parameters
+    ----------
+    data : array
+        The regridded data as an N-dimensional NumPy array.
+    src_cube : cube
+        The source Cube.
+    mes_dim : int
+        The dimension of the mesh within the source Cube.
+    grid_x : DimCoord
+        The :class:`iris.coords.DimCoord` for the new grid's X
+        coordinate.
+    grid_y : DimCoord
+        The :class:`iris.coords.DimCoord` for the new grid's Y
+        coordinate.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
     new_cube = iris.cube.Cube(data)
 
     # TODO: The following code is rigid with respect to which dimensions
@@ -123,6 +147,13 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 
 
 def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube):
+    """
+    First (setup) part of 'regrid_unstructured_to_rectilinear'.
+    Check inputs and calculate the sparse regrid matrix and related info.
+
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
     # TODO: Perform checks on the arguments. (grid coords are contiguous,
     #  spherical and monotonic. Mesh is defined on faces)
 
@@ -152,6 +183,12 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
 
 
 def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_unstructured_to_rectilinear'.
+
+    Perform the prepared regrid calculation on a single 2d cube.
+
+    """
     mesh_dim, grid_x, grid_y, regridder = regrid_info
 
     # Perform regridding with realised data for the moment. This may be changed
@@ -218,6 +255,7 @@ class MeshToGridESMFRegridder:
     """
     This class provides support for area weighted regridding from
     unstructured cubes to rectilinear cubes.
+
     """
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
