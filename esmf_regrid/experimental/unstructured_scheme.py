@@ -73,15 +73,10 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     # data: a masked array containing the result of the regridding operation
     # src_cube: the source cube which data is regrid from
     # mesh_dim: the dimension on src_cube which the mesh belongs to
-    # mesh: the Mesh (or MeshCoord) object belonging to src_cube
     # grid_x: the coordinate on the target cube representing the x axis
     # grid_y: the coordinate on the target cube representing the y axis
 
     new_cube = iris.cube.Cube(data)
-
-    # TODO: The following code assumes a 1D source cube and mesh_dim = 0.
-    #  This is therefore simple code which should be updated when we start
-    #  supporting the regridding of extra dimensions.
 
     # TODO: The following code is rigid with respect to which dimensions
     #  the x coord and y coord are assigned to. We should decide if it is
@@ -92,8 +87,37 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 
     new_cube.metadata = copy.deepcopy(src_cube.metadata)
 
-    for coord in src_cube.coords(dimensions=()):
-        new_cube.add_aux_coord(coord.copy())
+    # TODO: Handle derived coordinates. The following code is taken from
+    #  iris, the parts dealing with derived coordinates have been
+    #  commented out for the time being.
+    # coord_mapping = {}
+
+    def copy_coords(src_coords, add_method):
+        for coord in src_coords:
+            dims = src_cube.coord_dims(coord)
+            if hasattr(coord, "mesh") or mesh_dim in dims:
+                continue
+            # Since the mesh will be replaced by a 2D grid, dims which are
+            # beyond the mesh_dim are increased by one.
+            dims = [dim if dim < mesh_dim else dim + 1 for dim in dims]
+            result_coord = coord.copy()
+            # Add result_coord to the owner of add_method.
+            add_method(result_coord, dims)
+            # coord_mapping[id(coord)] = result_coord
+
+    copy_coords(src_cube.dim_coords, new_cube.add_dim_coord)
+    copy_coords(src_cube.aux_coords, new_cube.add_aux_coord)
+
+    # for factory in src_cube.aux_factories:
+    #     # TODO: Regrid dependant coordinates which span mesh_dim.
+    #     try:
+    #         result.add_aux_factory(factory.updated(coord_mapping))
+    #     except KeyError:
+    #         msg = (
+    #             "Cannot update aux_factory {!r} because of dropped"
+    #             " coordinates.".format(factory.name())
+    #         )
+    #         warnings.warn(msg)
 
     return new_cube
 
