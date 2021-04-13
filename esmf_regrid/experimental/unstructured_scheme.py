@@ -56,8 +56,7 @@ def _cube_to_GridInfo(cube):
 
 def _regrid_along_dims(regridder, data, src_dim, mdtol):
     # Before regridding, data is transposed to a standard form.
-    # This will be done either with something like the following code
-    # or else done within the regridder by specifying args.
+    # In the future, this may be done within the regridder by specifying args.
     data_dims = len(data.shape)
     new_axes_in = list(range(data_dims))
     new_axes_in.pop(src_dim)
