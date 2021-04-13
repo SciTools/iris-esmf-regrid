@@ -70,9 +70,10 @@ def _cube_to_GridInfo(cube):
 
 def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     """
-    Return a new cube for the result of regridding the source cube onto
-    the new grid.
+    Return a new cube for the result of regridding.
 
+    Returned cube represents the result of regridding the source cube
+    onto the new grid.
     All the metadata and coordinates of the result cube are copied from
     the source cube, with two exceptions:
         - Grid dimension coordinates are copied from the grid cube.
@@ -149,8 +150,8 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
-    Check inputs and calculate the sparse regrid matrix and related info.
 
+    Check inputs and calculate the sparse regrid matrix and related info.
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
@@ -212,10 +213,11 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
     """
+    Regrid unstructured cube onto rectilinear grid.
+
     Return a new cube with data values calculated using the area weighted
     mean of data values from unstructured cube src_cube regridded onto the
     horizontal grid of grid_cube.
-
     This function requires that the horizontal dimension of src_cube is
     described by a 2D mesh with data located on the faces of that mesh.
     This function requires that the horizontal grid of grid_cube is
@@ -253,6 +255,8 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 
 class MeshToGridESMFRegridder:
     """
+    Regridder class for unstructured to rectilinear cubes.
+
     This class provides support for area weighted regridding from
     unstructured cubes to rectilinear cubes.
 
@@ -260,8 +264,7 @@ class MeshToGridESMFRegridder:
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
         """
-        Create an area-weighted regridder for conversions between the source
-        mesh and target grid.
+        Create regridder for conversions between source mesh and target grid.
 
         Parameters
         ----------
@@ -303,6 +306,7 @@ class MeshToGridESMFRegridder:
 
         The given cube must be defined with the same mesh as the source
         cube used to create this MeshToGridESMFRegridder instance.
+
         Parameters
         ----------
         cube : cube
