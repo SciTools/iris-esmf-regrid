@@ -2,7 +2,7 @@
 
 from iris.coords import AuxCoord, DimCoord
 import numpy as np
-import pytset
+import pytest
 
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
