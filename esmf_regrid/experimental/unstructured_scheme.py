@@ -43,7 +43,7 @@ def _cube_to_GridInfo(cube):
     # Ensure coords come from a proper grid.
     assert isinstance(lon, iris.coords.DimCoord)
     assert isinstance(lat, iris.coords.DimCoord)
-    # TODO: accomodate other x/y coords.
+    # TODO: accommodate other x/y coords.
     # TODO: perform checks on lat/lon.
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
     return GridInfo(
@@ -69,13 +69,38 @@ def _cube_to_GridInfo(cube):
 
 
 def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
-    # Here we expect the args to be as follows:
-    # data: a masked array containing the result of the regridding operation
-    # src_cube: the source cube which data is regrid from
-    # mesh_dim: the dimension on src_cube which the mesh belongs to
-    # grid_x: the coordinate on the target cube representing the x axis
-    # grid_y: the coordinate on the target cube representing the y axis
+    """
+    Return a new cube for the result of regridding.
 
+    Returned cube represents the result of regridding the source cube
+    onto the new grid.
+    All the metadata and coordinates of the result cube are copied from
+    the source cube, with two exceptions:
+        - Grid dimension coordinates are copied from the grid cube.
+        - Auxiliary coordinates which span the grid dimensions are
+          ignored.
+
+    Parameters
+    ----------
+    data : array
+        The regridded data as an N-dimensional NumPy array.
+    src_cube : cube
+        The source Cube.
+    mes_dim : int
+        The dimension of the mesh within the source Cube.
+    grid_x : DimCoord
+        The :class:`iris.coords.DimCoord` for the new grid's X
+        coordinate.
+    grid_y : DimCoord
+        The :class:`iris.coords.DimCoord` for the new grid's Y
+        coordinate.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
     new_cube = iris.cube.Cube(data)
 
     # TODO: The following code is rigid with respect to which dimensions
@@ -123,6 +148,13 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 
 
 def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube):
+    """
+    First (setup) part of 'regrid_unstructured_to_rectilinear'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
     # TODO: Perform checks on the arguments. (grid coords are contiguous,
     #  spherical and monotonic. Mesh is defined on faces)
 
@@ -152,6 +184,12 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
 
 
 def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_unstructured_to_rectilinear'.
+
+    Perform the prepared regrid calculation on a single 2d cube.
+
+    """
     mesh_dim, grid_x, grid_y, regridder = regrid_info
 
     # Perform regridding with realised data for the moment. This may be changed
@@ -174,17 +212,70 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
-    """TODO: write docstring."""
+    """
+    Regrid unstructured cube onto rectilinear grid.
+
+    Return a new cube with data values calculated using the area weighted
+    mean of data values from unstructured cube src_cube regridded onto the
+    horizontal grid of grid_cube. The dimension on the cube belonging to
+    the mesh will replaced by the two dimensions associated with the grid.
+    This function requires that the horizontal dimension of src_cube is
+    described by a 2D mesh with data located on the faces of that mesh.
+    This function requires that the horizontal grid of grid_cube is
+    rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
+    This function also requires that the coordinates describing the
+    horizontal grid have bounds.
+
+    Parameters
+    ----------
+    src_cube : cube
+        An unstructured instance of iris.cube.Cube that supplies the data,
+        metadata and coordinates.
+    grid_cube : cube
+        A rectilinear instance of iris.cube.Cube that supplies the desired
+        horizontal grid definition.
+    mdtol : float, optional
+        Tolerance of missing data. The value returned in each element of the
+        returned cube's data array will be masked if the fraction of masked
+        data in the overlapping cells of the source cube exceeds mdtol. This
+        fraction is calculated based on the area of masked cells within each
+        target cell. mdtol=0 means no missing data is tolerated while mdtol=1
+        will mean the resulting element will be masked if and only if all the
+        overlapping cells of the source cube are masked. Defaults to 0.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(src_cube, grid_cube)
     result = _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
 
 
 class MeshToGridESMFRegridder:
-    """TODO: write docstring."""
+    """Regridder class for unstructured to rectilinear cubes."""
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
-        """TODO: write docstring."""
+        """
+        Create regridder for conversions between source mesh and target grid.
+
+        Parameters
+        ----------
+        src_grid_cube : cube
+            The unstructured iris cube providing the source grid.
+        target_grid_cube : cube
+            The rectilinear iris cube providing the target grid.
+        mdtol : float, optional
+            Tolerance of missing data. The value returned in each element of
+            the returned array will be masked if the fraction of masked data
+            exceeds mdtol. mdtol=0 means no missing data is tolerated while
+            mdtol=1 will mean the resulting element will be masked if and only
+            if all the contributing elements of data are masked.
+            Defaults to 1.
+
+        """
         # TODO: Record information about the identity of the mesh. This would
         #  typically be a copy of the mesh, though given the potential size of
         #  the mesh, it may make sense to either retain a reference to the actual
@@ -205,7 +296,25 @@ class MeshToGridESMFRegridder:
         _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
 
     def __call__(self, cube):
-        """TODO: write docstring."""
+        """
+        Regrid this cube onto the target grid of this regridder instance.
+
+        The given cube must be defined with the same mesh as the source
+        cube used to create this MeshToGridESMFRegridder instance.
+
+        Parameters
+        ----------
+        cube : cube
+            A iris.cube.Cube instance to be regridded.
+
+        Returns
+        -------
+            A cube defined with the horizontal dimensions of the target
+            and the other dimensions from this cube. The data values of
+            this cube will be converted to values on the new grid using
+            area-weighted regridding via ESMF generated weights.
+
+        """
         mesh = cube.mesh
         # TODO: Ensure cube has the same mesh as that of the recorded mesh.
         #  For the time being, we simply check that the mesh exists.

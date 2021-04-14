@@ -2,6 +2,7 @@
 
 from iris.coords import AuxCoord, DimCoord
 import numpy as np
+import pytest
 
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
@@ -56,3 +57,23 @@ def test_flat_cubes():
     # Check metadata and scalar coords.
     expected_cube.data = result.data
     assert expected_cube == result
+
+
+def test_invalid_mdtol():
+    """
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Checks that an error is raised when mdtol is out of range.
+    """
+    src = _flat_mesh_cube()
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    with pytest.raises(ValueError):
+        _ = MeshToGridESMFRegridder(src, tgt, mdtol=2)
+    with pytest.raises(ValueError):
+        _ = MeshToGridESMFRegridder(src, tgt, mdtol=-1)
