@@ -61,8 +61,9 @@ def test_flat_cubes():
 
 def test_invalid_mdtol():
     """
-    Test that initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`
-    raises an error when mdtol is out of range.
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Checks that an error is raised when mdtol is out of range.
     """
     src = _flat_mesh_cube()
 
