@@ -217,7 +217,8 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 
     Return a new cube with data values calculated using the area weighted
     mean of data values from unstructured cube src_cube regridded onto the
-    horizontal grid of grid_cube.
+    horizontal grid of grid_cube. The dimension on the cube belonging to
+    the mesh will replaced by the two dimensions associated with the grid.
     This function requires that the horizontal dimension of src_cube is
     described by a 2D mesh with data located on the faces of that mesh.
     This function requires that the horizontal grid of grid_cube is
@@ -256,10 +257,6 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 class MeshToGridESMFRegridder:
     """
     Regridder class for unstructured to rectilinear cubes.
-
-    This class provides support for area weighted regridding from
-    unstructured cubes to rectilinear cubes.
-
     """
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
