@@ -255,9 +255,7 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 
 
 class MeshToGridESMFRegridder:
-    """
-    Regridder class for unstructured to rectilinear cubes.
-    """
+    """Regridder class for unstructured to rectilinear cubes."""
 
     def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
         """
