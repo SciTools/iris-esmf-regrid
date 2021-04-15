@@ -63,8 +63,7 @@ def _regrid_along_dims(regridder, data, src_dim, mdtol):
     result = regridder.regrid(data, mdtol=mdtol)
 
     # Move grid axes back into the original position of the mesh.
-    result = np.moveaxis(result, -1, src_dim)
-    result = np.moveaxis(result, -1, src_dim)
+    result = np.moveaxis(result, [-2, -1], [src_dim, src_dim + 1])
 
     return result
 
