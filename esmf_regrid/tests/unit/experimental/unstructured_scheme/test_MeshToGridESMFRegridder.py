@@ -78,6 +78,7 @@ def test_multidim_cubes():
 
     src_data = np.empty([t, mesh_length, h])
     src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, :]
+    mesh_cube = Cube(src_data)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
     mesh_cube.add_aux_coord(mesh_coord_x, 1)
     mesh_cube.add_aux_coord(mesh_coord_y, 1)
