@@ -6,8 +6,6 @@ import iris
 from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
-# from numpy import ma
-
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
@@ -55,17 +53,19 @@ def _cube_to_GridInfo(cube):
     )
 
 
-# def _regrid_along_dims(regridder, data, src_dim, mdtol):
-#     # Before regridding, data is transposed to a standard form.
-#     # This will be done either with something like the following code
-#     # or else done within the regridder by specifying args.
-#     # new_axes = list(range(len(data.shape)))
-#     # new_axes.pop(src_dim)
-#     # new_axes.append(src_dim)
-#     # data = ma.transpose(data, axes=new_axes)
-#
-#     result = regridder.regrid(data, mdtol=mdtol)
-#     return result
+def _regrid_along_mesh_dim(regridder, data, mesh_dim, mdtol):
+    # Before regridding, data is transposed to a standard form.
+    # In the future, this may be done within the regridder by specifying args.
+
+    # Move the mesh axis to be the last dimension.
+    data = np.moveaxis(data, mesh_dim, -1)
+
+    result = regridder.regrid(data, mdtol=mdtol)
+
+    # Move grid axes back into the original position of the mesh.
+    result = np.moveaxis(result, [-2, -1], [mesh_dim, mesh_dim + 1])
+
+    return result
 
 
 def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
@@ -194,9 +194,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
     # Perform regridding with realised data for the moment. This may be changed
     # in future to handle src_cube.lazy_data.
-    new_data = regridder.regrid(src_cube.data, mdtol=mdtol)
-    # When we want to handle extra dimensions, we may want to do something like:
-    # new_data = _regrid_along_dims(src_cube.data, mesh_dim, mdtol)
+    new_data = _regrid_along_mesh_dim(regridder, src_cube.data, mesh_dim, mdtol)
 
     new_cube = _create_cube(
         new_data,
