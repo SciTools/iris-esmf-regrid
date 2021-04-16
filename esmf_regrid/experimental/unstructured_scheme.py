@@ -53,17 +53,17 @@ def _cube_to_GridInfo(cube):
     )
 
 
-def _regrid_along_dims(regridder, data, src_dim, mdtol):
+def _regrid_along_mesh_dim(regridder, data, mesh_dim, mdtol):
     # Before regridding, data is transposed to a standard form.
     # In the future, this may be done within the regridder by specifying args.
 
     # Move the mesh axis to be the last dimension.
-    data = np.moveaxis(data, src_dim, -1)
+    data = np.moveaxis(data, mesh_dim, -1)
 
     result = regridder.regrid(data, mdtol=mdtol)
 
     # Move grid axes back into the original position of the mesh.
-    result = np.moveaxis(result, [-2, -1], [src_dim, src_dim + 1])
+    result = np.moveaxis(result, [-2, -1], [mesh_dim, mesh_dim + 1])
 
     return result
 
@@ -194,7 +194,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
     # Perform regridding with realised data for the moment. This may be changed
     # in future to handle src_cube.lazy_data.
-    new_data = _regrid_along_dims(regridder, src_cube.data, mesh_dim, mdtol)
+    new_data = _regrid_along_mesh_dim(regridder, src_cube.data, mesh_dim, mdtol)
 
     new_cube = _create_cube(
         new_data,

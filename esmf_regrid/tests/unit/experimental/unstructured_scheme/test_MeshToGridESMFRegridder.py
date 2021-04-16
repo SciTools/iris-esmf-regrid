@@ -76,7 +76,8 @@ def test_multidim_cubes():
     height = DimCoord(np.arange(h), standard_name="height")
     time = DimCoord(np.arange(t), standard_name="time")
 
-    mesh_cube = Cube(np.zeros([t, mesh_length, h]))
+    src_data = np.empty([t, mesh_length, h])
+    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, :]
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
     mesh_cube.add_aux_coord(mesh_coord_x, 1)
     mesh_cube.add_aux_coord(mesh_coord_y, 1)
@@ -95,7 +96,8 @@ def test_multidim_cubes():
     result = regridder(mesh_cube)
 
     # Lenient check for data.
-    expected_data = np.zeros([t, n_lats, n_lons, h])
+    expected_data = np.empty([t, n_lats, n_lons, h])
+    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, np.newaxis, :]
     assert np.allclose(expected_data, result.data)
 
     expected_cube = Cube(expected_data)
