@@ -36,6 +36,7 @@ env:
   IRIS_TEST_DATA_VERSION: "2.2"
   # Base directory for the iris-test-data.
   IRIS_TEST_DATA_DIR: ${HOME}/iris-test-data
+  OVERRIDE_TEST_DATA_REPOSITORY: ${IRIS_TEST_DATA_DIR}/test_data
 
 
 #
@@ -118,5 +119,4 @@ test_task:
   << : *IRIS_TEST_DATA_TEMPLATE
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-    - export OVERRIDE_TEST_DATA_REPOSITORY=${IRIS_TEST_DATA_DIR}
     - nox --session tests -- --verbose
