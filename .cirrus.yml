@@ -32,6 +32,28 @@ env:
   CONDA_CACHE_PACKAGES: "nox pip pyyaml"
   # Use specific custom iris source feature branch.
   IRIS_SOURCE: "github:mesh-data-model"
+  # Git commit hash for iris test data.
+  IRIS_TEST_DATA_VERSION: "2.2"
+  # Base directory for the iris-test-data.
+  IRIS_TEST_DATA_DIR: ${HOME}/iris-test-data
+  # Iris config file location.
+  SITE_CFG: ${CIRRUS_WORKING_DIR}/lib/iris/etc/site.cfg
+
+
+#
+# YAML alias for the iris-test-data cache.
+#
+iris_test_data_template: &IRIS_TEST_DATA_TEMPLATE
+  data_cache:
+    folder: ${IRIS_TEST_DATA_DIR}
+    fingerprint_script:
+      - echo "iris-test-data v${IRIS_TEST_DATA_VERSION}"
+    populate_script:
+      - wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
+      - unzip -q iris-test-data.zip
+      - mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_DIR}
+      - echo "[Resources]" > ${SITE_CFG}
+      - echo "test_data_dir = ${IRIS_TEST_DATA_DIR}/test_data" >> ${SITE_CFG}
 
 
 #
@@ -97,6 +119,7 @@ test_task:
       - echo "${CIRRUS_TASK_NAME}"
       - echo "${NOX_CACHE_BUILD}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
+  << : *IRIS_TEST_DATA_TEMPLATE
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session tests -- --verbose
