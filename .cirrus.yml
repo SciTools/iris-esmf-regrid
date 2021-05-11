@@ -36,8 +36,6 @@ env:
   IRIS_TEST_DATA_VERSION: "2.2"
   # Base directory for the iris-test-data.
   IRIS_TEST_DATA_DIR: ${HOME}/iris-test-data
-  # Iris config file location.
-  SITE_CFG: ${CIRRUS_WORKING_DIR}/lib/iris/etc/site.cfg
 
 
 #
@@ -52,8 +50,7 @@ iris_test_data_template: &IRIS_TEST_DATA_TEMPLATE
       - wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
       - unzip -q iris-test-data.zip
       - mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_DIR}
-      - echo "[Resources]" > ${SITE_CFG}
-      - echo "test_data_dir = ${IRIS_TEST_DATA_DIR}/test_data" >> ${SITE_CFG}
+      - export OVERRIDE_TEST_DATA_REPOSITORY=${IRIS_TEST_DATA_DIR}
 
 
 #
