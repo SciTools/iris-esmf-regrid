@@ -20,12 +20,16 @@ def test_real_data():
     """
     # Load source cube.
     test_data_dir = iris.config.TEST_DATA_DIR
-    src_fn = os.path.join(test_data_dir, "NetCDF", "unstructured_grid", "lfric_surface_mean.nc")
+    src_fn = os.path.join(
+        test_data_dir, "NetCDF", "unstructured_grid", "lfric_surface_mean.nc"
+    )
     with PARSE_UGRID_ON_LOAD.context():
         src = iris.load_cube(src_fn, "rainfall_flux")
 
     # Load target grid cube.
-    tgt_fn = os.path.join(test_data_dir, "NetCDF", "global", "xyt", "SMALL_hires_wind_u_for_ipcc4.nc")
+    tgt_fn = os.path.join(
+        test_data_dir, "NetCDF", "global", "xyt", "SMALL_hires_wind_u_for_ipcc4.nc"
+    )
     tgt = iris.load_cube(tgt_fn)
 
     # Perform regridding.
