@@ -39,6 +39,7 @@ LOCKFILE_PLATFORM = "linux-64"
 def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
     """
     Return a constructed lockfile path for the relevant python string e.g ``py38``.
+
     Optionally retain the ``{platform}`` placeholder to support conda-lock's
     ``--filename-template``.
 
@@ -57,7 +58,7 @@ def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
 
 def _session_lockfile(session: nox.sessions.Session) -> Path:
     """Return the path of the session lockfile."""
-    return _lockfile_path(py_string=session.python.replace(".", ""))
+    return _lockfile_path(py_string=f"py{session.python.replace('.', '')}")
 
 
 def _session_cachefile(session: nox.sessions.Session) -> Path:
@@ -68,14 +69,12 @@ def _session_cachefile(session: nox.sessions.Session) -> Path:
 
 
 def _venv_populated(session: nox.sessions.Session) -> bool:
-    """Returns True if the Conda venv has been created and the list of
-    packages in the lockfile installed."""
+    """Return True if the Conda venv has been created and the list of packages in the lockfile installed."""
     return _session_cachefile(session).is_file()
 
 
 def _venv_changed(session: nox.sessions.Session) -> bool:
-    """Returns True if the installed session is different to that specified
-    in the lockfile."""
+    """Return True if the installed session is different to that specified in the lockfile."""
     result = False
     if _venv_populated(session):
         with _session_lockfile(session).open("rb") as lockfile:
