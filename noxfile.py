@@ -28,9 +28,6 @@ PY_VER = os.environ.get("PY_VER", ["3.6", "3.7", "3.8"])
 #: Cirrus-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
 
-#: The package's standard Iris checkout to test against.
-IRIS_SOURCE_DEFAULT = "github:master"
-
 #: Cirrus-CI environment variable hook.
 IRIS_SOURCE = os.environ.get("IRIS_SOURCE", None)
 
@@ -60,7 +57,7 @@ def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
 
 def _session_lockfile(session: nox.sessions.Session) -> Path:
     """Return the path of the session lockfile."""
-    return _lockfile_path(py_string=session.python.replace('.', ''))
+    return _lockfile_path(py_string=session.python.replace(".", ""))
 
 
 def _session_cachefile(session: nox.sessions.Session) -> Path:
@@ -126,6 +123,14 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 
     """
     result = IRIS_SOURCE
+    if not result:
+        # .cirrus.yml sets IRIS_SOURCE. Need to fetch the value (if any) when
+        # called outside Cirrus (e.g. user, ASV).
+        # .cirrus.yml = single-source-of-truth.
+        with Path(".cirrus.yml").open("r") as file:
+            cirrus_config = yaml.load(file, Loader=yaml.FullLoader)
+        result = cirrus_config["env"].get("IRIS_SOURCE", None)
+
     # The CLI overrides the environment variable.
     for arg in session.posargs:
         if arg.startswith("--iris="):
@@ -186,8 +191,6 @@ def _prepare_env(session: nox.sessions.Session) -> None:
         session.cd(str(cwd))
         session.install("--no-deps", "--editable", str(iris_dir))
 
-
-
     # Determine whether verbose diagnostics have been requested
     # from the command line.
     verbose = "-v" in session.posargs or "--verbose" in session.posargs
@@ -225,8 +228,12 @@ def update_lockfiles(session: nox.sessions.Session):
 
         # Generate the appropriate conda-lock template name, keeping the {platform}
         # placeholder to support conda-lock's internals.
-        filename_template = _lockfile_path(python_string, platform_placeholder=True)
-        lockfile_path = _lockfile_path(python_string, platform_placeholder=False)
+        filename_template = _lockfile_path(
+            python_string, platform_placeholder=True
+        )
+        lockfile_path = _lockfile_path(
+            python_string, platform_placeholder=False
+        )
         # Create the parent directory if it doesn't already exist.
         try:
             filename_template.parent.mkdir()
@@ -261,8 +268,13 @@ def update_lockfiles(session: nox.sessions.Session):
                 yaml.dump(reqs, file)
 
             iris_req_name = f"{python_string}.yml"
-            iris_req_url = f"https://raw.githubusercontent.com/SciTools/iris/{iris_artifact}/requirements/ci/{iris_req_name}"
-            iris_req_file = (tmp_dir / iris_req_name).with_stem(f"{python_string}-iris")
+            iris_req_url = (
+                f"https://raw.githubusercontent.com/SciTools/iris/"
+                f"{iris_artifact}/requirements/ci/{iris_req_name}"
+            )
+            iris_req_file = (tmp_dir / iris_req_name).with_stem(
+                f"{python_string}-iris"
+            )
             iris_req = urlopen(iris_req_url).read()
             with iris_req_file.open("wb") as file:
                 file.write(iris_req)
