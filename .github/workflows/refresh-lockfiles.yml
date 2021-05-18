@@ -1,0 +1,42 @@
+# This workflow periodically creates new environment lock files based on the newest
+# available packages and dependencies.
+#
+# Environment specifications are given as conda environment.yml files found in
+# ``requirements/py**.yml``.  These state the packages required, the conda channels
+# that the packages will be pulled from, and any versions of packages that need to be
+# pinned at specific versions.
+#
+# For environments that have changed, a pull request will be made and submitted
+# to the master branch.
+
+name: Refresh Lockfiles
+
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run once a week on a Saturday night.
+    - cron: 1 0 * * 6
+
+
+jobs:
+
+  gen_lockfiles:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: install nox
+        run: |
+          source $CONDA/bin/activate base
+          conda install -y -c conda-forge nox
+      - name: generate lockfiles
+        run: nox --session update_lockfiles
+      - name: create pull request
+        uses: peter-evans/create-pull-request@052fc72b4198ba9fbc81b818c6e1859f747d49a8
+        with:
+          commit-message: Updated environment lockfiles
+          delete-branch: true
+          branch: auto-update-lockfiles
+          title: Update CI environment lockfiles
+          body: |
+            Lockfiles updated to the latest resolvable environment.
