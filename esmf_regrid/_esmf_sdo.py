@@ -3,12 +3,19 @@
 
 from abc import ABC, abstractmethod
 
-import ESMF
 import cartopy.crs as ccrs
+import ESMF
 import numpy as np
 
 
 class SDO(ABC):
+    """
+    Abstract base class for handling spatial discretisation objects.
+
+    This contains shared things for representing the three spatial discretisation
+    objects supported by ESMPy, Grids, Meshes, and LocStreams.
+    """
+
     def __init__(self, shape, index_offset, field_kwargs):
         self._shape = shape
         self._index_offset = index_offset
@@ -26,10 +33,12 @@ class SDO(ABC):
 
     @property
     def shape(self):
+        """Return shape."""
         return self._shape
 
     @property
     def dims(self):
+        """Return number of dimensions."""
         return len(self._shape)
 
     @property
@@ -39,6 +48,7 @@ class SDO(ABC):
 
     @property
     def index_offset(self):
+        """Return the index offset."""
         return self._index_offset
 
     def _array_to_matrix(self, array):
