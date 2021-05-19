@@ -83,7 +83,7 @@ class Regridder:
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
                 (self.tgt.size, self.src.size),
-                (self.tgt._index_offset(), self.src._index_offset()),
+                (self.tgt.index_offset, self.src.index_offset),
             )
         else:
             if not scipy.sparse.isspmatrix(precomputed_weights):

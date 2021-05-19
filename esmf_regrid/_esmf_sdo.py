@@ -1,11 +1,69 @@
 # -*- coding: utf-8 -*-
+"""Provides representations of ESMF's Spatial Discretisation Objects."""
+
+from abc import ABC, abstractmethod
 
 import ESMF
 import cartopy.crs as ccrs
 import numpy as np
 
 
-class GridInfo:
+class SDO(ABC):
+    def __init__(self, shape, index_offset, field_kwargs):
+        self._shape = shape
+        self._index_offset = index_offset
+        self._field_kwargs = field_kwargs
+
+    @abstractmethod
+    def _make_esmf_sdo(self):
+        pass
+
+    def make_esmf_field(self):
+        """Return an ESMF field representing the grid."""
+        grid = self._make_esmf_sdo()
+        field = ESMF.Field(grid, **self._field_kwargs)
+        return field
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def dims(self):
+        return len(self._shape)
+
+    @property
+    def size(self):
+        """Return the number of cells in the grid."""
+        return np.prod(self._shape)
+
+    @property
+    def index_offset(self):
+        return self._index_offset
+
+    def _array_to_matrix(self, array):
+        """
+        Reshape data to a form that is compatible with weight matrices.
+
+        The data should be presented in the form of a matrix (i.e. 2D) in order
+        to be compatible with the weight matrix.
+        Weight matrices deriving from ESMF use fortran ordering when flattening
+        grids to determine cell indices so we use the same order for reshaping.
+        We then take the transpose so that matrix multiplication happens over
+        the appropriate axes.
+        """
+        return array.reshape(-1, self.size, order="F").T
+
+    def _matrix_to_array(self, array, extra_dims):
+        """
+        Reshape data to restore original dimensions.
+
+        This is the inverse operation of `_array_to_matrix`.
+        """
+        return array.T.reshape(extra_dims + self._shape, order="F")
+
+
+class GridInfo(SDO):
     """
     Class for handling structured grids.
 
@@ -70,11 +128,14 @@ class GridInfo:
             self.crs = crs
         self.circular = circular
         self.areas = areas
-        self.shape = (len(lats), len(lons))
-        self.dims = 2
+        super().__init__(
+            shape=(len(lats), len(lons)),
+            index_offset=1,
+            field_kwargs={"staggerloc": ESMF.StaggerLoc.CENTER},
+        )
 
     def _as_esmf_info(self):
-        shape = np.array(self.shape)
+        shape = np.array(self._shape)
 
         if self.circular:
             adjustedlonbounds = self.lonbounds[:-1]
@@ -107,7 +168,7 @@ class GridInfo:
         )
         return info
 
-    def _make_esmf_grid(self):
+    def _make_esmf_sdo(self):
         info = self._as_esmf_info()
         (
             shape,
@@ -152,38 +213,3 @@ class GridInfo:
             grid_areas[:] = areas.T
 
         return grid
-
-    def make_esmf_field(self):
-        """Return an ESMF field representing the grid."""
-        grid = self._make_esmf_grid()
-        field = ESMF.Field(grid, staggerloc=ESMF.StaggerLoc.CENTER)
-        return field
-
-    @property
-    def size(self):
-        """Return the number of cells in the grid."""
-        return len(self.lons) * len(self.lats)
-
-    def _index_offset(self):
-        return 1
-
-    def _array_to_matrix(self, array):
-        """
-        Reshape data to a form that is compatible with weight matrices.
-
-        The data should be presented in the form of a matrix (i.e. 2D) in order
-        to be compatible with the weight matrix.
-        Weight matrices deriving from ESMF use fortran ordering when flattening
-        grids to determine cell indices so we use the same order for reshaping.
-        We then take the transpose so that matrix multiplication happens over
-        the appropriate axes.
-        """
-        return array.reshape(-1, self.size, order="F").T
-
-    def _matrix_to_array(self, array, extra_dims):
-        """
-        Reshape data to restore original dimensions.
-
-        This is the inverse operation of `_array_to_matrix`.
-        """
-        return array.T.reshape(extra_dims + self.shape, order="F")
