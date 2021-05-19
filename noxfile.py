@@ -51,9 +51,7 @@ def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
         platform = "{platform}"
     else:
         platform = LOCKFILE_PLATFORM
-    lockfile_name = name_template.format(
-        py_string=py_string, platform=platform
-    )
+    lockfile_name = name_template.format(py_string=py_string, platform=platform)
     return dir / lockfile_name
 
 
@@ -228,12 +226,8 @@ def update_lockfiles(session: nox.sessions.Session):
 
         # Generate the appropriate conda-lock template name, keeping the {platform}
         # placeholder to support conda-lock's internals.
-        filename_template = _lockfile_path(
-            python_string, platform_placeholder=True
-        )
-        lockfile_path = _lockfile_path(
-            python_string, platform_placeholder=False
-        )
+        filename_template = _lockfile_path(python_string, platform_placeholder=True)
+        lockfile_path = _lockfile_path(python_string, platform_placeholder=False)
         # Create the parent directory if it doesn't already exist.
         try:
             filename_template.parent.mkdir()
@@ -261,9 +255,7 @@ def update_lockfiles(session: nox.sessions.Session):
             with req_file_local.open("r+") as file:
                 reqs = yaml.load(file, Loader=yaml.FullLoader)
                 reqs["dependencies"] = [
-                    spec
-                    for spec in reqs["dependencies"]
-                    if not spec.startswith("iris")
+                    spec for spec in reqs["dependencies"] if not spec.startswith("iris")
                 ]
                 yaml.dump(reqs, file)
 
@@ -272,9 +264,7 @@ def update_lockfiles(session: nox.sessions.Session):
                 f"https://raw.githubusercontent.com/SciTools/iris/"
                 f"{iris_artifact}/requirements/ci/{iris_req_name}"
             )
-            iris_req_file = (tmp_dir / iris_req_name).with_stem(
-                f"{python_string}-iris"
-            )
+            iris_req_file = (tmp_dir / iris_req_name).with_stem(f"{python_string}-iris")
             iris_req = urlopen(iris_req_url).read()
             with iris_req_file.open("wb") as file:
                 file.write(iris_req)
