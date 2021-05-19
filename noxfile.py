@@ -9,6 +9,7 @@ import hashlib
 import os
 from pathlib import Path
 import shutil
+from typing import Callable
 from urllib.request import urlopen
 
 import nox
@@ -50,13 +51,20 @@ def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
         platform = "{platform}"
     else:
         platform = LOCKFILE_PLATFORM
-    lockfile_name = name_template.format(py_string=py_string, platform=platform)
+    lockfile_name = name_template.format(
+        py_string=py_string, platform=platform
+    )
     return dir / lockfile_name
 
 
 def _session_lockfile(session: nox.sessions.Session) -> Path:
     """Return the path of the session lockfile."""
     return _lockfile_path(py_string=f"py{session.python.replace('.', '')}")
+
+
+def _file_content(file_path: Path) -> str:
+    with file_path.open("r") as file:
+        return file.read()
 
 
 def _session_cachefile(session: nox.sessions.Session) -> Path:
@@ -75,15 +83,13 @@ def _venv_changed(session: nox.sessions.Session) -> bool:
     """Return True if the installed session is different to that specified in the lockfile."""
     result = False
     if _venv_populated(session):
-        with _session_lockfile(session).open("rb") as lockfile:
-            expected = hashlib.sha256(lockfile.read()).hexdigest()
-        with _session_cachefile(session).open("r") as cachefile:
-            actual = cachefile.read()
+        expected = _file_content(_session_lockfile(session))
+        actual = _file_content(_session_cachefile(session))
         result = actual != expected
     return result
 
 
-def _cache_venv(session: nox.sessions.Session) -> None:
+def _install_and_cache_venv(session: nox.sessions.Session) -> None:
     """
     Cache the nox session environment.
 
@@ -96,10 +102,10 @@ def _cache_venv(session: nox.sessions.Session) -> None:
         A `nox.sessions.Session` object.
 
     """
-    with _session_lockfile(session).open("rb") as lockfile:
-        hexdigest = hashlib.sha256(lockfile.read()).hexdigest()
+    lockfile = _session_lockfile(session)
+    session.conda_install(f"--file={lockfile}")
     with _session_cachefile(session).open("w") as cachefile:
-        cachefile.write(hexdigest)
+        cachefile.write(_file_content(lockfile))
 
 
 def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
@@ -150,15 +156,13 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 
 
 def _prepare_env(session: nox.sessions.Session) -> None:
-    lockfile = _session_lockfile(session)
     venv_dir = session.virtualenv.location_name
 
     if not _venv_populated(session):
         # Environment has been created but packages not yet installed.
         # Populate the environment from the lockfile.
         logger.debug(f"Populating conda env: {venv_dir}")
-        session.conda_install(f"--file={lockfile}")
-        _cache_venv(session)
+        _install_and_cache_venv(session)
 
     elif _venv_changed(session):
         # Destroy the environment and rebuild it.
@@ -166,9 +170,8 @@ def _prepare_env(session: nox.sessions.Session) -> None:
         _reuse_original = session.virtualenv.reuse_existing
         session.virtualenv.reuse_existing = False
         session.virtualenv.create()
-        session.conda_install(f"--file={lockfile}")
+        _install_and_cache_venv(session)
         session.virtualenv.reuse_existing = _reuse_original
-        _cache_venv(session)
 
     logger.debug(f"Environment up to date: {venv_dir}")
 
@@ -225,8 +228,12 @@ def update_lockfiles(session: nox.sessions.Session):
 
         # Generate the appropriate conda-lock template name, keeping the {platform}
         # placeholder to support conda-lock's internals.
-        filename_template = _lockfile_path(python_string, platform_placeholder=True)
-        lockfile_path = _lockfile_path(python_string, platform_placeholder=False)
+        filename_template = _lockfile_path(
+            python_string, platform_placeholder=True
+        )
+        lockfile_path = _lockfile_path(
+            python_string, platform_placeholder=False
+        )
         # Create the parent directory if it doesn't already exist.
         try:
             filename_template.parent.mkdir()
@@ -254,7 +261,9 @@ def update_lockfiles(session: nox.sessions.Session):
             with req_file_local.open("r+") as file:
                 reqs = yaml.load(file, Loader=yaml.FullLoader)
                 reqs["dependencies"] = [
-                    spec for spec in reqs["dependencies"] if not spec.startswith("iris")
+                    spec
+                    for spec in reqs["dependencies"]
+                    if not spec.startswith("iris")
                 ]
                 yaml.dump(reqs, file)
 
@@ -263,7 +272,9 @@ def update_lockfiles(session: nox.sessions.Session):
                 f"https://raw.githubusercontent.com/SciTools/iris/"
                 f"{iris_artifact}/requirements/ci/{iris_req_name}"
             )
-            iris_req_file = (tmp_dir / iris_req_name).with_stem(f"{python_string}-iris")
+            iris_req_file = (tmp_dir / iris_req_name).with_stem(
+                f"{python_string}-iris"
+            )
             iris_req = urlopen(iris_req_url).read()
             with iris_req_file.open("wb") as file:
                 file.write(iris_req)
