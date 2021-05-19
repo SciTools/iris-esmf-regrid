@@ -5,11 +5,9 @@ For further details, see https://nox.thea.codes/en/stable/#
 
 """
 
-import hashlib
 import os
 from pathlib import Path
 import shutil
-from typing import Callable
 from urllib.request import urlopen
 
 import nox
