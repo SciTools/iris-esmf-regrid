@@ -26,7 +26,7 @@ class SDO(ABC):
         pass
 
     def make_esmf_field(self):
-        """Return an ESMF field representing the grid."""
+        """Return an ESMF field representing the spatial discretisation object."""
         grid = self._make_esmf_sdo()
         field = ESMF.Field(grid, **self._field_kwargs)
         return field
