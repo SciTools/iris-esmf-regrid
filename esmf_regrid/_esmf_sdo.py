@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Provides representations of ESMF's Spatial Discretisation Objects."""
 
 from abc import ABC, abstractmethod
@@ -27,8 +26,8 @@ class SDO(ABC):
 
     def make_esmf_field(self):
         """Return an ESMF field representing the spatial discretisation object."""
-        grid = self._make_esmf_sdo()
-        field = ESMF.Field(grid, **self._field_kwargs)
+        sdo = self._make_esmf_sdo()
+        field = ESMF.Field(sdo, **self._field_kwargs)
         return field
 
     @property
@@ -43,7 +42,7 @@ class SDO(ABC):
 
     @property
     def size(self):
-        """Return the number of cells in the grid."""
+        """Return the number of cells in the sdo."""
         return np.prod(self._shape)
 
     @property
