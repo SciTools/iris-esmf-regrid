@@ -35,11 +35,16 @@ def _cube_to_GridInfo(cube):
     # TODO: accommodate other x/y coords.
     # TODO: perform checks on lat/lon.
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
+    if cube.coord_system() is None:
+        crs = None
+    else:
+        crs = cube.coord_system().as_cartopy_crs()
     return GridInfo(
         lon.points,
         lat.points,
         _bounds_cf_to_simple_1d(lon.bounds),
         _bounds_cf_to_simple_1d(lat.bounds),
+        crs=crs,
         circular=lon.circular,
     )
 
