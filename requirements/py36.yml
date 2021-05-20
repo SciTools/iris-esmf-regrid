@@ -20,5 +20,6 @@ dependencies:
   - flake8
   - flake8-docstrings
   - flake8-import-order
+  - pip
   - pre-commit
   - pytest
