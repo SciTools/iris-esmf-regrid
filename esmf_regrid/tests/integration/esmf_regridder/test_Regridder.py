@@ -32,7 +32,7 @@ def test_esmpy_normalisation():
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
     src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
-    src_esmpy_grid = src_grid._make_esmf_grid()
+    src_esmpy_grid = src_grid._make_esmf_sdo()
     src_esmpy_grid.add_item(ESMF.GridItem.MASK, staggerloc=ESMF.StaggerLoc.CENTER)
     src_esmpy_grid.mask[0][...] = src_mask
     src_field = ESMF.Field(src_esmpy_grid)

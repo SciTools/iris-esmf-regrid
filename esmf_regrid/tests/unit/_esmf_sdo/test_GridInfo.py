@@ -1,8 +1,8 @@
-"""Unit tests for :class:`esmf_regrid.esmf_regridder.GridInfo`."""
+"""Unit tests for :class:`esmf_regrid._esmf_sdo.GridInfo`."""
 
 import numpy as np
 
-from esmf_regrid.esmf_regridder import GridInfo
+from esmf_regrid._esmf_sdo import GridInfo
 import esmf_regrid.tests as tests
 
 
@@ -23,13 +23,13 @@ def _make_small_grid_args():
 
 
 def test_make_grid():
-    """Basic test for :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
+    """Basic test for :meth:`~esmf_regrid._esmf_sdo.GridInfo.make_esmf_field`."""
     lon, lat, lon_bounds, lat_bounds = _make_small_grid_args()
     grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
     esmf_grid = grid.make_esmf_field()
     esmf_grid.data[:] = 0
 
-    relative_path = ("esmf_regridder", "test_GridInfo", "small_grid.txt")
+    relative_path = ("_esmf_sdo", "test_GridInfo", "small_grid.txt")
     fname = tests.get_result_path(relative_path)
     with open(fname) as fi:
         expected_repr = fi.read()

@@ -3,8 +3,10 @@
 import ESMF
 import numpy as np
 
+from .._esmf_sdo import SDO
 
-class MeshInfo:
+
+class MeshInfo(SDO):
     """
     Class for handling unstructured meshes.
 
@@ -59,8 +61,11 @@ class MeshInfo:
         self.nsi = node_start_index
         self.esi = elem_start_index
         self.areas = areas
-        self.shape = (len(face_node_connectivity),)
-        self.dims = 1
+        super().__init__(
+            shape=(len(face_node_connectivity),),
+            index_offset=self.esi,
+            field_kwargs={"meshloc": ESMF.MeshLoc.ELEMENT},
+        )
 
     def _as_esmf_info(self):
         # ESMF uses a slightly different format to UGRID,
@@ -87,7 +92,7 @@ class MeshInfo:
         )
         return result
 
-    def _make_esmf_mesh(self):
+    def _make_esmf_sdo(self):
         info = self._as_esmf_info()
         (
             num_node,
@@ -109,38 +114,3 @@ class MeshInfo:
         emesh.add_nodes(num_node, nodeId, nodeCoord, nodeOwner)
         emesh.add_elements(num_elem, elemId, elemType, elemConn, element_area=areas)
         return emesh
-
-    def make_esmf_field(self):
-        """Return an ESMF field representing the grid."""
-        mesh = self._make_esmf_mesh()
-        field = ESMF.Field(mesh, meshloc=ESMF.MeshLoc.ELEMENT)
-        return field
-
-    @property
-    def size(self):
-        """Return the number of cells in the mesh."""
-        return self.shape[0]
-
-    def _index_offset(self):
-        return self.esi
-
-    def _array_to_matrix(self, array):
-        """
-        Reshape data to a form that is compatible with weight matrices.
-
-        The data should be presented in the form of a matrix (i.e. 2D) in order
-        to be compatible with the weight matrix.
-        Weight matrices deriving from ESMF use fortran ordering when flattening
-        grids to determine cell indices so we use the same order for reshaping.
-        We then take the transpose so that matrix multiplication happens over
-        the appropriate axes.
-        """
-        return array.reshape(-1, self.size, order="F").T
-
-    def _matrix_to_array(self, array, extra_dims):
-        """
-        Reshape data to restore original dimensions.
-
-        This is the inverse operation of `_array_to_matrix`.
-        """
-        return array.T.reshape(extra_dims + self.shape, order="F")

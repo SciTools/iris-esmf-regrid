@@ -130,3 +130,7 @@ dmypy.json
 
 # Editors and IDEs
 .idea
+*~
+
+# ESMF stuff
+*.ESMF_LogFile

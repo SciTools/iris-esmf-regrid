@@ -172,14 +172,14 @@ def test_Regridder_init_small():
     lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
     src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
     assert src_grid.shape == (3, 2)
-    assert src_grid._index_offset() == 1
+    assert src_grid.index_offset == 1
 
     lon_bounds = np.array([0, 20])
     lat_bounds = np.array([0, 10, 30])
     lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
     tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
     assert tgt_grid.shape == (2, 1)
-    assert tgt_grid._index_offset() == 1
+    assert tgt_grid.index_offset == 1
 
     rg = Regridder(src_grid, tgt_grid)
 
@@ -187,10 +187,10 @@ def test_Regridder_init_small():
 
     weights_dict = {}
     weights_dict["row_dst"] = (
-        np.array([1, 1, 1, 1, 2, 2, 2, 2], dtype=np.int32) - src_grid._index_offset()
+        np.array([1, 1, 1, 1, 2, 2, 2, 2], dtype=np.int32) - src_grid.index_offset
     )
     weights_dict["col_src"] = (
-        np.array([1, 2, 4, 5, 2, 3, 5, 6], dtype=np.int32) - tgt_grid._index_offset()
+        np.array([1, 2, 4, 5, 2, 3, 5, 6], dtype=np.int32) - tgt_grid.index_offset
     )
     # The following weights are calculated from grids on a sphere with great circles
     # defining the lines. Because of this, weights are not exactly the same as they
