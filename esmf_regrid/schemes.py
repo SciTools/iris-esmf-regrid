@@ -60,6 +60,7 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
 def _create_cube(data, src_cube, grid_dim_x, grid_dim_y, grid_x, grid_y):
     """
     Return a new cube for the result of regridding.
+
     Returned cube represents the result of regridding the source cube
     onto the new grid.
     All the metadata and coordinates of the result cube are copied from
@@ -67,6 +68,7 @@ def _create_cube(data, src_cube, grid_dim_x, grid_dim_y, grid_x, grid_y):
         - Grid dimension coordinates are copied from the grid cube.
         - Auxiliary coordinates which span the grid dimensions are
           ignored.
+
     Parameters
     ----------
     data : array
@@ -83,10 +85,12 @@ def _create_cube(data, src_cube, grid_dim_x, grid_dim_y, grid_x, grid_y):
     grid_y : DimCoord
         The :class:`iris.coords.DimCoord` for the new grid's Y
         coordinate.
+
     Returns
     -------
     cube
         A new iris.cube.Cube instance.
+
     """
     new_cube = iris.cube.Cube(data)
 

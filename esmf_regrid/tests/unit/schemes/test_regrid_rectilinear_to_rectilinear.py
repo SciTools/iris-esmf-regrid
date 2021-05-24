@@ -1,6 +1,6 @@
 """Unit tests for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`."""
 
-from iris.coord_systems import GeogCS, RotatedGeogCS
+from iris.coord_systems import RotatedGeogCS
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
@@ -11,6 +11,13 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
 
 def test_rotated_regridding():
+    """
+    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+
+    Test the regriding of a rotated pole coordinate system. The test is
+    designed to that it should be possible to verify the result by
+    inspection.
+    """
     src_coord_system = RotatedGeogCS(0, 90, 90)
     tgt_coord_system = None
 
@@ -58,6 +65,11 @@ def test_rotated_regridding():
 
 
 def test_extra_dims():
+    """
+    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+
+    Tests the handling of extra dimensions and metadata.
+    """
     h = 2
     t = 4
     e = 6

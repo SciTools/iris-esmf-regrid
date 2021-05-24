@@ -1,7 +1,5 @@
 """Unit tests for :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
 
-import numpy as np
-from numpy import ma
 import pytest
 
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
@@ -11,6 +9,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 def test_dim_switching():
     """
     Test calling of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
     Checks that the regridder accepts a cube with dimensions in a different
     order than the cube which initialised it. Checks that dimension order is
     inherited from the cube in the calling function in both cases.
@@ -38,6 +37,7 @@ def test_dim_switching():
 def test_differing_grids():
     """
     Test calling of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
     Checks that the regridder raises an error when given a cube with a different
     grid to the one it was initialised with.
     """
@@ -65,9 +65,9 @@ def test_differing_grids():
 def test_invalid_mdtol():
     """
     Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
     Checks that an error is raised when mdtol is out of range.
     """
-
     n_lons = 6
     n_lats = 5
     lon_bounds = (-180, 180)

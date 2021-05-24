@@ -1,8 +1,8 @@
 """Unit tests for miscellaneous helper functions in `esmf_regrid.schemes`."""
 
 from iris.coords import DimCoord
-from iris.cube import Cube
 from iris.coord_systems import GeogCS
+from iris.cube import Cube
 from iris.fileformats.pp import EARTH_RADIUS
 import numpy as np
 import scipy.sparse
