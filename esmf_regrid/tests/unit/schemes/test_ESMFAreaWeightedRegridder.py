@@ -49,7 +49,9 @@ def test_differing_grids():
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     n_lons_dif = 7
-    src_dif_coord = _grid_cube(n_lons_dif, n_lats, lon_bounds, lat_bounds, circular=True)
+    src_dif_coord = _grid_cube(
+        n_lons_dif, n_lats, lon_bounds, lat_bounds, circular=True
+    )
     src_dif_circ = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=False)
 
     regridder = ESMFAreaWeightedRegridder(src_init, tgt)
