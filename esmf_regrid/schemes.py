@@ -162,14 +162,14 @@ class ESMFAreaWeighted:
 
 
 class ESMFAreaWeightedRegridder:
-    def __init__(self, src_grid, tgt_grid):
+    def __init__(self, src_grid, tgt_grid, mdtol=0):
         # TODO implement esmf regridder as an iris scheme.
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
 
-        regrid_info = _regrid_unstructured_to_rectilinear__prepare(src_grid, tgt_grid)
+        regrid_info = _regrid_rectilinear_to_rectilinear__prepare(src_grid, tgt_grid)
 
         # Store regrid info.
         _, _, self.grid_x, self.grid_y, self.regridder = regrid_info
@@ -178,16 +178,16 @@ class ESMFAreaWeightedRegridder:
         self.src_grid = get_xy_dim_coords(src_grid)
 
     def __call__(self, cube):
-        src_x, src_y = get_xy_dim_coords(src_grid_cube)
+        src_x, src_y = get_xy_dim_coords(cube)
 
         # Check the source grid matches that used in initialisation
         assert self.src_grid == (src_x, src_y)
 
-        grid_x_dim = src_grid_cube.coord_dims(src_x)[0]
-        grid_y_dim = src_grid_cube.coord_dims(src_y)[0]
+        grid_x_dim = cube.coord_dims(src_x)[0]
+        grid_y_dim = cube.coord_dims(src_y)[0]
 
         regrid_info = (grid_x_dim, grid_y_dim, self.grid_x, self.grid_y, self.regridder)
 
-        return _regrid_unstructured_to_rectilinear__perform(
+        return _regrid_rectilinear_to_rectilinear__perform(
             cube, regrid_info, self.mdtol
         )
