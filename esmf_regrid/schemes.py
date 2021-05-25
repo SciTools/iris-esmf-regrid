@@ -220,12 +220,12 @@ class ESMFAreaWeighted:
         self.mdtol = mdtol
 
     def __repr__(self):
+        """Return a representation of the class."""
         return "ESMFAreaWeighted(mdtol={})".format(self.mdtol)
 
     def regridder(self, src_grid, tgt_grid):
         """
-        Creates an area-weighted regridder to perform regridding from the
-        source grid to the target grid.
+        Create regridder to perform regridding from source grid to target grid.
 
         Parameters
         ----------
