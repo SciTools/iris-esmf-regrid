@@ -56,9 +56,10 @@ def test_differing_grids():
 
     regridder = ESMFAreaWeightedRegridder(src_init, tgt)
 
-    with pytest.raises(AssertionError):
+    msg = "The given cube is not defined on the same source grid as this regridder."
+    with pytest.raises(ValueError(msg)):
         _ = regridder(src_dif_coord)
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError(msg)):
         _ = regridder(src_dif_circ)
 
 
@@ -75,7 +76,8 @@ def test_invalid_mdtol():
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(ValueError):
+    msg = "Value for mdtol must be in range 0 - 1, got {}."
+    with pytest.raises(ValueError(msg.format(2))):
         _ = ESMFAreaWeightedRegridder(src, tgt, mdtol=2)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError(msg.format(-1))):
         _ = ESMFAreaWeightedRegridder(src, tgt, mdtol=-1)

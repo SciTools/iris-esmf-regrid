@@ -1,5 +1,6 @@
 """Provides an iris interface for regridding."""
 
+from collections import namedtuple
 import copy
 
 import iris
@@ -52,6 +53,28 @@ def _cube_to_GridInfo(cube):
 
 
 def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
+    """
+    Perform regridding on data over specific dimensions.
+
+    Parameters
+    ----------
+    regridder : Regridder
+        An instance of Regridder initialised to perfomr regridding.
+    data : array
+        The data to be regrid.
+    grid_x_dim : int
+        The dimension of the X axis.
+    grid_y_dim : int
+        The dimension of the Y axis.
+    mdtol : float
+        Tolerance of missing data.
+
+    Returns
+    -------
+    array
+        The result of regridding the data.
+
+    """
     data = np.moveaxis(data, [grid_x_dim, grid_y_dim], [-1, -2])
     result = regridder.regrid(data, mdtol=mdtol)
 
@@ -116,6 +139,11 @@ def _create_cube(data, src_cube, grid_dim_x, grid_dim_y, grid_x, grid_y):
     return new_cube
 
 
+RegridInfo = namedtuple(
+    "RegridInfo", ["x_dim", "y_dim", "x_coord", "y_coord", "regridder"]
+)
+
+
 def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
     tgt_x, tgt_y = get_xy_dim_coords(tgt_grid_cube)
     src_x, src_y = get_xy_dim_coords(src_grid_cube)
@@ -128,7 +156,13 @@ def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
 
     regridder = Regridder(srcinfo, tgtinfo)
 
-    regrid_info = (grid_x_dim, grid_y_dim, tgt_x, tgt_y, regridder)
+    regrid_info = RegridInfo(
+        x_dim=grid_x_dim,
+        y_dim=grid_y_dim,
+        x_coord=tgt_x,
+        y_coord=tgt_y,
+        regridder=regridder,
+    )
 
     return regrid_info
 
@@ -237,8 +271,8 @@ class ESMFAreaWeighted:
         Returns
         -------
         ESMFAreaWeightedRegridder
-            A callable with the interface:
-                `callable(cube)`
+            A callable instance of a regridder with the interface:
+                `regridder(cube)`
             where `cube` is a cube with the same grid as `src_grid`
             that is to be regridded to the grid of `tgt_grid`.
         """
@@ -275,7 +309,9 @@ class ESMFAreaWeightedRegridder:
         regrid_info = _regrid_rectilinear_to_rectilinear__prepare(src_grid, tgt_grid)
 
         # Store regrid info.
-        _, _, self.grid_x, self.grid_y, self.regridder = regrid_info
+        self.grid_x = regrid_info.x_coord
+        self.grid_y = regrid_info.y_coord
+        self.regridder = regrid_info.regridder
 
         # Record the source grid.
         self.src_grid = get_xy_dim_coords(src_grid)
@@ -303,12 +339,22 @@ class ESMFAreaWeightedRegridder:
         src_x, src_y = get_xy_dim_coords(cube)
 
         # Check the source grid matches that used in initialisation
-        assert self.src_grid == (src_x, src_y)
+        if self.src_grid != (src_x, src_y):
+            raise ValueError(
+                "The given cube is not defined on the same "
+                "source grid as this regridder."
+            )
 
         grid_x_dim = cube.coord_dims(src_x)[0]
         grid_y_dim = cube.coord_dims(src_y)[0]
 
-        regrid_info = (grid_x_dim, grid_y_dim, self.grid_x, self.grid_y, self.regridder)
+        regrid_info = RegridInfo(
+            x_dim=grid_x_dim,
+            y_dim=grid_y_dim,
+            x_coord=self.grid_x,
+            y_coord=self.grid_y,
+            regridder=self.regridder,
+        )
 
         return _regrid_rectilinear_to_rectilinear__perform(
             cube, regrid_info, self.mdtol

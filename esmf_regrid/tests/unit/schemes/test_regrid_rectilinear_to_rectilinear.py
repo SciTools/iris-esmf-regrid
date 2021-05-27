@@ -68,7 +68,8 @@ def test_extra_dims():
     """
     Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
-    Tests the handling of extra dimensions and metadata.
+    Tests the handling of extra dimensions and metadata. Ensures that proper
+    coordinates, attributes, names and units are copied over.
     """
     h = 2
     t = 4
