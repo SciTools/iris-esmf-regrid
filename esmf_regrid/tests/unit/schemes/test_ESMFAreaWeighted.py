@@ -55,8 +55,8 @@ def test_invalid_mdtol():
 
     Checks that an error is raised when mdtol is out of range.
     """
-    msg = "Value for mdtol must be in range 0 - 1, got {}."
-    with pytest.raises(ValueError(msg.format(2))):
+    match = "Value for mdtol must be in range 0 - 1, got "
+    with pytest.raises(ValueError, match=match):
         _ = ESMFAreaWeighted(mdtol=2)
-    with pytest.raises(ValueError(msg.format(-1))):
+    with pytest.raises(ValueError, match=match):
         _ = ESMFAreaWeighted(mdtol=-1)
