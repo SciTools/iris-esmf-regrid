@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "project": "esmf_regrid",
+    "repo": "..",
+    "environment_type": "nox-conda",
+    "pythons": [],
+    "benchmark_dir": "benchmarks",
+    "env_dir": ".asv-env",
+    "results_dir": ".asv-results",
+    "html_dir": ".asv-html",
+    "project_url": "https://github.com/SciTools-incubator/iris-esmf-regrid",
+    "show_commit_url": "https://github.com/SciTools-incubator/iris-esmf-regrid/commit/",
+    "plugins": ["nox_asv_plugin"],
+}

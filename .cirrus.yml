@@ -18,6 +18,7 @@ env:
   # Skip specific tasks by name. Set to a non-empty string to skip.
   SKIP_LINT_TASK: ""
   SKIP_TEST_TASK: ""
+  SKIP_BENCHMARK_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
   CACHE_PERIOD: "2"
   # Increment the build number to force new conda cache upload.
@@ -30,6 +31,34 @@ env:
   PIP_CACHE_PACKAGES: "pip setuptools wheel nox pyyaml"
   # Conda packages to be installed.
   CONDA_CACHE_PACKAGES: "nox pip pyyaml"
+  IRIS_SOURCE: "github:mesh-data-model"
+
+
+#
+# YAML alias for common linux test infra-structure.
+#
+LINUX_CONDA_TEMPLATE: &LINUX_CONDA_TEMPLATE
+  auto_cancellation: true
+  container:
+    image: gcc:latest
+  env:
+    PATH: ${HOME}/miniconda/bin:${PATH}
+  conda_cache:
+    folder: ${HOME}/miniconda
+    fingerprint_script:
+      - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+      - echo "${CIRRUS_OS} $(sha256sum miniconda.sh)"
+      - echo "${CONDA_CACHE_PACKAGES}"
+      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${CONDA_CACHE_BUILD}"
+      - uname -r
+    populate_script:
+      - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
+      - bash miniconda.sh -b -p ${HOME}/miniconda
+      - conda config --set always_yes yes --set changeps1 no
+      - conda config --set show_channel_urls True
+      - conda config --add channels conda-forge
+      - conda update --quiet --name base conda
+      - conda install --quiet --name base ${CONDA_CACHE_PACKAGES}
 
 
 #
@@ -68,26 +97,7 @@ test_task:
       PY_VER: "3.8"
       COVERAGE: "true"
   name: "${CIRRUS_OS}: py${PY_VER} tests"
-  container:
-    image: gcc:latest
-  env:
-    PATH: ${HOME}/miniconda/bin:${PATH}
-  conda_cache:
-    folder: ${HOME}/miniconda
-    fingerprint_script:
-      - wget --quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-      - echo "${CIRRUS_OS} $(sha256sum miniconda.sh)"
-      - echo "${CONDA_CACHE_PACKAGES}"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${CONDA_CACHE_BUILD}"
-      - uname -r
-    populate_script:
-      - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-      - bash miniconda.sh -b -p ${HOME}/miniconda
-      - conda config --set always_yes yes --set changeps1 no
-      - conda config --set show_channel_urls True
-      - conda config --add channels conda-forge
-      - conda update --quiet --name base conda
-      - conda install --quiet --name base ${CONDA_CACHE_PACKAGES}
+  << : *LINUX_CONDA_TEMPLATE
   nox_cache:
     folder: ${CIRRUS_WORKING_DIR}/.nox
     reupload_on_changes: true
@@ -98,3 +108,22 @@ test_task:
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session tests -- --verbose
+
+
+#
+# Performance Benchmarking (Linux)
+#
+benchmark_task:
+  only_if: ${SKIP_BENCHMARK_TASK} == ""
+  auto_cancellation: true
+  name: "${CIRRUS_OS}: performance benchmarking"
+  << : *LINUX_CONDA_TEMPLATE
+  asv_cache:
+    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo "${CIRRUS_TASK_NAME}"
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
+  test_script:
+    - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
+    - nox --session "benchmarks(ci_mode=True)"

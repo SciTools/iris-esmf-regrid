@@ -16,9 +16,11 @@ dependencies:
   - esmpy>=7.0
 
 # Test dependencies.
+  - asv
   - black=20.8b1
   - flake8
   - flake8-docstrings
   - flake8-import-order
+  - nox
   - pre-commit
   - pytest
