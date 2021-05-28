@@ -116,7 +116,7 @@ benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
   name: "${CIRRUS_OS}: performance benchmarking"
-  << : *LINUX_CONDA_TEMPLATE
+#  << : *LINUX_CONDA_TEMPLATE
 #  asv_cache:
 #    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
 #    reupload_on_changes: true
