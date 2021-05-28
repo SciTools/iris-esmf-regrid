@@ -357,6 +357,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool = True):
     the benchmarking environment.
 
     """
+    session.run_always("git", "log", "-n", "10", "--oneline")
+
     session.install("asv", "nox", "pyyaml")
     session.cd("benchmarks")
     # Skip over setup questions for a new machine.
