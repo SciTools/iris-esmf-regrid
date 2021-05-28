@@ -35,4 +35,5 @@ class TimeGridInfo:
         """Basic test for :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
         esmf_grid = self.grid.make_esmf_field()
         esmf_grid.data[:] = 0
+
     time_make_grid.version = 1
