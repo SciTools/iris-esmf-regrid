@@ -357,7 +357,7 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool = True):
     the benchmarking environment.
 
     """
-    session.run_always("git", "merge-base", "--fork-point", "HEAD", "main")
+    # session.run_always("git", "merge-base", "--fork-point", "HEAD", "main")
 
     session.install("asv", "nox", "pyyaml")
     session.cd("benchmarks")
