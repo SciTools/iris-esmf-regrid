@@ -254,4 +254,4 @@ class NoxConda(Conda):
     def checkout_project(self, repo: Repo, commit_hash: str) -> None:
         """Check out the working tree of the project at given commit hash."""
         super().checkout_project(repo, commit_hash)
-        # self._nox_prep_env()
+        self._nox_prep_env()
