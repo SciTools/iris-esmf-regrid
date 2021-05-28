@@ -31,7 +31,6 @@ env:
   PIP_CACHE_PACKAGES: "pip setuptools wheel nox pyyaml"
   # Conda packages to be installed.
   CONDA_CACHE_PACKAGES: "nox pip pyyaml"
-  IRIS_SOURCE: "github:mesh-data-model"
 
 
 #
