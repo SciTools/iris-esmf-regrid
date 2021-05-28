@@ -7,8 +7,8 @@ For further details, see https://nox.thea.codes/en/stable/#
 
 import os
 from pathlib import Path
-from typing import List
 import shutil
+from typing import List
 from urllib.request import urlopen
 
 import nox
