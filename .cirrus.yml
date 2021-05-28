@@ -125,4 +125,4 @@ benchmark_task:
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-#    - nox --session "benchmarks(ci_mode=True)"
+    - nox --session "benchmarks(ci_mode=True)"
