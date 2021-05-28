@@ -370,8 +370,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool = True):
         )
 
     if ci_mode:
-        asv_exec(["continuous", "HEAD~1", "HEAD", "--bench=ci"])
-        asv_exec(["compare", "HEAD~1", "HEAD"])
+        asv_exec(["continuous", "HEAD^1", "HEAD", "--bench=ci"])
+        asv_exec(["compare", "HEAD^1", "HEAD"])
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
         asv_exec(["run", "f32f23a5..HEAD"])
