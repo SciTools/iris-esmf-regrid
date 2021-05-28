@@ -361,8 +361,12 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool = True):
 
     session.install("asv", "nox", "pyyaml")
     session.cd("benchmarks")
-    session.run_always("pwd")
-    session.run_always("ls", "-a")
+    cmd = (
+        "from pathlib import Path; print(Path().cwd()); print(list(Path("
+        ").iterdir()));"
+    )
+    session.run_always("python", "-c", cmd)
+
     # Skip over setup questions for a new machine.
     session.run("asv", "machine", "--yes")
 
