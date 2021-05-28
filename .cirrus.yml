@@ -116,13 +116,13 @@ benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
   name: "${CIRRUS_OS}: performance benchmarking"
-#  << : *LINUX_CONDA_TEMPLATE
-#  asv_cache:
-#    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
-#    reupload_on_changes: true
-#    fingerprint_script:
-#      - echo "${CIRRUS_TASK_NAME}"
-#      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
+  << : *LINUX_CONDA_TEMPLATE
+  asv_cache:
+    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo "${CIRRUS_TASK_NAME}"
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session "benchmarks(ci_mode=True)"
