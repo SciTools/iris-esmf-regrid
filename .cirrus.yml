@@ -124,5 +124,6 @@ benchmark_task:
       - echo "${CIRRUS_TASK_NAME}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
+    - which git
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-    - nox --session "benchmarks(ci_mode=True)"
+#    - nox --session "benchmarks(ci_mode=True)"
