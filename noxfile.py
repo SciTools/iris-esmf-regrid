@@ -358,9 +358,9 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
 
     """
     test_string = (
-        "from os import environ; print(environ.get('CIRRUS_BASE_SHA', 'NONE'))"
+        'from os import environ; print(environ.get("CIRRUS_BASE_SHA", "NONE"))'
     )
-    session.run_always(f"python -c {test_string}")
+    session.run_always(f"python -c '{test_string}'")
     session.install("asv", "nox", "pyyaml")
     session.cd("benchmarks")
     # Skip over setup questions for a new machine.
