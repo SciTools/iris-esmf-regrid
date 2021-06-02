@@ -116,6 +116,9 @@ benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
   name: "${CIRRUS_OS}: performance benchmarking"
+  clone_script: |
+    git clone --branch=$CIRRUS_BRANCH https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
+    git reset --hard $CIRRUS_CHANGE_IN_REPO
   << : *LINUX_CONDA_TEMPLATE
   asv_cache:
     folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
@@ -123,9 +126,6 @@ benchmark_task:
     fingerprint_script:
       - echo "${CIRRUS_TASK_NAME}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
-  clone_script: |
-    git clone --branch=$CIRRUS_BRANCH https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
-    git reset --hard $CIRRUS_CHANGE_IN_REPO
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session "benchmarks(ci_mode=True)"
