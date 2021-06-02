@@ -1,5 +1,6 @@
 """Unit tests for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`."""
 
+import dask.array as da
 from iris.coord_systems import RotatedGeogCS
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
@@ -149,3 +150,19 @@ def test_extra_dims():
     # Check metadata and coords.
     result.data = expected_data
     assert expected_cube == result
+
+
+def test_laziness():
+    """Test that regridding is lazy when source data is lazy."""
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    src_data = da.ones([n_lats, n_lons])
+    src.data = src_data
+    assert src.has_lazy_data()
+    result = regrid_rectilinear_to_rectilinear(src, tgt)
+    assert result.has_lazy_data()

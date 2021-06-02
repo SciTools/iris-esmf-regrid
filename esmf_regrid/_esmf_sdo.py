@@ -61,7 +61,7 @@ class SDO(ABC):
         We then take the transpose so that matrix multiplication happens over
         the appropriate axes.
         """
-        return array.reshape(-1, self.size, order="F").T
+        return array.T.reshape(self.size, -1)
 
     def _matrix_to_array(self, array, extra_dims):
         """
@@ -69,7 +69,7 @@ class SDO(ABC):
 
         This is the inverse operation of `_array_to_matrix`.
         """
-        return array.T.reshape(extra_dims + self._shape, order="F")
+        return array.reshape((extra_dims + self._shape)[::-1]).T
 
 
 class GridInfo(SDO):
