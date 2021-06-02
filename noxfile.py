@@ -357,11 +357,10 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
     the benchmarking environment.
 
     """
-    session.run_always("which", "git")
-    # session.install("asv", "nox", "pyyaml")
-    # session.cd("benchmarks")
-    # # Skip over setup questions for a new machine.
-    # session.run("asv", "machine", "--yes")
+    session.install("asv", "nox", "pyyaml")
+    session.cd("benchmarks")
+    # Skip over setup questions for a new machine.
+    session.run("asv", "machine", "--yes")
 
     def asv_exec(sub_command: List[str]) -> None:
         session.run(
@@ -370,9 +369,10 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
             f"--python={PY_VER[-1]}",
         )
 
-    # if ci_mode:
-    #     asv_exec(["continuous", "HEAD^1", "HEAD", "--bench=ci"])
-    #     asv_exec(["compare", "HEAD^1", "HEAD"])
-    # else:
-    #     # f32f23a5 = first supporting commit for nox_asv_plugin.py .
-    #     asv_exec(["run", "f32f23a5..HEAD"])
+    if ci_mode:
+        previous_commit = os.environ.get("CIRRUS_BASE_SHA", "HEAD^1")
+        asv_exec(["continuous", previous_commit, "HEAD", "--bench=ci"])
+        asv_exec(["compare", previous_commit, "HEAD"])
+    else:
+        # f32f23a5 = first supporting commit for nox_asv_plugin.py .
+        asv_exec(["run", "f32f23a5..HEAD"])
