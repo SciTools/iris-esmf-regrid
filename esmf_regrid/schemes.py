@@ -5,8 +5,8 @@ import copy
 import functools
 
 import iris
-from iris.analysis._interpolation import get_xy_dim_coords
 from iris._lazy_data import map_complete_blocks
+from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
