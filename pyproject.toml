@@ -13,6 +13,7 @@ exclude = '''
     | \.nox
     | \.tox
     | \.venv
+    | \benchmarks\.asv*
     | _build
     | buck-out
     | build

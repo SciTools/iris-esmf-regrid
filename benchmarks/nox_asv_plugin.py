@@ -15,7 +15,7 @@ from asv.config import Config
 from asv.console import log
 from asv.plugins.conda import Conda, _find_conda
 from asv.repo import get_repo, Repo
-from asv import util
+from asv import util as asv_util
 
 
 # Fetch config variables.
@@ -124,7 +124,7 @@ class NoxConda(Conda):
             f"--python={python}"
         )
 
-        list_output = util.check_output(
+        list_output = asv_util.check_output(
             ["nox", "--list", *nox_cmd_substring.split(" ")],
             display_error=False,
             dots=False,
@@ -154,7 +154,7 @@ class NoxConda(Conda):
         def copy_asv_files(src_parent: Path, dst_parent: Path) -> None:
             """For copying between self._path and a temporary cache."""
             asv_files = list(src_parent.glob("asv*"))
-            # build_root.name usually == "project" .
+            # build_root_path.name usually == "project" .
             asv_files += [src_parent / build_root_path.name]
             for src_path in asv_files:
                 dst_path = dst_parent / src_path.name
@@ -195,7 +195,7 @@ class NoxConda(Conda):
                 "--verbose",
             ]
 
-            _ = util.check_output(nox_cmd)
+            _ = asv_util.check_output(nox_cmd)
             if not env_path.is_dir():
                 message = f"Expected Nox environment not found: {env_path}"
                 log.error(message)
@@ -208,16 +208,16 @@ class NoxConda(Conda):
             # No need during initial ASV setup - this will be run again before
             #  any benchmarks are run.
             cmd = f"{self.conda} env update -f {self._extra_reqs_path} -p {env_path}"
-            util.check_output(cmd.split(" "))
+            asv_util.check_output(cmd.split(" "))
 
     def _setup(self) -> None:
         """Used for initial environment creation - mimics parent method where possible."""
         try:
             self.conda = _find_conda()
         except IOError as e:
-            raise util.UserError(str(e))
+            raise asv_util.UserError(str(e))
         if find_spec("nox") is None:
-            raise util.UserError("Module not found: nox")
+            raise asv_util.UserError("Module not found: nox")
 
         message = f"Creating Nox-Conda environment for {self.name} ."
         log.info(message)
