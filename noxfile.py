@@ -8,6 +8,7 @@ For further details, see https://nox.thea.codes/en/stable/#
 import os
 from pathlib import Path
 import shutil
+from typing import List
 from urllib.request import urlopen
 
 import nox
@@ -214,7 +215,7 @@ def update_lockfiles(session: nox.sessions.Session):
     Parameters
     ----------
     session: object
-        A `nox.sessions.Session object.
+        A `nox.sessions.Session` object.
 
     """
     session.install("conda-lock")
@@ -274,7 +275,7 @@ def update_lockfiles(session: nox.sessions.Session):
 
 
 @nox.session
-def flake8(session):
+def flake8(session: nox.sessions.Session):
     """
     Perform flake8 linting of the code-base.
 
@@ -293,7 +294,7 @@ def flake8(session):
 
 
 @nox.session
-def black(session):
+def black(session: nox.sessions.Session):
     """
     Perform black format checking of the code-base.
 
@@ -312,7 +313,7 @@ def black(session):
 
 
 @nox.session(python=PY_VER, venv_backend="conda")
-def tests(session):
+def tests(session: nox.sessions.Session):
     """
     Perform esmf-regrid integration and unit tests.
 
@@ -334,3 +335,45 @@ def tests(session):
     else:
         # Execute the tests.
         session.run("pytest")
+
+
+@nox.session
+# CI_MODE=TRUE IS CURRENTLY DISABLED:
+#  https://github.com/SciTools-incubator/iris-esmf-regrid/pull/76#issuecomment-850378861
+@nox.parametrize("ci_mode", [False])
+def benchmarks(session: nox.sessions.Session, ci_mode: bool):
+    """
+    Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
+
+    Parameters
+    ----------
+    session: object
+        A `nox.sessions.Session` object.
+    ci_mode: bool
+        Run a cut-down selection of benchmarks, comparing the current commit to
+        the last commit for performance regressions.
+
+    Notes
+    -----
+    ASV is set up to use ``nox --session=tests --install-only`` to prepare
+    the benchmarking environment.
+
+    """
+    session.install("asv", "nox", "pyyaml")
+    session.cd("benchmarks")
+    # Skip over setup questions for a new machine.
+    session.run("asv", "machine", "--yes")
+
+    def asv_exec(sub_command: List[str]) -> None:
+        session.run(
+            "asv",
+            *sub_command,
+            f"--python={PY_VER[-1]}",
+        )
+
+    if ci_mode:
+        asv_exec(["continuous", "HEAD^1", "HEAD", "--bench=ci"])
+        asv_exec(["compare", "HEAD^1", "HEAD"])
+    else:
+        # f32f23a5 = first supporting commit for nox_asv_plugin.py .
+        asv_exec(["run", "f32f23a5..HEAD"])
