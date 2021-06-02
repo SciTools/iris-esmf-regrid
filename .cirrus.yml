@@ -117,7 +117,7 @@ benchmark_task:
   auto_cancellation: true
   name: "${CIRRUS_OS}: performance benchmarking"
   clone_script: |
-    git clone --branch=$CIRRUS_BRANCH https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
+    git clone --branch=ci_benchmarking https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
     git reset --hard $CIRRUS_CHANGE_IN_REPO
   << : *LINUX_CONDA_TEMPLATE
   asv_cache:
