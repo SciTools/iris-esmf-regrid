@@ -17,10 +17,8 @@ container:
 env:
   # Skip specific tasks by name. Set to a non-empty string to skip.
   SKIP_LINT_TASK: ""
-  SKIP_TEST_TASK: ""
-  # Currently disabled:
-  #  https://github.com/SciTools-incubator/iris-esmf-regrid/pull/76#issuecomment-850378861
-  SKIP_BENCHMARK_TASK: "."
+  SKIP_TEST_TASK: "."
+  SKIP_BENCHMARK_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
   CACHE_PERIOD: "2"
   # Increment the build number to force new conda cache upload.

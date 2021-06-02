@@ -338,9 +338,7 @@ def tests(session: nox.sessions.Session):
 
 
 @nox.session
-# CI_MODE=TRUE IS CURRENTLY DISABLED:
-#  https://github.com/SciTools-incubator/iris-esmf-regrid/pull/76#issuecomment-850378861
-@nox.parametrize("ci_mode", [False])
+@nox.parametrize("ci_mode", [False, True])
 def benchmarks(session: nox.sessions.Session, ci_mode: bool):
     """
     Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
@@ -359,6 +357,7 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
     the benchmarking environment.
 
     """
+    print(os.environ.get("CIRRUS_BASE_SHA", "NONE"))
     session.install("asv", "nox", "pyyaml")
     session.cd("benchmarks")
     # Skip over setup questions for a new machine.
