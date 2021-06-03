@@ -11,7 +11,6 @@ import shutil
 from urllib.request import urlopen
 
 import nox
-from nox.command import CommandFailed
 from nox.logger import logger
 import yaml
 
@@ -340,7 +339,7 @@ def tests(session: nox.sessions.Session):
 @nox.session
 @nox.parametrize(
     ["ci_mode", "gh_pages"],
-    [(False, False), (False, True), (True, False)],
+    [(True, False), (False, False), (False, True)],
     ids=["ci compare", "full", "full then publish"],
 )
 def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
@@ -354,6 +353,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
     ci_mode: bool
         Run a cut-down selection of benchmarks, comparing the current commit to
         the last commit for performance regressions.
+    gh_pages: bool
+        Run ``asv gh-pages --rewrite`` once finished.
 
     Notes
     -----
@@ -367,19 +368,24 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
     session.run("asv", "machine", "--yes")
 
     def asv_exec(*sub_args: str) -> None:
-        try:
-            session.run("asv", *sub_args, f"--python={PY_VER[-1]}")
-        except CommandFailed:
+        run_args = ["asv", *sub_args]
+        help_output = session.run(*run_args, "--help", silent=True)
+        if "--python" in help_output:
             # Not all asv commands accept the --python kwarg.
-            session.run("asv", *sub_args)
+            run_args.append(f"--python={PY_VER[-1]}")
+        session.run(*run_args)
 
     if ci_mode:
+        # If on a PR: compare to the base (target) branch.
+        #  Else: compare to previous commit.
         previous_commit = os.environ.get("CIRRUS_BASE_SHA", "HEAD^1")
-        asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
-        asv_exec("compare", previous_commit, "HEAD")
+        try:
+            asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
+        finally:
+            asv_exec("compare", previous_commit, "HEAD")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
         asv_exec("run", "f32f23a5..HEAD")
 
     if gh_pages:
-        asv_exec("gh-pages")
+        asv_exec("gh-pages", "--rewrite")
