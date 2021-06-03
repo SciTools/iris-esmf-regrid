@@ -137,7 +137,10 @@ benchmark_task:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - |
       if [ -z "$CIRRUS_PR" ]; then
-        nox --session "benchmarks(ci_mode=False)"
+        nox --session "benchmarks(ci_mode=True)"
+        if [ "$CIRRUS_BRANCH" == "$CIRRUS_DEFAULT_BRANCH"]; then
+          nox --session "benchmarks(ci_mode=False)"
+
       else
         nox --session "benchmarks(ci_mode=True)"
       fi

@@ -8,10 +8,10 @@ For further details, see https://nox.thea.codes/en/stable/#
 import os
 from pathlib import Path
 import shutil
-from typing import List
 from urllib.request import urlopen
 
 import nox
+from nox.command import CommandFailed
 from nox.logger import logger
 import yaml
 
@@ -338,8 +338,12 @@ def tests(session: nox.sessions.Session):
 
 
 @nox.session
-@nox.parametrize("ci_mode", [False, True])
-def benchmarks(session: nox.sessions.Session, ci_mode: bool):
+@nox.parametrize(
+    ["ci_mode", "gh_pages"],
+    [(False, False), (False, True), (True, False)],
+    ids=["ci compare", "full", "full then publish"],
+)
+def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
     """
     Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
 
@@ -362,17 +366,20 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
     # Skip over setup questions for a new machine.
     session.run("asv", "machine", "--yes")
 
-    def asv_exec(sub_command: List[str]) -> None:
-        session.run(
-            "asv",
-            *sub_command,
-            f"--python={PY_VER[-1]}",
-        )
+    def asv_exec(*sub_args: str) -> None:
+        try:
+            session.run("asv", *sub_args, f"--python={PY_VER[-1]}")
+        except CommandFailed:
+            # Not all asv commands accept the --python kwarg.
+            session.run("asv", *sub_args)
 
     if ci_mode:
         previous_commit = os.environ.get("CIRRUS_BASE_SHA", "HEAD^1")
-        asv_exec(["continuous", previous_commit, "HEAD", "--bench=ci"])
-        asv_exec(["compare", previous_commit, "HEAD"])
+        asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
+        asv_exec("compare", previous_commit, "HEAD")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
-        asv_exec(["run", "f32f23a5..HEAD"])
+        asv_exec("run", "f32f23a5..HEAD")
+
+    if gh_pages:
+        asv_exec("gh-pages")

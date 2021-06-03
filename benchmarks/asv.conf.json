@@ -4,6 +4,7 @@
     "repo": "..",
     "environment_type": "nox-conda",
     "pythons": [],
+    "branches": ["main"],
     "benchmark_dir": "benchmarks",
     "env_dir": ".asv-env",
     "results_dir": ".asv-results",
