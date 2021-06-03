@@ -116,9 +116,16 @@ benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
   name: "${CIRRUS_OS}: performance benchmarking"
+  # Need different behaviour to access the PR state if on a PR.
   clone_script: |
-    git clone --branch=ci_benchmarking https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
-    git reset --hard $CIRRUS_CHANGE_IN_REPO
+    if [ -z "$CIRRUS_PR" ]; then
+      git clone --branch=$CIRRUS_BRANCH https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
+      git reset --hard $CIRRUS_CHANGE_IN_REPO
+    else
+      git clone --recursive https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
+      git fetch origin pull/$CIRRUS_PR/head:pull/$CIRRUS_PR
+      git reset --hard $CIRRUS_CHANGE_IN_REPO
+    fi
   << : *LINUX_CONDA_TEMPLATE
   asv_cache:
     folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
@@ -128,4 +135,9 @@ benchmark_task:
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-    - nox --session "benchmarks(ci_mode=True)"
+    - |
+      if [ -z "$CIRRUS_PR" ]; then
+        nox --session "benchmarks(ci_mode=False)"
+      else
+        nox --session "benchmarks(ci_mode=True)"
+      fi
