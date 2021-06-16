@@ -18,9 +18,7 @@ env:
   # Skip specific tasks by name. Set to a non-empty string to skip.
   SKIP_LINT_TASK: ""
   SKIP_TEST_TASK: ""
-  # Currently disabled:
-  #  https://github.com/SciTools-incubator/iris-esmf-regrid/pull/76#issuecomment-850378861
-  SKIP_BENCHMARK_TASK: "."
+  SKIP_BENCHMARK_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
   CACHE_PERIOD: "2"
   # Increment the build number to force new conda cache upload.
@@ -118,6 +116,17 @@ benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
   name: "${CIRRUS_OS}: performance benchmarking"
+  # Custom clone behaviour to enable ASV to access the PR base branch (if on a
+  #  PR).
+  clone_script: |
+    if [ -z "$CIRRUS_PR" ]; then
+      git clone --branch=$CIRRUS_BRANCH https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
+      git reset --hard $CIRRUS_CHANGE_IN_REPO
+    else
+      git clone --recursive https://x-access-token:${CIRRUS_REPO_CLONE_TOKEN}@github.com/${CIRRUS_REPO_FULL_NAME}.git $CIRRUS_WORKING_DIR
+      git fetch origin pull/${CIRRUS_PR}/head:pull/${CIRRUS_PR}
+      git reset --hard $CIRRUS_CHANGE_IN_REPO
+    fi
   << : *LINUX_CONDA_TEMPLATE
   asv_cache:
     folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
@@ -127,4 +136,10 @@ benchmark_task:
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-    - nox --session "benchmarks(ci_mode=True)"
+    - nox --session="benchmarks(ci compare)"
+    # If running on the main branch (i.e. post-merge):
+    #  Run the full benchmark sequence then publish (``asv gh-pages``).
+    - |
+      if [ "$CIRRUS_BRANCH" == "$CIRRUS_DEFAULT_BRANCH" ]; then
+        nox --session="benchmarks(full then publish)"
+      fi

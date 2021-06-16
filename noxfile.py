@@ -8,7 +8,6 @@ For further details, see https://nox.thea.codes/en/stable/#
 import os
 from pathlib import Path
 import shutil
-from typing import List
 from urllib.request import urlopen
 
 import nox
@@ -338,10 +337,12 @@ def tests(session: nox.sessions.Session):
 
 
 @nox.session
-# CI_MODE=TRUE IS CURRENTLY DISABLED:
-#  https://github.com/SciTools-incubator/iris-esmf-regrid/pull/76#issuecomment-850378861
-@nox.parametrize("ci_mode", [False])
-def benchmarks(session: nox.sessions.Session, ci_mode: bool):
+@nox.parametrize(
+    ["ci_mode", "gh_pages"],
+    [(True, False), (False, False), (False, True)],
+    ids=["ci compare", "full", "full then publish"],
+)
+def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
     """
     Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
 
@@ -352,6 +353,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
     ci_mode: bool
         Run a cut-down selection of benchmarks, comparing the current commit to
         the last commit for performance regressions.
+    gh_pages: bool
+        Run ``asv gh-pages --rewrite`` once finished.
 
     Notes
     -----
@@ -364,16 +367,25 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool):
     # Skip over setup questions for a new machine.
     session.run("asv", "machine", "--yes")
 
-    def asv_exec(sub_command: List[str]) -> None:
-        session.run(
-            "asv",
-            *sub_command,
-            f"--python={PY_VER[-1]}",
-        )
+    def asv_exec(*sub_args: str) -> None:
+        run_args = ["asv", *sub_args]
+        help_output = session.run(*run_args, "--help", silent=True)
+        if "--python" in help_output:
+            # Not all asv commands accept the --python kwarg.
+            run_args.append(f"--python={PY_VER[-1]}")
+        session.run(*run_args)
 
     if ci_mode:
-        asv_exec(["continuous", "HEAD^1", "HEAD", "--bench=ci"])
-        asv_exec(["compare", "HEAD^1", "HEAD"])
+        # If on a PR: compare to the base (target) branch.
+        #  Else: compare to previous commit.
+        previous_commit = os.environ.get("CIRRUS_BASE_SHA", "HEAD^1")
+        try:
+            asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
+        finally:
+            asv_exec("compare", previous_commit, "HEAD")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
-        asv_exec(["run", "f32f23a5..HEAD"])
+        asv_exec("run", "f32f23a5..HEAD")
+
+    if gh_pages:
+        asv_exec("gh-pages", "--rewrite")
