@@ -385,7 +385,7 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
             asv_exec("compare", previous_commit, "HEAD")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
-        asv_exec("run", "f32f23a5..HEAD")
+        asv_exec("run", "HEAD^1..HEAD")
 
     if gh_pages:
         asv_exec("gh-pages", "--rewrite")

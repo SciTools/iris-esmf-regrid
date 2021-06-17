@@ -141,7 +141,7 @@ benchmark_task:
     #  Run the full benchmark sequence then publish (``asv gh-pages``).
     - |
       if [ 1 == 1 ]; then
-        git config --global user.email "."
+        git config --global user.email "trexfeathers@users.noreply.github.com"
         git config --global user.name "Airspeed Velocity automated"
         nox --session="benchmarks(full then publish)"
       fi
