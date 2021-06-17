@@ -137,11 +137,3 @@ benchmark_task:
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session="benchmarks(ci compare)"
-    # If running on the main branch (i.e. post-merge):
-    #  Run the full benchmark sequence then publish (``asv gh-pages``).
-    - |
-      if [ "$CIRRUS_BRANCH" == "$CIRRUS_DEFAULT_BRANCH" ]; then
-        git config user.email "."
-        git config user.name "Airspeed Velocity automated"
-        nox --session="benchmarks(full then publish)"
-      fi
