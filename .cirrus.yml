@@ -141,5 +141,7 @@ benchmark_task:
     #  Run the full benchmark sequence then publish (``asv gh-pages``).
     - |
       if [ "$CIRRUS_BRANCH" == "$CIRRUS_DEFAULT_BRANCH" ]; then
+        git config user.email "."
+        git config user.name "Airspeed Velocity automated"
         nox --session="benchmarks(full then publish)"
       fi
