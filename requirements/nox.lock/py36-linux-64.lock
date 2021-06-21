@@ -37,7 +37,7 @@ https://conda.anaconda.org/conda-forge/linux-64/libedit-3.1.20191231-he28a2e2_2.
 https://conda.anaconda.org/conda-forge/linux-64/libnghttp2-1.43.0-h812cca2_0.tar.bz2#1867d1e9658596b3fac8847a7702eef4
 https://conda.anaconda.org/conda-forge/linux-64/libpng-1.6.37-h21135ba_2.tar.bz2#b6acf807307d033d4b7e758b4f44b036
 https://conda.anaconda.org/conda-forge/linux-64/libssh2-1.9.0-ha56f1ee_6.tar.bz2#f0dfb86444df325e599dbc3f4c0a3f5b
-https://conda.anaconda.org/conda-forge/linux-64/libzip-1.7.3-h4de3113_0.tar.bz2#2568763f88009f95e9262cba837dbb82
+https://conda.anaconda.org/conda-forge/linux-64/libzip-1.8.0-h4de3113_0.tar.bz2#2d1b63c574f3e11157a07313e58ba7af
 https://conda.anaconda.org/conda-forge/linux-64/readline-8.1-h46c0cb4_0.tar.bz2#5788de3c8d7a7d64ac56c784c4ef48e6
 https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.10-h21135ba_1.tar.bz2#c647f70aa7e3d4cc4e029cc1c9a99953
 https://conda.anaconda.org/conda-forge/linux-64/udunits2-2.2.27.27-h975c496_1.tar.bz2#e663bd5dbc8cc4c1647d9f51cf25872c
@@ -149,4 +149,4 @@ https://conda.anaconda.org/conda-forge/noarch/flake8-import-order-0.18.1-py_0.ta
 https://conda.anaconda.org/conda-forge/noarch/nox-2021.6.6-pyhd8ed1ab_0.tar.bz2#997b985dfc3b4d782cad3ea9830ac919
 https://conda.anaconda.org/conda-forge/linux-64/pre-commit-2.13.0-py36h5fab9bb_0.tar.bz2#0ea3377f71861bf21c879f4da2c9ddd3
 https://conda.anaconda.org/conda-forge/linux-64/pytest-6.2.4-py36h5fab9bb_0.tar.bz2#c14178266877b2b826f3a1f9210bbcea
-https://conda.anaconda.org/conda-forge/linux-64/iris-3.0.2-py36h5fab9bb_1.tar.bz2#7feb1c98b27416f09e5c8686e88c3f4d
+https://conda.anaconda.org/conda-forge/linux-64/iris-3.0.2-py36h5fab9bb_2.tar.bz2#67d87c416321e672fee3f0abbe4cd92d
