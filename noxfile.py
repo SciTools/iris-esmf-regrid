@@ -43,14 +43,14 @@ def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
     ``--filename-template``.
 
     """
-    dir = Path() / "requirements" / "nox.lock"
+    lockfile_dir = Path() / "requirements" / "nox.lock"
     name_template = "{py_string}-{platform}.lock"
     if platform_placeholder:
         platform = "{platform}"
     else:
         platform = LOCKFILE_PLATFORM
     lockfile_name = name_template.format(py_string=py_string, platform=platform)
-    return dir / lockfile_name
+    return lockfile_dir / lockfile_name
 
 
 def _session_lockfile(session: nox.sessions.Session) -> Path:
