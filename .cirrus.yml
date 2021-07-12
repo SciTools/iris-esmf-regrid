@@ -85,10 +85,10 @@ test_task:
       PY_VER: "3.7"
     env:
       PY_VER: "3.8"
-      COVERAGE: "true"
     env:
       PY_VER: "3.8"
       IRIS_SOURCE: "github:mesh-data-model"
+      COVERAGE: "true"
   name: "${CIRRUS_OS}: py${PY_VER} tests"
   container:
     image: gcc:latest
