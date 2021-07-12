@@ -2,7 +2,8 @@
 
 try:
     import iris.experimental.ugrid
+
     iris.experimental.ugrid.Mesh
 except:
-    msg = 'skipping tests which use unstructured iris cubes'
+    msg = "skipping tests which use unstructured iris cubes"
     pytestmark = pytest.mark.skip(msg)
