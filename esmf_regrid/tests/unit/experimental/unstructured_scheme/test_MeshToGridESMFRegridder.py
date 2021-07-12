@@ -16,6 +16,14 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstru
     _full_mesh,
 )
 
+try:
+    import iris.experimental.ugrid
+
+    iris.experimental.ugrid.Mesh
+except (AttributeError, ModuleNotFoundError):
+    msg = "skipping tests which use unstructured iris cubes"
+    pytestmark = pytest.mark.skip(msg)
+
 
 def test_flat_cubes():
     """
