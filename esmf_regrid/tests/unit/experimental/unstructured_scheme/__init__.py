@@ -4,6 +4,7 @@ try:
     import iris.experimental.ugrid
 
     iris.experimental.ugrid.Mesh
-except:
+except (AttributeError, ModuleNotFoundError):
+    import pytest
     msg = "skipping tests which use unstructured iris cubes"
     pytestmark = pytest.mark.skip(msg)
