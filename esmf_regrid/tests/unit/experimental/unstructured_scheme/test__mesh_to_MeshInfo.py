@@ -1,13 +1,20 @@
 """Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
 
 from iris.coords import AuxCoord
-from iris.experimental.ugrid import Connectivity, Mesh
 import numpy as np
 from numpy import ma
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_scheme import _mesh_to_MeshInfo
+
+try:
+    from iris.experimental.ugrid import Connectivity, Mesh
+except ImportError:
+    import pytest
+
+    msg = "skipping tests which use unstructured iris cubes"
+    pytestmark = pytest.mark.skip(msg)
 
 
 def _pyramid_topology_connectivity_array():

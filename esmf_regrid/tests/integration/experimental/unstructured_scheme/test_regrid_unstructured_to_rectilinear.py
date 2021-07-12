@@ -4,12 +4,19 @@
 import os
 
 import iris
-from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 import numpy as np
 
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_unstructured_to_rectilinear,
 )
+
+try:
+    from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
+except ImportError:
+    import pytest
+
+    msg = "skipping tests which use unstructured iris cubes"
+    pytestmark = pytest.mark.skip(msg)
 
 
 def test_real_data():
