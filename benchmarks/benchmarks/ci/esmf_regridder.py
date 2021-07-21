@@ -1,8 +1,11 @@
 """Quick running benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
 import numpy as np
+from iris.coord_systems import RotatedGeogCS
 
 from esmf_regrid.esmf_regridder import GridInfo
+from esmf_regrid.schemes import ESMFAreaWeightedRegridder
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
 
 def _make_small_grid_args():
@@ -37,3 +40,38 @@ class TimeGridInfo:
         esmf_grid.data[:] = 0
 
     time_make_grid.version = 1
+
+
+class TimeRegridding:
+    params = ["similar", "large source", "large target", "mixed"]
+
+    def setup(self, type):
+        lon_bounds = (-180, 180)
+        lat_bounds = (-90, 90)
+        n_lons_src = 20
+        n_lats_src = 40
+        n_lons_tgt = 20
+        n_lats_tgt = 40
+        if type == "large source":
+            n_lons_src = 100
+            n_lats_src = 200
+        if type == "large target":
+            n_lons_tgt = 100
+            n_lats_tgt = 200
+        if type == "mixed":
+            coord_system_src = RotatedGeogCS(0, 90, 90)
+        else:
+            coord_system_src = None
+        src = _grid_cube(
+            n_lons_src,
+            n_lats_src,
+            lon_bounds,
+            lat_bounds,
+            coord_system=coord_system_src,
+        )
+        tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
+        self.regridder = ESMFAreaWeightedRegridder(src, tgt)
+        self.src = src
+
+    def time_perform_regridding(self, type):
+        _ = self.regridder(self.src)
