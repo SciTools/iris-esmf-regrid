@@ -327,6 +327,8 @@ class MeshToGridESMFRegridder:
 
 
 def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
+    # The mesh will be assigned to the first dimension associated with the
+    # grid, whether that is associated with the x or y coordinate.
     tgt_mesh_dim = min(grid_x_dim, grid_y_dim)
     data = np.moveaxis(data, [grid_x_dim, grid_y_dim], [-1, -2])
     result = regridder.regrid(data, mdtol=mdtol)
@@ -457,7 +459,9 @@ def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
     Return a new cube with data values calculated using the area weighted
     mean of data values from rectilinear cube src_cube regridded onto the
     horizontal mesh of mesh_cube. The dimensions on the cube associated
-    with the grid will replaced by a dimensions associated with the mesh.
+    with the grid will replaced by a dimension associated with the mesh.
+    That dimension will be the the first of the grid dimensions, whether
+    it is associated with the x or y coordinate.
     This function requires that the horizontal dimension of mesh_cube is
     described by a 2D mesh with data located on the faces of that mesh.
     This function requires that the horizontal grid of src_cube is
