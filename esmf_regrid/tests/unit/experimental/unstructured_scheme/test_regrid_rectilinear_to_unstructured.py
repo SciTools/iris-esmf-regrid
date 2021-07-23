@@ -81,32 +81,45 @@ def test_multidim_cubes():
     grid = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     h = 2
+    p = 4
     t = 3
     height = DimCoord(np.arange(h), standard_name="height")
+    pressure = DimCoord(np.arange(p), standard_name="air_pressure")
     time = DimCoord(np.arange(t), standard_name="time")
 
-    src_data = np.empty([t, n_lats, n_lons, h])
-    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, np.newaxis, :]
+    src_data = np.empty([t, n_lats, p, n_lons, h])
+    src_data[:] = np.arange(t * p * h).reshape([t, p, h])[
+        :, np.newaxis, :, np.newaxis, :
+    ]
     cube = Cube(src_data)
     cube.add_dim_coord(grid.coord("latitude"), 1)
-    cube.add_dim_coord(grid.coord("longitude"), 2)
+    cube.add_dim_coord(grid.coord("longitude"), 3)
     cube.add_dim_coord(time, 0)
-    cube.add_dim_coord(height, 3)
+    cube.add_dim_coord(pressure, 2)
+    cube.add_dim_coord(height, 4)
 
     result = regrid_rectilinear_to_unstructured(cube, tgt)
 
+    cube_transposed = cube.copy()
+    cube_transposed.transpose([0, 3, 2, 1, 4])
+    result_transposed = regrid_rectilinear_to_unstructured(cube_transposed, tgt)
+
     # Lenient check for data.
-    expected_data = np.empty([t, mesh_length, h])
-    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, :]
+    expected_data = np.empty([t, mesh_length, p, h])
+    expected_data[:] = np.arange(t * p * h).reshape(t, p, h)[:, np.newaxis, :, :]
     assert np.allclose(expected_data, result.data)
+    assert np.allclose(expected_data, result_transposed.data)
 
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
     expected_cube = Cube(expected_data)
     expected_cube.add_dim_coord(time, 0)
     expected_cube.add_aux_coord(mesh_coord_x, 1)
     expected_cube.add_aux_coord(mesh_coord_y, 1)
-    expected_cube.add_dim_coord(height, 2)
+    expected_cube.add_dim_coord(pressure, 2)
+    expected_cube.add_dim_coord(height, 3)
 
     # Check metadata and scalar coords.
     result.data = expected_data
     assert expected_cube == result
+    result_transposed.data = expected_data
+    assert expected_cube == result_transposed
