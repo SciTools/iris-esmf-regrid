@@ -512,7 +512,7 @@ class GridToMeshESMFRegridder:
             area-weighted regridding via ESMF generated weights.
 
         """
-        grid_x, grid_y = get_xy_dim_coords(src_grid_cube)
+        grid_x, grid_y = get_xy_dim_coords(cube)
         assert grid_x == self.grid_x
         assert grid_y == self.grid_y
 
