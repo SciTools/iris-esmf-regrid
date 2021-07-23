@@ -450,8 +450,45 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     return new_cube
 
 
-def regrid_rectilinear_to_unstructured(src_cube, grid_cube, mdtol=0):
-    regrid_info = _regrid_rectilinear_to_unstructured__prepare(src_cube, grid_cube)
+def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
+    """
+    Regrid rectilinear cube onto unstructured mesh.
+
+    Return a new cube with data values calculated using the area weighted
+    mean of data values from rectilinear cube src_cube regridded onto the
+    horizontal mesh of mesh_cube. The dimensions on the cube associated
+    with the grid will replaced by a dimensions associated with the mesh.
+    This function requires that the horizontal dimension of mesh_cube is
+    described by a 2D mesh with data located on the faces of that mesh.
+    This function requires that the horizontal grid of src_cube is
+    rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
+    This function also requires that the coordinates describing the
+    horizontal grid have bounds.
+
+    Parameters
+    ----------
+    src_cube : cube
+        A rectilinear instance of iris.cube.Cube that supplies the data,
+        metadata and coordinates.
+    mesh_cube : cube
+        An unstructured instance of iris.cube.Cube that supplies the desired
+        horizontal mesh definition.
+    mdtol : float, optional
+        Tolerance of missing data. The value returned in each element of the
+        returned cube's data array will be masked if the fraction of masked
+        data in the overlapping cells of the source cube exceeds mdtol. This
+        fraction is calculated based on the area of masked cells within each
+        target cell. mdtol=0 means no missing data is tolerated while mdtol=1
+        will mean the resulting element will be masked if and only if all the
+        overlapping cells of the source cube are masked. Defaults to 0.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
+    regrid_info = _regrid_rectilinear_to_unstructured__prepare(src_cube, mesh_cube)
     result = _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol)
     return result
 
