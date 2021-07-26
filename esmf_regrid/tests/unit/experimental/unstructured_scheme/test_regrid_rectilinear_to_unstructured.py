@@ -86,7 +86,7 @@ def test_multidim_cubes():
     height = DimCoord(np.arange(h), standard_name="height")
     pressure = DimCoord(np.arange(p), standard_name="air_pressure")
     time = DimCoord(np.arange(t), standard_name="time")
-    spanning = AuxCoord(np.ones([h, p, t]), long_name="spanning dim")
+    spanning = AuxCoord(np.ones([t, p, h]), long_name="spanning dim")
     ignore = AuxCoord(np.ones([n_lats, t]), long_name="ignore")
 
     src_data = np.empty([t, n_lats, p, n_lons, h])
