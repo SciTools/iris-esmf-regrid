@@ -337,7 +337,7 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
     return result
 
 
-def _create_mesh_cube(data, src_cube, grid_dim_x, grid_dim_y, mesh):
+def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh):
     """
     Return a new cube for the result of regridding.
 
@@ -355,10 +355,10 @@ def _create_mesh_cube(data, src_cube, grid_dim_x, grid_dim_y, mesh):
         The regridded data as an N-dimensional NumPy array.
     src_cube : cube
         The source Cube.
-    grid_dim_x : int
+    grid_x_dim : int
         The dimension of the x dimension on the source Cube.
-    grid_dim_y : int
-        The dimension of the x dimension on the source Cube.
+    grid_y_dim : int
+        The dimension of the y dimension on the source Cube.
     mesh : Mesh
         The :class:`iris.experimental.ugrid.Mesh` for the new
         Cube.
@@ -371,8 +371,8 @@ def _create_mesh_cube(data, src_cube, grid_dim_x, grid_dim_y, mesh):
     """
     new_cube = iris.cube.Cube(data)
 
-    min_grid_dim = min(grid_dim_x, grid_dim_y)
-    max_grid_dim = max(grid_dim_x, grid_dim_y)
+    min_grid_dim = min(grid_x_dim, grid_y_dim)
+    max_grid_dim = max(grid_x_dim, grid_y_dim)
     for coord in mesh.to_MeshCoords("face"):
         new_cube.add_aux_coord(coord, min_grid_dim)
 
@@ -381,12 +381,10 @@ def _create_mesh_cube(data, src_cube, grid_dim_x, grid_dim_y, mesh):
     def copy_coords(src_coords, add_method):
         for coord in src_coords:
             dims = src_cube.coord_dims(coord)
-            # if hasattr(coord, "mesh") or mesh_dim in dims:
-            #     continue
-            if grid_dim_x in dims or grid_dim_y in dims:
+            if grid_x_dim in dims or grid_y_dim in dims:
                 continue
-            # Since the mesh will be replaced by a 2D grid, dims which are
-            # beyond the mesh_dim are increased by one.
+            # Since the 2D grid will be replaced by a 1D mesh, dims which are
+            # beyond the max_grid_dim are decreased by one.
             dims = [dim if dim < max_grid_dim else dim - 1 for dim in dims]
             result_coord = coord.copy()
             # Add result_coord to the owner of add_method.
@@ -411,9 +409,6 @@ def _regrid_rectilinear_to_unstructured__prepare(src_grid_cube, target_mesh_cube
     # TODO: Improve the checking of mesh validity. Check the mesh location and
     #  raise appropriate error messages.
     assert mesh is not None
-    # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
-    # mesh belongs to.
-    # mesh_dim = src_mesh_cube.mesh_dim()
     grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
     grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
 
@@ -461,7 +456,9 @@ def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
     horizontal mesh of mesh_cube. The dimensions on the cube associated
     with the grid will replaced by a dimension associated with the mesh.
     That dimension will be the the first of the grid dimensions, whether
-    it is associated with the x or y coordinate.
+    it is associated with the x or y coordinate. Since two dimensions are
+    being replaced by one, coordinates associated with dimensions after
+    the grid will become associated with dimensions one lower.
     This function requires that the horizontal dimension of mesh_cube is
     described by a 2D mesh with data located on the faces of that mesh.
     This function requires that the horizontal grid of src_cube is
