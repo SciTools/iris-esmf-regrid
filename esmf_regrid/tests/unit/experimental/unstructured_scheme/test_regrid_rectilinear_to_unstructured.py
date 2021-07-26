@@ -86,6 +86,8 @@ def test_multidim_cubes():
     height = DimCoord(np.arange(h), standard_name="height")
     pressure = DimCoord(np.arange(p), standard_name="air_pressure")
     time = DimCoord(np.arange(t), standard_name="time")
+    spanning = AuxCoord(np.ones([h, p, t]), long_name="spanning dim")
+    ignore = AuxCoord(np.ones[n_lats, t], long_name="ignore")
 
     src_data = np.empty([t, n_lats, p, n_lons, h])
     src_data[:] = np.arange(t * p * h).reshape([t, p, h])[
@@ -97,6 +99,8 @@ def test_multidim_cubes():
     cube.add_dim_coord(time, 0)
     cube.add_dim_coord(pressure, 2)
     cube.add_dim_coord(height, 4)
+    cube.add_aux_coord(spanning, [0, 2, 4])
+    cube.add_aux_coord(ignore, [1, 4])
 
     result = regrid_rectilinear_to_unstructured(cube, tgt)
 
@@ -117,6 +121,7 @@ def test_multidim_cubes():
     expected_cube.add_aux_coord(mesh_coord_y, 1)
     expected_cube.add_dim_coord(pressure, 2)
     expected_cube.add_dim_coord(height, 3)
+    expected_cube.add_aux_coord(spanning, [0, 2, 3])
 
     # Check metadata and scalar coords.
     result.data = expected_data
