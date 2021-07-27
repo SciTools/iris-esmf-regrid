@@ -161,6 +161,7 @@ def test_mismatched_grids():
     with pytest.raises(ValueError):
         _ = regridder(src_other)
 
+
 def test_mask_handling():
     """
     Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
