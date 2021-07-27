@@ -164,7 +164,7 @@ def test_mismatched_grids():
 
 def test_mask_handling():
     """
-    Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
     """
     tgt = _flat_mesh_cube()
 
@@ -182,9 +182,9 @@ def test_mask_handling():
     regridder_0 = GridToMeshESMFRegridder(src, tgt, mdtol=0)
     regridder_05 = GridToMeshESMFRegridder(src, tgt, mdtol=0.05)
     regridder_1 = GridToMeshESMFRegridder(src, tgt, mdtol=1)
-    result_0 = regridder_0(src, tgt)
-    result_05 = regridder_05(src, tgt)
-    result_1 = regridder_1(src, tgt)
+    result_0 = regridder_0(src)
+    result_05 = regridder_05(src)
+    result_1 = regridder_1(src)
 
     expected_data = np.ones(tgt.shape)
     expected_0 = ma.array(expected_data)
