@@ -3,6 +3,7 @@
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
+from numpy import ma
 import pytest
 
 from esmf_regrid.experimental.unstructured_scheme import (
@@ -159,3 +160,36 @@ def test_mismatched_grids():
     )
     with pytest.raises(ValueError):
         _ = regridder(src_other)
+
+def test_mask_handling():
+    """
+    Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """
+    tgt = _flat_mesh_cube()
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    data = np.ones([n_lats, n_lons])
+    mask = np.zeros([n_lats, n_lons])
+    mask[0, 0] = 1
+    masked_data = ma.array(data, mask=mask)
+    src.data = masked_data
+    regridder_0 = GridToMeshESMFRegridder(src, tgt, mdtol=0)
+    regridder_05 = GridToMeshESMFRegridder(src, tgt, mdtol=0.05)
+    regridder_1 = GridToMeshESMFRegridder(src, tgt, mdtol=1)
+    result_0 = regridder_0(src, tgt)
+    result_05 = regridder_05(src, tgt)
+    result_1 = regridder_1(src, tgt)
+
+    expected_data = np.ones(tgt.shape)
+    expected_0 = ma.array(expected_data)
+    expected_05 = ma.array(expected_data, mask=[0, 0, 1, 0, 0, 0])
+    expected_1 = ma.array(expected_data, mask=[1, 0, 1, 0, 0, 0])
+
+    assert ma.allclose(expected_0, result_0.data)
+    assert ma.allclose(expected_05, result_05.data)
+    assert ma.allclose(expected_1, result_1.data)

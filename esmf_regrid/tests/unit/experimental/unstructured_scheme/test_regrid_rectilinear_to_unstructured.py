@@ -3,6 +3,7 @@
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
+from numpy import ma
 
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_rectilinear_to_unstructured,
@@ -128,3 +129,34 @@ def test_multidim_cubes():
     assert expected_cube == result
     result_transposed.data = expected_data
     assert expected_cube == result_transposed
+
+
+def test_mask_handling():
+    """
+    Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """
+    tgt = _flat_mesh_cube()
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    data = np.ones([n_lats, n_lons])
+    mask = np.zeros([n_lats, n_lons])
+    mask[0, 0] = 1
+    masked_data = ma.array(data, mask=mask)
+    src.data = masked_data
+    result_0 = regrid_rectilinear_to_unstructured(src, tgt, mdtol=0)
+    result_05 = regrid_rectilinear_to_unstructured(src, tgt, mdtol=0.05)
+    result_1 = regrid_rectilinear_to_unstructured(src, tgt, mdtol=1)
+
+    expected_data = np.ones(tgt.shape)
+    expected_0 = ma.array(expected_data)
+    expected_05 = ma.array(expected_data, mask=[0, 0, 1, 0, 0, 0])
+    expected_1 = ma.array(expected_data, mask=[1, 0, 1, 0, 0, 0])
+
+    assert ma.allclose(expected_0, result_0.data)
+    assert ma.allclose(expected_05, result_05.data)
+    assert ma.allclose(expected_1, result_1.data)
