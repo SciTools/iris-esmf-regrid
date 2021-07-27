@@ -86,7 +86,7 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
         The regridded data as an N-dimensional NumPy array.
     src_cube : cube
         The source Cube.
-    mes_dim : int
+    mesh_dim : int
         The dimension of the mesh within the source Cube.
     grid_x : DimCoord
         The :class:`iris.coords.DimCoord` for the new grid's X
@@ -187,7 +187,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     """
     Second (regrid) part of 'regrid_unstructured_to_rectilinear'.
 
-    Perform the prepared regrid calculation on a single 2d cube.
+    Perform the prepared regrid calculation on a single cube.
 
     """
     mesh_dim, grid_x, grid_y, regridder = regrid_info
@@ -322,5 +322,253 @@ class MeshToGridESMFRegridder:
         regrid_info = (mesh_dim, self.grid_x, self.grid_y, self.regridder)
 
         return _regrid_unstructured_to_rectilinear__perform(
+            cube, regrid_info, self.mdtol
+        )
+
+
+def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
+    # The mesh will be assigned to the first dimension associated with the
+    # grid, whether that is associated with the x or y coordinate.
+    tgt_mesh_dim = min(grid_x_dim, grid_y_dim)
+    data = np.moveaxis(data, [grid_x_dim, grid_y_dim], [-1, -2])
+    result = regridder.regrid(data, mdtol=mdtol)
+
+    result = np.moveaxis(result, -1, tgt_mesh_dim)
+    return result
+
+
+def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh):
+    """
+    Return a new cube for the result of regridding.
+
+    Returned cube represents the result of regridding the source cube
+    onto the new mesh.
+    All the metadata and coordinates of the result cube are copied from
+    the source cube, with two exceptions:
+        - Grid dimension coordinates are copied from the grid cube.
+        - Auxiliary coordinates which span the mesh dimension are
+          ignored.
+
+    Parameters
+    ----------
+    data : array
+        The regridded data as an N-dimensional NumPy array.
+    src_cube : cube
+        The source Cube.
+    grid_x_dim : int
+        The dimension of the x dimension on the source Cube.
+    grid_y_dim : int
+        The dimension of the y dimension on the source Cube.
+    mesh : Mesh
+        The :class:`iris.experimental.ugrid.Mesh` for the new
+        Cube.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
+    new_cube = iris.cube.Cube(data)
+
+    min_grid_dim = min(grid_x_dim, grid_y_dim)
+    max_grid_dim = max(grid_x_dim, grid_y_dim)
+    for coord in mesh.to_MeshCoords("face"):
+        new_cube.add_aux_coord(coord, min_grid_dim)
+
+    new_cube.metadata = copy.deepcopy(src_cube.metadata)
+
+    def copy_coords(src_coords, add_method):
+        for coord in src_coords:
+            dims = src_cube.coord_dims(coord)
+            if grid_x_dim in dims or grid_y_dim in dims:
+                continue
+            # Since the 2D grid will be replaced by a 1D mesh, dims which are
+            # beyond the max_grid_dim are decreased by one.
+            dims = [dim if dim < max_grid_dim else dim - 1 for dim in dims]
+            result_coord = coord.copy()
+            # Add result_coord to the owner of add_method.
+            add_method(result_coord, dims)
+
+    copy_coords(src_cube.dim_coords, new_cube.add_dim_coord)
+    copy_coords(src_cube.aux_coords, new_cube.add_aux_coord)
+
+    return new_cube
+
+
+def _regrid_rectilinear_to_unstructured__prepare(src_grid_cube, target_mesh_cube):
+    """
+    First (setup) part of 'regrid_rectilinear_to_unstructured'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
+    grid_x, grid_y = get_xy_dim_coords(src_grid_cube)
+    mesh = target_mesh_cube.mesh
+    # TODO: Improve the checking of mesh validity. Check the mesh location and
+    #  raise appropriate error messages.
+    assert mesh is not None
+    grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
+    grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
+
+    meshinfo = _mesh_to_MeshInfo(mesh)
+    gridinfo = _cube_to_GridInfo(src_grid_cube)
+
+    regridder = Regridder(gridinfo, meshinfo)
+
+    regrid_info = (grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, regridder)
+
+    return regrid_info
+
+
+def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_rectilinear_to_unstructured'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
+    grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, regridder = regrid_info
+
+    # Perform regridding with realised data for the moment. This may be changed
+    # in future to handle src_cube.lazy_data.
+    new_data = _regrid_along_grid_dims(
+        regridder, src_cube.data, grid_x_dim, grid_y_dim, mdtol
+    )
+
+    new_cube = _create_mesh_cube(
+        new_data,
+        src_cube,
+        grid_x_dim,
+        grid_y_dim,
+        mesh,
+    )
+    return new_cube
+
+
+def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
+    """
+    Regrid rectilinear cube onto unstructured mesh.
+
+    Return a new cube with data values calculated using the area weighted
+    mean of data values from rectilinear cube src_cube regridded onto the
+    horizontal mesh of mesh_cube. The dimensions on the cube associated
+    with the grid will replaced by a dimension associated with the mesh.
+    That dimension will be the the first of the grid dimensions, whether
+    it is associated with the x or y coordinate. Since two dimensions are
+    being replaced by one, coordinates associated with dimensions after
+    the grid will become associated with dimensions one lower.
+    This function requires that the horizontal dimension of mesh_cube is
+    described by a 2D mesh with data located on the faces of that mesh.
+    This function requires that the horizontal grid of src_cube is
+    rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
+    This function also requires that the coordinates describing the
+    horizontal grid have bounds.
+
+    Parameters
+    ----------
+    src_cube : cube
+        A rectilinear instance of iris.cube.Cube that supplies the data,
+        metadata and coordinates.
+    mesh_cube : cube
+        An unstructured instance of iris.cube.Cube that supplies the desired
+        horizontal mesh definition.
+    mdtol : float, optional
+        Tolerance of missing data. The value returned in each element of the
+        returned cube's data array will be masked if the fraction of masked
+        data in the overlapping cells of the source cube exceeds mdtol. This
+        fraction is calculated based on the area of masked cells within each
+        target cell. mdtol=0 means no missing data is tolerated while mdtol=1
+        will mean the resulting element will be masked if and only if all the
+        overlapping cells of the source cube are masked. Defaults to 0.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
+    regrid_info = _regrid_rectilinear_to_unstructured__prepare(src_cube, mesh_cube)
+    result = _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol)
+    return result
+
+
+class GridToMeshESMFRegridder:
+    """Regridder class for rectilinear to unstructured cubes."""
+
+    def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
+        """
+        Create regridder for conversions between source grid and target mesh.
+
+        Parameters
+        ----------
+        src_grid_cube : cube
+            The unstructured iris cube providing the source grid.
+        target_grid_cube : cube
+            The rectilinear iris cube providing the target mesh.
+        mdtol : float, optional
+            Tolerance of missing data. The value returned in each element of
+            the returned array will be masked if the fraction of masked data
+            exceeds mdtol. mdtol=0 means no missing data is tolerated while
+            mdtol=1 will mean the resulting element will be masked if and only
+            if all the contributing elements of data are masked.
+            Defaults to 1.
+
+        """
+        # Missing data tolerance.
+        # Code directly copied from iris.
+        if not (0 <= mdtol <= 1):
+            msg = "Value for mdtol must be in range 0 - 1, got {}."
+            raise ValueError(msg.format(mdtol))
+        self.mdtol = mdtol
+
+        partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
+            src_mesh_cube, target_grid_cube
+        )
+
+        # Store regrid info.
+        _, _, self.grid_x, self.grid_y, self.mesh, self.regridder = partial_regrid_info
+
+    def __call__(self, cube):
+        """
+        Regrid this cube onto the target mesh of this regridder instance.
+
+        The given cube must be defined with the same grid as the source
+        cube used to create this MeshToGridESMFRegridder instance.
+
+        Parameters
+        ----------
+        cube : cube
+            A iris.cube.Cube instance to be regridded.
+
+        Returns
+        -------
+            A cube defined with the horizontal dimensions of the target
+            and the other dimensions from this cube. The data values of
+            this cube will be converted to values on the new grid using
+            area-weighted regridding via ESMF generated weights.
+
+        """
+        grid_x, grid_y = get_xy_dim_coords(cube)
+        if (grid_x != self.grid_x) or (grid_y != self.grid_y):
+            raise ValueError(
+                "The given cube is not defined on the same "
+                "source grid as this regridder."
+            )
+
+        grid_x_dim = cube.coord_dims(grid_x)[0]
+        grid_y_dim = cube.coord_dims(grid_y)[0]
+
+        regrid_info = (
+            grid_x_dim,
+            grid_y_dim,
+            self.grid_x,
+            self.grid_y,
+            self.mesh,
+            self.regridder,
+        )
+
+        return _regrid_rectilinear_to_unstructured__perform(
             cube, regrid_info, self.mdtol
         )
