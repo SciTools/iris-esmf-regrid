@@ -143,9 +143,7 @@ def test_mismatched_grids():
     cube whose grid does not match with the one used when initialising
     the regridder.
     """
-
     tgt = _flat_mesh_cube()
-
     n_lons = 6
     n_lats = 5
     lon_bounds = (-180, 180)
