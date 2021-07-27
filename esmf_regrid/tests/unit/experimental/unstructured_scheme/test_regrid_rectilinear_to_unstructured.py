@@ -134,7 +134,7 @@ def test_multidim_cubes():
 def test_mask_handling():
     """
     Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
-    
+
     Tests masked data handling for multiple valid values for mdtol.
     """
     tgt = _flat_mesh_cube()
