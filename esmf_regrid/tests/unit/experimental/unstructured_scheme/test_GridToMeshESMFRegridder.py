@@ -165,6 +165,8 @@ def test_mismatched_grids():
 def test_mask_handling():
     """
     Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Tests masked data handling for multiple valid values for mdtol.
     """
     tgt = _flat_mesh_cube()
 
