@@ -133,3 +133,31 @@ def test_invalid_mdtol():
         _ = GridToMeshESMFRegridder(src, tgt, mdtol=2)
     with pytest.raises(ValueError):
         _ = GridToMeshESMFRegridder(src, tgt, mdtol=-1)
+
+
+def test_mismatched_grids():
+    """
+    Test error handling in calling of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Checks that an error is raised when the regridder is called with a
+    cube whose grid does not match with the one used when initialising
+    the regridder.
+    """
+
+    tgt = _flat_mesh_cube()
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    regridder = GridToMeshESMFRegridder(src, tgt)
+
+    n_lons_other = 3
+    n_lats_other = 10
+    src_other = _grid_cube(
+        n_lons_other, n_lats_other, lon_bounds, lat_bounds, circular=True
+    )
+    with pytest.raises(ValueError):
+        _ = regridder(src_other)

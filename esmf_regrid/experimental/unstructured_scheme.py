@@ -551,8 +551,11 @@ class GridToMeshESMFRegridder:
 
         """
         grid_x, grid_y = get_xy_dim_coords(cube)
-        assert grid_x == self.grid_x
-        assert grid_y == self.grid_y
+        if (grid_x != self.grid_x) or (grid_y != self.grid_y):
+            raise ValueError(
+                "The given cube is not defined on the same "
+                "source grid as this regridder."
+            )
 
         grid_x_dim = cube.coord_dims(grid_x)[0]
         grid_y_dim = cube.coord_dims(grid_y)[0]
