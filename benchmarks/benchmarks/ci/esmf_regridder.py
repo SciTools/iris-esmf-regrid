@@ -72,7 +72,9 @@ class TimeRegridding:
             coord_system=coord_system_src,
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
-        src_data = np.arange(n_lats_src * n_lons_src * h).reshape([n_lats_src, n_lons_src, h])
+        src_data = np.arange(n_lats_src * n_lons_src * h).reshape(
+            [n_lats_src, n_lons_src, h]
+        )
         src = Cube(src_data)
         src.add_dim_coord(grid.coord("latitude"), 0)
         src.add_dim_coord(grid.coord("longitude"), 1)
