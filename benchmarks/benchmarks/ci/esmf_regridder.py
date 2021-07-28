@@ -2,6 +2,7 @@
 
 import numpy as np
 from iris.coord_systems import RotatedGeogCS
+from iris.cube import Cube
 
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
@@ -52,6 +53,7 @@ class TimeRegridding:
         n_lats_src = 40
         n_lons_tgt = 20
         n_lats_tgt = 40
+        h = 100
         if type == "large source":
             n_lons_src = 100
             n_lats_src = 200
@@ -62,7 +64,7 @@ class TimeRegridding:
             coord_system_src = RotatedGeogCS(0, 90, 90)
         else:
             coord_system_src = None
-        src = _grid_cube(
+        grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
@@ -70,6 +72,10 @@ class TimeRegridding:
             coord_system=coord_system_src,
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
+        src_data = np.arange(n_lats_src * n_lons_src * h).reshape([n_lats_src, n_lons_src, h])
+        src = Cube(src_data)
+        src.add_dim_coord(grid.coord("latitude"), 0)
+        src.add_dim_coord(grid.coord("longitude"), 1)
         self.regridder = ESMFAreaWeightedRegridder(src, tgt)
         self.src = src
 
