@@ -45,6 +45,7 @@ class TimeGridInfo:
 
 class TimeRegridding:
     params = ["similar", "large source", "large target", "mixed"]
+    param_names = ["source/target difference"]
 
     def setup(self, type):
         lon_bounds = (-180, 180)
