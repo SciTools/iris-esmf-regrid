@@ -1,9 +1,9 @@
 """Quick running benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
 from pathlib import Path
-from shutil import rmtree
 
 import numpy as np
+import dask.array as da
 import iris
 from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
@@ -11,17 +11,6 @@ from iris.cube import Cube
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
-
-
-SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
-
-
-def setup_cache(*args):
-    SYNTH_DATA_DIR.mkdir(exist_ok=True)
-
-
-def teardown(*args):
-    rmtree(SYNTH_DATA_DIR)
 
 
 def _make_small_grid_args():
@@ -111,9 +100,10 @@ class TimeLazyRegridding:
     # being lazy.
     warmup_time = 0.0
 
-    file = SYNTH_DATA_DIR.joinpath("chunked_cube.nc")
-
     def setup_cache(self):
+        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
+        SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        file = str(SYNTH_DATA_DIR.joinpath("chunked_cube.nc"))
         lon_bounds = (-180, 180)
         lat_bounds = (-90, 90)
         n_lons_src = 100
@@ -121,32 +111,35 @@ class TimeLazyRegridding:
         n_lons_tgt = 20
         n_lats_tgt = 40
         h = 100
-        coord_system_src = RotatedGeogCS(0, 90, 90)
+        # Rotated coord systems prevent pickling of the regridder so are
+        # removed for the time being.
+        # coord_system_src = RotatedGeogCS(0, 90, 90)
         grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            coord_system=coord_system_src,
+            # coord_system=coord_system_src,
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
-        regridder = ESMFAreaWeightedRegridder(grid, tgt)
 
         chunk_size = [n_lats_src, n_lons_src, 10]
         src_data = da.ones([n_lats_src, n_lons_src, h], chunks=chunk_size)
         src = Cube(src_data)
         src.add_dim_coord(grid.coord("latitude"), 0)
         src.add_dim_coord(grid.coord("longitude"), 1)
-        print(5)
-        iris.save(src, self.file, chunksizes=chunk_size)
-        print(6)
+        iris.save(src, file, chunksizes=chunk_size)
+        # Construct regridder with a loaded version of the grid for consistency.
+        loaded_src = iris.load_cube(file)
+        regridder = ESMFAreaWeightedRegridder(loaded_src, tgt)
 
-        return regridder
+        return regridder, file
 
     def setup(self, cache):
-        self.src = iris.load_cube(self.file)
+        _, file = cache
+        self.src = iris.load_cube(file)
 
     def time_lazy_regridding(self, cache):
         assert self.src.has_lazy_data()
-        regridder = cache
+        regridder, _ = cache
         _ = regridder(self.src)
