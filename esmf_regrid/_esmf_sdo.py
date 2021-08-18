@@ -61,7 +61,7 @@ class SDO(ABC):
         We then take the transpose so that matrix multiplication happens over
         the appropriate axes.
         """
-        return array.T.reshape(self.size, -1)
+        return array.T.reshape((self.size, -1))
 
     def _matrix_to_array(self, array, extra_dims):
         """

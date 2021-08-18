@@ -172,6 +172,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
 def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     grid_x_dim, grid_y_dim, grid_x, grid_y, regridder = regrid_info
 
+    # Set up a function which can accept just chunk of data as an argument.
     regrid = functools.partial(
         _regrid_along_grid_dims,
         regridder,
@@ -180,6 +181,9 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         mdtol=mdtol,
     )
 
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
     new_data = map_complete_blocks(
         src_cube,
         regrid,
