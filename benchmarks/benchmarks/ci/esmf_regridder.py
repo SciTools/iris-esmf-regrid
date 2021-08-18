@@ -94,7 +94,9 @@ class TimeLazyRegridding:
     # Prevent repeat runs between setup() runs - data won't be lazy after 1st.
     number = 1
     # Compensate for reduced certainty by increasing number of repeats.
-    repeat = (10, 10, 10.0)
+    #  (setup() is run between each repeat).
+    #  Minimum 5 repeats, run up to 30 repeats / 20 secs whichever comes first.
+    repeat = (5, 30, 20.0)
     # Prevent ASV running its warmup, which ignores `number` and would
     # therefore get a false idea of typical run time since the data would stop
     # being lazy.
