@@ -112,7 +112,7 @@ class TimeLazyRegridding:
         n_lats_src = 200
         n_lons_tgt = 20
         n_lats_tgt = 40
-        h = 100
+        h = 2000
         # Rotated coord systems prevent pickling of the regridder so are
         # removed for the time being.
         # coord_system_src = RotatedGeogCS(0, 90, 90)
