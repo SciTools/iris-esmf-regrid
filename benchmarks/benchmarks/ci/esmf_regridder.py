@@ -150,4 +150,4 @@ class TimeLazyRegridding:
 
     def time_regridding_realisation(self, cache):
         assert self.result.has_lazy_data()
-        _ = result.data
+        _ = self.result.data
