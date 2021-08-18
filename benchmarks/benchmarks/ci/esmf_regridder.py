@@ -138,10 +138,16 @@ class TimeLazyRegridding:
         return regridder, file
 
     def setup(self, cache):
-        _, file = cache
+        regridder, file = cache
         self.src = iris.load_cube(file)
+        cube = iris.load_cube(file)
+        self.result = regridder(cube)
 
     def time_lazy_regridding(self, cache):
         assert self.src.has_lazy_data()
         regridder, _ = cache
         _ = regridder(self.src)
+
+    def time_regridding_realisation(self, cache):
+        assert self.result.has_lazy_data()
+        _ = result.data
