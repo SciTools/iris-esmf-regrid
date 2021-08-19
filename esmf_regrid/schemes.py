@@ -2,8 +2,10 @@
 
 from collections import namedtuple
 import copy
+import functools
 
 import iris
+from iris._lazy_data import map_complete_blocks
 from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
@@ -170,10 +172,23 @@ def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
 def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     grid_x_dim, grid_y_dim, grid_x, grid_y, regridder = regrid_info
 
-    # Perform regridding with realised data for the moment. This may be changed
-    # in future to handle src_cube.lazy_data.
-    new_data = _regrid_along_grid_dims(
-        regridder, src_cube.data, grid_x_dim, grid_y_dim, mdtol
+    # Set up a function which can accept just chunk of data as an argument.
+    regrid = functools.partial(
+        _regrid_along_grid_dims,
+        regridder,
+        grid_x_dim=grid_x_dim,
+        grid_y_dim=grid_y_dim,
+        mdtol=mdtol,
+    )
+
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
+    new_data = map_complete_blocks(
+        src_cube,
+        regrid,
+        (grid_x_dim, grid_y_dim),
+        (len(grid_x.points), len(grid_y.points)),
     )
 
     new_cube = _create_cube(
