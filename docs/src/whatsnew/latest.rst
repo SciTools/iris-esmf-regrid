@@ -1,5 +1,3 @@
-.. include:: ../common_links.inc
-
 |iris_version| |build_date| [unreleased]
 ****************************************
 
@@ -91,3 +89,6 @@ This document explains the changes made to iris-esmf-regrid for this release
     Whatsnew resources in alphabetical order:
 
 .. _GitHub: https://github.com/SciTools-incubator/iris-esmf-regrid/issues/new/choose
+.. _@lbdreyer: https://github.com/lbdreyer
+.. _@stephenworsley: https://github.com/stephenworsley
+.. _@trexfeathers: https://github.com/trexfeathers
