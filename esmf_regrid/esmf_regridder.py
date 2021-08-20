@@ -49,14 +49,15 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 
 
 class Regridder:
-    """TBD: public class docstring."""
+    """Regridder for directly interfacing with ESMF."""
 
     def __init__(self, src, tgt, precomputed_weights=None):
         """
-        TBD: public method docstring summary (one line).
+        Create a regridder from descriptions of horizontal grids/meshes.
 
-        Create a regridder designed to regrid data from a specified
-        source mesh/grid to a specified target mesh/grid.
+        Weights will be calculated using ESMF and stored as a scipy.sparse
+        matrix for use in regridding. If precomputed weights are provided,
+        these will be used instead of calculating via ESMF.
 
         Parameters
         ----------
