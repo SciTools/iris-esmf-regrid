@@ -49,9 +49,7 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 
 
 class Regridder:
-    """
-    Regridder for directly interfacing with ESMF.
-    """
+    """Regridder for directly interfacing with ESMF."""
 
     def __init__(self, src, tgt, precomputed_weights=None):
         """
