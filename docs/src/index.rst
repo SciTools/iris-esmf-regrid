@@ -11,4 +11,5 @@ Welcome to iris-esmf-regrid's documentation!
    :caption: Reference
    :hidden:
 
+   generated/api/iris-esmf-regrid
    whatsnew/index
