@@ -25,3 +25,11 @@ dependencies:
   - nox
   - pre-commit
   - pytest
+
+# Documentation dependencies.
+  - sphinx
+  - sphinxcontrib-napoleon
+  - sphinx-copybutton
+  - sphinx-gallery
+  - sphinx-panels
+  - sphinx_rtd_theme
