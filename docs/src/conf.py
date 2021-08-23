@@ -42,9 +42,6 @@ extensions = [
     "sphinx_panels",
     # TODO: Spelling extension disabled until the dependencies can be included
     # "sphinxcontrib.spelling",
-    "sphinx_gallery.gen_gallery",
-    "matplotlib.sphinxext.mathmpl",
-    "matplotlib.sphinxext.plot_directive",
 ]
 # -- panels extension ---------------------------------------------------------
 # See https://sphinx-panels.readthedocs.io/en/latest/
