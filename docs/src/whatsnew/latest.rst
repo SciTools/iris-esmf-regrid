@@ -1,4 +1,4 @@
-|iris_version| |build_date| [unreleased]
+|iris-esmf-regrid_version| |build_date| [unreleased]
 ****************************************
 
 This document explains the changes made to iris-esmf-regrid for this release
