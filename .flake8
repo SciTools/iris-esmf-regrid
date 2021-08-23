@@ -31,5 +31,6 @@ ignore =
 exclude = 
     .eggs
     build
+    docs/src/conf.py
     esmf_regrid/__init__.py
     esmf_regrid/tests/results
