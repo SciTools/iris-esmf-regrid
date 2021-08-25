@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
-## [0.2] - yyyy-mm-dd
+## [0.2] - 2021-08-25
 
 The major change in this version is the addition of lazy regridding.
 This defers the calculation of regridding to the realisation of the data
