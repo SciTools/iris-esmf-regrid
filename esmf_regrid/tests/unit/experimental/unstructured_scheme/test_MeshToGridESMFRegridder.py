@@ -144,15 +144,7 @@ def test_laziness():
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
 
-    mesh = _gridlike_mesh(n_lats, n_lons)
-
-    # In order to add a mesh to a cube, face locations must be added.
-    # These are not used in calculations and are here given a value of zero.
-    mesh_length = mesh.connectivity(contains_face=True).shape[0]
-    dummy_face_lon = AuxCoord(np.zeros(mesh_length), standard_name="longitude")
-    dummy_face_lat = AuxCoord(np.zeros(mesh_length), standard_name="latitude")
-    mesh.add_coords(face_x=dummy_face_lon, face_y=dummy_face_lat)
-    mesh.long_name = "example mesh"
+    mesh = _gridlike_mesh(n_lons, n_lats)
 
     src_data = np.arange(n_lats * n_lons * h).reshape([-1, h])
     src_data = da.from_array(src_data, chunks=[15, 2])

@@ -72,7 +72,7 @@ def _example_mesh():
     return mesh
 
 
-def _gridlike_mesh(n_lats, n_lons):
+def _gridlike_mesh(n_lons, n_lats):
     fnc_template = np.arange((n_lats-1) * n_lons).reshape(n_lats-1, n_lons) + 1
     fnc_array = np.empty([n_lats, n_lons, 4])
     fnc_array[1:, :, 0] = fnc_template
@@ -120,6 +120,14 @@ def _gridlike_mesh(n_lats, n_lons):
     lons = AuxCoord(node_lons, standard_name="longitude")
     lats = AuxCoord(node_lats, standard_name="latitude")
     mesh = Mesh(2, ((lons, "x"), (lats, "y")), fnc)
+
+    # In order to add a mesh to a cube, face locations must be added.
+    # These are not used in calculations and are here given a value of zero.
+    mesh_length = mesh.connectivity(contains_face=True).shape[0]
+    dummy_face_lon = AuxCoord(np.zeros(mesh_length), standard_name="longitude")
+    dummy_face_lat = AuxCoord(np.zeros(mesh_length), standard_name="latitude")
+    mesh.add_coords(face_x=dummy_face_lon, face_y=dummy_face_lat)
+    mesh.long_name = "example mesh"
     return mesh
 
 
@@ -165,7 +173,7 @@ def test_anticlockwise_validity():
 
 def test_large_mesh_validity():
     """Test validity of objects derived from a large gridlike Mesh."""
-    mesh = _gridlike_mesh(20, 40)
+    mesh = _gridlike_mesh(40, 20)
     meshinfo = _mesh_to_MeshInfo(mesh)
 
     # Ensure conversion to ESMF works without error.
