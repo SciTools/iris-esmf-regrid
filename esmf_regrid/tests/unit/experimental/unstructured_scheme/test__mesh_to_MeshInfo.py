@@ -72,6 +72,57 @@ def _example_mesh():
     return mesh
 
 
+def _gridlike_mesh(n_lats, n_lons):
+    fnc_template = np.arange((n_lats-1) * n_lons).reshape(n_lats-1, n_lons) + 1
+    fnc_array = np.empty([n_lats, n_lons, 4])
+    fnc_array[1:, :, 0] = fnc_template
+    fnc_array[1:, :, 1] = np.roll(fnc_template, -1, 1)
+    fnc_array[:-1, :, 2] = np.roll(fnc_template, -1, 1)
+    fnc_array[:-1, :, 3] = fnc_template
+    # TODO: determine if orientation is correct here.
+    # fnc_array[1:, :, 0] = np.roll(fnc_template, -1, 1)
+    # fnc_array[1:, :, 1] = fnc_template
+    # fnc_array[:-1, :, 2] = fnc_template
+    # fnc_array[:-1, :, 3] = np.roll(fnc_template, -1, 1)
+    fnc_array[0, :, :2] = 0
+    num_nodes = fnc_template.max()
+    fnc_array[-1, :, 2:] = num_nodes + 1
+    fnc_array[0, :, :] = np.roll(fnc_array[0, :, :], -1, -1)
+
+    fnc_mask = np.zeros_like(fnc_array)
+    fnc_mask[0, :, 3] = 1
+    fnc_mask[-1, :, 3] = 1
+
+    fnc_ma = ma.array(fnc_array, mask=fnc_mask, dtype=int)
+    fnc_ma = fnc_ma.reshape([-1, 4])
+
+    lat_values = np.linspace(-90, 90, n_lats+1)
+    lon_values = np.linspace(-180, 180, n_lons, endpoint=False)
+    coord_template = np.empty([n_lats-1, n_lons])
+    lat_array = coord_template.copy()
+    lat_array[:] = lat_values[1:-1, np.newaxis]
+    lon_array = coord_template.copy()
+    lon_array[:] = lon_values[np.newaxis, :]
+    node_lats = np.empty(num_nodes + 2)
+    node_lats[1:-1] = lat_array.reshape([-1])
+    node_lats[0] = lat_values[0]
+    node_lats[-1] = lat_values[-1]
+    node_lons = np.empty(num_nodes + 2)
+    node_lons[1:-1] = lon_array.reshape([-1])
+    node_lons[0] = 0
+    node_lons[-1] = 0
+
+    fnc = Connectivity(
+        fnc_ma,
+        cf_role="face_node_connectivity",
+        start_index=0,
+    )
+    lons = AuxCoord(node_lons, standard_name="longitude")
+    lats = AuxCoord(node_lats, standard_name="latitude")
+    mesh = Mesh(2, ((lons, "x"), (lats, "y")), fnc)
+    return mesh
+
+
 def test__mesh_to_MeshInfo():
     """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
     mesh = _example_mesh()
@@ -99,6 +150,22 @@ def test__mesh_to_MeshInfo():
 def test_anticlockwise_validity():
     """Test validity of objects derived from Mesh objects with anticlockwise orientation."""
     mesh = _example_mesh()
+    meshinfo = _mesh_to_MeshInfo(mesh)
+
+    # Ensure conversion to ESMF works without error.
+    _ = meshinfo.make_esmf_field()
+
+    # The following test ensures there are no overlapping cells.
+    # This catches geometric/topological abnormalities that would arise from,
+    # for example: switching lat/lon values, using euclidean coords vs spherical.
+    rg = Regridder(meshinfo, meshinfo)
+    expected_weights = scipy.sparse.identity(meshinfo.size)
+    assert np.allclose(expected_weights.todense(), rg.weight_matrix.todense())
+
+
+def test_large_mesh_validity():
+    """Test validity of objects derived from a large gridlike Mesh."""
+    mesh = _gridlike_mesh(20, 40)
     meshinfo = _mesh_to_MeshInfo(mesh)
 
     # Ensure conversion to ESMF works without error.

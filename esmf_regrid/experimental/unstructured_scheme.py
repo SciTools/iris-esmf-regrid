@@ -4,12 +4,68 @@ import copy
 import functools
 
 import iris
-from iris._lazy_data import map_complete_blocks
 from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
+
+
+def _map_complete_blocks(src, func, dims, out_sizes):
+    """
+    Apply a function to complete blocks.
+
+    Complete means that the data is not chunked along the chosen dimensions.
+
+    Parameters
+    ----------
+
+    src : cube
+        Source :class:`~iris.cube.Cube` that function is applied to.
+    func : function
+        Function to apply.
+    dims : tuple of int
+        Dimensions that cannot be chunked.
+    out_sizes : tuple of int
+        Output size of dimensions that cannot be chunked.
+
+    Returns
+    -------
+    cube
+        A new iris.cube.Cube instance.
+
+    """
+    if not src.has_lazy_data():
+        return func(src.data)
+
+    data = src.lazy_data()
+
+    # Ensure dims are not chunked
+    in_chunks = list(data.chunks)
+    for dim in dims:
+        in_chunks[dim] = src.shape[dim]
+    data = data.rechunk(in_chunks)
+
+    # Determine output chunks
+    out_chunks = list(data.chunks)
+    num_dims = len(dims)
+    num_out = len(out_sizes)
+    sorted_dims = list(dims)
+    sorted_dims.sort()
+    dropped_dims = []
+    for i in range(max(num_dims, num_out)):
+        if i < min(num_dims, num_out):
+            out_chunks[sorted_dims[i]] = out_sizes[i]
+        elif i >= num_dims:
+            out_chunks.insert(sorted_dims[-1] + i - num_dims, out_sizes[i])
+        elif i >= num_out:
+            dropped_dims.append(sorted_dims[i])
+    for dim in dropped_dims[::-1]:
+        out_chunks.pop(dim)
+
+    return data.map_blocks(
+        func, chunks=out_chunks, drop_axis=dropped_dims, dtype=src.dtype
+    )
 
 
 # Taken from PR #26
@@ -205,7 +261,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
-    new_data = map_complete_blocks(
+    new_data = _map_complete_blocks(
         src_cube,
         regrid,
         (mesh_dim,),
@@ -459,11 +515,11 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
-    new_data = map_complete_blocks(
+    new_data = _map_complete_blocks(
         src_cube,
         regrid,
         (grid_x_dim, grid_y_dim),
-        (len(grid_x.points), len(grid_y.points)),
+        (len(mesh.face_node_connectivity.src_lengths()),),
     )
 
     new_cube = _create_mesh_cube(

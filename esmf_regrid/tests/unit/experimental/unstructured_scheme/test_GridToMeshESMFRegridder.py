@@ -1,5 +1,6 @@
 """Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`."""
 
+import dask.array as da
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
@@ -11,6 +12,9 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
     _grid_cube,
+)
+from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+    _gridlike_mesh,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
@@ -196,3 +200,42 @@ def test_mask_handling():
     assert ma.allclose(expected_0, result_0.data)
     assert ma.allclose(expected_05, result_05.data)
     assert ma.allclose(expected_1, result_1.data)
+
+
+def test_laziness():
+    """Test that regridding is lazy when source data is lazy."""
+    n_lons = 12
+    n_lats = 10
+    h = 4
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+
+    mesh = _gridlike_mesh(n_lats, n_lons)
+
+    # In order to add a mesh to a cube, face locations must be added.
+    # These are not used in calculations and are here given a value of zero.
+    mesh_length = mesh.connectivity(contains_face=True).shape[0]
+    dummy_face_lon = AuxCoord(np.zeros(mesh_length), standard_name="longitude")
+    dummy_face_lat = AuxCoord(np.zeros(mesh_length), standard_name="latitude")
+    mesh.add_coords(face_x=dummy_face_lon, face_y=dummy_face_lat)
+    mesh.long_name = "example mesh"
+
+    src_data = np.arange(n_lats * n_lons * h).reshape([n_lats, n_lons, h])
+    src_data = da.from_array(src_data, chunks=[3, 5, 2])
+    src = Cube(src_data)
+    grid = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    src.add_dim_coord(grid.coord("latitude"), 0)
+    src.add_dim_coord(grid.coord("longitude"), 1)
+
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    tgt_data = np.zeros([n_lats * n_lons])
+    tgt = Cube(tgt_data)
+    tgt.add_aux_coord(mesh_coord_x, 0)
+    tgt.add_aux_coord(mesh_coord_y, 0)
+
+    rg = GridToMeshESMFRegridder(src, tgt)
+
+    assert src.has_lazy_data()
+    result = rg(src)
+    assert result.has_lazy_data()
+    assert np.allclose(result.data, src_data.reshape([-1, h]))
