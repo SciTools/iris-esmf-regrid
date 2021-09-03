@@ -19,7 +19,6 @@ def _map_complete_blocks(src, func, dims, out_sizes):
 
     Parameters
     ----------
-
     src : cube
         Source :class:`~iris.cube.Cube` that function is applied to.
     func : function
