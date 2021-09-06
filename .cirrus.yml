@@ -16,8 +16,8 @@ container:
 
 env:
   # Skip specific tasks by name. Set to a non-empty string to skip.
-  SKIP_LINT_TASK: ""
-  SKIP_TEST_TASK: ""
+  SKIP_LINT_TASK: "."
+  SKIP_TEST_TASK: "."
   SKIP_BENCHMARK_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
   CACHE_PERIOD: "2"
@@ -31,27 +31,6 @@ env:
   PIP_CACHE_PACKAGES: "pip setuptools wheel nox pyyaml"
   # Conda packages to be installed.
   CONDA_CACHE_PACKAGES: "nox pip pyyaml"
-  # Use specific custom iris source feature branch.
-  IRIS_SOURCE: "github:mesh-data-model"
-  # Git commit hash for iris test data.
-  IRIS_TEST_DATA_VERSION: "2.2"
-  # Base directory for the iris-test-data.
-  IRIS_TEST_DATA_DIR: ${HOME}/iris-test-data
-  OVERRIDE_TEST_DATA_REPOSITORY: ${IRIS_TEST_DATA_DIR}/test_data
-
-
-#
-# YAML alias for the iris-test-data cache.
-#
-iris_test_data_template: &IRIS_TEST_DATA_TEMPLATE
-  data_cache:
-    folder: ${IRIS_TEST_DATA_DIR}
-    fingerprint_script:
-      - echo "iris-test-data v${IRIS_TEST_DATA_VERSION}"
-    populate_script:
-      - wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
-      - unzip -q iris-test-data.zip
-      - mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_DIR}
 
 
 #
@@ -110,6 +89,8 @@ test_task:
   auto_cancellation: true
   matrix:
     env:
+      PY_VER: "3.6"
+    env:
       PY_VER: "3.7"
     env:
       PY_VER: "3.8"
@@ -123,7 +104,6 @@ test_task:
       - echo "${CIRRUS_TASK_NAME}"
       - echo "${NOX_CACHE_BUILD}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
-  << : *IRIS_TEST_DATA_TEMPLATE
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session tests -- --verbose
@@ -156,4 +136,4 @@ benchmark_task:
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-    - nox --session="benchmarks(ci compare)"
+    - echo $CIRRUS_BASE_SHA
