@@ -9,6 +9,10 @@ from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
 
 from esmf_regrid.esmf_regridder import GridInfo
+from esmf_regrid.experimental.unstructured_scheme import (
+    GridToMeshESMFRegridder,
+    MeshToGridESMFRegridder,
+)
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
@@ -191,7 +195,7 @@ class TimeMeshToGridRegridding:
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         src.add_aux_coord(mesh_coord_x, 0)
         src.add_aux_coord(mesh_coord_y, 0)
-        self.regridder = ESMFAreaWeightedRegridder(src, tgt)
+        self.regridder = MeshToGridESMFRegridder(src, tgt)
         self.src = src
 
     def time_perform_regridding(self, type):
@@ -234,7 +238,7 @@ class TimeLazyMeshToGridRegridding:
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         loaded_src.add_aux_coord(mesh_coord_x, 0)
         loaded_src.add_aux_coord(mesh_coord_y, 0)
-        regridder = ESMFAreaWeightedRegridder(loaded_src, tgt)
+        regridder = MeshToGridESMFRegridder(loaded_src, tgt)
 
         return regridder, file, mesh
 
@@ -300,7 +304,7 @@ class TimeGridToMeshRegridding:
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         tgt.add_aux_coord(mesh_coord_x, 0)
         tgt.add_aux_coord(mesh_coord_y, 0)
-        self.regridder = ESMFAreaWeightedRegridder(src, tgt)
+        self.regridder = GridToMeshESMFRegridder(src, tgt)
         self.src = src
 
     def time_perform_regridding(self, type):
@@ -346,7 +350,7 @@ class TimeLazyGridToMeshRegridding:
         iris.save(src, file, chunksizes=chunk_size)
         # Construct regridder with a loaded version of the grid for consistency.
         loaded_src = iris.load_cube(file)
-        regridder = ESMFAreaWeightedRegridder(loaded_src, tgt)
+        regridder = GridToMeshESMFRegridder(loaded_src, tgt)
 
         return regridder, file
 

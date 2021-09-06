@@ -73,7 +73,7 @@ def _example_mesh():
 
 
 def _gridlike_mesh(n_lons, n_lats):
-    fnc_template = np.arange((n_lats-1) * n_lons).reshape(n_lats-1, n_lons) + 1
+    fnc_template = np.arange((n_lats - 1) * n_lons).reshape(n_lats - 1, n_lons) + 1
     fnc_array = np.empty([n_lats, n_lons, 4])
     fnc_array[1:, :, 0] = fnc_template
     fnc_array[1:, :, 1] = np.roll(fnc_template, -1, 1)
@@ -96,9 +96,9 @@ def _gridlike_mesh(n_lons, n_lats):
     fnc_ma = ma.array(fnc_array, mask=fnc_mask, dtype=int)
     fnc_ma = fnc_ma.reshape([-1, 4])
 
-    lat_values = np.linspace(-90, 90, n_lats+1)
+    lat_values = np.linspace(-90, 90, n_lats + 1)
     lon_values = np.linspace(-180, 180, n_lons, endpoint=False)
-    coord_template = np.empty([n_lats-1, n_lons])
+    coord_template = np.empty([n_lats - 1, n_lons])
     lat_array = coord_template.copy()
     lat_array[:] = lat_values[1:-1, np.newaxis]
     lon_array = coord_template.copy()
