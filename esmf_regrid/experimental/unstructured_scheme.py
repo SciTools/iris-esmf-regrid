@@ -15,7 +15,12 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     """
     Apply a function to complete blocks.
 
+    Based on the function iris._lazy_data.map_complete_blocks.
     Complete means that the data is not chunked along the chosen dimensions.
+    Unlike the iris version of this function, this function also handles
+    cases where the input and output have a different number of dimensions.
+    The particular cases this function is designed for involves collapsing
+    a 2D grid to a 1D mesh and expanding a 1D mesh to a 2D grid.
 
     Parameters
     ----------
@@ -46,21 +51,23 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     data = data.rechunk(in_chunks)
 
     # Determine output chunks
+    sorted_dims = sorted(dims)
     out_chunks = list(data.chunks)
+    for dim, size in zip(sorted_dims, out_sizes):
+        out_chunks[dim] = size
+
     num_dims = len(dims)
     num_out = len(out_sizes)
-    sorted_dims = list(dims)
-    sorted_dims.sort()
     dropped_dims = []
-    for i in range(max(num_dims, num_out)):
-        if i < min(num_dims, num_out):
-            out_chunks[sorted_dims[i]] = out_sizes[i]
-        elif i >= num_dims:
-            out_chunks.insert(sorted_dims[-1] + i - num_dims, out_sizes[i])
-        elif i >= num_out:
-            dropped_dims.append(sorted_dims[i])
-    for dim in dropped_dims[::-1]:
-        out_chunks.pop(dim)
+    if num_out > num_dims:
+        slice_index = sorted_dims[-1]
+        out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
+    elif num_dims > num_out:
+        dropped_dims = sorted_dims[num_out:]
+        for dim in dropped_dims[::-1]:
+            out_chunks.pop(dim)
+    else:
+        pass
 
     return data.map_blocks(
         func, chunks=out_chunks, drop_axis=dropped_dims, dtype=src.dtype
