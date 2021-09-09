@@ -98,11 +98,7 @@ def _gridlike_mesh(n_lons, n_lats):
 
     lat_values = np.linspace(-90, 90, n_lats + 1)
     lon_values = np.linspace(-180, 180, n_lons, endpoint=False)
-    coord_template = np.empty([n_lats - 1, n_lons])
-    lat_array = coord_template.copy()
-    lat_array[:] = lat_values[1:-1, np.newaxis]
-    lon_array = coord_template.copy()
-    lon_array[:] = lon_values[np.newaxis, :]
+    lon_array, lat_array = np.meshgrid(lon_values, lat_values[1:-1])
     node_lats = np.empty(num_nodes + 2)
     node_lats[1:-1] = lat_array.reshape([-1])
     node_lats[0] = lat_values[0]
