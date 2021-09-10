@@ -159,4 +159,7 @@ def test_laziness():
     assert src.has_lazy_data()
     result = rg(src)
     assert result.has_lazy_data()
+    out_chunks = result.lazy_data().chunks
+    expected_chunks = ((10,), (12,), (2, 2))
+    assert out_chunks == expected_chunks
     assert np.allclose(result.data.reshape([-1, h]), src_data)
