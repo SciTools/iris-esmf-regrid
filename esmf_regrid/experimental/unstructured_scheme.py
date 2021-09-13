@@ -20,7 +20,9 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     Unlike the iris version of this function, this function also handles
     cases where the input and output have a different number of dimensions.
     The particular cases this function is designed for involves collapsing
-    a 2D grid to a 1D mesh and expanding a 1D mesh to a 2D grid.
+    a 2D grid to a 1D mesh and expanding a 1D mesh to a 2D grid. Cases
+    involving the mapping between the same number of dimensions should still
+    behave the same as before.
 
     Parameters
     ----------
@@ -35,8 +37,9 @@ def _map_complete_blocks(src, func, dims, out_sizes):
 
     Returns
     -------
-    cube
-        A new iris.cube.Cube instance.
+    array
+        Either a :class:`dask.array.array`, or :class:`numpy.ndarray`
+        depending on the laziness of the data in src.
 
     """
     if not src.has_lazy_data():
@@ -60,10 +63,23 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     num_out = len(out_sizes)
     dropped_dims = []
     if num_out > num_dims:
+        # While this code should be robust for cases where num_out > num_dims > 1,
+        # there is some ambiguity as to what their behaviour ought to be.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_dims == 1
         slice_index = sorted_dims[-1]
+        # Insert the remaining contents of out_sizes in the position immediately
+        # after the last dimension.
         out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
     elif num_dims > num_out:
+        # While this code should be robust for cases where num_dims > num_out > 1,
+        # there is some ambiguity as to what their behaviour ought to be.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_out == 1
         dropped_dims = sorted_dims[num_out:]
+        # Remove the remaining dimensions from the expected output shape.
         for dim in dropped_dims[::-1]:
             out_chunks.pop(dim)
     else:

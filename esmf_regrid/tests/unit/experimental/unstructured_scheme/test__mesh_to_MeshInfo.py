@@ -81,6 +81,8 @@ def _gridlike_mesh(n_lons, n_lats):
     Note that the cells neighbouring the poles will actually be triangular while
     the rest of the cells will be rectangular.
     """
+    # Arrange the indices of the non-pole nodes in an array representative of their
+    # latitude/longitude.
     fnc_template = np.arange((n_lats - 1) * n_lons).reshape(n_lats - 1, n_lons) + 1
     fnc_array = np.empty([n_lats, n_lons, 4])
     # Assign points in an anticlockwise orientation. From the 0 node to 1
