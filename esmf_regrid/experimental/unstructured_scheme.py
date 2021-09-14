@@ -15,8 +15,9 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     """
     Apply a function to complete blocks.
 
-    Based on the function iris._lazy_data.map_complete_blocks.
-    Complete means that the data is not chunked along the chosen dimensions.
+    Based on :func:`iris._lazy_data.map_complete_blocks`.
+    By "complete blocks" we mean that certain dimensions are enforced to be
+    spanned by single chunks.
     Unlike the iris version of this function, this function also handles
     cases where the input and output have a different number of dimensions.
     The particular cases this function is designed for involves collapsing
@@ -534,6 +535,11 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         mdtol=mdtol,
     )
 
+    face_node = mesh.face_node_connectivity
+    # In face_node_connectivity: `src`= face, `tgt` = node, so you want to
+    # get the length of the `src` dimension.
+    n_faces = face_node.shape[face_node.src_dim]
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -541,7 +547,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         src_cube,
         regrid,
         (grid_x_dim, grid_y_dim),
-        (len(mesh.face_node_connectivity.src_lengths()),),
+        (n_faces,),
     )
 
     new_cube = _create_mesh_cube(

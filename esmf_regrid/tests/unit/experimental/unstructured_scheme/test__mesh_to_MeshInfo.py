@@ -77,7 +77,7 @@ def _gridlike_mesh(n_lons, n_lats):
     Generate a global mesh with geometry similar to a rectilinear grid.
 
     The resulting mesh will have n_lons cells spanning its longitudes and
-    n_lats cells spanning ints latitudes for a total of (n_lons * n_lats) cells.
+    n_lats cells spanning its latitudes for a total of (n_lons * n_lats) cells.
     Note that the cells neighbouring the poles will actually be triangular while
     the rest of the cells will be rectangular.
     """
@@ -105,8 +105,8 @@ def _gridlike_mesh(n_lons, n_lats):
 
     # One of the two references to the pole node are defined to be masked.
     fnc_mask = np.zeros_like(fnc_array)
-    fnc_mask[0, :, 3] = 1
-    fnc_mask[-1, :, 3] = 1
+    fnc_mask[0, :, -1] = 1
+    fnc_mask[-1, :, -1] = 1
     fnc_ma = ma.array(fnc_array, mask=fnc_mask, dtype=int)
 
     # The face node connectivity is flattened to the correct dimensionality.
@@ -146,7 +146,7 @@ def _gridlike_mesh(n_lons, n_lats):
 
     # In order to add a mesh to a cube, face locations must be added.
     # These are not used in calculations and are here given a value of zero.
-    mesh_length = mesh.connectivity(contains_face=True).shape[0]
+    mesh_length = mesh.face_node_connectivity.shape[0]
     dummy_face_lon = AuxCoord(np.zeros(mesh_length), standard_name="longitude")
     dummy_face_lat = AuxCoord(np.zeros(mesh_length), standard_name="latitude")
     mesh.add_coords(face_x=dummy_face_lon, face_y=dummy_face_lat)
