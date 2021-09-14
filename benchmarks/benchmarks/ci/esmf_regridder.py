@@ -86,7 +86,6 @@ class MultiGridCompare:
         return args
 
 
-
 class TimeRegridding(MultiGridCompare):
     def setup(self, type):
         (
