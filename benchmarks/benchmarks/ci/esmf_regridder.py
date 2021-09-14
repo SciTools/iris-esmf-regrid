@@ -8,7 +8,7 @@ import iris
 from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
 
-from ci import disable_repeat_between_setup
+from benchmarks import disable_repeat_between_setup
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
