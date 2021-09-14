@@ -8,7 +8,7 @@ import iris
 from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
 
-from benchmarks import disable_repeat_between_setup
+from ci import disable_repeat_between_setup
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -81,6 +81,7 @@ class MultiGridCompare:
             n_lats_src,
             n_lons_tgt,
             n_lats_tgt,
+            h,
             coord_system_src,
         )
         return args
@@ -95,6 +96,7 @@ class TimeRegridding(MultiGridCompare):
             n_lats_src,
             n_lons_tgt,
             n_lats_tgt,
+            h,
             coord_system_src,
         ) = self.get_args(type)
         grid = _grid_cube(
@@ -184,6 +186,7 @@ class TimeMeshToGridRegridding(MultiGridCompare):
             n_lats_src,
             n_lons_tgt,
             n_lats_tgt,
+            h,
             coord_system_src,
         ) = self.get_args(type)
         mesh = _gridlike_mesh(n_lons_src, n_lats_src)
@@ -277,6 +280,7 @@ class TimeGridToMeshRegridding(MultiGridCompare):
             n_lats_src,
             n_lons_tgt,
             n_lats_tgt,
+            h,
             coord_system_src,
         ) = self.get_args(type)
         grid = _grid_cube(
