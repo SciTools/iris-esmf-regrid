@@ -173,7 +173,7 @@ class TimeLazyRegridding:
         _ = self.result.data
 
 
-class TimeMeshToGridRegridding(MultiGridCompare):
+class TimeMeshToGridRegridding(TimeRegridding):
     def setup(self, type):
         from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
             _gridlike_mesh,
@@ -204,9 +204,6 @@ class TimeMeshToGridRegridding(MultiGridCompare):
         src.add_aux_coord(mesh_coord_y, 0)
         self.regridder = MeshToGridESMFRegridder(src, tgt)
         self.src = src
-
-    def time_perform_regridding(self, type):
-        _ = self.regridder(self.src)
 
 
 @disable_repeat_between_setup
@@ -267,7 +264,7 @@ class TimeLazyMeshToGridRegridding:
         _ = self.result.data
 
 
-class TimeGridToMeshRegridding(MultiGridCompare):
+class TimeGridToMeshRegridding(TimeRegridding):
     def setup(self, type):
         from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
             _gridlike_mesh,
@@ -304,9 +301,6 @@ class TimeGridToMeshRegridding(MultiGridCompare):
         tgt.add_aux_coord(mesh_coord_y, 0)
         self.regridder = GridToMeshESMFRegridder(src, tgt)
         self.src = src
-
-    def time_perform_regridding(self, type):
-        _ = self.regridder(self.src)
 
 
 @disable_repeat_between_setup
