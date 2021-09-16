@@ -1,5 +1,6 @@
 """Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`."""
 
+import dask.array as da
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
@@ -10,6 +11,9 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
     _grid_cube,
+)
+from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+    _gridlike_mesh,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
@@ -130,3 +134,32 @@ def test_invalid_mdtol():
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=2)
     with pytest.raises(ValueError):
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=-1)
+
+
+def test_laziness():
+    """Test that regridding is lazy when source data is lazy."""
+    n_lons = 12
+    n_lats = 10
+    h = 4
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+
+    mesh = _gridlike_mesh(n_lons, n_lats)
+
+    src_data = np.arange(n_lats * n_lons * h).reshape([-1, h])
+    src_data = da.from_array(src_data, chunks=[15, 2])
+    src = Cube(src_data)
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    src.add_aux_coord(mesh_coord_x, 0)
+    src.add_aux_coord(mesh_coord_y, 0)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    rg = MeshToGridESMFRegridder(src, tgt)
+
+    assert src.has_lazy_data()
+    result = rg(src)
+    assert result.has_lazy_data()
+    out_chunks = result.lazy_data().chunks
+    expected_chunks = ((10,), (12,), (2, 2))
+    assert out_chunks == expected_chunks
+    assert np.allclose(result.data.reshape([-1, h]), src_data)

@@ -1,6 +1,7 @@
 """Provides an iris interface for unstructured regridding."""
 
 import copy
+import functools
 
 import iris
 from iris.analysis._interpolation import get_xy_dim_coords
@@ -8,6 +9,86 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
+
+
+def _map_complete_blocks(src, func, dims, out_sizes):
+    """
+    Apply a function to complete blocks.
+
+    Based on :func:`iris._lazy_data.map_complete_blocks`.
+    By "complete blocks" we mean that certain dimensions are enforced to be
+    spanned by single chunks.
+    Unlike the iris version of this function, this function also handles
+    cases where the input and output have a different number of dimensions.
+    The particular cases this function is designed for involves collapsing
+    a 2D grid to a 1D mesh and expanding a 1D mesh to a 2D grid. Cases
+    involving the mapping between the same number of dimensions should still
+    behave the same as before.
+
+    Parameters
+    ----------
+    src : cube
+        Source :class:`~iris.cube.Cube` that function is applied to.
+    func : function
+        Function to apply.
+    dims : tuple of int
+        Dimensions that cannot be chunked.
+    out_sizes : tuple of int
+        Output size of dimensions that cannot be chunked.
+
+    Returns
+    -------
+    array
+        Either a :class:`dask.array.array`, or :class:`numpy.ndarray`
+        depending on the laziness of the data in src.
+
+    """
+    if not src.has_lazy_data():
+        return func(src.data)
+
+    data = src.lazy_data()
+
+    # Ensure dims are not chunked
+    in_chunks = list(data.chunks)
+    for dim in dims:
+        in_chunks[dim] = src.shape[dim]
+    data = data.rechunk(in_chunks)
+
+    # Determine output chunks
+    sorted_dims = sorted(dims)
+    out_chunks = list(data.chunks)
+    for dim, size in zip(sorted_dims, out_sizes):
+        out_chunks[dim] = size
+
+    num_dims = len(dims)
+    num_out = len(out_sizes)
+    dropped_dims = []
+    if num_out > num_dims:
+        # While this code should be robust for cases where num_out > num_dims > 1,
+        # there is some ambiguity as to what their behaviour ought to be.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_dims == 1
+        slice_index = sorted_dims[-1]
+        # Insert the remaining contents of out_sizes in the position immediately
+        # after the last dimension.
+        out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
+    elif num_dims > num_out:
+        # While this code should be robust for cases where num_dims > num_out > 1,
+        # there is some ambiguity as to what their behaviour ought to be.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_out == 1
+        dropped_dims = sorted_dims[num_out:]
+        # Remove the remaining dimensions from the expected output shape.
+        for dim in dropped_dims[::-1]:
+            out_chunks.pop(dim)
+    else:
+        pass
+
+    return data.map_blocks(
+        func, chunks=out_chunks, drop_axis=dropped_dims, dtype=src.dtype
+    )
 
 
 # Taken from PR #26
@@ -192,9 +273,23 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     """
     mesh_dim, grid_x, grid_y, regridder = regrid_info
 
-    # Perform regridding with realised data for the moment. This may be changed
-    # in future to handle src_cube.lazy_data.
-    new_data = _regrid_along_mesh_dim(regridder, src_cube.data, mesh_dim, mdtol)
+    # Set up a function which can accept just chunk of data as an argument.
+    regrid = functools.partial(
+        _regrid_along_mesh_dim,
+        regridder,
+        mesh_dim=mesh_dim,
+        mdtol=mdtol,
+    )
+
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
+    new_data = _map_complete_blocks(
+        src_cube,
+        regrid,
+        (mesh_dim,),
+        (len(grid_x.points), len(grid_y.points)),
+    )
 
     new_cube = _create_cube(
         new_data,
@@ -431,10 +526,28 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     """
     grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, regridder = regrid_info
 
-    # Perform regridding with realised data for the moment. This may be changed
-    # in future to handle src_cube.lazy_data.
-    new_data = _regrid_along_grid_dims(
-        regridder, src_cube.data, grid_x_dim, grid_y_dim, mdtol
+    # Set up a function which can accept just chunk of data as an argument.
+    regrid = functools.partial(
+        _regrid_along_grid_dims,
+        regridder,
+        grid_x_dim=grid_x_dim,
+        grid_y_dim=grid_y_dim,
+        mdtol=mdtol,
+    )
+
+    face_node = mesh.face_node_connectivity
+    # In face_node_connectivity: `src`= face, `tgt` = node, so you want to
+    # get the length of the `src` dimension.
+    n_faces = face_node.shape[face_node.src_dim]
+
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
+    new_data = _map_complete_blocks(
+        src_cube,
+        regrid,
+        (grid_x_dim, grid_y_dim),
+        (n_faces,),
     )
 
     new_cube = _create_mesh_cube(
