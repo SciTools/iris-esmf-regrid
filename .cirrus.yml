@@ -32,7 +32,7 @@ env:
   # Conda packages to be installed.
   CONDA_CACHE_PACKAGES: "nox pip pyyaml"
   # Use specific custom iris source feature branch.
-  IRIS_SOURCE: "github:mesh-data-model"
+  IRIS_SOURCE: "github:main"
   # Git commit hash for iris test data.
   IRIS_TEST_DATA_VERSION: "2.2"
   # Base directory for the iris-test-data.
