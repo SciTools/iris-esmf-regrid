@@ -1,13 +1,13 @@
 """Slower benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
+from pathlib import Path
+
 import numpy as np
 import dask.array as da
 import iris
-from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
 
 from benchmarks import disable_repeat_between_setup
-from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -22,6 +22,8 @@ class PrepareScalabilityGridToGrid:
     regridder = ESMFAreaWeightedRegridder
 
     def src_cube(self, n):
+        lon_bounds = (-180, 180)
+        lat_bounds = (-90, 90)
         src = _grid_cube(n, n, lon_bounds, lat_bounds)
         return src
 
@@ -36,7 +38,7 @@ class PrepareScalabilityGridToGrid:
         self.tgt = self.tgt_cube(n)
 
     def time_prepare(self, n):
-        rg = self.regridder(self.src, self.tgt)
+        _ = self.regridder(self.src, self.tgt)
 
 
 class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
@@ -75,7 +77,7 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
 class PerformScalabilityGridToGrid:
     params = [10, 100, 1000, 10000]
     grid_size = 500
-    chunk_size = [self.grid_size / 2, self.grid_size / 2, 10]
+    chunk_size = [grid_size / 2, grid_size / 2, 10]
     regridder = ESMFAreaWeightedRegridder
 
     def src_cube(self, height):
@@ -132,7 +134,7 @@ class PerformScalabilityGridToGrid:
 
 class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
     regridder = MeshToGridESMFRegridder
-    chunk_size = [self.grid_size / 2 * self.grid_size / 2, 10]
+    chunk_size = [grid_size / 2 * grid_size / 2, 10]
 
     def src_cube(self, height, chunk_size):
         data = da.ones(
@@ -146,7 +148,7 @@ class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
             _gridlike_mesh,
         )
 
-        mesh = _gridlike_mesh(grid_size, grid_size)
+        mesh = _gridlike_mesh(self.grid_size, self.grid_size)
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         cube.add_aux_coord(mesh_coord_x, 0)
         cube.add_aux_coord(mesh_coord_y, 0)
