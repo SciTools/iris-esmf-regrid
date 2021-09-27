@@ -134,7 +134,12 @@ class PerformScalabilityGridToGrid:
 
 class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
     regridder = MeshToGridESMFRegridder
-    chunk_size = [grid_size / 2 * grid_size / 2, 10]
+    chunk_size = [
+        PerformScalabilityGridToGrid.grid_size
+        * PerformScalabilityGridToGrid.grid_size
+        / 4,
+        10,
+    ]
 
     def src_cube(self, height, chunk_size):
         data = da.ones(
@@ -157,7 +162,6 @@ class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
 
 class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
     regridder = GridToMeshESMFRegridder
-    chunk_size = [grid_size / 2 * grid_size / 2, 10]
 
     def tgt_cube(self):
         from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
