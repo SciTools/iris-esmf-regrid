@@ -75,7 +75,7 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
 class PerformScalabilityGridToGrid:
     params = [10, 100, 1000, 10000]
     grid_size = 500
-    chunk_size = [grid_size / 2, grid_size / 2, 10]
+    chunk_size = [self.grid_size / 2, self.grid_size / 2, 10]
     regridder = ESMFAreaWeightedRegridder
 
     def src_cube(self, height):
@@ -132,7 +132,7 @@ class PerformScalabilityGridToGrid:
 
 class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
     regridder = MeshToGridESMFRegridder
-    chunk_size = [grid_size / 2 * grid_size / 2, 10]
+    chunk_size = [self.grid_size / 2 * self.grid_size / 2, 10]
 
     def src_cube(self, height, chunk_size):
         data = da.ones(
