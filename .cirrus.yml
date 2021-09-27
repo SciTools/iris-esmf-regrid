@@ -12,7 +12,7 @@
 container:
   image: python:3.8
   cpu: 2
-  memory: 4G
+  memory: 6G
 
 env:
   # Skip specific tasks by name. Set to a non-empty string to skip.

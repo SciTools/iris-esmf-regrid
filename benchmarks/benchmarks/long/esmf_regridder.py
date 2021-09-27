@@ -17,7 +17,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
 
 class PrepareScalabilityGridToGrid:
-    params = [50, 100, 500, 1000, 2000]
+    params = [50, 100, 200, 400, 600, 800, 1000, 2000]
     height = 100
     regridder = ESMFAreaWeightedRegridder
 
@@ -75,9 +75,10 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
 
 @disable_repeat_between_setup
 class PerformScalabilityGridToGrid:
-    params = [10, 100, 1000, 10000]
+    params = [100, 200, 400, 600, 800, 1000]
     grid_size = 500
-    chunk_size = [grid_size / 2, grid_size / 2, 10]
+    target_grid_size = 51
+    chunk_size = [int(grid_size / 2), int(grid_size / 2), 10]
     regridder = ESMFAreaWeightedRegridder
 
     def src_cube(self, height):
@@ -97,7 +98,7 @@ class PerformScalabilityGridToGrid:
         lon_bounds = (-180, 180)
         lat_bounds = (-90, 90)
         grid = _grid_cube(
-            self.grid_size / 10 + 1, self.grid_size / 10 + 1, lon_bounds, lat_bounds
+            self.target_grid_size, self.target_grid_size, lon_bounds, lat_bounds
         )
         return grid
 
@@ -168,8 +169,8 @@ class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
             _gridlike_mesh,
         )
 
-        tgt = Cube(np.ones([(self.grid_size / 10 + 1) * (self.grid_size / 10 + 1)]))
-        mesh = _gridlike_mesh(self.grid_size / 10 + 1, self.grid_size / 10 + 1)
+        tgt = Cube(np.ones([self.target_grid_size * self.target_grid_size]))
+        mesh = _gridlike_mesh(self.target_grid_size, self.target_grid_size)
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         tgt.add_aux_coord(mesh_coord_x, 0)
         tgt.add_aux_coord(mesh_coord_y, 0)
