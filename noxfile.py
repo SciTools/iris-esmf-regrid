@@ -338,11 +338,11 @@ def tests(session: nox.sessions.Session):
 
 @nox.session
 @nox.parametrize(
-    ["ci_mode", "gh_pages"],
-    [(True, False), (False, False), (False, True)],
-    ids=["ci compare", "full", "full then publish"],
+    ["ci_mode", "long_mode", "gh_pages"],
+    [(True, False, False), (False, False, False), (False, False, True), (False, True, False)],
+    ids=["ci compare", "full", "full then publish", "long snapshot"],
 )
-def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
+def benchmarks(session: nox.sessions.Session, ci_mode: bool, long_mode: bool, gh_pages: bool):
     """
     Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
 
@@ -353,6 +353,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
     ci_mode: bool
         Run a cut-down selection of benchmarks, comparing the current commit to
         the last commit for performance regressions.
+    long_mode: bool
+        Run the long running benchmarks at the current head of the repo.
     gh_pages: bool
         Run ``asv gh-pages --rewrite`` once finished.
 
@@ -383,6 +385,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
             asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
         finally:
             asv_exec("compare", previous_commit, "HEAD")
+    elif long_mode:
+        asv_exec("run", "HEAD^!", "--bench=long")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
         asv_exec("run", "f32f23a5..HEAD")
