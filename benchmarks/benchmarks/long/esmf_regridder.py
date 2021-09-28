@@ -75,9 +75,9 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
 
 @disable_repeat_between_setup
 class PerformScalabilityGridToGrid:
-    params = [100, 200, 400, 600, 800, 1000]
-    grid_size = 500
-    target_grid_size = 51
+    params = [100, 200, 400, 600, 800]
+    grid_size = 400
+    target_grid_size = 41
     chunk_size = [int(grid_size / 2), int(grid_size / 2), 10]
     regridder = ESMFAreaWeightedRegridder
 
@@ -102,12 +102,12 @@ class PerformScalabilityGridToGrid:
         )
         return grid
 
-    def setup_cache(self, height):
+    def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
         file = str(SYNTH_DATA_DIR.joinpath("chunked_cube.nc"))
 
-        src = self.src_cube(height)
+        src = self.src_cube(max(self.params))
         iris.save(src, file, chunksizes=self.chunk_size)
         loaded_src = iris.load_cube(file)
         loaded_src = self.add_src_metadata(loaded_src)
@@ -117,10 +117,12 @@ class PerformScalabilityGridToGrid:
 
     def setup(self, cache, height):
         regridder, file = cache
-        self.src = iris.load_cube(file)
+        src = iris.load_cube(file)[..., :height]
+        self.src = self.add_src_metadata(src)
         # Realise data.
         self.src.data
-        cube = iris.load_cube(file)
+        cube = iris.load_cube(file)[..., :height]
+        cube = self.add_src_metadata(cube)
         self.result = regridder(cube)
 
     def time_perform(self, cache, height):
@@ -142,7 +144,7 @@ class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
         10,
     ]
 
-    def src_cube(self, height, chunk_size):
+    def src_cube(self, height):
         data = da.ones(
             [self.grid_size * self.grid_size, height], chunks=self.chunk_size
         )

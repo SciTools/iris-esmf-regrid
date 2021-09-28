@@ -11,7 +11,7 @@
 #
 container:
   image: python:3.8
-  cpu: 2
+  cpu: 4
   memory: 6G
 
 env:
