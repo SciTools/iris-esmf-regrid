@@ -17,7 +17,9 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
 
 class PrepareScalabilityGridToGrid:
-    params = [50, 100, 200, 400, 600, 800, 1000, 2000]
+    # params = [50, 100, 200, 400, 600, 800, 1000, 2000]
+    params = [50, 100, 200, 400, 600, 800]
+    param_names = ["grid width"]
     height = 100
     regridder = ESMFAreaWeightedRegridder
 
@@ -75,11 +77,13 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
 
 @disable_repeat_between_setup
 class PerformScalabilityGridToGrid:
-    params = [100, 200, 400, 600, 800]
+    params = [100, 200, 400, 600, 800, 1000]
+    param_names = ["height"]
     grid_size = 400
     target_grid_size = 41
-    chunk_size = [int(grid_size / 2), int(grid_size / 2), 10]
+    chunk_size = [grid_size, grid_size, 10]
     regridder = ESMFAreaWeightedRegridder
+    file_name = "chunked_cube.nc"
 
     def src_cube(self, height):
         data = da.ones([self.grid_size, self.grid_size, height], chunks=self.chunk_size)
@@ -105,7 +109,7 @@ class PerformScalabilityGridToGrid:
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
-        file = str(SYNTH_DATA_DIR.joinpath("chunked_cube.nc"))
+        file = str(SYNTH_DATA_DIR.joinpath(self.file_name))
 
         src = self.src_cube(max(self.params))
         iris.save(src, file, chunksizes=self.chunk_size)
@@ -139,10 +143,13 @@ class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
     regridder = MeshToGridESMFRegridder
     chunk_size = [
         PerformScalabilityGridToGrid.grid_size
-        * PerformScalabilityGridToGrid.grid_size
-        / 4,
+        * PerformScalabilityGridToGrid.grid_size,
         10,
     ]
+    file_name = "chunked_cube_1d.nc"
+
+    def setup_cache(self):
+        return super().setup_cache()
 
     def src_cube(self, height):
         data = da.ones(
@@ -165,6 +172,9 @@ class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
 
 class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
     regridder = GridToMeshESMFRegridder
+
+    def setup_cache(self):
+        return super().setup_cache()
 
     def tgt_cube(self):
         from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
