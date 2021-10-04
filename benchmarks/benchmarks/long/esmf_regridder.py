@@ -111,6 +111,8 @@ class PerformScalabilityGridToGrid:
         file = str(SYNTH_DATA_DIR.joinpath(self.file_name))
 
         src = self.src_cube(max(self.params))
+        # While iris is not able to save meshes, we add these after loading. 
+        # TODO: change this back after iris allows mesh saving.
         iris.save(src, file, chunksizes=self.chunk_size)
         loaded_src = iris.load_cube(file)
         loaded_src = self.add_src_metadata(loaded_src)
