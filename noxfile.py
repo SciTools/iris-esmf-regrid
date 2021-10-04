@@ -339,10 +339,17 @@ def tests(session: nox.sessions.Session):
 @nox.session
 @nox.parametrize(
     ["ci_mode", "long_mode", "gh_pages"],
-    [(True, False, False), (False, False, False), (False, False, True), (False, True, False)],
+    [
+        (True, False, False),
+        (False, False, False),
+        (False, False, True),
+        (False, True, False),
+    ],
     ids=["ci compare", "full", "full then publish", "long snapshot"],
 )
-def benchmarks(session: nox.sessions.Session, ci_mode: bool, long_mode: bool, gh_pages: bool):
+def benchmarks(
+    session: nox.sessions.Session, ci_mode: bool, long_mode: bool, gh_pages: bool
+):
     """
     Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
 
