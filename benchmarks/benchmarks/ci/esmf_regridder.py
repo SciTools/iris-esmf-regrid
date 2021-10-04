@@ -113,8 +113,13 @@ class TimeRegridding(MultiGridCompare):
         src = Cube(src_data)
         src.add_dim_coord(grid.coord("latitude"), 0)
         src.add_dim_coord(grid.coord("longitude"), 1)
-        self.regridder = ESMFAreaWeightedRegridder(src, tgt)
+        self.regrid_class = ESMFAreaWeightedRegridder
+        self.regridder = self.regrid_class(src, tgt)
         self.src = src
+        self.tgt = tgt
+
+    def time_prepare_regridding(self, type):
+        _ = self.regrid_class(self.src, self.tgt)
 
     def time_perform_regridding(self, type):
         _ = self.regridder(self.src)
@@ -202,8 +207,10 @@ class TimeMeshToGridRegridding(TimeRegridding):
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         src.add_aux_coord(mesh_coord_x, 0)
         src.add_aux_coord(mesh_coord_y, 0)
-        self.regridder = MeshToGridESMFRegridder(src, tgt)
+        self.regrid_class = MeshToGridESMFRegridder
+        self.regridder = self.regrid_class(src, tgt)
         self.src = src
+        self.tgt = tgt
 
 
 @disable_repeat_between_setup
@@ -299,8 +306,10 @@ class TimeGridToMeshRegridding(TimeRegridding):
         mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
         tgt.add_aux_coord(mesh_coord_x, 0)
         tgt.add_aux_coord(mesh_coord_y, 0)
-        self.regridder = GridToMeshESMFRegridder(src, tgt)
+        self.regrid_class = GridToMeshESMFRegridder
+        self.regridder = self.regrid_class(src, tgt)
         self.src = src
+        self.tgt = tgt
 
 
 @disable_repeat_between_setup
