@@ -17,7 +17,6 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
 
 class PrepareScalabilityGridToGrid:
-    # params = [50, 100, 200, 400, 600, 800, 1000, 2000]
     params = [50, 100, 200, 400, 600, 800]
     param_names = ["grid width"]
     height = 100
@@ -141,11 +140,7 @@ class PerformScalabilityGridToGrid:
 
 class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
     regridder = MeshToGridESMFRegridder
-    chunk_size = [
-        PerformScalabilityGridToGrid.grid_size
-        * PerformScalabilityGridToGrid.grid_size,
-        10,
-    ]
+    chunk_size = [PerformScalabilityGridToGrid.grid_size ^ 2, 10]
     file_name = "chunked_cube_1d.nc"
 
     def setup_cache(self):
