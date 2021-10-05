@@ -10,7 +10,7 @@ dependencies:
   - setuptools>=40.8.0
 
 # Core dependencies.
-  - cartopy>=0.18
+  - cartopy<0.2
   - numpy>=1.14
   - scipy
   - esmpy>=7.0
