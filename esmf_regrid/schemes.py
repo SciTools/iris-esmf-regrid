@@ -26,29 +26,51 @@ def _bounds_cf_to_simple_1d(cf_bounds):
     return simple_bounds
 
 
+def _bounds_cf_to_simple_2d(cf_bounds):
+    simple_bounds = np.empty(
+        (cf_bounds.shape[0] + 1, cf_bounds.shape[1] + 1), dtype=np.float64
+    )
+    simple_bounds[1:, 1:] = cf_bounds[:, :, 0]
+    simple_bounds[0, 1:] = cf_bounds[0, :, 3]
+    simple_bounds[1:, 0] = cf_bounds[:, 0, 1]
+    simple_bounds[0, 0] = cf_bounds[0, 0, 2]
+    return simple_bounds
+
+
 def _cube_to_GridInfo(cube):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
     # Returns a GridInfo object describing the horizontal grid of the cube.
     # This may be inherited from code written for the rectilinear regridding scheme.
-    lon = cube.coord("longitude")
-    lat = cube.coord("latitude")
-    # Ensure coords come from a proper grid.
-    assert isinstance(lon, iris.coords.DimCoord)
-    assert isinstance(lat, iris.coords.DimCoord)
-    # TODO: accommodate other x/y coords.
-    # TODO: perform checks on lat/lon.
+    lon, lat = src_cube.coord(axis="x"), src_cube.coord(axis="y")
+    # lon = cube.coord("longitude")
+    # lat = cube.coord("latitude")
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
     if cube.coord_system() is None:
         crs = None
     else:
         crs = cube.coord_system().as_cartopy_crs()
+    londim, latdim = len(lon.points.shape), len(lat.points.shape)
+    assert londim == latdim
+    assert londim in (1, 2)
+    if londim == 1:
+        # Ensure coords come from a proper grid.
+        assert isinstance(lon, iris.coords.DimCoord)
+        assert isinstance(lat, iris.coords.DimCoord)
+        # TODO: accommodate other x/y coords.
+        # TODO: perform checks on lat/lon.
+        bound_conversion = _bounds_cf_to_simple_1d
+    elif londim == 2:
+        assert cube.coord_dims(lon) == cube.coord_dims(lat)
+        assert lon.is_contiguous()
+        assert lat.is_contiguous()
+        bound_conversion = _bounds_cf_to_simple_2d
     return GridInfo(
         lon.points,
         lat.points,
-        _bounds_cf_to_simple_1d(lon.bounds),
-        _bounds_cf_to_simple_1d(lat.bounds),
+        bound_conversion(lon.bounds),
+        bound_conversion(lat.bounds),
         crs=crs,
         circular=lon.circular,
     )

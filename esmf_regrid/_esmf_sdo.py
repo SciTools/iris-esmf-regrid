@@ -146,13 +146,29 @@ class GridInfo(SDO):
     def _as_esmf_info(self):
         shape = np.array(self._shape)
 
-        if self.circular:
-            adjustedlonbounds = self.lonbounds[:-1]
-        else:
-            adjustedlonbounds = self.lonbounds
+        londims = len(self.lons.shape)
+        assert len(self.lons.shape) == londims
+        latdims = len(self.lats.shape)
+        assert len(self.lats.shape) == latdims
+        assert londims == latdims
+        assert londims in (1, 2)
 
-        centerlons, centerlats = np.meshgrid(self.lons, self.lats)
-        cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
+        if londims == 1:
+            if self.circular:
+                adjustedlonbounds = self.lonbounds[:-1]
+            else:
+                adjustedlonbounds = self.lonbounds
+            centerlons, centerlats = np.meshgrid(self.lons, self.lats)
+            cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
+        elif londims == 2:
+            if self.circular:
+                slice = np.s_[:, :-1]
+            else:
+                slice = np.s_[:]
+            centerlons = self.lons[slice]
+            centerlats = self.lats[slice]
+            cornerlons = self.lonbouns[slice]
+            cornerlats = self.latbounds[slice]
 
         truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
         truecorners = ccrs.Geodetic().transform_points(self.crs, cornerlons, cornerlats)
