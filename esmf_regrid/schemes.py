@@ -18,23 +18,23 @@ __all__ = [
 ]
 
 
-def _bounds_cf_to_simple_1d(cf_bounds):
-    assert (cf_bounds[1:, 0] == cf_bounds[:-1, 1]).all()
-    simple_bounds = np.empty((cf_bounds.shape[0] + 1,), dtype=np.float64)
-    simple_bounds[:-1] = cf_bounds[:, 0]
-    simple_bounds[-1] = cf_bounds[-1, 1]
-    return simple_bounds
-
-
-def _bounds_cf_to_simple_2d(cf_bounds):
-    simple_bounds = np.empty(
-        (cf_bounds.shape[0] + 1, cf_bounds.shape[1] + 1), dtype=np.float64
-    )
-    simple_bounds[1:, 1:] = cf_bounds[:, :, 0]
-    simple_bounds[0, 1:] = cf_bounds[0, :, 3]
-    simple_bounds[1:, 0] = cf_bounds[:, 0, 1]
-    simple_bounds[0, 0] = cf_bounds[0, 0, 2]
-    return simple_bounds
+# def _bounds_cf_to_simple_1d(cf_bounds):
+#     assert (cf_bounds[1:, 0] == cf_bounds[:-1, 1]).all()
+#     simple_bounds = np.empty((cf_bounds.shape[0] + 1,), dtype=np.float64)
+#     simple_bounds[:-1] = cf_bounds[:, 0]
+#     simple_bounds[-1] = cf_bounds[-1, 1]
+#     return simple_bounds
+#
+#
+# def _bounds_cf_to_simple_2d(cf_bounds):
+#     simple_bounds = np.empty(
+#         (cf_bounds.shape[0] + 1, cf_bounds.shape[1] + 1), dtype=np.float64
+#     )
+#     simple_bounds[1:, 1:] = cf_bounds[:, :, 0]
+#     simple_bounds[0, 1:] = cf_bounds[0, :, 3]
+#     simple_bounds[1:, 0] = cf_bounds[:, 0, 1]
+#     simple_bounds[0, 0] = cf_bounds[0, 0, 2]
+#     return simple_bounds
 
 
 def _cube_to_GridInfo(cube):
@@ -60,17 +60,19 @@ def _cube_to_GridInfo(cube):
         assert isinstance(lat, iris.coords.DimCoord)
         # TODO: accommodate other x/y coords.
         # TODO: perform checks on lat/lon.
-        bound_conversion = _bounds_cf_to_simple_1d
+        # bound_conversion = _bounds_cf_to_simple_1d
     elif londim == 2:
         assert cube.coord_dims(lon) == cube.coord_dims(lat)
         assert lon.is_contiguous()
         assert lat.is_contiguous()
-        bound_conversion = _bounds_cf_to_simple_2d
+        # bound_conversion = _bounds_cf_to_simple_2d
     return GridInfo(
         lon.points,
         lat.points,
-        bound_conversion(lon.bounds),
-        bound_conversion(lat.bounds),
+        # bound_conversion(lon.bounds),
+        # bound_conversion(lat.bounds),
+        lon.contiguous_bounds(),
+        lat.contiguous_bounds(),
         crs=crs,
         circular=lon.circular,
     )
