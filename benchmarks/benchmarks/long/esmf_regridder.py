@@ -7,7 +7,7 @@ import dask.array as da
 import iris
 from iris.cube import Cube
 
-from benchmarks import disable_repeat_between_setup
+from benchmarks import disable_repeat_between_setup, skip_benchmark
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -190,6 +190,9 @@ class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
         return tgt
 
 
+# These benchmarks unusually long and are resource intensive so are skipped.
+# They can be run by manually removing the skip.
+@skip_benchmark
 class PerformScalability1kGridToGrid(PerformScalabilityGridToGrid):
     timeout = 600
     grid_size = 1100
@@ -204,6 +207,9 @@ class PerformScalability1kGridToGrid(PerformScalabilityGridToGrid):
         return super().setup_cache()
 
 
+# These benchmarks unusually long and are resource intensive so are skipped.
+# They can be run by manually removing the skip.
+@skip_benchmark
 class PerformScalability2kGridToGrid(PerformScalabilityGridToGrid):
     timeout = 600
     grid_size = 2200
