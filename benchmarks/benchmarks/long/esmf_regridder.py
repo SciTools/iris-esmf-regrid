@@ -184,3 +184,23 @@ class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
         tgt.add_aux_coord(mesh_coord_x, 0)
         tgt.add_aux_coord(mesh_coord_y, 0)
         return tgt
+
+
+class PerformScalability1kGridToGrid(PerformScalabilityGridToGrid):
+    timeout = 600
+    grid_size = 1100
+    chunk_size = [grid_size, grid_size, 10]
+    target_grid_size = 111
+
+    def setup_cache(self):
+        return super().setup_cache()
+
+
+class PerformScalability2kGridToGrid(PerformScalabilityGridToGrid):
+    timeout = 600
+    grid_size = 2200
+    chunk_size = [grid_size, grid_size, 10]
+    target_grid_size = 221
+
+    def setup_cache(self):
+        return super().setup_cache()
