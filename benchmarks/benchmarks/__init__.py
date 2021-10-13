@@ -25,3 +25,20 @@ def disable_repeat_between_setup(benchmark_object):
     benchmark_object.warmup_time = 0.0
 
     return benchmark_object
+
+
+def skip_benchmark(benchmark_object):
+    """
+    Decorator for benchmarks skipping benchmarks.
+    """
+
+    def setup_cache(self):
+        pass
+
+    def setup(*args):
+        raise NotImplementedError
+
+    benchmark_object.setup_cache = setup_cache
+    benchmark_object.setup = setup
+
+    return benchmark_object
