@@ -79,6 +79,10 @@ class PerformScalabilityGridToGrid:
     params = [100, 200, 400, 600, 800, 1000]
     param_names = ["height"]
     grid_size = 400
+    # Define the target grid to be smaller so that time spent realising a large array
+    # does not dominate the time spent on regridding calculation. A number which is
+    # not a factor of the grid size is chosen so that the two grids will be slightly
+    # misaligned.
     target_grid_size = 41
     chunk_size = [grid_size, grid_size, 10]
     regridder = ESMFAreaWeightedRegridder
@@ -190,6 +194,10 @@ class PerformScalability1kGridToGrid(PerformScalabilityGridToGrid):
     timeout = 600
     grid_size = 1100
     chunk_size = [grid_size, grid_size, 10]
+    # Define the target grid to be smaller so that time spent realising a large array
+    # does not dominate the time spent on regridding calculation. A number which is
+    # not a factor of the grid size is chosen so that the two grids will be slightly
+    # misaligned.
     target_grid_size = 111
 
     def setup_cache(self):
@@ -200,6 +208,10 @@ class PerformScalability2kGridToGrid(PerformScalabilityGridToGrid):
     timeout = 600
     grid_size = 2200
     chunk_size = [grid_size, grid_size, 10]
+    # Define the target grid to be smaller so that time spent realising a large array
+    # does not dominate the time spent on regridding calculation. A number which is
+    # not a factor of the grid size is chosen so that the two grids will be slightly
+    # misaligned.
     target_grid_size = 221
 
     def setup_cache(self):
