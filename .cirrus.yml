@@ -115,6 +115,8 @@ test_task:
 benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
+  env:
+    PY_VER: "3.8"
   name: "${CIRRUS_OS}: performance benchmarking"
   # Custom clone behaviour to enable ASV to access the PR base branch (if on a
   #  PR).
