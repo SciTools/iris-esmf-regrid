@@ -134,6 +134,15 @@ benchmark_task:
     fingerprint_script:
       - echo "${CIRRUS_TASK_NAME}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
+  nox_cache:
+    folder: ${CIRRUS_WORKING_DIR}/.nox
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo "${CIRRUS_TASK_NAME}"
+      - echo "${NOX_CACHE_BUILD}"
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
+    - nox --session=tests --install-only
+    - export DATA_GEN_PYTHON=$(find .nox -path "*bin/python")
     - nox --session="benchmarks(ci compare)"
