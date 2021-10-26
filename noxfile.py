@@ -336,7 +336,7 @@ def tests(session: nox.sessions.Session):
         session.run("pytest")
 
 
-@nox.session
+@nox.session(python=PY_VER, venv_backend="conda")
 @nox.parametrize(
     ["ci_mode", "gh_pages"],
     [(True, False), (False, False), (False, True)],
@@ -372,7 +372,7 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
         help_output = session.run(*run_args, "--help", silent=True)
         if "--python" in help_output:
             # Not all asv commands accept the --python kwarg.
-            run_args.append(f"--python={PY_VER[-1]}")
+            run_args.append(f"--python={session.python}")
         session.run(*run_args)
 
     if ci_mode:
