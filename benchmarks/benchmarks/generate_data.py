@@ -67,9 +67,11 @@ def _grid_cube(
     circular=False,
     alt_coord_system=False,
 ):
+    """Wrapper for calling _grid_cube using an alternative python executable."""
+
     def func(*args, **kwargs):
         """
-        Prep and run _grid_args, saving to a NetCDF file.
+        Prep and run _grid_cube, saving to a NetCDF file.
 
         Saving to a file allows the original python executable to pick back up.
 
