@@ -146,5 +146,5 @@ benchmark_task:
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session=tests --python --install-only
-    - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*bin/python"))
+    - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests*bin/python"))
     - nox --session="benchmarks(ci compare)"
