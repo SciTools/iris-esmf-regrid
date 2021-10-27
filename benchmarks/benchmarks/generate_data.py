@@ -4,12 +4,10 @@ Scripts for generating supporting data for benchmarking.
 Data generated using iris-esmf-regrid should use
 :func:`run_function_elsewhere`, which means that data is generated using a
 fixed version of iris-esmf-regrid and a fixed environment, rather than those
-that get changed when the benchmarking run checks out a new commit.
-
-The python executable for :func:`run_function_elsewhere` is provided via the
-``DATA_GEN_PYTHON`` environment variable, and should be the path of an
-executable within an environment that supports iris-esmf-regrid and has
-iris-esmf-regrid installed via ``pip install -e``.
+that get changed when the benchmarking run checks out a new commit. The passed
+python executable path in such a case should be within an environment that
+supports iris-esmf-regrid and has iris-esmf-regrid installed via
+``pip install -e``. See also :const:`DATA_GEN_PYTHON`.
 
 Downstream use of data generated 'elsewhere' requires saving; usually in a
 NetCDF file. Could also use pickling but there is a potential risk if the
@@ -23,13 +21,15 @@ from textwrap import dedent
 
 from iris import load_cube
 
-PYTHON_EXE = environ.get("DATA_GEN_PYTHON", "")
+# Allows the command line to pass in a python executable for use within
+#  run_function_elsewhere()·
+DATA_GEN_PYTHON = environ.get("DATA_GEN_PYTHON", "")
 try:
-    _ = check_output([PYTHON_EXE, "-c", "a = True"])
+    _ = check_output([DATA_GEN_PYTHON, "-c", "a = True"])
 except (CalledProcessError, FileNotFoundError, PermissionError):
     error = (
         f"Expected valid python executable path from env variable "
-        f"DATA_GEN_PYTHON. Got: {PYTHON_EXE}"
+        f"DATA_GEN_PYTHON. Got: {DATA_GEN_PYTHON}"
     )
     raise ValueError(error)
 
@@ -105,6 +105,6 @@ def _grid_cube(
         f"{circular}, alt_coord_system={alt_coord_system}"
         ")"
     )
-    cube_file = run_function_elsewhere(PYTHON_EXE, func, call_string)
+    cube_file = run_function_elsewhere(DATA_GEN_PYTHON, func, call_string)
     return_cube = load_cube(cube_file)
     return return_cube
