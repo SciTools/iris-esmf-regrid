@@ -17,6 +17,7 @@ benchmark sequence runs over two different Python versions.
 from inspect import getsource
 from subprocess import CalledProcessError, check_output, run
 from os import environ
+from pathlib import Path
 from textwrap import dedent
 
 from iris import load_cube
@@ -41,8 +42,6 @@ def run_function_elsewhere(python_exe, func_to_run, func_call_string):
     This structure allows the function to be written natively, with only the
     function call needing to be written as a string.
 
-    Uses print (stdout) as the only available 'return'.
-
     Parameters
     ----------
     python_exe : pathlib.Path or str
@@ -52,11 +51,16 @@ def run_function_elsewhere(python_exe, func_to_run, func_call_string):
     func_call_string: str
         A string that, when executed, will call the function with the desired arguments.
 
+    Returns
+    -------
+    str
+        The ``stdout`` from the run.
+
     """
     func_string = dedent(getsource(func_to_run))
     python_string = "\n".join([func_string, func_call_string])
     result = run([python_exe, "-c", python_string], capture_output=True, check=True)
-    return result.stdout.decode().strip()
+    return result.stdout
 
 
 def _grid_cube(
@@ -79,32 +83,31 @@ def _grid_cube(
         construction of a ``coord_system`` within the function.
 
         """
-        from pathlib import Path
-
         from iris import save
         from iris.coord_systems import RotatedGeogCS
 
         from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
-        save_dir = (Path().parent.parent / ".data").resolve()
-        save_dir.mkdir(exist_ok=True)
-        # TODO: caching? Currently written assuming overwrite every time.
-        save_path = save_dir / "_grid_cube.nc"
+        save_path = kwargs.pop("save_path")
 
         if kwargs.pop("alt_coord_system"):
             kwargs["coord_system"] = RotatedGeogCS(0, 90, 90)
 
         cube = _grid_cube(*args, **kwargs)
-        save(cube, str(save_path))
-        # Print the path for downstream use - is returned by run_function_elsewhere().
-        print(save_path)
+        save(cube, save_path)
+
+    save_dir = (Path(__file__).parent.parent / ".data").resolve()
+    save_dir.mkdir(exist_ok=True)
+    # TODO: caching? Currently written assuming overwrite every time.
+    save_path = save_dir / "_grid_cube.nc"
 
     call_string = (
         "func("
         f"{n_lons}, {n_lats}, {lon_outer_bounds}, {lat_outer_bounds}, "
-        f"{circular}, alt_coord_system={alt_coord_system}"
+        f"{circular}, alt_coord_system={alt_coord_system}, "
+        f"save_path='{save_path}'"
         ")"
     )
-    cube_file = run_function_elsewhere(DATA_GEN_PYTHON, func, call_string)
-    return_cube = load_cube(cube_file)
+    _ = run_function_elsewhere(DATA_GEN_PYTHON, func, call_string)
+    return_cube = load_cube(str(save_path))
     return return_cube
