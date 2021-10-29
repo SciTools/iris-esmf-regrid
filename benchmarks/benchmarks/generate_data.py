@@ -73,9 +73,9 @@ def _grid_cube(
 ):
     """Wrapper for calling _grid_cube using an alternative python executable."""
 
-    def func(*args, **kwargs):
+    def external(*args, **kwargs):
         """
-        Prep and run _grid_cube, saving to a NetCDF file.
+        Prep and call _grid_cube, saving to a NetCDF file.
 
         Saving to a file allows the original python executable to pick back up.
 
@@ -86,14 +86,16 @@ def _grid_cube(
         from iris import save
         from iris.coord_systems import RotatedGeogCS
 
-        from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
+        from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
+            _grid_cube as original,
+        )
 
         save_path = kwargs.pop("save_path")
 
         if kwargs.pop("alt_coord_system"):
             kwargs["coord_system"] = RotatedGeogCS(0, 90, 90)
 
-        cube = _grid_cube(*args, **kwargs)
+        cube = original(*args, **kwargs)
         save(cube, save_path)
 
     save_dir = (Path(__file__).parent.parent / ".data").resolve()
@@ -101,13 +103,13 @@ def _grid_cube(
     # TODO: caching? Currently written assuming overwrite every time.
     save_path = save_dir / "_grid_cube.nc"
 
-    call_string = (
+    external_call = (
         "func("
         f"{n_lons}, {n_lats}, {lon_outer_bounds}, {lat_outer_bounds}, "
         f"{circular}, alt_coord_system={alt_coord_system}, "
         f"save_path='{save_path}'"
         ")"
     )
-    _ = run_function_elsewhere(DATA_GEN_PYTHON, func, call_string)
+    _ = run_function_elsewhere(DATA_GEN_PYTHON, external, external_call)
     return_cube = load_cube(str(save_path))
     return return_cube
