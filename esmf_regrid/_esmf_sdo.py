@@ -129,6 +129,17 @@ class GridInfo(SDO):
         """
         self.lons = lons
         self.lats = lats
+        londims = len(self.lons.shape)
+        assert len(self.lons.shape) == londims
+        latdims = len(self.lats.shape)
+        assert len(self.lats.shape) == latdims
+        assert londims == latdims
+        assert londims in (1, 2)
+        if londims == 1:
+            shape = (len(lats), len(lons))
+        else:
+            shape = self.lons.shape
+
         self.lonbounds = lonbounds
         self.latbounds = latbounds
         if crs is None:
@@ -138,7 +149,7 @@ class GridInfo(SDO):
         self.circular = circular
         self.areas = areas
         super().__init__(
-            shape=(len(lats), len(lons)),
+            shape=shape,
             index_offset=1,
             field_kwargs={"staggerloc": ESMF.StaggerLoc.CENTER},
         )
@@ -167,7 +178,7 @@ class GridInfo(SDO):
                 slice = np.s_[:]
             centerlons = self.lons[slice]
             centerlats = self.lats[slice]
-            cornerlons = self.lonbouns[slice]
+            cornerlons = self.lonbounds[slice]
             cornerlats = self.latbounds[slice]
 
         truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)

@@ -1,7 +1,7 @@
 """Unit tests for miscellaneous helper functions in `esmf_regrid.schemes`."""
 
 from iris.coord_systems import GeogCS
-from iris.coords import DimCoord
+from iris.coords import DimCoord, AuxCoord
 from iris.cube import Cube
 from iris.fileformats.pp import EARTH_RADIUS
 import numpy as np
@@ -18,6 +18,45 @@ def _generate_points_and_bounds(n, outer_bounds):
     bound_span = full_span[::2]
     bounds = np.stack([bound_span[:-1], bound_span[1:]], axis=-1)
     return points, bounds
+
+
+def _curvilinear_cube(
+    n_lons,
+    n_lats,
+    lon_outer_bounds,
+    lat_outer_bounds,
+    coord_system=None,
+):
+    lon_points, lon_bounds = _generate_points_and_bounds(n_lons, lon_outer_bounds)
+    lat_points, lat_bounds = _generate_points_and_bounds(n_lats, lat_outer_bounds)
+    lon_bounds_full = np.empty([n_lats, n_lons, 4])
+    lon_bounds_full[:, :, :2] = lon_bounds[np.newaxis, :]
+    lon_bounds_full[:, :, 2:] = lon_bounds[np.newaxis, :, ::-1]
+    lat_bounds_full = np.empty([n_lats, n_lons, 4])
+    lat_bounds_full[:, :, :2] = lat_bounds[:, np.newaxis, 0, np.newaxis]
+    lat_bounds_full[:, :, 2:] = lat_bounds[:, np.newaxis, 1, np.newaxis]
+
+    lon_points, lat_points = np.meshgrid(lon_points, lat_points)
+    lon = AuxCoord(
+        lon_points,
+        "longitude",
+        units="degrees",
+        bounds=lon_bounds_full,
+        coord_system=coord_system,
+    )
+    lat = AuxCoord(
+        lat_points,
+        "latitude",
+        units="degrees",
+        bounds=lat_bounds_full,
+        coord_system=coord_system,
+    )
+
+    data = np.zeros([n_lats, n_lons])
+    cube = Cube(data)
+    cube.add_aux_coord(lon, (0, 1))
+    cube.add_aux_coord(lat, (0, 1))
+    return cube
 
 
 def _grid_cube(
