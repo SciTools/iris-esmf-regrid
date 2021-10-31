@@ -1,9 +1,10 @@
 """Unit tests for :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
 
+import numpy as np
 import pytest
 
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube, _curvilinear_cube
 
 
 def test_dim_switching():
@@ -81,3 +82,33 @@ def test_invalid_mdtol():
         _ = ESMFAreaWeightedRegridder(src, tgt, mdtol=2)
     with pytest.raises(ValueError, match=match):
         _ = ESMFAreaWeightedRegridder(src, tgt, mdtol=-1)
+
+
+def test_curvilinear_equivalence():
+    """
+    Test that ESMFAreaWeighted can be passed to a cubes regrid method.
+
+    Checks that regridding occurs and that mdtol is used correctly.
+    """
+
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    grid_src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+    grid_tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+    curv_src = _curvilinear_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds)
+    curv_tgt = _curvilinear_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
+
+    grid_to_grid = ESMFAreaWeightedRegridder(grid_src, grid_tgt)
+    grid_to_curv = ESMFAreaWeightedRegridder(grid_src, curv_tgt)
+    curv_to_grid = ESMFAreaWeightedRegridder(curv_src, grid_tgt)
+    curv_to_curv = ESMFAreaWeightedRegridder(curv_src, curv_tgt)
+    
+    def extract_weights(regridder):
+        return regridder.regridder.weight_matrix.todense()
+
+    for regridder in [grid_to_curv, curv_to_grid, curv_to_curv]:
+        assert np.allclose(extract_weights(grid_to_grid), extract_weights(regridder))

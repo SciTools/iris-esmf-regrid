@@ -159,3 +159,30 @@ def test_grid_with_scalars():
     rg = Regridder(gridinfo, gridinfo)
     expected_weights = scipy.sparse.identity(n_lats * n_lons)
     assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
+
+
+def test_curvilinear_grid():
+    """Test conversion of a global grid."""
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+
+    cube = _curvilinear_cube(
+        n_lons,
+        n_lats,
+        lon_bounds,
+        lat_bounds,
+        coord_system=GeogCS(EARTH_RADIUS),
+    )
+    gridinfo = _cube_to_GridInfo(cube)
+    # Ensure conversion to ESMF works without error
+    _ = gridinfo.make_esmf_field()
+
+    # The following test ensures there are no overlapping cells.
+    # This catches geometric/topological abnormalities that would arise from,
+    # for example: switching lat/lon values, using euclidean coords vs spherical.
+    rg = Regridder(gridinfo, gridinfo)
+    expected_weights = scipy.sparse.identity(n_lats * n_lons)
+    assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
+    assert gridinfo.crs == GeogCS(EARTH_RADIUS).as_cartopy_crs()
