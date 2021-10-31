@@ -4,7 +4,10 @@ import numpy as np
 import pytest
 
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube, _curvilinear_cube
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
+    _grid_cube,
+    _curvilinear_cube,
+)
 
 
 def test_dim_switching():
@@ -106,7 +109,7 @@ def test_curvilinear_equivalence():
     grid_to_curv = ESMFAreaWeightedRegridder(grid_src, curv_tgt)
     curv_to_grid = ESMFAreaWeightedRegridder(curv_src, grid_tgt)
     curv_to_curv = ESMFAreaWeightedRegridder(curv_src, curv_tgt)
-    
+
     def extract_weights(regridder):
         return regridder.regridder.weight_matrix.todense()
 
