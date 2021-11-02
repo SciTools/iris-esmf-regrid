@@ -5,8 +5,8 @@ import pytest
 
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
-    _grid_cube,
     _curvilinear_cube,
+    _grid_cube,
 )
 
 
@@ -93,7 +93,6 @@ def test_curvilinear_equivalence():
 
     Checks that regridding occurs and that mdtol is used correctly.
     """
-
     n_lons_src = 6
     n_lons_tgt = 3
     n_lats_src = 4

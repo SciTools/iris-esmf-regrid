@@ -9,8 +9,8 @@ from numpy import ma
 
 from esmf_regrid.schemes import regrid_rectilinear_to_rectilinear
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
-    _grid_cube,
     _curvilinear_cube,
+    _grid_cube,
 )
 
 
