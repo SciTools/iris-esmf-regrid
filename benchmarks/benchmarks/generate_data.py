@@ -4,10 +4,7 @@ Scripts for generating supporting data for benchmarking.
 Data generated using iris-esmf-regrid should use
 :func:`run_function_elsewhere`, which means that data is generated using a
 fixed version of iris-esmf-regrid and a fixed environment, rather than those
-that get changed when the benchmarking run checks out a new commit. The passed
-python executable path in such a case should be within an environment that
-supports iris-esmf-regrid and has iris-esmf-regrid installed via
-``pip install -e``. See also :const:`DATA_GEN_PYTHON`.
+that get changed when the benchmarking run checks out a new commit.
 
 Downstream use of data generated 'elsewhere' requires saving; usually in a
 NetCDF file. Could also use pickling but there is a potential risk if the
@@ -22,8 +19,10 @@ from textwrap import dedent
 
 from iris import load_cube
 
-# Allows the command line to pass in a python executable for use within
-#  run_function_elsewhere()·
+#: Python executable used by :func:`run_function_elsewhere`, set via env
+#:  variable of same name. Must be path of Python within an environment that
+#:  supports iris-esmf-regrid and has iris-esmf-regrid installed via
+#:  ``pip install -e``.
 DATA_GEN_PYTHON = environ.get("DATA_GEN_PYTHON", "")
 try:
     _ = check_output([DATA_GEN_PYTHON, "-c", "a = True"])
@@ -35,21 +34,25 @@ except (CalledProcessError, FileNotFoundError, PermissionError):
     raise ValueError(error)
 
 
-def run_function_elsewhere(python_exe, func_to_run, func_call_string):
+def run_function_elsewhere(func_to_run, *args, **kwargs):
     """
-    Run a given function using an alternative python executable.
+    Run a given function using the :const:`DATA_GEN_PYTHON` executable.
 
-    This structure allows the function to be written natively, with only the
-    function call needing to be written as a string.
+    This structure allows the function to be written natively.
 
     Parameters
     ----------
-    python_exe : pathlib.Path or str
-        Path to the alternative python executable.
     func_to_run : FunctionType
-        The function object to be run using the alternative python executable.
-    func_call_string: str
-        A string that, when executed, will call the function with the desired arguments.
+        The function object to be run.
+        NOTE: the function must be completely self-contained, i.e. perform all
+        its own imports (within the target :const:`DATA_GEN_PYTHON`
+        environment).
+    *args : tuple, optional
+        Function call arguments. Must all be expressible as simple literals,
+        i.e. the ``repr`` must be a valid literal expression.
+    **kwargs: dict, optional
+        Function call keyword arguments. All values must be expressible as
+        simple literals (see ``*args``).
 
     Returns
     -------
@@ -58,8 +61,15 @@ def run_function_elsewhere(python_exe, func_to_run, func_call_string):
 
     """
     func_string = dedent(getsource(func_to_run))
+    func_call_term_strings = [repr(arg) for arg in args]
+    func_call_term_strings += [f"{name}={repr(val)}" for name, val in kwargs.items()]
+    func_call_string = (
+        f"{func_to_run.__name__}(" + ",".join(func_call_term_strings) + ")"
+    )
     python_string = "\n".join([func_string, func_call_string])
-    result = run([python_exe, "-c", python_string], capture_output=True, check=True)
+    result = run(
+        [DATA_GEN_PYTHON, "-c", python_string], capture_output=True, check=True
+    )
     return result.stdout
 
 
@@ -71,7 +81,7 @@ def _grid_cube(
     circular=False,
     alt_coord_system=False,
 ):
-    """Wrapper for calling _grid_cube using an alternative python executable."""
+    """Wrapper for calling _grid_cube via :func:`run_function_elsewhere`."""
 
     def external(*args, **kwargs):
         """
@@ -103,13 +113,15 @@ def _grid_cube(
     # TODO: caching? Currently written assuming overwrite every time.
     save_path = save_dir / "_grid_cube.nc"
 
-    external_call = (
-        "func("
-        f"{n_lons}, {n_lats}, {lon_outer_bounds}, {lat_outer_bounds}, "
-        f"{circular}, alt_coord_system={alt_coord_system}, "
-        f"save_path='{save_path}'"
-        ")"
+    _ = run_function_elsewhere(
+        external,
+        n_lons,
+        n_lats,
+        lon_outer_bounds,
+        lat_outer_bounds,
+        circular,
+        alt_coord_system=alt_coord_system,
+        save_path=str(save_path),
     )
-    _ = run_function_elsewhere(DATA_GEN_PYTHON, external, external_call)
     return_cube = load_cube(str(save_path))
     return return_cube
