@@ -30,7 +30,6 @@ COVERAGE = os.environ.get("COVERAGE", False)
 #: Cirrus-CI environment variable hook.
 IRIS_SOURCE = os.environ.get("IRIS_SOURCE", None)
 
-COVERAGE_PACKAGES = ["pytest-cov", "codecov"]
 IRIS_GITHUB = "https://github.com/scitools/iris.git"
 LOCKFILE_PLATFORM = "linux-64"
 
@@ -328,7 +327,6 @@ def tests(session: nox.sessions.Session):
 
     if COVERAGE:
         # Execute the tests with code coverage.
-        session.conda_install("--channel=conda-forge", *COVERAGE_PACKAGES)
         session.run("pytest", "--cov-report=xml", "--cov")
         session.run("codecov")
     else:
