@@ -329,7 +329,7 @@ def tests(session: nox.sessions.Session):
     if COVERAGE:
         # Execute the tests with code coverage.
         session.conda_install(
-            "--channel=conda-forge", "--no-update-deps", *COVERAGE_PACKAGES
+            "--channel=conda-forge", "--satisfied-skip-solve", *COVERAGE_PACKAGES
         )
         session.run("pytest", "--cov-report=xml", "--cov")
         session.run("codecov")
