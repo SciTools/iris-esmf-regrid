@@ -23,14 +23,14 @@ from iris import load_cube
 #:  variable of same name. Must be path of Python within an environment that
 #:  supports iris-esmf-regrid and has iris-esmf-regrid installed via
 #:  ``pip install -e``.
-DATA_GEN_PYTHON = environ.get("DATA_GEN_PYTHON", "")
 try:
+    DATA_GEN_PYTHON = environ["DATA_GEN_PYTHON"]
     _ = check_output([DATA_GEN_PYTHON, "-c", "a = True"])
+except KeyError:
+    error = "Env variable DATA_GEN_PYTHON not defined."
+    raise KeyError(error)
 except (CalledProcessError, FileNotFoundError, PermissionError):
-    error = (
-        f"Expected valid python executable path from env variable "
-        f"DATA_GEN_PYTHON. Got: {DATA_GEN_PYTHON}"
-    )
+    error = "Env variable DATA_GEN_PYTHON not a runnable python executable path."
     raise ValueError(error)
 
 
