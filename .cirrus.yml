@@ -145,6 +145,6 @@ benchmark_task:
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
-    - nox --session=tests --python --install-only
+    - nox --session=tests --install-only
     - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests*bin/python"))
     - nox --session="benchmarks(ci compare)"
