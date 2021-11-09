@@ -1,15 +1,16 @@
 """Provides load/save functions for regridders."""
 
 import iris
-from iris.cube import Cube, CubeList
 from iris.coords import AuxCoord
+from iris.cube import Cube, CubeList
 from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
-from esmf_regrid.experimental.unstructured_scheme import (
-    MeshToGridESMFRegridder,
-    GridToMeshESMFRegridder,
-)
 import numpy as np
 import scipy.sparse
+
+from esmf_regrid.experimental.unstructured_scheme import (
+    GridToMeshESMFRegridder,
+    MeshToGridESMFRegridder,
+)
 
 
 def save_regridder(rg, file):
@@ -74,8 +75,11 @@ def save_regridder(rg, file):
     metadata_cube.add_aux_coord(row_coord, 0)
     metadata_cube.add_aux_coord(col_coord, 0)
 
-    cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
-    # cube_list = CubeList([tgt_cube, src_cube, metadata_cube])
+    # Avoid saving bug.
+    if regridder_type == "grid to mesh":
+        cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
+    elif regridder_type == "mesh to grid":
+        cube_list = CubeList([tgt_cube, src_cube, metadata_cube])
     iris.fileformats.netcdf.save(cube_list, file)
 
 
