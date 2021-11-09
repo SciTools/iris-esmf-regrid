@@ -16,7 +16,8 @@ from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
+
+from ..generate_data import _grid_cube
 
 
 def _make_small_grid_args():
@@ -65,16 +66,13 @@ class MultiGridCompare:
         n_lons_tgt = 20
         n_lats_tgt = 40
         h = 100
-        if type == "large source":
+        if type == "large_source":
             n_lons_src = 100
             n_lats_src = 200
-        if type == "large target":
+        if type == "large_target":
             n_lons_tgt = 100
             n_lats_tgt = 200
-        if type == "mixed":
-            coord_system_src = RotatedGeogCS(0, 90, 90)
-        else:
-            coord_system_src = None
+        alt_coord_system=(type == "mixed")
         args = (
             lon_bounds,
             lat_bounds,
@@ -105,7 +103,7 @@ class TimeRegridding(MultiGridCompare):
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            coord_system=coord_system_src,
+            alt_coord_system=alt_coord_system,
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
         src_data = np.arange(n_lats_src * n_lons_src * h).reshape(
@@ -141,13 +139,12 @@ class TimeLazyRegridding:
         h = 2000
         # Rotated coord systems prevent pickling of the regridder so are
         # removed for the time being.
-        # coord_system_src = RotatedGeogCS(0, 90, 90)
         grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            # coord_system=coord_system_src,
+            # alt_coord_system=True,
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
 
@@ -193,7 +190,7 @@ class TimeMeshToGridRegridding(TimeRegridding):
             n_lons_tgt,
             n_lats_tgt,
             h,
-            coord_system_src,
+            alt_coord_system_src,
         ) = self.get_args(type)
         mesh = _gridlike_mesh(n_lons_src, n_lats_src)
         tgt = _grid_cube(
@@ -201,7 +198,7 @@ class TimeMeshToGridRegridding(TimeRegridding):
             n_lats_tgt,
             lon_bounds,
             lat_bounds,
-            coord_system=coord_system_src,
+            alt_coord_system=alt_coord_system_src,
         )
         src_data = np.arange(n_lats_src * n_lons_src * h).reshape([-1, h])
         src = Cube(src_data)
@@ -384,14 +381,14 @@ class TimeRegridderIO(MultiGridCompare):
             n_lons_tgt,
             n_lats_tgt,
             _,
-            coord_system_src,
+            alt_coord_system_src,
         ) = self.get_args(type)
         src_grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            coord_system=coord_system_src,
+            alt_coord_system=alt_coord_system_src,
         )
         tgt_grid = _grid_cube(
             n_lons_tgt,
