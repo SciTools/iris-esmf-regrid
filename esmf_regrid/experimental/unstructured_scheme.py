@@ -385,6 +385,9 @@ class MeshToGridESMFRegridder:
             src_mesh_cube, target_grid_cube
         )
 
+        # Record source mesh.
+        self.mesh = src_mesh_cube.mesh
+
         # Store regrid info.
         _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
 
