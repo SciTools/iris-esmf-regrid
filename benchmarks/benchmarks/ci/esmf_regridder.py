@@ -5,12 +5,12 @@ from pathlib import Path
 import numpy as np
 import dask.array as da
 import iris
-from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
 
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
+
+from ..generate_data import _grid_cube
 
 
 def _make_small_grid_args():
@@ -65,16 +65,12 @@ class TimeRegridding:
         if type == "large target":
             n_lons_tgt = 100
             n_lats_tgt = 200
-        if type == "mixed":
-            coord_system_src = RotatedGeogCS(0, 90, 90)
-        else:
-            coord_system_src = None
         grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            coord_system=coord_system_src,
+            alt_coord_system=(type == "mixed"),
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
         src_data = np.arange(n_lats_src * n_lons_src * h).reshape(
@@ -115,13 +111,12 @@ class TimeLazyRegridding:
         h = 2000
         # Rotated coord systems prevent pickling of the regridder so are
         # removed for the time being.
-        # coord_system_src = RotatedGeogCS(0, 90, 90)
         grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            # coord_system=coord_system_src,
+            # alt_coord_system=True,
         )
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
 
