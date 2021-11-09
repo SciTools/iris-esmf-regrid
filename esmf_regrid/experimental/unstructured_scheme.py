@@ -228,7 +228,9 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
     return new_cube
 
 
-def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube):
+def _regrid_unstructured_to_rectilinear__prepare(
+    src_mesh_cube, target_grid_cube, precomputed_weights=None
+):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
 
@@ -257,7 +259,7 @@ def _regrid_unstructured_to_rectilinear__prepare(src_mesh_cube, target_grid_cube
     meshinfo = _mesh_to_MeshInfo(mesh)
     gridinfo = _cube_to_GridInfo(target_grid_cube)
 
-    regridder = Regridder(meshinfo, gridinfo)
+    regridder = Regridder(meshinfo, gridinfo, precomputed_weights)
 
     regrid_info = (mesh_dim, grid_x, grid_y, regridder)
 
@@ -350,7 +352,9 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 class MeshToGridESMFRegridder:
     """Regridder class for unstructured to rectilinear cubes."""
 
-    def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
+    def __init__(
+        self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
+    ):
         """
         Create regridder for conversions between source mesh and target grid.
 
@@ -382,7 +386,7 @@ class MeshToGridESMFRegridder:
         self.mdtol = mdtol
 
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-            src_mesh_cube, target_grid_cube
+            src_mesh_cube, target_grid_cube, precomputed_weights=precomputed_weights
         )
 
         # Record source mesh.
@@ -494,7 +498,9 @@ def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh):
     return new_cube
 
 
-def _regrid_rectilinear_to_unstructured__prepare(src_grid_cube, target_mesh_cube):
+def _regrid_rectilinear_to_unstructured__prepare(
+    src_grid_cube, target_mesh_cube, precomputed_weights=None
+):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
 
@@ -513,7 +519,7 @@ def _regrid_rectilinear_to_unstructured__prepare(src_grid_cube, target_mesh_cube
     meshinfo = _mesh_to_MeshInfo(mesh)
     gridinfo = _cube_to_GridInfo(src_grid_cube)
 
-    regridder = Regridder(gridinfo, meshinfo)
+    regridder = Regridder(gridinfo, meshinfo, precomputed_weights)
 
     regrid_info = (grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, regridder)
 
@@ -613,7 +619,9 @@ def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
 class GridToMeshESMFRegridder:
     """Regridder class for rectilinear to unstructured cubes."""
 
-    def __init__(self, src_mesh_cube, target_grid_cube, mdtol=1):
+    def __init__(
+        self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
+    ):
         """
         Create regridder for conversions between source grid and target mesh.
 
@@ -640,7 +648,7 @@ class GridToMeshESMFRegridder:
         self.mdtol = mdtol
 
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-            src_mesh_cube, target_grid_cube
+            src_mesh_cube, target_grid_cube, precomputed_weights=precomputed_weights
         )
 
         # Store regrid info.

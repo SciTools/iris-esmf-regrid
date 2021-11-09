@@ -3,10 +3,13 @@
 import iris
 from iris.cube import Cube, CubeList
 from iris.coords import AuxCoord
+from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
     GridToMeshESMFRegridder,
 )
+import numpy as np
+import scipy.sparse
 
 
 def save_regridder(rg, file):
@@ -22,14 +25,14 @@ def save_regridder(rg, file):
         src_cube.add_dim_coord(src_grid[1], 1)
 
         tgt_mesh = rg.mesh
-        tgt_data = np.zeros(tgt_mesh.face_node_connectivity.indices.shape)
+        tgt_data = np.zeros(tgt_mesh.face_node_connectivity.indices.shape[0])
         tgt_cube = Cube(tgt_data, long_name=tgt_name)
         for coord in tgt_mesh.to_MeshCoords("face"):
             tgt_cube.add_aux_coord(coord, 0)
     elif isinstance(rg, MeshToGridESMFRegridder):
         regridder_type = "mesh to grid"
         src_mesh = rg.mesh
-        src_data = np.zeros(src_mesh.face_node_connectivity.indices.shape)
+        src_data = np.zeros(src_mesh.face_node_connectivity.indices.shape[0])
         src_cube = Cube(src_data, long_name=src_name)
         for coord in src_mesh.to_MeshCoords("face"):
             src_cube.add_aux_coord(coord, 0)
@@ -72,4 +75,44 @@ def save_regridder(rg, file):
     metadata_cube.add_aux_coord(col_coord, 0)
 
     cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
+    # cube_list = CubeList([tgt_cube, src_cube, metadata_cube])
     iris.fileformats.netcdf.save(cube_list, file)
+
+
+def load_regridder(file):
+    with PARSE_UGRID_ON_LOAD.context():
+        cubes = iris.load(file)
+
+    src_name = "regridder source field"
+    tgt_name = "regridder target field"
+    metadata_name = "regridder weights and metadata"
+
+    src_cube = cubes.extract_cube(src_name)
+    tgt_cube = cubes.extract_cube(tgt_name)
+    metadata_cube = cubes.extract_cube(metadata_name)
+
+    regridder_type = metadata_cube.attributes["regridder type"]
+    if regridder_type == "grid to mesh":
+        scheme = GridToMeshESMFRegridder
+    elif regridder_type == "mesh to grid":
+        scheme = MeshToGridESMFRegridder
+    else:
+        raise ValueError(
+            f"expected a regridder type to be either 'grid to mesh' "
+            f"or 'mesh to grid', got '{regridder_type}'"
+        )
+    weight_data = metadata_cube.data
+    row_name = "weight matrix rows"
+    weight_rows = metadata_cube.coord(row_name).points
+    col_name = "weight matrix columns"
+    weight_cols = metadata_cube.coord(col_name).points
+    weight_shape = metadata_cube.attributes["weights shape"]
+    weight_matrix = scipy.sparse.csr_matrix(
+        (weight_data, (weight_rows, weight_cols)), shape=weight_shape
+    )
+    mdtol = metadata_cube.attributes["mdtol"]
+
+    regridder = scheme(
+        src_cube, tgt_cube, mdtol=mdtol, precomputed_weights=weight_matrix
+    )
+    return regridder
