@@ -37,7 +37,7 @@ def test_GridToMeshESMFRegridder_round_trip():
     tgt.add_aux_coord(mesh_coord_y, 0)
 
     original_rg = GridToMeshESMFRegridder(src, tgt, mdtol=0.5)
-    with IrisTest_nometa.temp_filename(None, suffix=".nc") as filename:
+    with temp_filename(None, suffix=".nc") as filename:
         save_regridder(original_rg, filename)
         loaded_rg = load_regridder(filename)
     assert original_rg.mdtol == loaded_rg.mdtol

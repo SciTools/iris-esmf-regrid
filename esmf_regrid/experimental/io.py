@@ -15,7 +15,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 
 def save_regridder(rg, filename):
     """
-    Saves a regridder scheme instance.
+    Save a regridder scheme instance.
 
     Saves either a `GridToMeshESMFRegridder` or a `MeshToGridESMFRegridder`.
 
@@ -97,7 +97,7 @@ def save_regridder(rg, filename):
 
 def load_regridder(filename):
     """
-    Loads a regridder scheme instance.
+    Load a regridder scheme instance.
 
     Loads either a `GridToMeshESMFRegridder` or a `MeshToGridESMFRegridder`.
 
