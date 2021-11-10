@@ -83,7 +83,7 @@ def create_temp_filename(suffix=""):
     ----------
     suffix : str
         Optional filename extension.
-    
+
     Returns
     -------
     str
@@ -92,6 +92,7 @@ def create_temp_filename(suffix=""):
     temp_file = tempfile.mkstemp(suffix)
     os.close(temp_file[0])
     return temp_file[1]
+
 
 @contextlib.contextmanager
 def temp_filename(suffix=""):
@@ -104,7 +105,7 @@ def temp_filename(suffix=""):
     ----------
     suffix : str
         Optional filename extension.
-    
+
     Yields
     ------
     str
