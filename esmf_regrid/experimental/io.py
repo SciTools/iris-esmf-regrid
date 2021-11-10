@@ -59,7 +59,7 @@ def save_regridder(rg, filename):
     else:
         msg = (
             f"Expected a regridder of type `GridToMeshESMFRegridder` or "
-            f"`MeshToGridESMFRegridder`, got type {type(rg)}"
+            f"`MeshToGridESMFRegridder`, got type {type(rg)}."
         )
         raise TypeError(msg)
 
