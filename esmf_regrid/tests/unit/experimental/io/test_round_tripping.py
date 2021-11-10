@@ -1,7 +1,6 @@
 """Unit tests for round tripping (saving then loading) with :mod:`esmf_regrid.experimental.io`."""
 
 from iris.cube import Cube
-from iris.tests import IrisTest_nometa
 import numpy as np
 
 from esmf_regrid.experimental.io import load_regridder, save_regridder
@@ -9,6 +8,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
+from esmf_regrid.tests import temp_filename
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
     _grid_cube,
 )
@@ -18,6 +18,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshI
 
 
 def test_GridToMeshESMFRegridder_round_trip():
+    """Test save/load round tripping for `GridToMeshESMFRegridder`."""
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -51,6 +52,7 @@ def test_GridToMeshESMFRegridder_round_trip():
 
 
 def test_MeshToGridESMFRegridder_round_trip():
+    """Test save/load round tripping for `MeshToGridESMFRegridder`."""
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -69,7 +71,7 @@ def test_MeshToGridESMFRegridder_round_trip():
     src.add_aux_coord(mesh_coord_y, 0)
 
     original_rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
-    with IrisTest_nometa.temp_filename(None, suffix=".nc") as filename:
+    with temp_filename(None, suffix=".nc") as filename:
         save_regridder(original_rg, filename)
         loaded_rg = load_regridder(filename)
     assert original_rg.mdtol == loaded_rg.mdtol

@@ -13,7 +13,19 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 
 
-def save_regridder(rg, file):
+def save_regridder(rg, filename):
+    """
+    Saves a regridder scheme instance.
+
+    Saves either a `GridToMeshESMFRegridder` or a `MeshToGridESMFRegridder`.
+
+    Parameters
+    ----------
+    rg : GridToMeshESMFRegridder, MeshToGridESMFRegridder
+        The regridder instance to save.
+    filename : str
+        The file name to save to.
+    """
     src_name = "regridder source field"
     tgt_name = "regridder target field"
     if isinstance(rg, GridToMeshESMFRegridder):
@@ -80,12 +92,22 @@ def save_regridder(rg, file):
         cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
     elif regridder_type == "mesh to grid":
         cube_list = CubeList([tgt_cube, src_cube, metadata_cube])
-    iris.fileformats.netcdf.save(cube_list, file)
+    iris.fileformats.netcdf.save(cube_list, filename)
 
 
-def load_regridder(file):
+def load_regridder(filename):
+    """
+    Loads a regridder scheme instance.
+
+    Loads either a `GridToMeshESMFRegridder` or a `MeshToGridESMFRegridder`.
+
+    Parameters
+    ----------
+    filename : str
+        The file name to load from.
+    """
     with PARSE_UGRID_ON_LOAD.context():
-        cubes = iris.load(file)
+        cubes = iris.load(filename)
 
     src_name = "regridder source field"
     tgt_name = "regridder target field"

@@ -1,5 +1,7 @@
 """Common testing infrastructure."""
 
+import contextlib
+import os
 import pathlib
 
 import numpy as np
@@ -69,3 +71,47 @@ def make_grid_args(nx, ny):
         small_grid_lon_bounds,
         small_grid_lat_bounds,
     )
+
+
+def create_temp_filename(suffix=""):
+    """
+    Return a temporary file name.
+
+    Copied from `iris.util`.
+
+    Parameters
+    ----------
+    suffix : str
+        Optional filename extension.
+    
+    Returns
+    -------
+    str
+        An appropriate filename for a temporary file.
+    """
+    temp_file = tempfile.mkstemp(suffix)
+    os.close(temp_file[0])
+    return temp_file[1]
+
+@contextlib.contextmanager
+def temp_filename(suffix=""):
+    """
+    Yeild a temporary file name to be removed after use.
+
+    Copied from `iris.tests`.
+
+    Parameters
+    ----------
+    suffix : str
+        Optional filename extension.
+    
+    Yields
+    ------
+    str
+        An appropriate filename for a temporary file.
+    """
+    filename = create_temp_filename(suffix)
+    try:
+        yield filename
+    finally:
+        os.remove(filename)
