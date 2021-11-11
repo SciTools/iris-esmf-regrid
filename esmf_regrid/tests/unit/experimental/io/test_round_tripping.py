@@ -2,6 +2,7 @@
 
 from iris.cube import Cube
 import numpy as np
+from numpy import ma
 
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
@@ -50,6 +51,14 @@ def test_GridToMeshESMFRegridder_round_trip():
         loaded_rg.regridder.weight_matrix.todense(),
     )
 
+    # Demonstrate regridding still gives the same results.
+    src_data = np.arange(src_lats * src_lons).reshape([src_lats, src_lons])
+    src_mask = np.zeros([src_lats, src_lons])
+    src_mask[0, 0] = 1
+    src.data = ma.array(src_data, mask=src_mask)
+    # TODO: make this a cube comparison when mesh comparison becomes available.
+    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
+
 
 def test_MeshToGridESMFRegridder_round_trip():
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
@@ -83,3 +92,10 @@ def test_MeshToGridESMFRegridder_round_trip():
         original_rg.regridder.weight_matrix.todense(),
         loaded_rg.regridder.weight_matrix.todense(),
     )
+
+    # Demonstrate regridding still gives the same results.
+    src_data = np.arange(src_lats * src_lons)
+    src_mask = np.zeros([src_lats * src_lons])
+    src_mask[0] = 1
+    src.data = ma.array(src_data, mask=src_mask)
+    assert original_rg(src) == loaded_rg(src)
