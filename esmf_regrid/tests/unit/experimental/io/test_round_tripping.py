@@ -46,6 +46,9 @@ def test_GridToMeshESMFRegridder_round_trip():
     assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
+    assert type(original_rg.regridder.weight_matrix) is type(
+        loaded_rg.regridder.weight_matrix
+    )
     assert np.array_equal(
         original_rg.regridder.weight_matrix.todense(),
         loaded_rg.regridder.weight_matrix.todense(),
@@ -88,6 +91,9 @@ def test_MeshToGridESMFRegridder_round_trip():
     assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
+    assert type(original_rg.regridder.weight_matrix) is type(
+        loaded_rg.regridder.weight_matrix
+    )
     assert np.array_equal(
         original_rg.regridder.weight_matrix.todense(),
         loaded_rg.regridder.weight_matrix.todense(),

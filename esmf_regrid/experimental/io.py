@@ -87,7 +87,8 @@ def save_regridder(rg, filename):
     metadata_cube.add_aux_coord(row_coord, 0)
     metadata_cube.add_aux_coord(col_coord, 0)
 
-    # Avoid saving bug.
+    # Avoid saving bug by placing the mesh cube second.
+    # TODO: simplify this when this bug is fixed in iris.
     if regridder_type == "grid to mesh":
         cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
     elif regridder_type == "mesh to grid":
@@ -113,10 +114,12 @@ def load_regridder(filename):
     tgt_name = "regridder target field"
     metadata_name = "regridder weights and metadata"
 
+    # Extract the source, target and metadata information.
     src_cube = cubes.extract_cube(src_name)
     tgt_cube = cubes.extract_cube(tgt_name)
     metadata_cube = cubes.extract_cube(metadata_name)
 
+    # Determine the regridder type.
     regridder_type = metadata_cube.attributes["regridder type"]
     if regridder_type == "grid to mesh":
         scheme = GridToMeshESMFRegridder
@@ -127,6 +130,8 @@ def load_regridder(filename):
             f"expected a regridder type to be either 'grid to mesh' "
             f"or 'mesh to grid', got '{regridder_type}'"
         )
+
+    # Reconstruct the weight matrix.
     weight_data = metadata_cube.data
     row_name = "weight matrix rows"
     weight_rows = metadata_cube.coord(row_name).points
@@ -136,6 +141,7 @@ def load_regridder(filename):
     weight_matrix = scipy.sparse.csr_matrix(
         (weight_data, (weight_rows, weight_cols)), shape=weight_shape
     )
+
     mdtol = metadata_cube.attributes["mdtol"]
 
     regridder = scheme(
