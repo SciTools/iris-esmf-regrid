@@ -64,7 +64,7 @@ def _make_mesh_to_grid_regridder():
 
 def test_GridToMeshESMFRegridder_round_trip():
     """Test save/load round tripping for `GridToMeshESMFRegridder`."""
-    original_rg = _make_grid_to_mesh_regridder()
+    original_rg, src = _make_grid_to_mesh_regridder()
     with temp_filename(suffix=".nc") as filename:
         save_regridder(original_rg, filename)
         loaded_rg = load_regridder(filename)
