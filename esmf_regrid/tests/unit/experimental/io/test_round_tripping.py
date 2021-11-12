@@ -46,13 +46,13 @@ def test_GridToMeshESMFRegridder_round_trip():
     assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
-    assert type(original_rg.regridder.weight_matrix) is type(
-        loaded_rg.regridder.weight_matrix
-    )
-    assert np.array_equal(
-        original_rg.regridder.weight_matrix.todense(),
-        loaded_rg.regridder.weight_matrix.todense(),
-    )
+
+    # Compare the weight matrices.
+    original_matrix = original_rg.regridder.weight_matrix
+    loaded_matrix = loaded_rg.regridder.weight_matrix
+    # Ensure the original and loaded weight matrix have identical type.
+    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
     src_data = np.arange(src_lats * src_lons).reshape([src_lats, src_lons])
@@ -91,13 +91,13 @@ def test_MeshToGridESMFRegridder_round_trip():
     assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
-    assert type(original_rg.regridder.weight_matrix) is type(
-        loaded_rg.regridder.weight_matrix
-    )
-    assert np.array_equal(
-        original_rg.regridder.weight_matrix.todense(),
-        loaded_rg.regridder.weight_matrix.todense(),
-    )
+
+    # Compare the weight matrices.
+    original_matrix = original_rg.regridder.weight_matrix
+    loaded_matrix = loaded_rg.regridder.weight_matrix
+    # Ensure the original and loaded weight matrix have identical type.
+    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
     src_data = np.arange(src_lats * src_lons)
