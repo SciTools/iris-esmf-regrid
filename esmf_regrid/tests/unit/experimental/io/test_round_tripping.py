@@ -18,8 +18,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshI
 )
 
 
-def test_GridToMeshESMFRegridder_round_trip():
-    """Test save/load round tripping for `GridToMeshESMFRegridder`."""
+def _make_grid_to_mesh_regridder():
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -37,10 +36,37 @@ def test_GridToMeshESMFRegridder_round_trip():
     tgt.add_aux_coord(mesh_coord_x, 0)
     tgt.add_aux_coord(mesh_coord_y, 0)
 
-    original_rg = GridToMeshESMFRegridder(src, tgt, mdtol=0.5)
+    return GridToMeshESMFRegridder(src, tgt, mdtol=0.5)
+
+
+def _make_mesh_to_grid_regridder():
+    src_lons = 3
+    src_lats = 4
+    tgt_lons = 5
+    tgt_lats = 6
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    # TODO check that circularity is preserved.
+    tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
+    tgt.coord("longitude").var_name = "longitude"
+    tgt.coord("latitude").var_name = "latitude"
+    mesh = _gridlike_mesh(src_lons, src_lats)
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    src_data = np.zeros(src_lons * src_lats)
+    src = Cube(src_data)
+    src.add_aux_coord(mesh_coord_x, 0)
+    src.add_aux_coord(mesh_coord_y, 0)
+
+    return MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
+
+
+def test_GridToMeshESMFRegridder_round_trip():
+    """Test save/load round tripping for `GridToMeshESMFRegridder`."""
+    original_rg = _make_grid_to_mesh_regridder()
     with temp_filename(suffix=".nc") as filename:
         save_regridder(original_rg, filename)
         loaded_rg = load_regridder(filename)
+
     assert original_rg.mdtol == loaded_rg.mdtol
     assert original_rg.grid_x == loaded_rg.grid_x
     assert original_rg.grid_y == loaded_rg.grid_y
@@ -65,27 +91,11 @@ def test_GridToMeshESMFRegridder_round_trip():
 
 def test_MeshToGridESMFRegridder_round_trip():
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
-    src_lons = 3
-    src_lats = 4
-    tgt_lons = 5
-    tgt_lats = 6
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    # TODO check that circularity is preserved.
-    tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
-    tgt.coord("longitude").var_name = "longitude"
-    tgt.coord("latitude").var_name = "latitude"
-    mesh = _gridlike_mesh(src_lons, src_lats)
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-    src_data = np.zeros(src_lons * src_lats)
-    src = Cube(src_data)
-    src.add_aux_coord(mesh_coord_x, 0)
-    src.add_aux_coord(mesh_coord_y, 0)
-
-    original_rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
+    original_rg = _make_mesh_to_grid_regridder()
     with temp_filename(suffix=".nc") as filename:
         save_regridder(original_rg, filename)
         loaded_rg = load_regridder(filename)
+
     assert original_rg.mdtol == loaded_rg.mdtol
     assert original_rg.grid_x == loaded_rg.grid_x
     assert original_rg.grid_y == loaded_rg.grid_y
