@@ -87,7 +87,8 @@ def test_GridToMeshESMFRegridder_round_trip():
     src_mask = np.zeros(src.data.shape)
     src_mask[0, 0] = 1
     src.data = ma.array(src_data, mask=src_mask)
-    assert original_rg(src) == loaded_rg(src)
+    # TODO: make this a cube comparison when mesh comparison becomes available.
+    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
 
 
 def test_MeshToGridESMFRegridder_round_trip():
