@@ -36,7 +36,8 @@ def _make_grid_to_mesh_regridder():
     tgt.add_aux_coord(mesh_coord_x, 0)
     tgt.add_aux_coord(mesh_coord_y, 0)
 
-    return GridToMeshESMFRegridder(src, tgt, mdtol=0.5)
+    rg = GridToMeshESMFRegridder(src, tgt, mdtol=0.5)
+    return rg, src
 
 
 def _make_mesh_to_grid_regridder():
@@ -57,7 +58,8 @@ def _make_mesh_to_grid_regridder():
     src.add_aux_coord(mesh_coord_x, 0)
     src.add_aux_coord(mesh_coord_y, 0)
 
-    return MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
+    rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
+    return rg, src
 
 
 def test_GridToMeshESMFRegridder_round_trip():
@@ -81,17 +83,16 @@ def test_GridToMeshESMFRegridder_round_trip():
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
-    src_data = np.arange(src_lats * src_lons).reshape([src_lats, src_lons])
-    src_mask = np.zeros([src_lats, src_lons])
+    src_data = np.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_mask = np.zeros(src.data.shape)
     src_mask[0, 0] = 1
     src.data = ma.array(src_data, mask=src_mask)
-    # TODO: make this a cube comparison when mesh comparison becomes available.
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
+    assert original_rg(src) == loaded_rg(src)
 
 
 def test_MeshToGridESMFRegridder_round_trip():
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
-    original_rg = _make_mesh_to_grid_regridder()
+    original_rg, src = _make_mesh_to_grid_regridder()
     with temp_filename(suffix=".nc") as filename:
         save_regridder(original_rg, filename)
         loaded_rg = load_regridder(filename)
@@ -110,8 +111,8 @@ def test_MeshToGridESMFRegridder_round_trip():
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
-    src_data = np.arange(src_lats * src_lons)
-    src_mask = np.zeros([src_lats * src_lons])
+    src_data = np.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_mask = np.zeros(src.data.shape)
     src_mask[0] = 1
     src.data = ma.array(src_data, mask=src_mask)
     assert original_rg(src) == loaded_rg(src)
