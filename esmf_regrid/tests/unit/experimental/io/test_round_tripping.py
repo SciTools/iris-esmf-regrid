@@ -9,7 +9,6 @@ from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
-from esmf_regrid.tests import temp_filename
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
     _grid_cube,
 )
@@ -62,12 +61,12 @@ def _make_mesh_to_grid_regridder():
     return rg, src
 
 
-def test_GridToMeshESMFRegridder_round_trip():
+def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     """Test save/load round tripping for `GridToMeshESMFRegridder`."""
     original_rg, src = _make_grid_to_mesh_regridder()
-    with temp_filename(suffix=".nc") as filename:
-        save_regridder(original_rg, filename)
-        loaded_rg = load_regridder(filename)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(filename)
 
     assert original_rg.mdtol == loaded_rg.mdtol
     assert original_rg.grid_x == loaded_rg.grid_x
@@ -91,12 +90,12 @@ def test_GridToMeshESMFRegridder_round_trip():
     assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
 
 
-def test_MeshToGridESMFRegridder_round_trip():
+def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
     original_rg, src = _make_mesh_to_grid_regridder()
-    with temp_filename(suffix=".nc") as filename:
-        save_regridder(original_rg, filename)
-        loaded_rg = load_regridder(filename)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(filename)
 
     assert original_rg.mdtol == loaded_rg.mdtol
     assert original_rg.grid_x == loaded_rg.grid_x
