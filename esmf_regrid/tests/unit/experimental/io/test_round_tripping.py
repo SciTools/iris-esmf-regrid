@@ -66,7 +66,7 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     original_rg, src = _make_grid_to_mesh_regridder()
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
-    loaded_rg = load_regridder(filename)
+    loaded_rg = load_regridder(str(filename))
 
     assert original_rg.mdtol == loaded_rg.mdtol
     assert original_rg.grid_x == loaded_rg.grid_x
@@ -95,7 +95,7 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     original_rg, src = _make_mesh_to_grid_regridder()
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
-    loaded_rg = load_regridder(filename)
+    loaded_rg = load_regridder(str(filename))
 
     assert original_rg.mdtol == loaded_rg.mdtol
     assert original_rg.grid_x == loaded_rg.grid_x
