@@ -127,7 +127,7 @@ def load_regridder(filename):
 
     # Determine the regridder type.
     regridder_type = metadata_cube.attributes["regridder type"]
-    assert regridder_type in SUPPORTED_REGRIDDERS
+    assert regridder_type in REGRIDDER_NAME_MAP.keys()
     scheme = REGRIDDER_NAME_MAP[regridder_type]
 
     # Reconstruct the weight matrix.
