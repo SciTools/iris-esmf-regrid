@@ -93,7 +93,12 @@ def save_regridder(rg, filename):
     metadata_cube.add_aux_coord(row_coord, 0)
     metadata_cube.add_aux_coord(col_coord, 0)
 
-    cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
+    # Avoid saving bug by placing the mesh cube second.
+    # TODO: simplify this when this bug is fixed in iris.
+    if regridder_type == "GridToMeshESMFRegridder":
+        cube_list = CubeList([src_cube, tgt_cube, metadata_cube])
+    elif regridder_type == "MeshToGridESMFRegridder":
+        cube_list = CubeList([tgt_cube, src_cube, metadata_cube])
     iris.fileformats.netcdf.save(cube_list, filename)
 
 
