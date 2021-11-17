@@ -13,6 +13,13 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 
 
+SUPPORTED_REGRIDDERS = [
+    GridToMeshESMFRegridder,
+    MeshToGridESMFRegridder,
+]
+REGRIDDER_NAME_MAP = {rg_class.__name__: rg_class for rg_class in SUPPORTED_REGRIDDERS}
+
+
 def save_regridder(rg, filename):
     """
     Save a regridder scheme instance.
@@ -28,8 +35,8 @@ def save_regridder(rg, filename):
     """
     src_name = "regridder source field"
     tgt_name = "regridder target field"
-    if isinstance(rg, GridToMeshESMFRegridder):
-        regridder_type = "grid to mesh"
+    regridder_type = rg.__class__.__name__
+    if regridder_type == "GridToMeshESMFRegridder":
         src_grid = (rg.grid_y, rg.grid_x)
         src_shape = [len(coord.points) for coord in src_grid]
         src_data = np.zeros(src_shape)
@@ -42,8 +49,7 @@ def save_regridder(rg, filename):
         tgt_cube = Cube(tgt_data, long_name=tgt_name)
         for coord in tgt_mesh.to_MeshCoords("face"):
             tgt_cube.add_aux_coord(coord, 0)
-    elif isinstance(rg, MeshToGridESMFRegridder):
-        regridder_type = "mesh to grid"
+    elif regridder_type == "MeshToGridESMFRegridder":
         src_mesh = rg.mesh
         src_data = np.zeros(src_mesh.face_node_connectivity.indices.shape[0])
         src_cube = Cube(src_data, long_name=src_name)
@@ -59,7 +65,7 @@ def save_regridder(rg, filename):
     else:
         msg = (
             f"Expected a regridder of type `GridToMeshESMFRegridder` or "
-            f"`MeshToGridESMFRegridder`, got type {type(rg)}."
+            f"`MeshToGridESMFRegridder`, got type {regridder_type}."
         )
         raise TypeError(msg)
 
@@ -121,15 +127,8 @@ def load_regridder(filename):
 
     # Determine the regridder type.
     regridder_type = metadata_cube.attributes["regridder type"]
-    if regridder_type == "grid to mesh":
-        scheme = GridToMeshESMFRegridder
-    elif regridder_type == "mesh to grid":
-        scheme = MeshToGridESMFRegridder
-    else:
-        raise ValueError(
-            f"expected a regridder type to be either 'grid to mesh' "
-            f"or 'mesh to grid', got '{regridder_type}'"
-        )
+    assert regridder_type in SUPPORTED_REGRIDDERS
+    scheme = REGRIDDER_NAME_MAP[regridder_type]
 
     # Reconstruct the weight matrix.
     weight_data = metadata_cube.data
