@@ -1,5 +1,6 @@
 """Slower benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
+import os
 from pathlib import Path
 
 import numpy as np
@@ -57,6 +58,32 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
         src.add_aux_coord(mesh_coord_y, 0)
         return src
 
+    def setup(self, n):
+        from esmf_regrid.experimental.io import load_regridder, save_regridder
+
+        self.load_regridder = load_regridder
+        self.save_regridder = save_regridder
+
+        super().setup(n)
+        self.rg = self.regridder(self.src, self.tgt)
+        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
+        SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        self.source_file = str(SYNTH_DATA_DIR.joinpath("source_rg.nc"))
+        self.destination_file = str(SYNTH_DATA_DIR.joinpath("dest_rg.nc"))
+        save_regridder(self.rg, self.source_file)
+
+    def teardown(self, n):
+        if os.path.exists(self.source_file):
+            os.remove(self.source_file)
+        if os.path.exists(self.destination_file):
+            os.remove(self.destination_file)
+
+    def time_load(self, n):
+        self.load_regridder(self.source_file)
+
+    def time_save(self, n):
+        self.save_regridder(self.rg, self.destination_file)
+
 
 class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
     regridder = GridToMeshESMFRegridder
@@ -72,6 +99,32 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
         tgt.add_aux_coord(mesh_coord_x, 0)
         tgt.add_aux_coord(mesh_coord_y, 0)
         return tgt
+
+    def setup(self, n):
+        from esmf_regrid.experimental.io import load_regridder, save_regridder
+
+        self.load_regridder = load_regridder
+        self.save_regridder = save_regridder
+
+        super().setup(n)
+        self.rg = self.regridder(self.src, self.tgt)
+        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
+        SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        self.source_file = str(SYNTH_DATA_DIR.joinpath("source_rg.nc"))
+        self.destination_file = str(SYNTH_DATA_DIR.joinpath("dest_rg.nc"))
+        save_regridder(self.rg, self.source_file)
+
+    def teardown(self, n):
+        if os.path.exists(self.source_file):
+            os.remove(self.source_file)
+        if os.path.exists(self.destination_file):
+            os.remove(self.destination_file)
+
+    def time_load(self, n):
+        self.load_regridder(self.source_file)
+
+    def time_save(self, n):
+        self.save_regridder(self.rg, self.destination_file)
 
 
 @disable_repeat_between_setup
