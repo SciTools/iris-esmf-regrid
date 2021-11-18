@@ -370,7 +370,8 @@ class TimeRegridderIO(MultiGridCompare):
     def setup(self, type):
         from esmf_regrid.experimental.io import load_regridder, save_regridder
 
-        global load_regridder, save_regridder
+        self.load_regridder = load_regridder
+        self.save_regridder = save_regridder
         from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
             _gridlike_mesh,
         )
@@ -436,19 +437,23 @@ class TimeRegridderIO(MultiGridCompare):
         save_regridder(self.grid_to_mesh_regridder, self.source_file_g2m)
 
     def teardown(self, type):
-        os.remove(self.source_file_m2g)
-        os.remove(self.source_file_g2m)
-        os.remove(self.destination_file_m2g)
-        os.remove(self.destination_file_g2m)
+        if os.path.exists(self.source_file_m2g):
+            os.remove(self.source_file_m2g)
+        if os.path.exists(self.source_file_g2m):
+            os.remove(self.source_file_g2m)
+        if os.path.exists(self.destination_file_m2g):
+            os.remove(self.destination_file_m2g)
+        if os.path.exists(self.destination_file_g2m):
+            os.remove(self.destination_file_g2m)
 
     def time_save_mesh_to_grid(self, type):
-        save_regridder(self.mesh_to_grid_regridder, self.destination_file_m2g)
+        self.save_regridder(self.mesh_to_grid_regridder, self.destination_file_m2g)
 
     def time_save_grid_to_mesh(self, type):
-        save_regridder(self.grid_to_mesh_regridder, self.destination_file_g2m)
+        self.save_regridder(self.grid_to_mesh_regridder, self.destination_file_g2m)
 
     def time_load_mesh_to_grid(self, type):
-        _ = load_regridder(self.source_file_m2g)
+        _ = self.load_regridder(self.source_file_m2g)
 
     def time_load_grid_to_mesh(self, type):
-        _ = load_regridder(self.source_file_g2m)
+        _ = self.load_regridder(self.source_file_g2m)
