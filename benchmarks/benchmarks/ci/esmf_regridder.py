@@ -6,7 +6,6 @@ from pathlib import Path
 import numpy as np
 import dask.array as da
 import iris
-from iris.coord_systems import RotatedGeogCS
 from iris.cube import Cube
 
 from benchmarks import disable_repeat_between_setup
@@ -72,7 +71,7 @@ class MultiGridCompare:
         if type == "large_target":
             n_lons_tgt = 100
             n_lats_tgt = 200
-        alt_coord_system=(type == "mixed")
+        alt_coord_system = (type == "mixed")
         args = (
             lon_bounds,
             lat_bounds,
@@ -81,7 +80,7 @@ class MultiGridCompare:
             n_lons_tgt,
             n_lats_tgt,
             h,
-            coord_system_src,
+            alt_coord_system,
         )
         return args
 
@@ -96,7 +95,7 @@ class TimeRegridding(MultiGridCompare):
             n_lons_tgt,
             n_lats_tgt,
             h,
-            coord_system_src,
+            alt_coord_system,
         ) = self.get_args(type)
         grid = _grid_cube(
             n_lons_src,
@@ -395,7 +394,7 @@ class TimeRegridderIO(MultiGridCompare):
             n_lats_tgt,
             lon_bounds,
             lat_bounds,
-            coord_system=coord_system_src,
+            alt_coord_system=alt_coord_system_src,
         )
         src_mesh = _gridlike_mesh(
             n_lons_src,
