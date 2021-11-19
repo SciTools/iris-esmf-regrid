@@ -129,7 +129,7 @@ def _grid_cube(
 
 def _gridlike_mesh_cube(n_lons, n_lats):
     """Wrapper for calling _gridlike_mesh via :func:`run_function_elsewhere`."""
-    
+
     def external(*args, **kwargs):
         """
         Prep and call _gridlike_mesh, saving to a NetCDF file.
