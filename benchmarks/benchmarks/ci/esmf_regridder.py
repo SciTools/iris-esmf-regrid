@@ -71,7 +71,7 @@ class MultiGridCompare:
         if type == "large_target":
             n_lons_tgt = 100
             n_lats_tgt = 200
-        alt_coord_system = (type == "mixed")
+        alt_coord_system = type == "mixed"
         args = (
             lon_bounds,
             lat_bounds,
