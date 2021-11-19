@@ -125,3 +125,39 @@ def _grid_cube(
     )
     return_cube = load_cube(str(save_path))
     return return_cube
+
+
+def _gridlike_mesh_cube(n_lons, n_lats):
+    """Wrapper for calling _gridlike_mesh via :func:`run_function_elsewhere`."""
+    
+    def external(*args, **kwargs):
+        """
+        Prep and call _gridlike_mesh, saving to a NetCDF file.
+
+        Saving to a file allows the original python executable to pick back up.
+
+        """
+        from iris import save
+
+        from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+            _gridlike_mesh_cube as original,
+        )
+
+        save_path = kwargs.pop("save_path")
+
+        cube = original(*args, **kwargs)
+        save(cube, save_path)
+
+    save_dir = (Path(__file__).parent.parent / ".data").resolve()
+    save_dir.mkdir(exist_ok=True)
+    # TODO: caching? Currently written assuming overwrite every time.
+    save_path = save_dir / "_mesh_cube.nc"
+
+    _ = run_function_elsewhere(
+        external,
+        n_lons,
+        n_lats,
+        save_path=str(save_path),
+    )
+    return_cube = load_cube(str(save_path))
+    return return_cube
