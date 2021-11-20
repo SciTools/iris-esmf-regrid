@@ -391,7 +391,7 @@ def benchmarks(
         finally:
             asv_exec("compare", previous_commit, "HEAD")
     elif long_mode:
-        asv_exec("run", "HEAD^!", "--bench=long")
+        asv_exec("run", "-e", "HEAD^!", "--bench=long")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
         asv_exec("run", "f32f23a5..HEAD")
