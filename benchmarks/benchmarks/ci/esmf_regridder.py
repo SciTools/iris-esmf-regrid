@@ -187,7 +187,7 @@ class TimeMeshToGridRegridding(TimeRegridding):
             h,
             alt_coord_system_src,
         ) = self.get_args(type)
-        src = _gridlike_mesh(n_lons_src, n_lats_src)
+        src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
         tgt = _grid_cube(
             n_lons_tgt,
             n_lats_tgt,
@@ -336,21 +336,21 @@ class TimeRegridderIO(MultiGridCompare):
             n_lons_tgt,
             n_lats_tgt,
             _,
-            alt_coord_system_src,
+            alt_coord_system,
         ) = self.get_args(type)
         src_grid = _grid_cube(
             n_lons_src,
             n_lats_src,
             lon_bounds,
             lat_bounds,
-            alt_coord_system=alt_coord_system_src,
+            alt_coord_system=alt_coord_system,
         )
         tgt_grid = _grid_cube(
             n_lons_tgt,
             n_lats_tgt,
             lon_bounds,
             lat_bounds,
-            alt_coord_system=alt_coord_system_src,
+            alt_coord_system=alt_coord_system,
         )
         src_mesh_cube = _gridlike_mesh_cube(
             n_lons_src,
