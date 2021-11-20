@@ -387,9 +387,9 @@ def benchmarks(
         #  Else: compare to previous commit.
         previous_commit = os.environ.get("CIRRUS_BASE_SHA", "HEAD^1")
         try:
-            asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
+            asv_exec("continuous", "-e", previous_commit, "HEAD", "--bench=ci")
         finally:
-            asv_exec("compare", previous_commit, "HEAD")
+            asv_exec("compare", "-e", previous_commit, "HEAD")
     elif long_mode:
         asv_exec("run", "-e", "HEAD^!", "--bench=long")
     else:
