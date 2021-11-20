@@ -18,6 +18,7 @@ from pathlib import Path
 from textwrap import dedent
 
 from iris import load_cube
+from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 
 #: Python executable used by :func:`run_function_elsewhere`, set via env
 #:  variable of same name. Must be path of Python within an environment that
@@ -159,5 +160,7 @@ def _gridlike_mesh_cube(n_lons, n_lats):
         n_lats,
         save_path=str(save_path),
     )
-    return_cube = load_cube(str(save_path))
+
+    with PARSE_UGRID_ON_LOAD.context():
+        return_cube = load_cube(str(save_path))
     return return_cube
