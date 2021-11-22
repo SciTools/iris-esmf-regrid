@@ -187,7 +187,7 @@ class TimeMeshToGridRegridding(TimeRegridding):
             h,
             alt_coord_system_src,
         ) = self.get_args(type)
-        src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
+        src_mesh = _gridlike_mesh_cube(n_lons_src, n_lats_src).mesh
         tgt = _grid_cube(
             n_lons_tgt,
             n_lats_tgt,
@@ -196,7 +196,11 @@ class TimeMeshToGridRegridding(TimeRegridding):
             alt_coord_system=alt_coord_system_src,
         )
         src_data = np.arange(n_lats_src * n_lons_src * h).reshape([-1, h])
-        src.data = src_data
+        src = Cube(src_data)
+        mesh_coord_x, mesh_coord_y = src_mesh.to_MeshCoords("face")
+        src.add_aux_coord(mesh_coord_x, 0)
+        src.add_aux_coord(mesh_coord_y, 0)
+
         self.regrid_class = MeshToGridESMFRegridder
         self.regridder = self.regrid_class(src, tgt)
         self.src = src
@@ -216,12 +220,16 @@ class TimeLazyMeshToGridRegridding:
         n_lons_tgt = 20
         n_lats_tgt = 40
         h = 2000
-        src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
+        src_mesh = _gridlike_mesh_cube(n_lons_src, n_lats_src).mesh
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
 
         chunk_size = [n_lats_src * n_lons_src, 10]
         src_data = da.ones([n_lats_src * n_lons_src, h], chunks=chunk_size)
-        src.data = src_data
+        src = Cube(src_data)
+        mesh_coord_x, mesh_coord_y = src_mesh.to_MeshCoords("face")
+        src.add_aux_coord(mesh_coord_x, 0)
+        src.add_aux_coord(mesh_coord_y, 0)
+
         iris.save(src, file, chunksizes=chunk_size)
         # Construct regridder with a loaded version of the grid for consistency.
         loaded_src = iris.load_cube(file)
