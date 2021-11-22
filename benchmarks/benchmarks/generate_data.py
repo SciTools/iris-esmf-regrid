@@ -152,7 +152,7 @@ def _gridlike_mesh_cube(n_lons, n_lats):
     save_dir = (Path(__file__).parent.parent / ".data").resolve()
     save_dir.mkdir(exist_ok=True)
     # TODO: caching? Currently written assuming overwrite every time.
-    save_path = save_dir / "_mesh_cube.nc"
+    save_path = save_dir / f"_mesh_cube_{n_lons}_{n_lats}.nc"
 
     _ = run_function_elsewhere(
         external,
