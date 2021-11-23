@@ -15,6 +15,7 @@ from inspect import getsource
 from subprocess import CalledProcessError, check_output, run
 from os import environ
 from pathlib import Path
+import re
 from textwrap import dedent
 
 from iris import load_cube
@@ -33,6 +34,14 @@ except KeyError:
 except (CalledProcessError, FileNotFoundError, PermissionError):
     error = "Env variable DATA_GEN_PYTHON not a runnable python executable path."
     raise ValueError(error)
+
+default_data_dir = (Path(__file__).parent.parent / ".data").resolve()
+BENCHMARK_DATA = Path(environ.get("BENCHMARK_DATA", default_data_dir))
+if BENCHMARK_DATA == default_data_dir:
+    BENCHMARK_DATA.mkdir(exist_ok=True)
+elif not BENCHMARK_DATA.is_dir():
+    message = f"Not a directory: {BENCHMARK_DATA} ."
+    raise ValueError(message)
 
 
 def run_function_elsewhere(func_to_run, *args, **kwargs):
@@ -109,21 +118,32 @@ def _grid_cube(
         cube = original(*args, **kwargs)
         save(cube, save_path)
 
-    save_dir = (Path(__file__).parent.parent / ".data").resolve()
-    save_dir.mkdir(exist_ok=True)
-    # TODO: caching? Currently written assuming overwrite every time.
-    save_path = save_dir / "_grid_cube.nc"
-
-    _ = run_function_elsewhere(
-        external,
+    file_name_sections = [
+        "_grid_cube",
         n_lons,
         n_lats,
         lon_outer_bounds,
         lat_outer_bounds,
         circular,
-        alt_coord_system=alt_coord_system,
-        save_path=str(save_path),
-    )
+        alt_coord_system,
+    ]
+    file_name = "_".join(str(section) for section in file_name_sections)
+    # Remove 'unsafe' characters.
+    file_name = re.sub(r"\W+", "", file_name)
+    save_path = (BENCHMARK_DATA / file_name).with_suffix(".nc")
+
+    if not save_path.is_file():
+        _ = run_function_elsewhere(
+            external,
+            n_lons,
+            n_lats,
+            lon_outer_bounds,
+            lat_outer_bounds,
+            circular,
+            alt_coord_system=alt_coord_system,
+            save_path=str(save_path),
+        )
+
     return_cube = load_cube(str(save_path))
     return return_cube
 
@@ -149,17 +169,15 @@ def _gridlike_mesh_cube(n_lons, n_lats):
         cube = original(*args, **kwargs)
         save(cube, save_path)
 
-    save_dir = (Path(__file__).parent.parent / ".data").resolve()
-    save_dir.mkdir(exist_ok=True)
-    # TODO: caching? Currently written assuming overwrite every time.
-    save_path = save_dir / f"_mesh_cube_{n_lons}_{n_lats}.nc"
+    save_path = BENCHMARK_DATA / f"_mesh_cube_{n_lons}_{n_lats}.nc"
 
-    _ = run_function_elsewhere(
-        external,
-        n_lons,
-        n_lats,
-        save_path=str(save_path),
-    )
+    if not save_path.is_file():
+        _ = run_function_elsewhere(
+            external,
+            n_lons,
+            n_lats,
+            save_path=str(save_path),
+        )
 
     with PARSE_UGRID_ON_LOAD.context():
         return_cube = load_cube(str(save_path))
