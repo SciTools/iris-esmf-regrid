@@ -7,6 +7,7 @@ import numpy as np
 import dask.array as da
 import iris
 from iris.cube import Cube
+from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 
 from benchmarks import disable_repeat_between_setup
 from esmf_regrid.esmf_regridder import GridInfo
@@ -232,15 +233,17 @@ class TimeLazyMeshToGridRegridding:
 
         iris.save(src, file, chunksizes=chunk_size)
         # Construct regridder with a loaded version of the grid for consistency.
-        loaded_src = iris.load_cube(file)
+        with PARSE_UGRID_ON_LOAD.context():
+            loaded_src = iris.load_cube(file)
         regridder = MeshToGridESMFRegridder(loaded_src, tgt)
 
         return regridder, file
 
     def setup(self, cache):
         regridder, file = cache
-        self.src = iris.load_cube(file)
-        cube = iris.load_cube(file)
+        with PARSE_UGRID_ON_LOAD.context():
+            self.src = iris.load_cube(file)
+            cube = iris.load_cube(file)
         self.result = regridder(cube)
 
     def time_lazy_regridding(self, cache):
