@@ -248,7 +248,7 @@ class TimeLazyMeshToGridRegridding:
 
     def time_lazy_regridding(self, cache):
         assert self.src.has_lazy_data()
-        regridder, _, _ = cache
+        regridder, _ = cache
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
