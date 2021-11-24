@@ -9,15 +9,20 @@ import iris
 from iris.cube import Cube
 
 from benchmarks import disable_repeat_between_setup, skip_benchmark
+from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
+from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+    _gridlike_mesh_cube,
+)
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 
 
 class PrepareScalabilityGridToGrid:
+    timeout = 120
     params = [50, 100, 200, 400, 600, 800]
     param_names = ["grid width"]
     height = 100
@@ -47,84 +52,82 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
     regridder = MeshToGridESMFRegridder
 
     def src_cube(self, n):
-        from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
-            _gridlike_mesh,
-        )
-
-        src = Cube(np.ones([n * n]))
-        mesh = _gridlike_mesh(n, n)
-        mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-        src.add_aux_coord(mesh_coord_x, 0)
-        src.add_aux_coord(mesh_coord_y, 0)
+        src = _gridlike_mesh_cube(n, n)
         return src
 
-    def setup(self, n):
-        from esmf_regrid.experimental.io import load_regridder, save_regridder
-
-        self.load_regridder = load_regridder
-        self.save_regridder = save_regridder
-
-        super().setup(n)
-        self.rg = self.regridder(self.src, self.tgt)
+    def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
-        self.source_file = str(SYNTH_DATA_DIR.joinpath("source_rg.nc"))
-        self.destination_file = str(SYNTH_DATA_DIR.joinpath("dest_rg.nc"))
-        save_regridder(self.rg, self.source_file)
+        for n in self.params:
+            super().setup(n)
+            rg = self.regridder(self.src, self.tgt)
+            source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
+            save_regridder(rg, source_file)
+        return SYNTH_DATA_DIR
 
-    def teardown(self, n):
-        if os.path.exists(self.source_file):
-            os.remove(self.source_file)
+    setup_cache.timeout = 180
+
+    def setup(self, SYNTH_DATA_DIR, n):
+        super().setup(n)
+        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
+        SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
+        self.destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg_{n}.nc"))
+        self.rg = load_regridder(self.source_file)
+
+    def teardown(self, _, n):
         if os.path.exists(self.destination_file):
             os.remove(self.destination_file)
 
-    def time_load(self, n):
-        self.load_regridder(self.source_file)
+    def time_load(self, _, n):
+        load_regridder(self.source_file)
 
-    def time_save(self, n):
-        self.save_regridder(self.rg, self.destination_file)
+    def time_save(self, _, n):
+        save_regridder(self.rg, self.destination_file)
+
+    def time_prepare(self, _, n):
+        super().time_prepare(n)
 
 
 class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
     regridder = GridToMeshESMFRegridder
 
     def tgt_cube(self, n):
-        from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
-            _gridlike_mesh,
-        )
-
-        tgt = Cube(np.ones([(n + 1) * (n + 1)]))
-        mesh = _gridlike_mesh(n + 1, n + 1)
-        mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-        tgt.add_aux_coord(mesh_coord_x, 0)
-        tgt.add_aux_coord(mesh_coord_y, 0)
+        tgt = _gridlike_mesh_cube(n + 1, n + 1)
         return tgt
 
-    def setup(self, n):
-        from esmf_regrid.experimental.io import load_regridder, save_regridder
-
-        self.load_regridder = load_regridder
-        self.save_regridder = save_regridder
-
-        super().setup(n)
-        self.rg = self.regridder(self.src, self.tgt)
+    def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
-        self.source_file = str(SYNTH_DATA_DIR.joinpath("source_rg.nc"))
-        self.destination_file = str(SYNTH_DATA_DIR.joinpath("dest_rg.nc"))
-        save_regridder(self.rg, self.source_file)
+        for n in self.params:
+            super().setup(n)
+            rg = self.regridder(self.src, self.tgt)
+            source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
+            save_regridder(rg, source_file)
+        return SYNTH_DATA_DIR
 
-    def teardown(self, n):
-        if os.path.exists(self.source_file):
-            os.remove(self.source_file)
+    setup_cache.timeout = 180
+
+    def setup(self, SYNTH_DATA_DIR, n):
+        super().setup(n)
+        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
+        SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
+        self.destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg_{n}.nc"))
+        self.rg = load_regridder(self.source_file)
+
+    def teardown(self, _, n):
         if os.path.exists(self.destination_file):
             os.remove(self.destination_file)
 
-    def time_load(self, n):
-        self.load_regridder(self.source_file)
+    def time_load(self, _, n):
+        load_regridder(self.source_file)
 
-    def time_save(self, n):
-        self.save_regridder(self.rg, self.destination_file)
+    def time_save(self, _, n):
+        save_regridder(self.rg, self.destination_file)
+
+    def time_prepare(self, _, n):
+        super().time_prepare(n)
 
 
 @disable_repeat_between_setup
