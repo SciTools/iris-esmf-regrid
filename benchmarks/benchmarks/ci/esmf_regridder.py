@@ -339,7 +339,7 @@ class TimeRegridderIO(MultiGridCompare):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
 
-        for type in self.params:
+        for tp in self.params:
             (
                 lon_bounds,
                 lat_bounds,
@@ -349,7 +349,7 @@ class TimeRegridderIO(MultiGridCompare):
                 n_lats_tgt,
                 _,
                 alt_coord_system,
-            ) = self.get_args(type)
+            ) = self.get_args(tp)
             src_grid = _grid_cube(
                 n_lons_src,
                 n_lats_src,
@@ -376,8 +376,8 @@ class TimeRegridderIO(MultiGridCompare):
             mesh_to_grid_regridder = MeshToGridESMFRegridder(src_mesh_cube, tgt_grid)
             grid_to_mesh_regridder = GridToMeshESMFRegridder(src_grid, tgt_mesh_cube)
 
-            source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{type}.nc"))
-            source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{type}.nc"))
+            source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{tp}.nc"))
+            source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{tp}.nc"))
 
             save_regridder(mesh_to_grid_regridder, source_file_m2g)
             save_regridder(grid_to_mesh_regridder, source_file_g2m)
