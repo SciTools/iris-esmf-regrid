@@ -1,6 +1,5 @@
 """Unit tests for round tripping (saving then loading) with :mod:`esmf_regrid.experimental.io`."""
 
-from iris.cube import Cube
 import numpy as np
 from numpy import ma
 
