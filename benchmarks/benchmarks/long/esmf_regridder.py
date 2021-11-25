@@ -69,8 +69,6 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
 
     def setup(self, SYNTH_DATA_DIR, n):
         super().setup(n)
-        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
-        SYNTH_DATA_DIR.mkdir(exist_ok=True)
         self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
         self.destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg_{n}.nc"))
         self.rg = load_regridder(self.source_file)
@@ -110,8 +108,6 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
 
     def setup(self, SYNTH_DATA_DIR, n):
         super().setup(n)
-        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
-        SYNTH_DATA_DIR.mkdir(exist_ok=True)
         self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
         self.destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg_{n}.nc"))
         self.rg = load_regridder(self.source_file)

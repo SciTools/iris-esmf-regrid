@@ -370,6 +370,12 @@ def benchmarks(
 
     """
     session.install("asv", "nox", "pyyaml")
+    print("Setting up the data generation environment...")
+    session.run("nox", "--session=tests", "--install-only", f"--python={session.python}")
+    data_gen_python = next(Path(".nox").rglob(f"tests*/bin/python{session.python}")).resolve()
+    session.env["DATA_GEN_PYTHON"] = data_gen_python
+
+    print("Running ASV...")
     session.cd("benchmarks")
     # Skip over setup questions for a new machine.
     session.run("asv", "machine", "--yes")
