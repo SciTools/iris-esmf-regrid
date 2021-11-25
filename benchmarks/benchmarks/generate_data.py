@@ -43,6 +43,9 @@ elif not BENCHMARK_DATA.is_dir():
     message = f"Not a directory: {BENCHMARK_DATA} ."
     raise ValueError(message)
 
+# Flag to allow the rebuilding of synthetic data.
+REUSE_DATA = True
+
 
 def run_function_elsewhere(func_to_run, *args, **kwargs):
     """
@@ -171,7 +174,7 @@ def _gridlike_mesh_cube(n_lons, n_lats):
 
     save_path = BENCHMARK_DATA / f"_mesh_cube_{n_lons}_{n_lats}.nc"
 
-    if not save_path.is_file():
+    if not REUSE_DATA or not save_path.is_file():
         _ = run_function_elsewhere(
             external,
             n_lons,
