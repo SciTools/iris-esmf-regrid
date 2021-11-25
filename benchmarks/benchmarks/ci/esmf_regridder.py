@@ -383,7 +383,6 @@ class TimeRegridderIO(MultiGridCompare):
             save_regridder(grid_to_mesh_regridder, source_file_g2m)
             return SYNTH_DATA_DIR
 
-
     def setup(self, SYNTH_DATA_DIR, tp):
         from esmf_regrid.experimental.io import load_regridder, save_regridder
 
