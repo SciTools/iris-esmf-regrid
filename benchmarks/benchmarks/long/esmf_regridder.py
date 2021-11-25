@@ -15,14 +15,11 @@ from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
-    _gridlike_mesh_cube,
-)
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
+from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
 class PrepareScalabilityGridToGrid:
-    timeout = 120
+    timeout = 180
     params = [50, 100, 200, 400, 600, 800]
     param_names = ["grid width"]
     height = 100

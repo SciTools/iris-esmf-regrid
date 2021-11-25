@@ -334,7 +334,7 @@ class TimeLazyGridToMeshRegridding:
 
 class TimeRegridderIO(MultiGridCompare):
     def setup_cache(self):
-        from esmf_regrid.experimental.io import load_regridder, save_regridder
+        from esmf_regrid.experimental.io import save_regridder
 
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
@@ -382,7 +382,6 @@ class TimeRegridderIO(MultiGridCompare):
             save_regridder(mesh_to_grid_regridder, source_file_m2g)
             save_regridder(grid_to_mesh_regridder, source_file_g2m)
             return SYNTH_DATA_DIR
-
 
     def setup(self, SYNTH_DATA_DIR, tp):
         from esmf_regrid.experimental.io import load_regridder, save_regridder
