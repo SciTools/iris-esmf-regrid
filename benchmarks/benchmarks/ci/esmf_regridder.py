@@ -58,7 +58,7 @@ class MultiGridCompare:
     params = ["similar", "large_source", "large_target", "mixed"]
     param_names = ["source/target difference"]
 
-    def get_args(self, type):
+    def get_args(self, tp):
         lon_bounds = (-180, 180)
         lat_bounds = (-90, 90)
         n_lons_src = 20
@@ -66,13 +66,13 @@ class MultiGridCompare:
         n_lons_tgt = 20
         n_lats_tgt = 40
         h = 100
-        if type == "large_source":
+        if tp == "large_source":
             n_lons_src = 100
             n_lats_src = 200
-        if type == "large_target":
+        if tp == "large_target":
             n_lons_tgt = 100
             n_lats_tgt = 200
-        alt_coord_system = type == "mixed"
+        alt_coord_system = tp == "mixed"
         args = (
             lon_bounds,
             lat_bounds,
@@ -87,7 +87,7 @@ class MultiGridCompare:
 
 
 class TimeRegridding(MultiGridCompare):
-    def setup(self, type):
+    def setup(self, tp):
         (
             lon_bounds,
             lat_bounds,
@@ -97,7 +97,7 @@ class TimeRegridding(MultiGridCompare):
             n_lats_tgt,
             h,
             alt_coord_system,
-        ) = self.get_args(type)
+        ) = self.get_args(tp)
         grid = _grid_cube(
             n_lons_src,
             n_lats_src,
@@ -117,10 +117,10 @@ class TimeRegridding(MultiGridCompare):
         self.src = src
         self.tgt = tgt
 
-    def time_prepare_regridding(self, type):
+    def time_prepare_regridding(self, tp):
         _ = self.regrid_class(self.src, self.tgt)
 
-    def time_perform_regridding(self, type):
+    def time_perform_regridding(self, tp):
         _ = self.regridder(self.src)
 
 
@@ -177,7 +177,7 @@ class TimeLazyRegridding:
 
 
 class TimeMeshToGridRegridding(TimeRegridding):
-    def setup(self, type):
+    def setup(self, tp):
         (
             lon_bounds,
             lat_bounds,
@@ -187,7 +187,7 @@ class TimeMeshToGridRegridding(TimeRegridding):
             n_lats_tgt,
             h,
             alt_coord_system_src,
-        ) = self.get_args(type)
+        ) = self.get_args(tp)
         src_mesh = _gridlike_mesh_cube(n_lons_src, n_lats_src).mesh
         tgt = _grid_cube(
             n_lons_tgt,
@@ -257,7 +257,7 @@ class TimeLazyMeshToGridRegridding:
 
 
 class TimeGridToMeshRegridding(TimeRegridding):
-    def setup(self, type):
+    def setup(self, tp):
         (
             lon_bounds,
             lat_bounds,
@@ -267,7 +267,7 @@ class TimeGridToMeshRegridding(TimeRegridding):
             n_lats_tgt,
             h,
             alt_coord_system,
-        ) = self.get_args(type)
+        ) = self.get_args(tp)
         grid = _grid_cube(
             n_lons_src,
             n_lats_src,
@@ -333,79 +333,89 @@ class TimeLazyGridToMeshRegridding:
 
 
 class TimeRegridderIO(MultiGridCompare):
-    def setup(self, type):
+    def setup_cache(self):
+        from esmf_regrid.experimental.io import load_regridder, save_regridder
+
+        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
+        SYNTH_DATA_DIR.mkdir(exist_ok=True)
+
+        for type in self.params:
+            (
+                lon_bounds,
+                lat_bounds,
+                n_lons_src,
+                n_lats_src,
+                n_lons_tgt,
+                n_lats_tgt,
+                _,
+                alt_coord_system,
+            ) = self.get_args(type)
+            src_grid = _grid_cube(
+                n_lons_src,
+                n_lats_src,
+                lon_bounds,
+                lat_bounds,
+                alt_coord_system=alt_coord_system,
+            )
+            tgt_grid = _grid_cube(
+                n_lons_tgt,
+                n_lats_tgt,
+                lon_bounds,
+                lat_bounds,
+                alt_coord_system=alt_coord_system,
+            )
+            src_mesh_cube = _gridlike_mesh_cube(
+                n_lons_src,
+                n_lats_src,
+            )
+            tgt_mesh_cube = _gridlike_mesh_cube(
+                n_lons_tgt,
+                n_lats_tgt,
+            )
+
+            mesh_to_grid_regridder = MeshToGridESMFRegridder(src_mesh_cube, tgt_grid)
+            grid_to_mesh_regridder = GridToMeshESMFRegridder(src_grid, tgt_mesh_cube)
+
+            source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{type}.nc"))
+            source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{type}.nc"))
+
+            save_regridder(mesh_to_grid_regridder, source_file_m2g)
+            save_regridder(grid_to_mesh_regridder, source_file_g2m)
+            return SYNTH_DATA_DIR
+
+
+    def setup(self, SYNTH_DATA_DIR, tp):
         from esmf_regrid.experimental.io import load_regridder, save_regridder
 
         self.load_regridder = load_regridder
         self.save_regridder = save_regridder
 
-        (
-            lon_bounds,
-            lat_bounds,
-            n_lons_src,
-            n_lats_src,
-            n_lons_tgt,
-            n_lats_tgt,
-            _,
-            alt_coord_system,
-        ) = self.get_args(type)
-        src_grid = _grid_cube(
-            n_lons_src,
-            n_lats_src,
-            lon_bounds,
-            lat_bounds,
-            alt_coord_system=alt_coord_system,
-        )
-        tgt_grid = _grid_cube(
-            n_lons_tgt,
-            n_lats_tgt,
-            lon_bounds,
-            lat_bounds,
-            alt_coord_system=alt_coord_system,
-        )
-        src_mesh_cube = _gridlike_mesh_cube(
-            n_lons_src,
-            n_lats_src,
-        )
-        tgt_mesh_cube = _gridlike_mesh_cube(
-            n_lons_tgt,
-            n_lats_tgt,
-        )
-
-        self.mesh_to_grid_regridder = MeshToGridESMFRegridder(src_mesh_cube, tgt_grid)
-        self.grid_to_mesh_regridder = GridToMeshESMFRegridder(src_grid, tgt_mesh_cube)
-
-        SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
-        SYNTH_DATA_DIR.mkdir(exist_ok=True)
-        self.source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{type}.nc"))
-        self.source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{type}.nc"))
+        self.source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{tp}.nc"))
+        self.source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{tp}.nc"))
         self.destination_file_m2g = str(
-            SYNTH_DATA_DIR.joinpath(f"m2g_destination_{type}.nc")
+            SYNTH_DATA_DIR.joinpath(f"m2g_destination_{tp}.nc")
         )
         self.destination_file_g2m = str(
-            SYNTH_DATA_DIR.joinpath(f"g2m_destination_{type}.nc")
+            SYNTH_DATA_DIR.joinpath(f"g2m_destination_{tp}.nc")
         )
-        save_regridder(self.mesh_to_grid_regridder, self.source_file_m2g)
-        save_regridder(self.grid_to_mesh_regridder, self.source_file_g2m)
 
-    def teardown(self, type):
-        if os.path.exists(self.source_file_m2g):
-            os.remove(self.source_file_m2g)
-        if os.path.exists(self.source_file_g2m):
-            os.remove(self.source_file_g2m)
+        self.mesh_to_grid_regridder = load_regridder(self.source_file_m2g)
+        self.grid_to_mesh_regridder = load_regridder(self.source_file_g2m)
+
+    def teardown(self, _, tp):
         if os.path.exists(self.destination_file_m2g):
             os.remove(self.destination_file_m2g)
         if os.path.exists(self.destination_file_g2m):
             os.remove(self.destination_file_g2m)
 
-    def time_save_mesh_to_grid(self, type):
+    def time_save_mesh_to_grid(self, _, tp):
         self.save_regridder(self.mesh_to_grid_regridder, self.destination_file_m2g)
 
-    def time_save_grid_to_mesh(self, type):
+    def time_save_grid_to_mesh(self, _, tp):
         self.save_regridder(self.grid_to_mesh_regridder, self.destination_file_g2m)
 
-    def time_load_mesh_to_grid(self, type):
+    def time_load_mesh_to_grid(self, _, tp):
         _ = self.load_regridder(self.source_file_m2g)
 
-    def time_load_grid_to_mesh(self, type):
+    def time_load_grid_to_mesh(self, _, tp):
         _ = self.load_regridder(self.source_file_g2m)
