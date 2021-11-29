@@ -55,7 +55,7 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
-        destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg.nc"))
+        destination_file = str(SYNTH_DATA_DIR.joinpath("dest_rg.nc"))
         file_dict = {"destination": destination_file}
         for n in self.params:
             super().setup(n)
@@ -95,7 +95,7 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
-        destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg.nc"))
+        destination_file = str(SYNTH_DATA_DIR.joinpath("dest_rg.nc"))
         file_dict = {"destination": destination_file}
         for n in self.params:
             super().setup(n)
