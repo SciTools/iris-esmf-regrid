@@ -333,13 +333,16 @@ class TimeLazyGridToMeshRegridding:
 
 
 class TimeRegridderIO(MultiGridCompare):
+    params = [MultiGridCompare.params, ["mesh_to_grid", "grid_to_mesh"]]
+    param_names = MultiGridCompare.param_names + ["regridder type"]
+
     def setup_cache(self):
         from esmf_regrid.experimental.io import save_regridder
 
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
 
-        for tp in self.params:
+        for tp in self.params[0]:
             (
                 lon_bounds,
                 lat_bounds,
@@ -376,45 +379,33 @@ class TimeRegridderIO(MultiGridCompare):
             mesh_to_grid_regridder = MeshToGridESMFRegridder(src_mesh_cube, tgt_grid)
             grid_to_mesh_regridder = GridToMeshESMFRegridder(src_grid, tgt_mesh_cube)
 
-            source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{tp}.nc"))
-            source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{tp}.nc"))
+            source_file_m2g = str(
+                SYNTH_DATA_DIR.joinpath(f"source_{tp}_mesh_to_grid.nc")
+            )
+            source_file_g2m = str(
+                SYNTH_DATA_DIR.joinpath(f"source_{tp}_grid_to_mesh.nc")
+            )
 
             save_regridder(mesh_to_grid_regridder, source_file_m2g)
             save_regridder(grid_to_mesh_regridder, source_file_g2m)
         return SYNTH_DATA_DIR
 
-    def setup(self, SYNTH_DATA_DIR, tp):
+    def setup(self, SYNTH_DATA_DIR, tp, rgt):
         from esmf_regrid.experimental.io import load_regridder, save_regridder
 
         self.load_regridder = load_regridder
         self.save_regridder = save_regridder
 
-        self.source_file_m2g = str(SYNTH_DATA_DIR.joinpath(f"m2g_source_{tp}.nc"))
-        self.source_file_g2m = str(SYNTH_DATA_DIR.joinpath(f"g2m_source_{tp}.nc"))
-        self.destination_file_m2g = str(
-            SYNTH_DATA_DIR.joinpath(f"m2g_destination_{tp}.nc")
-        )
-        self.destination_file_g2m = str(
-            SYNTH_DATA_DIR.joinpath(f"g2m_destination_{tp}.nc")
-        )
+        self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_{tp}_{rgt}.nc"))
+        self.destination_file = str(SYNTH_DATA_DIR.joinpath("destination.nc"))
+        self.regridder = load_regridder(self.source_file)
 
-        self.mesh_to_grid_regridder = load_regridder(self.source_file_m2g)
-        self.grid_to_mesh_regridder = load_regridder(self.source_file_g2m)
+    def teardown(self, _, tp, rgt):
+        if os.path.exists(self.destination_file):
+            os.remove(self.destination_file)
 
-    def teardown(self, _, tp):
-        if os.path.exists(self.destination_file_m2g):
-            os.remove(self.destination_file_m2g)
-        if os.path.exists(self.destination_file_g2m):
-            os.remove(self.destination_file_g2m)
+    def time_save(self, _, tp, rgt):
+        self.save_regridder(self.regridder, self.destination_file)
 
-    def time_save_mesh_to_grid(self, _, tp):
-        self.save_regridder(self.mesh_to_grid_regridder, self.destination_file_m2g)
-
-    def time_save_grid_to_mesh(self, _, tp):
-        self.save_regridder(self.grid_to_mesh_regridder, self.destination_file_g2m)
-
-    def time_load_mesh_to_grid(self, _, tp):
-        _ = self.load_regridder(self.source_file_m2g)
-
-    def time_load_grid_to_mesh(self, _, tp):
-        _ = self.load_regridder(self.source_file_g2m)
+    def time_load(self, _, tp, rgt):
+        _ = self.load_regridder(self.source_file)
