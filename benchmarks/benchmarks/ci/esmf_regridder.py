@@ -342,6 +342,9 @@ class TimeRegridderIO(MultiGridCompare):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
 
+        destination_file = str(SYNTH_DATA_DIR.joinpath("destination.nc"))
+        file_dict = {"destination": destination_file}
+
         for tp in self.params[0]:
             (
                 lon_bounds,
@@ -388,16 +391,19 @@ class TimeRegridderIO(MultiGridCompare):
 
             save_regridder(mesh_to_grid_regridder, source_file_m2g)
             save_regridder(grid_to_mesh_regridder, source_file_g2m)
-        return SYNTH_DATA_DIR
 
-    def setup(self, SYNTH_DATA_DIR, tp, rgt):
+            file_dict[(tp, "mesh_to_grid")] = source_file_m2g
+            file_dict[(tp, "grid_to_mesh")] = source_file_g2m
+        return file_dict
+
+    def setup(self, file_dict, tp, rgt):
         from esmf_regrid.experimental.io import load_regridder, save_regridder
 
         self.load_regridder = load_regridder
         self.save_regridder = save_regridder
 
-        self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_{tp}_{rgt}.nc"))
-        self.destination_file = str(SYNTH_DATA_DIR.joinpath("destination.nc"))
+        self.source_file = file_dict[(tp, rgt)]
+        self.destination_file = file_dict["destination"]
         self.regridder = load_regridder(self.source_file)
 
     def teardown(self, _, tp, rgt):

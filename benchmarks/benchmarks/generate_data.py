@@ -135,7 +135,7 @@ def _grid_cube(
     file_name = re.sub(r"\W+", "", file_name)
     save_path = (BENCHMARK_DATA / file_name).with_suffix(".nc")
 
-    if not save_path.is_file():
+    if not REUSE_DATA or not save_path.is_file():
         _ = run_function_elsewhere(
             external,
             n_lons,

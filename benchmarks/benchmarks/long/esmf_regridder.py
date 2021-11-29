@@ -55,19 +55,20 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg.nc"))
+        file_dict = {"destination": destination_file}
         for n in self.params:
             super().setup(n)
             rg = self.regridder(self.src, self.tgt)
             source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
             save_regridder(rg, source_file)
-        return SYNTH_DATA_DIR
+            file_dict[n] = source_file
+        return file_dict
 
-    setup_cache.timeout = 180
-
-    def setup(self, SYNTH_DATA_DIR, n):
+    def setup(self, file_dict, n):
         super().setup(n)
-        self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
-        self.destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg_{n}.nc"))
+        self.source_file = file_dict[n]
+        self.destination_file = file_dict["destination"]
         self.rg = load_regridder(self.source_file)
 
     def teardown(self, _, n):
@@ -94,19 +95,20 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
+        destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg.nc"))
+        file_dict = {"destination": destination_file}
         for n in self.params:
             super().setup(n)
             rg = self.regridder(self.src, self.tgt)
             source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
             save_regridder(rg, source_file)
-        return SYNTH_DATA_DIR
+            file_dict[n] = source_file
+        return file_dict
 
-    setup_cache.timeout = 180
-
-    def setup(self, SYNTH_DATA_DIR, n):
+    def setup(self, file_dict, n):
         super().setup(n)
-        self.source_file = str(SYNTH_DATA_DIR.joinpath(f"source_rg_{n}.nc"))
-        self.destination_file = str(SYNTH_DATA_DIR.joinpath(f"dest_rg_{n}.nc"))
+        self.source_file = file_dict[n]
+        self.destination_file = file_dict["destination"]
         self.rg = load_regridder(self.source_file)
 
     def teardown(self, _, n):
