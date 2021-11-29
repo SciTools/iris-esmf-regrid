@@ -379,21 +379,17 @@ class TimeRegridderIO(MultiGridCompare):
                 n_lats_tgt,
             )
 
-            mesh_to_grid_regridder = MeshToGridESMFRegridder(src_mesh_cube, tgt_grid)
-            grid_to_mesh_regridder = GridToMeshESMFRegridder(src_grid, tgt_mesh_cube)
+            rg_dict = {}
+            rg_dict["mesh_to_grid"] = MeshToGridESMFRegridder(src_mesh_cube, tgt_grid)
+            rg_dict["grid_to_mesh"] = GridToMeshESMFRegridder(src_grid, tgt_mesh_cube)
 
-            source_file_m2g = str(
-                SYNTH_DATA_DIR.joinpath(f"source_{tp}_mesh_to_grid.nc")
-            )
-            source_file_g2m = str(
-                SYNTH_DATA_DIR.joinpath(f"source_{tp}_grid_to_mesh.nc")
-            )
+            for rgt in self.params[1]:
+                regridder = rg_dict[rgt]
+                source_file = str(SYNTH_DATA_DIR.joinpath(f"source_{tp}_{rgt}.nc"))
 
-            save_regridder(mesh_to_grid_regridder, source_file_m2g)
-            save_regridder(grid_to_mesh_regridder, source_file_g2m)
+                save_regridder(regridder, source_file)
 
-            file_dict[(tp, "mesh_to_grid")] = source_file_m2g
-            file_dict[(tp, "grid_to_mesh")] = source_file_g2m
+                file_dict[(tp, rgt)] = source_file
         return file_dict
 
     def setup(self, file_dict, tp, rgt):
