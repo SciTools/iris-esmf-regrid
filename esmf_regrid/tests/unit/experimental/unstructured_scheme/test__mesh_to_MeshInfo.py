@@ -1,6 +1,7 @@
 """Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
 
 from iris.coords import AuxCoord
+from iris.cube import Cube
 from iris.experimental.ugrid import Connectivity, Mesh
 import numpy as np
 from numpy import ma
@@ -152,6 +153,16 @@ def _gridlike_mesh(n_lons, n_lats):
     mesh.add_coords(face_x=dummy_face_lon, face_y=dummy_face_lat)
     mesh.long_name = "example mesh"
     return mesh
+
+
+def _gridlike_mesh_cube(n_lons, n_lats):
+    mesh = _gridlike_mesh(n_lons, n_lats)
+    data = np.zeros([n_lons * n_lats])
+    cube = Cube(data)
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    cube.add_aux_coord(mesh_coord_x, 0)
+    cube.add_aux_coord(mesh_coord_y, 0)
+    return cube
 
 
 def test__mesh_to_MeshInfo():

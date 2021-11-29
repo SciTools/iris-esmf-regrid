@@ -135,6 +135,8 @@ test_task:
 benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
+  env:
+    PY_VER: "3.8"
   name: "${CIRRUS_OS}: performance benchmarking"
   # Custom clone behaviour to enable ASV to access the PR base branch (if on a
   #  PR).
@@ -153,6 +155,13 @@ benchmark_task:
     reupload_on_changes: true
     fingerprint_script:
       - echo "${CIRRUS_TASK_NAME}"
+      - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
+  nox_cache:
+    folder: ${CIRRUS_WORKING_DIR}/.nox
+    reupload_on_changes: true
+    fingerprint_script:
+      - echo "${CIRRUS_TASK_NAME}"
+      - echo "${NOX_CACHE_BUILD}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"

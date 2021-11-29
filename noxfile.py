@@ -334,7 +334,7 @@ def tests(session: nox.sessions.Session):
         session.run("pytest")
 
 
-@nox.session
+@nox.session(python=PY_VER, venv_backend="conda")
 @nox.parametrize(
     ["ci_mode", "long_mode", "gh_pages"],
     [
@@ -370,6 +370,19 @@ def benchmarks(
 
     """
     session.install("asv", "nox", "pyyaml")
+    if "DATA_GEN_PYTHON" in os.environ:
+        print("Using existing data generation environment.")
+    else:
+        print("Setting up the data generation environment...")
+        session.run(
+            "nox", "--session=tests", "--install-only", f"--python={session.python}"
+        )
+        data_gen_python = next(
+            Path(".nox").rglob(f"tests*/bin/python{session.python}")
+        ).resolve()
+        session.env["DATA_GEN_PYTHON"] = data_gen_python
+
+    print("Running ASV...")
     session.cd("benchmarks")
     # Skip over setup questions for a new machine.
     session.run("asv", "machine", "--yes")
@@ -379,7 +392,7 @@ def benchmarks(
         help_output = session.run(*run_args, "--help", silent=True)
         if "--python" in help_output:
             # Not all asv commands accept the --python kwarg.
-            run_args.append(f"--python={PY_VER[-1]}")
+            run_args.append(f"--python={session.python}")
         session.run(*run_args)
 
     if ci_mode:

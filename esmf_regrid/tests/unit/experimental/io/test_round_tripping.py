@@ -1,6 +1,5 @@
 """Unit tests for round tripping (saving then loading) with :mod:`esmf_regrid.experimental.io`."""
 
-from iris.cube import Cube
 import numpy as np
 from numpy import ma
 
@@ -13,7 +12,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridI
     _grid_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
-    _gridlike_mesh,
+    _gridlike_mesh_cube,
 )
 
 
@@ -28,12 +27,7 @@ def _make_grid_to_mesh_regridder():
     src = _grid_cube(src_lons, src_lats, lon_bounds, lat_bounds, circular=True)
     src.coord("longitude").var_name = "longitude"
     src.coord("latitude").var_name = "latitude"
-    mesh = _gridlike_mesh(tgt_lons, tgt_lats)
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-    tgt_data = np.zeros(tgt_lons * tgt_lats)
-    tgt = Cube(tgt_data)
-    tgt.add_aux_coord(mesh_coord_x, 0)
-    tgt.add_aux_coord(mesh_coord_y, 0)
+    tgt = _gridlike_mesh_cube(tgt_lons, tgt_lats)
 
     rg = GridToMeshESMFRegridder(src, tgt, mdtol=0.5)
     return rg, src
@@ -50,12 +44,7 @@ def _make_mesh_to_grid_regridder():
     tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
     tgt.coord("longitude").var_name = "longitude"
     tgt.coord("latitude").var_name = "latitude"
-    mesh = _gridlike_mesh(src_lons, src_lats)
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-    src_data = np.zeros(src_lons * src_lats)
-    src = Cube(src_data)
-    src.add_aux_coord(mesh_coord_x, 0)
-    src.add_aux_coord(mesh_coord_y, 0)
+    src = _gridlike_mesh_cube(src_lons, src_lats)
 
     rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
     return rg, src
