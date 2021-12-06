@@ -63,22 +63,34 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     num_dims = len(dims)
     num_out = len(out_sizes)
     dropped_dims = []
+    new_axis = None
     if num_out > num_dims:
         # While this code should be robust for cases where num_out > num_dims > 1,
         # there is some ambiguity as to what their behaviour ought to be.
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
         assert num_dims == 1
+        # While this code should be robust for cases where num_out > 2,
+        # we expect to handle at most 2D grids.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_out == 2
         slice_index = sorted_dims[-1]
         # Insert the remaining contents of out_sizes in the position immediately
         # after the last dimension.
         out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
+        new_axis = range(slice_index, slice_index + num_out - num_dims)
     elif num_dims > num_out:
         # While this code should be robust for cases where num_dims > num_out > 1,
         # there is some ambiguity as to what their behaviour ought to be.
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
         assert num_out == 1
+        # While this code should be robust for cases where num_dims > 2,
+        # we expect to handle at most 2D grids.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_dims == 2
         dropped_dims = sorted_dims[num_out:]
         # Remove the remaining dimensions from the expected output shape.
         for dim in dropped_dims[::-1]:
@@ -87,7 +99,11 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         pass
 
     return data.map_blocks(
-        func, chunks=out_chunks, drop_axis=dropped_dims, dtype=src.dtype
+        func,
+        chunks=out_chunks,
+        drop_axis=dropped_dims,
+        new_axis=new_axis,
+        dtype=src.dtype,
     )
 
 

@@ -141,17 +141,20 @@ def test_laziness():
     n_lons = 12
     n_lats = 10
     h = 4
+    i = 9
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
 
     mesh = _gridlike_mesh(n_lons, n_lats)
 
-    src_data = np.arange(n_lats * n_lons * h).reshape([-1, h])
-    src_data = da.from_array(src_data, chunks=[15, 2])
+    # Add a chunked dimension both before and after the mesh dimension.
+    # The leading length 1 dimension matches the example in issue #135.
+    src_data = np.arange(i * n_lats * n_lons * h).reshape([1, i, -1, h])
+    src_data = da.from_array(src_data, chunks=[1, 3, 15, 2])
     src = Cube(src_data)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-    src.add_aux_coord(mesh_coord_x, 0)
-    src.add_aux_coord(mesh_coord_y, 0)
+    src.add_aux_coord(mesh_coord_x, 2)
+    src.add_aux_coord(mesh_coord_y, 2)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     rg = MeshToGridESMFRegridder(src, tgt)
@@ -160,6 +163,6 @@ def test_laziness():
     result = rg(src)
     assert result.has_lazy_data()
     out_chunks = result.lazy_data().chunks
-    expected_chunks = ((10,), (12,), (2, 2))
+    expected_chunks = ((1,), (3, 3, 3), (10,), (12,), (2, 2))
     assert out_chunks == expected_chunks
-    assert np.allclose(result.data.reshape([-1, h]), src_data)
+    assert np.allclose(result.data.reshape([1, i, -1, h]), src_data)
