@@ -74,7 +74,7 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         # Insert the remaining contents of out_sizes in the position immediately
         # after the last dimension.
         out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
-        new_axis = slice_index
+        new_axis = range(slice_index, slice_index + num_out - num_dims)
     elif num_dims > num_out:
         # While this code should be robust for cases where num_dims > num_out > 1,
         # there is some ambiguity as to what their behaviour ought to be.
