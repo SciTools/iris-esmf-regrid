@@ -141,7 +141,7 @@ def test_laziness():
     n_lons = 12
     n_lats = 10
     h = 4
-    l = 9
+    i = 9
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
 
@@ -149,7 +149,7 @@ def test_laziness():
 
     # Add a chunked dimension both before and after the mesh dimension.
     # The leading length 1 dimension matches the example in issue #135.
-    src_data = np.arange(l * n_lats * n_lons * h).reshape([1, l, -1, h])
+    src_data = np.arange(i * n_lats * n_lons * h).reshape([1, i, -1, h])
     src_data = da.from_array(src_data, chunks=[1, 3, 15, 2])
     src = Cube(src_data)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
@@ -165,4 +165,4 @@ def test_laziness():
     out_chunks = result.lazy_data().chunks
     expected_chunks = ((1,), (3, 3, 3), (10,), (12,), (2, 2))
     assert out_chunks == expected_chunks
-    assert np.allclose(result.data.reshape([1, l, -1, h]), src_data)
+    assert np.allclose(result.data.reshape([1, i, -1, h]), src_data)
