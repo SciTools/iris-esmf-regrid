@@ -70,6 +70,11 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
         assert num_dims == 1
+        # While this code should be robust for cases where num_out > 2,
+        # we expect to handle at most 2D grids.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_out == 2
         slice_index = sorted_dims[-1]
         # Insert the remaining contents of out_sizes in the position immediately
         # after the last dimension.
@@ -81,6 +86,11 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
         assert num_out == 1
+        # While this code should be robust for cases where num_dims > 2,
+        # we expect to handle at most 2D grids.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_dims == 2
         dropped_dims = sorted_dims[num_out:]
         # Remove the remaining dimensions from the expected output shape.
         for dim in dropped_dims[::-1]:
