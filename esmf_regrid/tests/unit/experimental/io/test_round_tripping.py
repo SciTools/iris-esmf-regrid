@@ -78,6 +78,10 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     # TODO: make this a cube comparison when mesh comparison becomes available.
     assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
 
+    # Ensure version data is equal.
+    assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
+    assert original_rg.regridder.esmf_regrid_version == loaded_rg.regridder.esmf_regrid_version
+
 
 def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
@@ -105,3 +109,7 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     src_mask[0] = 1
     src.data = ma.array(src_data, mask=src_mask)
     assert original_rg(src) == loaded_rg(src)
+
+    # Ensure version data is equal.
+    assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
+    assert original_rg.regridder.esmf_regrid_version == loaded_rg.regridder.esmf_regrid_version
