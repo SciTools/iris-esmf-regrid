@@ -80,7 +80,10 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
-    assert original_rg.regridder.esmf_regrid_version == loaded_rg.regridder.esmf_regrid_version
+    assert (
+        original_rg.regridder.esmf_regrid_version
+        == loaded_rg.regridder.esmf_regrid_version
+    )
 
 
 def test_MeshToGridESMFRegridder_round_trip(tmp_path):
@@ -112,4 +115,7 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
-    assert original_rg.regridder.esmf_regrid_version == loaded_rg.regridder.esmf_regrid_version
+    assert (
+        original_rg.regridder.esmf_regrid_version
+        == loaded_rg.regridder.esmf_regrid_version
+    )
