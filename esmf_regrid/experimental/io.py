@@ -85,6 +85,9 @@ def save_regridder(rg, filename):
     esmf_regrid_version = rg.regridder.esmf_regrid_version
     save_version = esmf_regrid.__version__
 
+    # Currently, all schemes use the fracarea normalization.
+    normalization = "fracarea"
+
     mdtol = rg.mdtol
     attributes = {
         "title": "iris-esmf-regrid regridding scheme",
@@ -92,6 +95,7 @@ def save_regridder(rg, filename):
         "ESMF_version": esmf_version,
         "esmf_regrid_version_on_initialise": esmf_regrid_version,
         "esmf_regrid_version_on_save": save_version,
+        "normalization": normalization,
         "mdtol": mdtol,
     }
 
