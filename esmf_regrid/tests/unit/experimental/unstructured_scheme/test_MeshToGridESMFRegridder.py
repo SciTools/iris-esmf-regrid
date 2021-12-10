@@ -14,6 +14,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridI
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
+    _gridlike_mesh_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
@@ -153,7 +154,7 @@ def test_mistmatched_mesh():
 
     rg = MeshToGridESMFRegridder(src, tgt)
 
-    other_src = _gridlike_mesh(n_lons, n_lats)
+    other_src = _gridlike_mesh_cube(n_lons, n_lats)
 
     with pytest.raises(ValueError):
         _ = rg(other_src)
