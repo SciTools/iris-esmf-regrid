@@ -432,9 +432,12 @@ class MeshToGridESMFRegridder:
 
         """
         mesh = cube.mesh
-        # TODO: Ensure cube has the same mesh as that of the recorded mesh.
-        #  For the time being, we simply check that the mesh exists.
-        assert mesh is not None
+        if mesh != self.mesh:
+            raise ValueError(
+                "The given cube is not defined on the same "
+                "source mesh as this regridder."
+            )
+
         mesh_dim = cube.mesh_dim()
 
         regrid_info = (mesh_dim, self.grid_x, self.grid_y, self.regridder)

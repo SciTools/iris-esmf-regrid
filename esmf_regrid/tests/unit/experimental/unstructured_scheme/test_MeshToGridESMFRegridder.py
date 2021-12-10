@@ -136,6 +136,29 @@ def test_invalid_mdtol():
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=-1)
 
 
+def test_mistmatched_mesh():
+    """
+    Test the calling of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Checks that an error is raised when the regridder is called with a cube
+    whose mesh does not match the one used for initialisation.
+    """
+    src = _flat_mesh_cube()
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    rg = MeshToGridESMFRegridder(src, tgt)
+
+    other_src = _gridlike_mesh(n_lons, n_lats)
+
+    with pytest.raises(ValueError):
+        _ = rg(other_src)
+
+
 def test_laziness():
     """Test that regridding is lazy when source data is lazy."""
     n_lons = 12
