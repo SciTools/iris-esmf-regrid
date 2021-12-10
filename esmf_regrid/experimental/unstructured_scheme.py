@@ -437,7 +437,9 @@ class MeshToGridESMFRegridder:
         for self_coord, other_coord in zip(self_mesh.all_coords, mesh.all_coords):
             if self_coord is not None:
                 self_coord.var_name = other_coord.var_name
-        for self_con, other_con in zip(self_mesh.all_connectivities, mesh.all_connectivities):
+        for self_con, other_con in zip(
+            self_mesh.all_connectivities, mesh.all_connectivities
+        ):
             if self_con is not None:
                 self_con.var_name = other_con.var_name
         if self_mesh != mesh:
