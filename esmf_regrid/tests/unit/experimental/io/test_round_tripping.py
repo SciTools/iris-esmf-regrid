@@ -118,6 +118,7 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     # Compare results, ignoring var_name changes due to saving.
     original_result = original_rg(src)
     loaded_result = loaded_rg(src)
+    original_result.varname = loaded_result.var_name
     original_result.coord("latitude").varname = loaded_result.coord("latitude").var_name
     original_result.coord("longitude").varname = loaded_result.coord(
         "longitude"
