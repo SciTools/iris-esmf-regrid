@@ -19,6 +19,12 @@ SUPPORTED_REGRIDDERS = [
     MeshToGridESMFRegridder,
 ]
 REGRIDDER_NAME_MAP = {rg_class.__name__: rg_class for rg_class in SUPPORTED_REGRIDDERS}
+SOURCE_NAME = "regridder_source_field"
+TARGET_NAME = "regridder_target_field"
+WEIGHTS_NAME = "regridder_weights"
+WEIGHTS_SHAPE_NAME = "weights_shape"
+WEIGHTS_ROW_NAME = "weight_matrix_rows"
+WEIGHTS_COL_NAME = "weight_matrix_columns"
 
 
 def save_regridder(rg, filename):
@@ -34,33 +40,31 @@ def save_regridder(rg, filename):
     filename : str
         The file name to save to.
     """
-    src_name = "regridder_source_field"
-    tgt_name = "regridder_target_field"
     regridder_type = rg.__class__.__name__
     if regridder_type == "GridToMeshESMFRegridder":
         src_grid = (rg.grid_y, rg.grid_x)
         src_shape = [len(coord.points) for coord in src_grid]
         src_data = np.zeros(src_shape)
-        src_cube = Cube(src_data, var_name=src_name, long_name=src_name)
+        src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
         src_cube.add_dim_coord(src_grid[0], 0)
         src_cube.add_dim_coord(src_grid[1], 1)
 
         tgt_mesh = rg.mesh
         tgt_data = np.zeros(tgt_mesh.face_node_connectivity.indices.shape[0])
-        tgt_cube = Cube(tgt_data, var_name=tgt_name, long_name=tgt_name)
+        tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
         for coord in tgt_mesh.to_MeshCoords("face"):
             tgt_cube.add_aux_coord(coord, 0)
     elif regridder_type == "MeshToGridESMFRegridder":
         src_mesh = rg.mesh
         src_data = np.zeros(src_mesh.face_node_connectivity.indices.shape[0])
-        src_cube = Cube(src_data, var_name=src_name, long_name=src_name)
+        src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
         for coord in src_mesh.to_MeshCoords("face"):
             src_cube.add_aux_coord(coord, 0)
 
         tgt_grid = (rg.grid_y, rg.grid_x)
         tgt_shape = [len(coord.points) for coord in tgt_grid]
         tgt_data = np.zeros(tgt_shape)
-        tgt_cube = Cube(tgt_data, var_name=tgt_name, long_name=tgt_name)
+        tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
         tgt_cube.add_dim_coord(tgt_grid[0], 0)
         tgt_cube.add_dim_coord(tgt_grid[1], 1)
     else:
@@ -70,8 +74,6 @@ def save_regridder(rg, filename):
         )
         raise TypeError(msg)
 
-    weights_name = "regridder_weights"
-
     weight_matrix = rg.regridder.weight_matrix
     reformatted_weight_matrix = weight_matrix.tocoo()
     weight_data = reformatted_weight_matrix.data
@@ -80,8 +82,6 @@ def save_regridder(rg, filename):
     weight_shape = reformatted_weight_matrix.shape
 
     esmf_version = rg.regridder.esmf_version
-    # if esmf_version is None:
-    #     esmf_version = "unknown"
     esmf_regrid_version = rg.regridder.esmf_regrid_version
     save_version = esmf_regrid.__version__
 
@@ -99,18 +99,20 @@ def save_regridder(rg, filename):
         "mdtol": mdtol,
     }
 
-    weights_cube = Cube(weight_data, var_name=weights_name, long_name=weights_name)
-    row_name = "weight_matrix_rows"
-    row_coord = AuxCoord(weight_rows, var_name=row_name, long_name=row_name)
-    col_name = "weight_matrix_columns"
-    col_coord = AuxCoord(weight_cols, var_name=col_name, long_name=col_name)
+    weights_cube = Cube(weight_data, var_name=WEIGHTS_NAME, long_name=WEIGHTS_NAME)
+    row_coord = AuxCoord(
+        weight_rows, var_name=WEIGHTS_ROW_NAME, long_name=WEIGHTS_ROW_NAME
+    )
+    col_coord = AuxCoord(
+        weight_cols, var_name=WEIGHTS_COL_NAME, long_name=WEIGHTS_COL_NAME
+    )
     weights_cube.add_aux_coord(row_coord, 0)
     weights_cube.add_aux_coord(col_coord, 0)
 
     weight_shape_cube = Cube(
         weight_shape,
-        var_name="weights_shape",
-        long_name="weights_shape",
+        var_name=WEIGHTS_SHAPE_NAME,
+        long_name=WEIGHTS_SHAPE_NAME,
     )
 
     # Avoid saving bug by placing the mesh cube second.
@@ -140,15 +142,11 @@ def load_regridder(filename):
     with PARSE_UGRID_ON_LOAD.context():
         cubes = iris.load(filename)
 
-    src_name = "regridder_source_field"
-    tgt_name = "regridder_target_field"
-    weights_name = "regridder_weights"
-
     # Extract the source, target and metadata information.
-    src_cube = cubes.extract_cube(src_name)
-    tgt_cube = cubes.extract_cube(tgt_name)
-    weights_cube = cubes.extract_cube(weights_name)
-    weight_shape_cube = cubes.extract_cube("weights_shape")
+    src_cube = cubes.extract_cube(SOURCE_NAME)
+    tgt_cube = cubes.extract_cube(TARGET_NAME)
+    weights_cube = cubes.extract_cube(WEIGHTS_NAME)
+    weight_shape_cube = cubes.extract_cube(WEIGHTS_SHAPE_NAME)
 
     # Determine the regridder type.
     regridder_type = weights_cube.attributes["regridder_type"]
@@ -157,10 +155,8 @@ def load_regridder(filename):
 
     # Reconstruct the weight matrix.
     weight_data = weights_cube.data
-    row_name = "weight_matrix_rows"
-    weight_rows = weights_cube.coord(row_name).points
-    col_name = "weight_matrix_columns"
-    weight_cols = weights_cube.coord(col_name).points
+    weight_rows = weights_cube.coord(WEIGHTS_ROW_NAME).points
+    weight_cols = weights_cube.coord(WEIGHTS_COL_NAME).points
     weight_shape = weight_shape_cube.data
     weight_matrix = scipy.sparse.csr_matrix(
         (weight_data, (weight_rows, weight_cols)), shape=weight_shape
