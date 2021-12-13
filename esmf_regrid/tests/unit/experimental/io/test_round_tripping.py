@@ -42,8 +42,8 @@ def _make_mesh_to_grid_regridder():
     lat_bounds = (-90, 90)
     # TODO check that circularity is preserved.
     tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
-    tgt.coord("longitude").var_name = "longitude"
-    tgt.coord("latitude").var_name = "latitude"
+    # tgt.coord("longitude").var_name = "longitude"
+    # tgt.coord("latitude").var_name = "latitude"
     src = _gridlike_mesh_cube(src_lons, src_lats)
 
     rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
@@ -111,7 +111,14 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     src_mask = np.zeros(src.data.shape)
     src_mask[0] = 1
     src.data = ma.array(src_data, mask=src_mask)
-    assert original_rg(src) == loaded_rg(src)
+    # Compare results, ignoring var_name changes due to saving.
+    original_result = original_rg(src)
+    loaded_result = loaded_rg(src)
+    original_result.coord("latitude").varname = loaded_result.coord("latitude").var_name
+    original_result.coord("longitude").varname = loaded_result.coord(
+        "longitude"
+    ).var_name
+    assert original_result == loaded_result
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version

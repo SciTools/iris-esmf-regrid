@@ -432,6 +432,7 @@ class MeshToGridESMFRegridder:
 
         """
         mesh = cube.mesh
+        # Ignore differences in var_name that might be caused by saving.
         self_mesh = copy.deepcopy(self.mesh)
         self_mesh.var_name = mesh.var_name
         for self_coord, other_coord in zip(self_mesh.all_coords, mesh.all_coords):
@@ -704,7 +705,12 @@ class GridToMeshESMFRegridder:
 
         """
         grid_x, grid_y = get_xy_dim_coords(cube)
-        if (grid_x != self.grid_x) or (grid_y != self.grid_y):
+        # Ignore differences in var_name that might be caused by saving.
+        self_grid_x = copy.deepcopy(self.grid_x)
+        self_grid_x.var_name = grid_x.var_name
+        self_grid_y = copy.deepcopy(self.grid_y)
+        self_grid_y.var_name = grid_y.var_name
+        if (grid_x != self_grid_x) or (grid_y != self_grid_y):
             raise ValueError(
                 "The given cube is not defined on the same "
                 "source grid as this regridder."
