@@ -44,8 +44,6 @@ def _make_mesh_to_grid_regridder():
     lat_bounds = (-90, 90)
     # TODO check that circularity is preserved.
     tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
-    # tgt.coord("longitude").var_name = "longitude"
-    # tgt.coord("latitude").var_name = "latitude"
     src = _gridlike_mesh_cube(src_lons, src_lats)
 
     rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
@@ -98,10 +96,10 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     assert original_rg.mdtol == loaded_rg.mdtol
     loaded_grid_x = deepcopy(loaded_rg.grid_x)
     loaded_grid_x.var_name = original_rg.grid_x.var_name
-    assert original_rg.grid_x == loaded_rg.grid_x
+    assert original_rg.grid_x == loaded_grid_x
     loaded_grid_y = deepcopy(loaded_rg.grid_y)
     loaded_grid_y.var_name = original_rg.grid_y.var_name
-    assert original_rg.grid_y == loaded_rg.grid_y
+    assert original_rg.grid_y == loaded_grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
 

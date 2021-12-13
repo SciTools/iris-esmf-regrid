@@ -137,6 +137,7 @@ def test_invalid_mdtol():
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=-1)
 
 
+@pytest.mark.xfail
 def test_mistmatched_mesh():
     """
     Test the calling of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
@@ -156,8 +157,12 @@ def test_mistmatched_mesh():
 
     other_src = _gridlike_mesh_cube(n_lons, n_lats)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as excinfo:
         _ = rg(other_src)
+    expected_message = (
+        "The given cube is not defined on the same " "source mesh as this regridder."
+    )
+    assert expected_message in str(excinfo.value)
 
 
 def test_laziness():
