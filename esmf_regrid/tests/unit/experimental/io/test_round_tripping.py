@@ -1,5 +1,7 @@
 """Unit tests for round tripping (saving then loading) with :mod:`esmf_regrid.experimental.io`."""
 
+from copy import deepcopy
+
 import numpy as np
 from numpy import ma
 
@@ -94,7 +96,11 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     loaded_rg = load_regridder(str(filename))
 
     assert original_rg.mdtol == loaded_rg.mdtol
+    loaded_grid_x = deepcopy(loaded_rg.grid_x)
+    loaded_grid_x.var_name = original_rg.grid_x.var_name
     assert original_rg.grid_x == loaded_rg.grid_x
+    loaded_grid_y = deepcopy(loaded_rg.grid_y)
+    loaded_grid_y.var_name = original_rg.grid_y.var_name
     assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
