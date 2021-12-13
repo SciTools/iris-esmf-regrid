@@ -25,6 +25,10 @@ WEIGHTS_NAME = "regridder_weights"
 WEIGHTS_SHAPE_NAME = "weights_shape"
 WEIGHTS_ROW_NAME = "weight_matrix_rows"
 WEIGHTS_COL_NAME = "weight_matrix_columns"
+REGRIDDER_TYPE = "regridder_type"
+VERSION_ESMF = "ESMF_version"
+VERSION_INITIAL = "esmf_regrid_version_on_initialise"
+MDTOL = "mdtol"
 
 
 def save_regridder(rg, filename):
@@ -91,12 +95,12 @@ def save_regridder(rg, filename):
     mdtol = rg.mdtol
     attributes = {
         "title": "iris-esmf-regrid regridding scheme",
-        "regridder_type": regridder_type,
-        "ESMF_version": esmf_version,
-        "esmf_regrid_version_on_initialise": esmf_regrid_version,
+        REGRIDDER_TYPE: regridder_type,
+        VERSION_ESMF: esmf_version,
+        VERSION_INITIAL: esmf_regrid_version,
         "esmf_regrid_version_on_save": save_version,
         "normalization": normalization,
-        "mdtol": mdtol,
+        MDTOL: mdtol,
     }
 
     weights_cube = Cube(weight_data, var_name=WEIGHTS_NAME, long_name=WEIGHTS_NAME)
@@ -149,7 +153,7 @@ def load_regridder(filename):
     weight_shape_cube = cubes.extract_cube(WEIGHTS_SHAPE_NAME)
 
     # Determine the regridder type.
-    regridder_type = weights_cube.attributes["regridder_type"]
+    regridder_type = weights_cube.attributes[REGRIDDER_TYPE]
     assert regridder_type in REGRIDDER_NAME_MAP.keys()
     scheme = REGRIDDER_NAME_MAP[regridder_type]
 
@@ -162,14 +166,14 @@ def load_regridder(filename):
         (weight_data, (weight_rows, weight_cols)), shape=weight_shape
     )
 
-    mdtol = weights_cube.attributes["mdtol"]
+    mdtol = weights_cube.attributes[MDTOL]
 
     regridder = scheme(
         src_cube, tgt_cube, mdtol=mdtol, precomputed_weights=weight_matrix
     )
 
-    esmf_version = weights_cube.attributes["ESMF_version"]
+    esmf_version = weights_cube.attributes[VERSION_ESMF]
     regridder.regridder.esmf_version = esmf_version
-    esmf_regrid_version = weights_cube.attributes["esmf_regrid_version_on_initialise"]
+    esmf_regrid_version = weights_cube.attributes[VERSION_INITIAL]
     regridder.regridder.esmf_regrid_version = esmf_regrid_version
     return regridder
