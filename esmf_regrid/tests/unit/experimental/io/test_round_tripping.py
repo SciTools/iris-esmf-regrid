@@ -1,5 +1,7 @@
 """Unit tests for round tripping (saving then loading) with :mod:`esmf_regrid.experimental.io`."""
 
+from copy import deepcopy
+
 import numpy as np
 from numpy import ma
 
@@ -42,8 +44,6 @@ def _make_mesh_to_grid_regridder():
     lat_bounds = (-90, 90)
     # TODO check that circularity is preserved.
     tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
-    tgt.coord("longitude").var_name = "longitude"
-    tgt.coord("latitude").var_name = "latitude"
     src = _gridlike_mesh_cube(src_lons, src_lats)
 
     rg = MeshToGridESMFRegridder(src, tgt, mdtol=0.5)
@@ -94,8 +94,12 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     loaded_rg = load_regridder(str(filename))
 
     assert original_rg.mdtol == loaded_rg.mdtol
-    assert original_rg.grid_x == loaded_rg.grid_x
-    assert original_rg.grid_y == loaded_rg.grid_y
+    loaded_grid_x = deepcopy(loaded_rg.grid_x)
+    loaded_grid_x.var_name = original_rg.grid_x.var_name
+    assert original_rg.grid_x == loaded_grid_x
+    loaded_grid_y = deepcopy(loaded_rg.grid_y)
+    loaded_grid_y.var_name = original_rg.grid_y.var_name
+    assert original_rg.grid_y == loaded_grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
 
@@ -111,7 +115,17 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     src_mask = np.zeros(src.data.shape)
     src_mask[0] = 1
     src.data = ma.array(src_data, mask=src_mask)
-    assert original_rg(src) == loaded_rg(src)
+    # Compare results, ignoring var_name changes due to saving.
+    original_result = original_rg(src)
+    loaded_result = loaded_rg(src)
+    original_result.var_name = loaded_result.var_name
+    original_result.coord("latitude").var_name = loaded_result.coord(
+        "latitude"
+    ).var_name
+    original_result.coord("longitude").var_name = loaded_result.coord(
+        "longitude"
+    ).var_name
+    assert original_result == loaded_result
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version

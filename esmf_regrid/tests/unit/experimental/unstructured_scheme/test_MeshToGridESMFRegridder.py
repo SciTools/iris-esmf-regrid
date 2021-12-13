@@ -14,6 +14,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridI
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
+    _gridlike_mesh_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
@@ -134,6 +135,34 @@ def test_invalid_mdtol():
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=2)
     with pytest.raises(ValueError):
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=-1)
+
+
+@pytest.mark.xfail
+def test_mistmatched_mesh():
+    """
+    Test the calling of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Checks that an error is raised when the regridder is called with a cube
+    whose mesh does not match the one used for initialisation.
+    """
+    src = _flat_mesh_cube()
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    rg = MeshToGridESMFRegridder(src, tgt)
+
+    other_src = _gridlike_mesh_cube(n_lons, n_lats)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = rg(other_src)
+    expected_message = (
+        "The given cube is not defined on the same " "source mesh as this regridder."
+    )
+    assert expected_message in str(excinfo.value)
 
 
 def test_laziness():

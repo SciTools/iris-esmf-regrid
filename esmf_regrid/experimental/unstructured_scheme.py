@@ -432,9 +432,26 @@ class MeshToGridESMFRegridder:
 
         """
         mesh = cube.mesh
-        # TODO: Ensure cube has the same mesh as that of the recorded mesh.
-        #  For the time being, we simply check that the mesh exists.
+        # TODO: replace temporary hack when iris issues are sorted.
         assert mesh is not None
+        # Ignore differences in var_name that might be caused by saving.
+        # TODO: uncomment this when iris issue with masked array comparison is sorted.
+        # self_mesh = copy.deepcopy(self.mesh)
+        # self_mesh.var_name = mesh.var_name
+        # for self_coord, other_coord in zip(self_mesh.all_coords, mesh.all_coords):
+        #     if self_coord is not None:
+        #         self_coord.var_name = other_coord.var_name
+        # for self_con, other_con in zip(
+        #     self_mesh.all_connectivities, mesh.all_connectivities
+        # ):
+        #     if self_con is not None:
+        #         self_con.var_name = other_con.var_name
+        # if self_mesh != mesh:
+        #     raise ValueError(
+        #         "The given cube is not defined on the same "
+        #         "source mesh as this regridder."
+        #     )
+
         mesh_dim = cube.mesh_dim()
 
         regrid_info = (mesh_dim, self.grid_x, self.grid_y, self.regridder)
@@ -691,7 +708,12 @@ class GridToMeshESMFRegridder:
 
         """
         grid_x, grid_y = get_xy_dim_coords(cube)
-        if (grid_x != self.grid_x) or (grid_y != self.grid_y):
+        # Ignore differences in var_name that might be caused by saving.
+        self_grid_x = copy.deepcopy(self.grid_x)
+        self_grid_x.var_name = grid_x.var_name
+        self_grid_y = copy.deepcopy(self.grid_y)
+        self_grid_y.var_name = grid_y.var_name
+        if (grid_x != self_grid_x) or (grid_y != self_grid_y):
             raise ValueError(
                 "The given cube is not defined on the same "
                 "source grid as this regridder."
