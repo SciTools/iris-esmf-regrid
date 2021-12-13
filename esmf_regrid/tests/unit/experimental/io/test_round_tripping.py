@@ -119,8 +119,8 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     original_result = original_rg(src)
     loaded_result = loaded_rg(src)
     original_result.var_name = loaded_result.var_name
-    original_result.coord("latitude").varname = loaded_result.coord("latitude").var_name
-    original_result.coord("longitude").varname = loaded_result.coord(
+    original_result.coord("latitude").var_name = loaded_result.coord("latitude").var_name
+    original_result.coord("longitude").var_name = loaded_result.coord(
         "longitude"
     ).var_name
     assert original_result == loaded_result
