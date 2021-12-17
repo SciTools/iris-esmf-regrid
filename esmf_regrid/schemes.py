@@ -38,7 +38,6 @@ def _cube_to_GridInfo(cube):
         assert isinstance(lon, iris.coords.DimCoord)
         assert isinstance(lat, iris.coords.DimCoord)
         circular = lon.circular
-        # TODO: accommodate other x/y coords.
         # TODO: perform checks on lat/lon.
     elif londim == 2:
         assert cube.coord_dims(lon) == cube.coord_dims(lat)

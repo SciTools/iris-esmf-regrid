@@ -162,7 +162,7 @@ def test_grid_with_scalars():
 
 
 def test_curvilinear_grid():
-    """Test conversion of a global grid."""
+    """Test conversion of a curvilinear global grid."""
     n_lons = 6
     n_lats = 5
     lon_bounds = (-180, 180)
