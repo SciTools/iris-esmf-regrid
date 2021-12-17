@@ -186,3 +186,10 @@ def test_curvilinear_grid():
     expected_weights = scipy.sparse.identity(n_lats * n_lons)
     assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
     assert gridinfo.crs == GeogCS(EARTH_RADIUS).as_cartopy_crs()
+
+    # While curvilinear coords do not have the "circular" attribute, the code
+    # allows "circular" to be True when setting the core regridder directly.
+    circular_gridinfo = _cube_to_GridInfo(cube)
+    circular_gridinfo.circular = True
+    rg_circular = Regridder(circular_gridinfo, gridinfo)
+    assert np.array_equal(expected_weights.todense(), rg_circular.weight_matrix.todense())

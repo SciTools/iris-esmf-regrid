@@ -130,9 +130,9 @@ class GridInfo(SDO):
         self.lons = lons
         self.lats = lats
         londims = len(self.lons.shape)
-        assert len(self.lons.shape) == londims
+        assert len(self.lonbounds.shape) - 1 == londims
         latdims = len(self.lats.shape)
-        assert len(self.lats.shape) == latdims
+        assert len(self.latbounds.shape) - 1 == latdims
         assert londims == latdims
         assert londims in (1, 2)
         if londims == 1:
@@ -158,11 +158,6 @@ class GridInfo(SDO):
         shape = np.array(self._shape)
 
         londims = len(self.lons.shape)
-        assert len(self.lons.shape) == londims
-        latdims = len(self.lats.shape)
-        assert len(self.lats.shape) == latdims
-        assert londims == latdims
-        assert londims in (1, 2)
 
         if londims == 1:
             if self.circular:
