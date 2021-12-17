@@ -130,9 +130,9 @@ class GridInfo(SDO):
         self.lons = lons
         self.lats = lats
         londims = len(self.lons.shape)
-        assert len(lonbounds.shape) - 1 == londims
+        assert len(lonbounds.shape) == londims
         latdims = len(self.lats.shape)
-        assert len(latbounds.shape) - 1 == latdims
+        assert len(latbounds.shape) == latdims
         assert londims == latdims
         assert londims in (1, 2)
         if londims == 1:
