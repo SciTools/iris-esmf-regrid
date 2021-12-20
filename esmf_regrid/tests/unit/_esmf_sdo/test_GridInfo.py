@@ -1,6 +1,7 @@
 """Unit tests for :class:`esmf_regrid._esmf_sdo.GridInfo`."""
 
 import numpy as np
+import pytest
 
 from esmf_regrid._esmf_sdo import GridInfo
 import esmf_regrid.tests as tests
@@ -35,3 +36,49 @@ def test_make_grid():
         expected_repr = fi.read()
 
     assert esmf_grid.__repr__() == expected_repr
+
+
+def test_GridInfo_init_fail():
+    """
+    Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`.
+
+    Tests that appropriate errors are raised for invalid data.
+    """
+
+    latlon_1D = np.ones(3)
+    latlon_2D = np.ones([3, 3])
+    latlon_3D = np.ones([3, 3, 3])
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridInfo(latlon_1D, latlon_1D, latlon_2D, latlon_1D)
+    expected_message = (
+        "The dimensionality of longitude bounds "
+        "(2) is incompatible with the "
+        "dimensionality of the longitude (1)."
+    )
+    assert expected_message in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridInfo(latlon_1D, latlon_1D, latlon_1D, latlon_2D)
+    expected_message = (
+        "The dimensionality of latitude bounds "
+        "(2) is incompatible with the "
+        "dimensionality of the latitude (1)."
+    )
+    assert expected_message in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridInfo(latlon_1D, latlon_2D, latlon_1D, latlon_2D)
+    expected_message = (
+        f"The dimensionality of the longitude "
+        f"(1) is incompatible with the "
+        f"dimensionality of the latitude (2)."
+    )
+    assert expected_message in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridInfo(latlon_3D, latlon_3D, latlon_3D, latlon_3D)
+    expected_message = (
+        f"Expected a latitude/longitude with a dimensionality " f"of 1 or 2, got 3."
+    )
+    assert expected_message in str(excinfo.value)

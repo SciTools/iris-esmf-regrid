@@ -15,6 +15,7 @@ dependencies:
   - scipy
   - esmpy>=7.0
   - iris
+  - cf-units
 
 # Test dependencies.
   - asv

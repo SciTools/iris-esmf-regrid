@@ -43,6 +43,7 @@ def _cube_to_GridInfo(cube):
         assert cube.coord_dims(lon) == cube.coord_dims(lat)
         assert lon.is_contiguous()
         assert lat.is_contiguous()
+        # 2D coords must be AuxCoords, which do not have a circular attribute.
         circular = False
     lon_bound_array = lon.contiguous_bounds()
     lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))

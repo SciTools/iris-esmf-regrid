@@ -140,9 +140,9 @@ class GridInfo(SDO):
         latdims = len(self.lats.shape)
         if len(latbounds.shape) != latdims:
             msg = (
-                f"The dimensionality of longitude bounds "
+                f"The dimensionality of latitude bounds "
                 f"({len(latbounds.shape)}) is incompatible with the "
-                f"dimensionality of the longitude ({latdims})."
+                f"dimensionality of the latitude ({latdims})."
             )
             raise ValueError(msg)
         if londims != latdims:
