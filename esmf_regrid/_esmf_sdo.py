@@ -105,16 +105,16 @@ class GridInfo(SDO):
         Parameters
         ----------
         lons : array_like
-            A 1D numpy array or list describing the longitudes of the
+            A 1D or 2D numpy array or list describing the longitudes of the
             grid points.
         lats : array_like
-            A 1D numpy array or list describing the latitudes of the
+            A 1D or 2D numpy array or list describing the latitudes of the
             grid points.
         lonbounds : array_like
-            A 1D numpy array or list describing the longitude bounds of
+            A 1D or 2D numpy array or list describing the longitude bounds of
             the grid. Should have length one greater than lons.
         latbounds : array_like
-            A 1D numpy array or list describing the latitude bounds of
+            A 1D or 2D numpy array or list describing the latitude bounds of
             the grid. Should have length one greater than lats.
         crs : cartopy projection, optional
             None or a cartopy.crs projection describing how to interpret the
@@ -130,11 +130,34 @@ class GridInfo(SDO):
         self.lons = lons
         self.lats = lats
         londims = len(self.lons.shape)
-        assert len(lonbounds.shape) == londims
+        if len(lonbounds.shape) != londims:
+            msg = (
+                f"The dimensionality of longitude bounds "
+                f"({len(lonbounds.shape)}) is incompatible with the "
+                f"dimensionality of the longitude ({londims})."
+            )
+            raise ValueError(msg)
         latdims = len(self.lats.shape)
-        assert len(latbounds.shape) == latdims
-        assert londims == latdims
-        assert londims in (1, 2)
+        if len(latbounds.shape) != latdims:
+            msg = (
+                f"The dimensionality of longitude bounds "
+                f"({len(latbounds.shape)}) is incompatible with the "
+                f"dimensionality of the longitude ({latdims})."
+            )
+            raise ValueError(msg)
+        if londims != latdims:
+            msg = (
+                f"The dimensionality of the longitude "
+                f"({londims}) is incompatible with the "
+                f"dimensionality of the latitude ({latdims})."
+            )
+            raise ValueError(msg)
+        if londims not in (1, 2):
+            msg = (
+                f"Expected a latitude/longitude with a dimensionality "
+                f"of 1 or 2, got {londims}."
+            )
+            raise ValueError(msg)
         if londims == 1:
             shape = (len(lats), len(lons))
         else:
