@@ -30,7 +30,7 @@ def _cube_to_GridInfo(cube):
         crs = None
     else:
         crs = cube.coord_system().as_cartopy_crs()
-    londim, latdim = len(lon.points.shape), len(lat.points.shape)
+    londim, latdim = len(lon.shape), len(lat.shape)
     assert londim == latdim
     assert londim in (1, 2)
     if londim == 1:
@@ -126,12 +126,12 @@ def _create_cube(data, src_cube, grid_dim_x, grid_dim_y, grid_x, grid_y):
     """
     new_cube = iris.cube.Cube(data)
 
-    if len(grid_x.points.shape) == 1:
+    if len(grid_x.shape) == 1:
         new_cube.add_dim_coord(grid_x, grid_dim_x)
     else:
         new_cube.add_aux_coord(grid_x, (grid_dim_y, grid_dim_x))
 
-    if len(grid_y.points.shape) == 1:
+    if len(grid_y.shape) == 1:
         new_cube.add_dim_coord(grid_y, grid_dim_y)
     else:
         new_cube.add_aux_coord(grid_y, (grid_dim_y, grid_dim_x))
@@ -164,7 +164,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
     src_x = src_grid_cube.coord(axis="x")
     src_y = src_grid_cube.coord(axis="y")
 
-    if len(src_x.points.shape) == 1:
+    if len(src_x.shape) == 1:
         grid_x_dim = src_grid_cube.coord_dims(src_x)[0]
         grid_y_dim = src_grid_cube.coord_dims(src_y)[0]
     else:
@@ -381,7 +381,7 @@ class ESMFAreaWeightedRegridder:
                 "source grid as this regridder."
             )
 
-        if len(src_x.points.shape) == 1:
+        if len(src_x.shape) == 1:
             grid_x_dim = cube.coord_dims(src_x)[0]
             grid_y_dim = cube.coord_dims(src_y)[0]
         else:
