@@ -70,15 +70,15 @@ def test_GridInfo_init_fail():
     with pytest.raises(ValueError) as excinfo:
         _ = GridInfo(latlon_1D, latlon_2D, latlon_1D, latlon_2D)
     expected_message = (
-        f"The dimensionality of the longitude "
-        f"(1) is incompatible with the "
-        f"dimensionality of the latitude (2)."
+        "The dimensionality of the longitude "
+        "(1) is incompatible with the "
+        "dimensionality of the latitude (2)."
     )
     assert expected_message in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
         _ = GridInfo(latlon_3D, latlon_3D, latlon_3D, latlon_3D)
     expected_message = (
-        f"Expected a latitude/longitude with a dimensionality " f"of 1 or 2, got 3."
+        "Expected a latitude/longitude with a dimensionality of 1 or 2, got 3."
     )
     assert expected_message in str(excinfo.value)
