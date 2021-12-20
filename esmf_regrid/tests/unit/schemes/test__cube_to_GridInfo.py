@@ -189,9 +189,11 @@ def test_curvilinear_grid():
 
     # While curvilinear coords do not have the "circular" attribute, the code
     # allows "circular" to be True when setting the core regridder directly.
+    # This describes an ESMF object which is topologically different, but ought
+    # to be geometrically equivalent to the non-circular case.
     circular_gridinfo = _cube_to_GridInfo(cube)
     circular_gridinfo.circular = True
     rg_circular = Regridder(circular_gridinfo, gridinfo)
-    assert np.array_equal(
+    assert np.allclose(
         expected_weights.todense(), rg_circular.weight_matrix.todense()
     )
