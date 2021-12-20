@@ -44,7 +44,6 @@ def test_GridInfo_init_fail():
 
     Tests that appropriate errors are raised for invalid data.
     """
-
     latlon_1D = np.ones(3)
     latlon_2D = np.ones([3, 3])
     latlon_3D = np.ones([3, 3, 3])
