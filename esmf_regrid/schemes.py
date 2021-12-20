@@ -4,9 +4,9 @@ from collections import namedtuple
 import copy
 import functools
 
+from cf_units import Unit
 import iris
 from iris._lazy_data import map_complete_blocks
-from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
@@ -18,39 +18,44 @@ __all__ = [
 ]
 
 
-def _bounds_cf_to_simple_1d(cf_bounds):
-    assert (cf_bounds[1:, 0] == cf_bounds[:-1, 1]).all()
-    simple_bounds = np.empty((cf_bounds.shape[0] + 1,), dtype=np.float64)
-    simple_bounds[:-1] = cf_bounds[:, 0]
-    simple_bounds[-1] = cf_bounds[-1, 1]
-    return simple_bounds
-
-
 def _cube_to_GridInfo(cube):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
     # Returns a GridInfo object describing the horizontal grid of the cube.
     # This may be inherited from code written for the rectilinear regridding scheme.
-    lon = cube.coord("longitude")
-    lat = cube.coord("latitude")
-    # Ensure coords come from a proper grid.
-    assert isinstance(lon, iris.coords.DimCoord)
-    assert isinstance(lat, iris.coords.DimCoord)
-    # TODO: accommodate other x/y coords.
-    # TODO: perform checks on lat/lon.
+    lon, lat = cube.coord(axis="x"), cube.coord(axis="y")
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
     if cube.coord_system() is None:
         crs = None
     else:
         crs = cube.coord_system().as_cartopy_crs()
+    londim, latdim = len(lon.shape), len(lat.shape)
+    assert londim == latdim
+    assert londim in (1, 2)
+    if londim == 1:
+        # Ensure coords come from a proper grid.
+        assert isinstance(lon, iris.coords.DimCoord)
+        assert isinstance(lat, iris.coords.DimCoord)
+        circular = lon.circular
+        # TODO: perform checks on lat/lon.
+    elif londim == 2:
+        assert cube.coord_dims(lon) == cube.coord_dims(lat)
+        assert lon.is_contiguous()
+        assert lat.is_contiguous()
+        # 2D coords must be AuxCoords, which do not have a circular attribute.
+        circular = False
+    lon_bound_array = lon.contiguous_bounds()
+    lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
+    lat_bound_array = lat.contiguous_bounds()
+    lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
     return GridInfo(
         lon.points,
         lat.points,
-        _bounds_cf_to_simple_1d(lon.bounds),
-        _bounds_cf_to_simple_1d(lat.bounds),
+        lon_bound_array,
+        lat_bound_array,
         crs=crs,
-        circular=lon.circular,
+        circular=circular,
     )
 
 
@@ -121,8 +126,15 @@ def _create_cube(data, src_cube, grid_dim_x, grid_dim_y, grid_x, grid_y):
     """
     new_cube = iris.cube.Cube(data)
 
-    new_cube.add_dim_coord(grid_x, grid_dim_x)
-    new_cube.add_dim_coord(grid_y, grid_dim_y)
+    if len(grid_x.shape) == 1:
+        new_cube.add_dim_coord(grid_x, grid_dim_x)
+    else:
+        new_cube.add_aux_coord(grid_x, (grid_dim_y, grid_dim_x))
+
+    if len(grid_y.shape) == 1:
+        new_cube.add_dim_coord(grid_y, grid_dim_y)
+    else:
+        new_cube.add_aux_coord(grid_y, (grid_dim_y, grid_dim_x))
 
     new_cube.metadata = copy.deepcopy(src_cube.metadata)
 
@@ -147,11 +159,16 @@ RegridInfo = namedtuple(
 
 
 def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
-    tgt_x, tgt_y = get_xy_dim_coords(tgt_grid_cube)
-    src_x, src_y = get_xy_dim_coords(src_grid_cube)
+    tgt_x = tgt_grid_cube.coord(axis="x")
+    tgt_y = tgt_grid_cube.coord(axis="y")
+    src_x = src_grid_cube.coord(axis="x")
+    src_y = src_grid_cube.coord(axis="y")
 
-    grid_x_dim = src_grid_cube.coord_dims(src_x)[0]
-    grid_y_dim = src_grid_cube.coord_dims(src_y)[0]
+    if len(src_x.shape) == 1:
+        grid_x_dim = src_grid_cube.coord_dims(src_x)[0]
+        grid_y_dim = src_grid_cube.coord_dims(src_y)[0]
+    else:
+        grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(src_x)
 
     srcinfo = _cube_to_GridInfo(src_grid_cube)
     tgtinfo = _cube_to_GridInfo(tgt_grid_cube)
@@ -184,11 +201,15 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
+    if len(grid_x.shape) == 1:
+        chunk_shape = (len(grid_x.points), len(grid_y.points))
+    else:
+        chunk_shape = grid_x.shape
     new_data = map_complete_blocks(
         src_cube,
         regrid,
         (grid_x_dim, grid_y_dim),
-        (len(grid_x.points), len(grid_y.points)),
+        chunk_shape,
     )
 
     new_cube = _create_cube(
@@ -329,7 +350,7 @@ class ESMFAreaWeightedRegridder:
         self.regridder = regrid_info.regridder
 
         # Record the source grid.
-        self.src_grid = get_xy_dim_coords(src_grid)
+        self.src_grid = (src_grid.coord(axis="x"), src_grid.coord(axis="y"))
 
     def __call__(self, cube):
         """
@@ -351,7 +372,7 @@ class ESMFAreaWeightedRegridder:
             area-weighted regridding via ESMF generated weights.
 
         """
-        src_x, src_y = get_xy_dim_coords(cube)
+        src_x, src_y = (cube.coord(axis="x"), cube.coord(axis="y"))
 
         # Check the source grid matches that used in initialisation
         if self.src_grid != (src_x, src_y):
@@ -360,8 +381,11 @@ class ESMFAreaWeightedRegridder:
                 "source grid as this regridder."
             )
 
-        grid_x_dim = cube.coord_dims(src_x)[0]
-        grid_y_dim = cube.coord_dims(src_y)[0]
+        if len(src_x.shape) == 1:
+            grid_x_dim = cube.coord_dims(src_x)[0]
+            grid_y_dim = cube.coord_dims(src_y)[0]
+        else:
+            grid_y_dim, grid_x_dim = cube.coord_dims(src_x)
 
         regrid_info = RegridInfo(
             x_dim=grid_x_dim,

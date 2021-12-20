@@ -87,8 +87,6 @@ class GridInfo(SDO):
 
     """
 
-    # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
-
     def __init__(
         self,
         lons,
@@ -105,16 +103,16 @@ class GridInfo(SDO):
         Parameters
         ----------
         lons : array_like
-            A 1D numpy array or list describing the longitudes of the
+            A 1D or 2D numpy array or list describing the longitudes of the
             grid points.
         lats : array_like
-            A 1D numpy array or list describing the latitudes of the
+            A 1D or 2D numpy array or list describing the latitudes of the
             grid points.
         lonbounds : array_like
-            A 1D numpy array or list describing the longitude bounds of
+            A 1D or 2D numpy array or list describing the longitude bounds of
             the grid. Should have length one greater than lons.
         latbounds : array_like
-            A 1D numpy array or list describing the latitude bounds of
+            A 1D or 2D numpy array or list describing the latitude bounds of
             the grid. Should have length one greater than lats.
         crs : cartopy projection, optional
             None or a cartopy.crs projection describing how to interpret the
@@ -129,6 +127,40 @@ class GridInfo(SDO):
         """
         self.lons = lons
         self.lats = lats
+        londims = len(self.lons.shape)
+        if len(lonbounds.shape) != londims:
+            msg = (
+                f"The dimensionality of longitude bounds "
+                f"({len(lonbounds.shape)}) is incompatible with the "
+                f"dimensionality of the longitude ({londims})."
+            )
+            raise ValueError(msg)
+        latdims = len(self.lats.shape)
+        if len(latbounds.shape) != latdims:
+            msg = (
+                f"The dimensionality of latitude bounds "
+                f"({len(latbounds.shape)}) is incompatible with the "
+                f"dimensionality of the latitude ({latdims})."
+            )
+            raise ValueError(msg)
+        if londims != latdims:
+            msg = (
+                f"The dimensionality of the longitude "
+                f"({londims}) is incompatible with the "
+                f"dimensionality of the latitude ({latdims})."
+            )
+            raise ValueError(msg)
+        if londims not in (1, 2):
+            msg = (
+                f"Expected a latitude/longitude with a dimensionality "
+                f"of 1 or 2, got {londims}."
+            )
+            raise ValueError(msg)
+        if londims == 1:
+            shape = (len(lats), len(lons))
+        else:
+            shape = self.lons.shape
+
         self.lonbounds = lonbounds
         self.latbounds = latbounds
         if crs is None:
@@ -138,7 +170,7 @@ class GridInfo(SDO):
         self.circular = circular
         self.areas = areas
         super().__init__(
-            shape=(len(lats), len(lons)),
+            shape=shape,
             index_offset=1,
             field_kwargs={"staggerloc": ESMF.StaggerLoc.CENTER},
         )
@@ -146,13 +178,24 @@ class GridInfo(SDO):
     def _as_esmf_info(self):
         shape = np.array(self._shape)
 
-        if self.circular:
-            adjustedlonbounds = self.lonbounds[:-1]
-        else:
-            adjustedlonbounds = self.lonbounds
+        londims = len(self.lons.shape)
 
-        centerlons, centerlats = np.meshgrid(self.lons, self.lats)
-        cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
+        if londims == 1:
+            if self.circular:
+                adjustedlonbounds = self.lonbounds[:-1]
+            else:
+                adjustedlonbounds = self.lonbounds
+            centerlons, centerlats = np.meshgrid(self.lons, self.lats)
+            cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
+        elif londims == 2:
+            if self.circular:
+                slice = np.s_[:, :-1]
+            else:
+                slice = np.s_[:]
+            centerlons = self.lons[slice]
+            centerlats = self.lats[slice]
+            cornerlons = self.lonbounds[slice]
+            cornerlats = self.latbounds[slice]
 
         truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
         truecorners = ccrs.Geodetic().transform_points(self.crs, cornerlons, cornerlats)
