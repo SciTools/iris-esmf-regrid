@@ -87,8 +87,6 @@ class GridInfo(SDO):
 
     """
 
-    # TODO: Edit GridInfo so that it is able to handle 2D lat/lon arrays.
-
     def __init__(
         self,
         lons,
