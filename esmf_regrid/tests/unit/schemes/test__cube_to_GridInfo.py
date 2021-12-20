@@ -194,6 +194,4 @@ def test_curvilinear_grid():
     circular_gridinfo = _cube_to_GridInfo(cube)
     circular_gridinfo.circular = True
     rg_circular = Regridder(circular_gridinfo, gridinfo)
-    assert np.allclose(
-        expected_weights.todense(), rg_circular.weight_matrix.todense()
-    )
+    assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
