@@ -32,3 +32,16 @@ when the data is a dask array. Calculations may be parallelised via dask.
 - [PR#83](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/83)
   Added missing docstrings. [@stephenworsley](https://github.com/stephenworsley)
 
+## [0.3] - 2021-12-21
+
+The major change with this version was the addition of the ability to
+regrid curvilinear grids (i.e. grids with 2D arrays of coordinates).
+
+### Added
+- [PR#125](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/125)
+  Added support for curvilinear grids, i.e. cubes with 2D lat/lon coords.
+  [@stephenworsley](https://github.com/stephenworsley)
+- [PR#124](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/124)
+  Improved generation of benchmark data to allow data to be generated from
+  a common version/environment.
+  [@trexfeathers](https://github.com/trexfeathers)
