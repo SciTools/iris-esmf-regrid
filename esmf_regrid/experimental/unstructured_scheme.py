@@ -121,7 +121,7 @@ def _mesh_to_MeshInfo(mesh):
     assert mesh.topology_dimension == 2
     meshinfo = MeshInfo(
         np.stack([coord.points for coord in mesh.node_coords], axis=-1),
-        mesh.face_node_connectivity.indices,
+        mesh.face_node_connectivity.indices_by_location(),
         mesh.face_node_connectivity.start_index,
     )
     return meshinfo
