@@ -22,7 +22,7 @@ nox.options.reuse_existing_virtualenvs = True
 PACKAGE = "esmf_regrid"
 
 #: Cirrus-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.7", "3.8"])
+PY_VER = os.environ.get("PY_VER", ["3.8"])
 
 #: Cirrus-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
