@@ -20,11 +20,11 @@ env:
   SKIP_TEST_TASK: ""
   SKIP_BENCHMARK_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
-  CACHE_PERIOD: "2"
+  CACHE_PERIOD: "0"
   # Increment the build number to force new conda cache upload.
-  CONDA_CACHE_BUILD: "1"
+  CONDA_CACHE_BUILD: "0"
   # Increment the build number to force new nox cache upload.
-  NOX_CACHE_BUILD: "2"
+  NOX_CACHE_BUILD: "0"
   # Increment the build number to force new pip cache upload.
   PIP_CACHE_BUILD: "0"
   # Pip package to be installed.
@@ -109,8 +109,6 @@ test_task:
   only_if: ${SKIP_TEST_TASK} == ""
   auto_cancellation: true
   matrix:
-    env:
-      PY_VER: "3.7"
     env:
       PY_VER: "3.8"
       COVERAGE: "true"
