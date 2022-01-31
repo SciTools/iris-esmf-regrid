@@ -22,7 +22,7 @@ nox.options.reuse_existing_virtualenvs = True
 PACKAGE = "esmf_regrid"
 
 #: Cirrus-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.6", "3.7", "3.8"])
+PY_VER = os.environ.get("PY_VER", ["3.8"])
 
 #: Cirrus-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
@@ -336,11 +336,18 @@ def tests(session: nox.sessions.Session):
 
 @nox.session(python=PY_VER, venv_backend="conda")
 @nox.parametrize(
-    ["ci_mode", "gh_pages"],
-    [(True, False), (False, False), (False, True)],
-    ids=["ci compare", "full", "full then publish"],
+    ["ci_mode", "long_mode", "gh_pages"],
+    [
+        (True, False, False),
+        (False, False, False),
+        (False, False, True),
+        (False, True, False),
+    ],
+    ids=["ci compare", "full", "full then publish", "long snapshot"],
 )
-def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
+def benchmarks(
+    session: nox.sessions.Session, ci_mode: bool, long_mode: bool, gh_pages: bool
+):
     """
     Perform esmf-regrid performance benchmarks (using Airspeed Velocity).
 
@@ -351,6 +358,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
     ci_mode: bool
         Run a cut-down selection of benchmarks, comparing the current commit to
         the last commit for performance regressions.
+    long_mode: bool
+        Run the long running benchmarks at the current head of the repo.
     gh_pages: bool
         Run ``asv gh-pages --rewrite`` once finished.
 
@@ -361,6 +370,19 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
 
     """
     session.install("asv", "nox", "pyyaml")
+    if "DATA_GEN_PYTHON" in os.environ:
+        print("Using existing data generation environment.")
+    else:
+        print("Setting up the data generation environment...")
+        session.run(
+            "nox", "--session=tests", "--install-only", f"--python={session.python}"
+        )
+        data_gen_python = next(
+            Path(".nox").rglob(f"tests*/bin/python{session.python}")
+        ).resolve()
+        session.env["DATA_GEN_PYTHON"] = data_gen_python
+
+    print("Running ASV...")
     session.cd("benchmarks")
     # Skip over setup questions for a new machine.
     session.run("asv", "machine", "--yes")
@@ -381,6 +403,8 @@ def benchmarks(session: nox.sessions.Session, ci_mode: bool, gh_pages: bool):
             asv_exec("continuous", previous_commit, "HEAD", "--bench=ci")
         finally:
             asv_exec("compare", previous_commit, "HEAD")
+    elif long_mode:
+        asv_exec("run", "HEAD^!", "--bench=long")
     else:
         # f32f23a5 = first supporting commit for nox_asv_plugin.py .
         asv_exec("run", "f32f23a5..HEAD")
