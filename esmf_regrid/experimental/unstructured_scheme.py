@@ -116,18 +116,24 @@ def _bounds_cf_to_simple_1d(cf_bounds):
     return simple_bounds
 
 
-def _mesh_to_MeshInfo(mesh):
+def _mesh_to_MeshInfo(mesh, location="face"):
     # Returns a MeshInfo object describing the mesh of the cube.
     assert mesh.topology_dimension == 2
+    if None in mesh.face_coords:
+        elem_coords = None
+    else:
+        elem_coords = np.stack([coord.points for coord in mesh.face_coords], axis=-1)
     meshinfo = MeshInfo(
         np.stack([coord.points for coord in mesh.node_coords], axis=-1),
         mesh.face_node_connectivity.indices_by_location(),
         mesh.face_node_connectivity.start_index,
+        elem_coords=elem_coords,
+        location=location,
     )
     return meshinfo
 
 
-def _cube_to_GridInfo(cube):
+def _cube_to_GridInfo(cube, center=False):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
@@ -147,6 +153,7 @@ def _cube_to_GridInfo(cube):
         _bounds_cf_to_simple_1d(lon.bounds),
         _bounds_cf_to_simple_1d(lat.bounds),
         circular=lon.circular,
+        center=center,
     )
 
 
@@ -245,7 +252,10 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 
 
 def _regrid_unstructured_to_rectilinear__prepare(
-    src_mesh_cube, target_grid_cube, precomputed_weights=None
+    src_mesh_cube,
+    target_grid_cube,
+    precomputed_weights=None,
+    method="conservative",
 ):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
@@ -265,17 +275,28 @@ def _regrid_unstructured_to_rectilinear__prepare(
 
     grid_x, grid_y = get_xy_dim_coords(target_grid_cube)
     mesh = src_mesh_cube.mesh
+    location = src_mesh_cube.location
     # TODO: Improve the checking of mesh validity. Check the mesh location and
     #  raise appropriate error messages.
     assert mesh is not None
+    if method == "conservative":
+        assert location == "face"
+        center = False
+    elif method == "bilinear":
+        assert location in ["face", "node"]
+        center = True
+    else:
+        raise ValueError("method must be either bilinear or conservative.")
     # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
     # mesh belongs to.
     mesh_dim = src_mesh_cube.mesh_dim()
 
-    meshinfo = _mesh_to_MeshInfo(mesh)
-    gridinfo = _cube_to_GridInfo(target_grid_cube)
+    meshinfo = _mesh_to_MeshInfo(mesh, location)
+    gridinfo = _cube_to_GridInfo(target_grid_cube, center=center)
 
-    regridder = Regridder(meshinfo, gridinfo, precomputed_weights)
+    regridder = Regridder(
+        meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
+    )
 
     regrid_info = (mesh_dim, grid_x, grid_y, regridder)
 
@@ -322,7 +343,9 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     return new_cube
 
 
-def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
+def regrid_unstructured_to_rectilinear(
+    src_cube, grid_cube, mdtol=0, method="conservative"
+):
     r"""
     Regrid unstructured :class:`~iris.cube.Cube` onto rectilinear grid.
 
@@ -363,7 +386,9 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
         A new :class:`~iris.cube.Cube` instance.
 
     """
-    regrid_info = _regrid_unstructured_to_rectilinear__prepare(src_cube, grid_cube)
+    regrid_info = _regrid_unstructured_to_rectilinear__prepare(
+        src_cube, grid_cube, method=method
+    )
     result = _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
 
@@ -372,7 +397,12 @@ class MeshToGridESMFRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
-        self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
+        self,
+        src_mesh_cube,
+        target_grid_cube,
+        mdtol=None,
+        method="conservative",
+        precomputed_weights=None,
     ):
         """
         Create regridder for conversions between source mesh and target grid.
@@ -398,17 +428,27 @@ class MeshToGridESMFRegridder:
 
         # Missing data tolerance.
         # Code directly copied from iris.
+        if mdtol is None:
+            if method == "conservative":
+                mdtol = 1
+            elif method == "bilinear":
+                mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+        self.method = method
 
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-            src_mesh_cube, target_grid_cube, precomputed_weights=precomputed_weights
+            src_mesh_cube,
+            target_grid_cube,
+            method=method,
+            precomputed_weights=precomputed_weights,
         )
 
         # Record source mesh.
         self.mesh = src_mesh_cube.mesh
+        self.location = src_mesh_cube.location
 
         # Store regrid info.
         _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
@@ -435,6 +475,7 @@ class MeshToGridESMFRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
+        assert cube.location == self.location
         mesh = cube.mesh
         # TODO: replace temporary hack when iris issues are sorted.
         assert mesh is not None
@@ -476,7 +517,7 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
     return result
 
 
-def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh):
+def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location="face"):
     """
     Return a new cube for the result of regridding.
 
@@ -512,7 +553,7 @@ def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh):
 
     min_grid_dim = min(grid_x_dim, grid_y_dim)
     max_grid_dim = max(grid_x_dim, grid_y_dim)
-    for coord in mesh.to_MeshCoords("face"):
+    for coord in mesh.to_MeshCoords(location):
         new_cube.add_aux_coord(coord, min_grid_dim)
 
     new_cube.metadata = copy.deepcopy(src_cube.metadata)
@@ -536,7 +577,10 @@ def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh):
 
 
 def _regrid_rectilinear_to_unstructured__prepare(
-    src_grid_cube, target_mesh_cube, precomputed_weights=None
+    src_grid_cube,
+    target_mesh_cube,
+    method="conservative",
+    precomputed_weights=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
@@ -547,18 +591,30 @@ def _regrid_rectilinear_to_unstructured__prepare(
     """
     grid_x, grid_y = get_xy_dim_coords(src_grid_cube)
     mesh = target_mesh_cube.mesh
+    location = target_mesh_cube.location
     # TODO: Improve the checking of mesh validity. Check the mesh location and
     #  raise appropriate error messages.
+    assert mesh is not None
+    if method == "conservative":
+        assert location == "face"
+        center = False
+    elif method == "bilinear":
+        assert location in ["face", "node"]
+        center = True
+    else:
+        raise ValueError("method must be either bilinear or conservative.")
     assert mesh is not None
     grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
     grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
 
-    meshinfo = _mesh_to_MeshInfo(mesh)
-    gridinfo = _cube_to_GridInfo(src_grid_cube)
+    meshinfo = _mesh_to_MeshInfo(mesh, location)
+    gridinfo = _cube_to_GridInfo(src_grid_cube, center=center)
 
-    regridder = Regridder(gridinfo, meshinfo, precomputed_weights)
+    regridder = Regridder(
+        gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
+    )
 
-    regrid_info = (grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, regridder)
+    regrid_info = (grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, location, regridder)
 
     return regrid_info
 
@@ -570,7 +626,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     Perform the prepared regrid calculation on a single cube.
 
     """
-    grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, regridder = regrid_info
+    grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, location, regridder = regrid_info
 
     # Set up a function which can accept just chunk of data as an argument.
     regrid = functools.partial(
@@ -602,11 +658,14 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         grid_x_dim,
         grid_y_dim,
         mesh,
+        location=location,
     )
     return new_cube
 
 
-def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
+def regrid_rectilinear_to_unstructured(
+    src_cube, mesh_cube, mdtol=0, method="conservative"
+):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
 
@@ -651,7 +710,9 @@ def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
         A new :class:`~iris.cube.Cube` instance.
 
     """
-    regrid_info = _regrid_rectilinear_to_unstructured__prepare(src_cube, mesh_cube)
+    regrid_info = _regrid_rectilinear_to_unstructured__prepare(
+        src_cube, mesh_cube, method=method
+    )
     result = _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol)
     return result
 
@@ -660,7 +721,12 @@ class GridToMeshESMFRegridder:
     r"""Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
-        self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
+        self,
+        src_mesh_cube,
+        target_grid_cube,
+        mdtol=None,
+        method="conservative",
+        precomputed_weights=None,
     ):
         """
         Create regridder for conversions between source grid and target mesh.
@@ -681,17 +747,34 @@ class GridToMeshESMFRegridder:
         """
         # Missing data tolerance.
         # Code directly copied from iris.
+        if mdtol is None:
+            if method == "conservative":
+                mdtol = 1
+            elif method == "bilinear":
+                mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+        self.method = method
 
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-            src_mesh_cube, target_grid_cube, precomputed_weights=precomputed_weights
+            src_mesh_cube,
+            target_grid_cube,
+            method=method,
+            precomputed_weights=precomputed_weights,
         )
 
         # Store regrid info.
-        _, _, self.grid_x, self.grid_y, self.mesh, self.regridder = partial_regrid_info
+        (
+            _,
+            _,
+            self.grid_x,
+            self.grid_y,
+            self.mesh,
+            self.location,
+            self.regridder,
+        ) = partial_regrid_info
 
     def __call__(self, cube):
         """
@@ -736,6 +819,7 @@ class GridToMeshESMFRegridder:
             self.grid_x,
             self.grid_y,
             self.mesh,
+            self.location,
             self.regridder,
         )
 

@@ -26,6 +26,8 @@ class MeshInfo(SDO):
         node_start_index,
         elem_start_index=0,
         areas=None,
+        elem_coords=None,
+        location="face",
     ):
         """
         Create a :class:`MeshInfo` object describing a UGRID-like mesh.
@@ -60,10 +62,15 @@ class MeshInfo(SDO):
         self.nsi = node_start_index
         self.esi = elem_start_index
         self.areas = areas
+        self.elem_coords = elem_coords
+        if location == "face":
+            field_kwargs = {"meshloc": ESMF.MeshLoc.ELEMENT}
+        elif location == "node":
+            field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
         super().__init__(
             shape=(len(face_node_connectivity),),
             index_offset=self.esi,
-            field_kwargs={"meshloc": ESMF.MeshLoc.ELEMENT},
+            field_kwargs=field_kwargs,
         )
 
     def _as_esmf_info(self):
@@ -78,6 +85,7 @@ class MeshInfo(SDO):
         elemType = self.fnc.count(axis=1)
         # Experiments seem to indicate that ESMF is using 0 indexing here
         elemConn = self.fnc.compressed() - self.nsi
+        elemCoord = self.elem_coords
         result = (
             num_node,
             num_elem,
@@ -88,6 +96,7 @@ class MeshInfo(SDO):
             elemType,
             elemConn,
             self.areas,
+            elemCoord,
         )
         return result
 
@@ -103,6 +112,7 @@ class MeshInfo(SDO):
             elemType,
             elemConn,
             areas,
+            elemCoord,
         ) = info
         # ESMF can handle other dimensionalities, but we are unlikely
         # to make such a use of ESMF
@@ -111,5 +121,12 @@ class MeshInfo(SDO):
         )
 
         emesh.add_nodes(num_node, nodeId, nodeCoord, nodeOwner)
-        emesh.add_elements(num_elem, elemId, elemType, elemConn, element_area=areas)
+        emesh.add_elements(
+            num_elem,
+            elemId,
+            elemType,
+            elemConn,
+            element_area=areas,
+            element_coords=elemCoord,
+        )
         return emesh
