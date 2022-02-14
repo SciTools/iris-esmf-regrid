@@ -65,10 +65,12 @@ class MeshInfo(SDO):
         self.elem_coords = elem_coords
         if location == "face":
             field_kwargs = {"meshloc": ESMF.MeshLoc.ELEMENT}
+            shape = (len(face_node_connectivity),)
         elif location == "node":
             field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
+            shape = (len(node_coords),)
         super().__init__(
-            shape=(len(face_node_connectivity),),
+            shape=shape,
             index_offset=self.esi,
             field_kwargs=field_kwargs,
         )

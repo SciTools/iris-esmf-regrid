@@ -85,3 +85,47 @@ def test_regrid_with_mesh():
     extra_dim_mesh_output = grid_to_mesh_regridder.regrid(extra_dim_grid_input)
     extra_dim_expected_mesh_output = _give_extra_dims(expected_mesh_output)
     assert ma.allclose(extra_dim_expected_mesh_output, extra_dim_mesh_output)
+
+
+def test_regrid_bilinear_with_mesh():
+    """Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
+    mesh_args = _make_small_mesh_args()
+    mesh = MeshInfo(*mesh_args, location="node")
+
+    grid_args = [ar * 2 for ar in make_grid_args(2, 3)]
+    grid = GridInfo(*grid_args, center=True)
+
+    mesh_to_grid_regridder = Regridder(mesh, grid, method="bilinear")
+    mesh_input = np.arange(5)
+    grid_output = mesh_to_grid_regridder.regrid(mesh_input)
+    expected_grid_output = np.array(
+        [
+            [0.0, 2.0],
+            [0.6662902773937054, 2.6662902773105808],
+            [-1, 3.333709722689418],
+        ]
+    )
+    expected_grid_mask = np.array([[0, 0], [0, 0], [1, 0]])
+    expected_grid_output = ma.array(expected_grid_output, mask=expected_grid_mask)
+    assert ma.allclose(expected_grid_output, grid_output)
+
+    grid_to_mesh_regridder = Regridder(grid, mesh, method="bilinear")
+    grid_input = np.array([[0, 0], [1, 0], [2, 1]])
+    mesh_output = grid_to_mesh_regridder.regrid(grid_input)
+    expected_mesh_output = ma.array([0.0, 1.5, 0.0, 0.5, -1], mask=[0, 0, 0, 0, 1])
+    assert ma.allclose(expected_mesh_output, mesh_output)
+
+    def _give_extra_dims(array):
+        result = np.stack([array, array + 1])
+        result = np.stack([result, result + 10, result + 100])
+        return result
+
+    extra_dim_mesh_input = _give_extra_dims(mesh_input)
+    extra_dim_grid_output = mesh_to_grid_regridder.regrid(extra_dim_mesh_input)
+    extra_dim_expected_grid_output = _give_extra_dims(expected_grid_output)
+    assert ma.allclose(extra_dim_expected_grid_output, extra_dim_grid_output)
+
+    extra_dim_grid_input = _give_extra_dims(grid_input)
+    extra_dim_mesh_output = grid_to_mesh_regridder.regrid(extra_dim_grid_input)
+    extra_dim_expected_mesh_output = _give_extra_dims(expected_mesh_output)
+    assert ma.allclose(extra_dim_expected_mesh_output, extra_dim_mesh_output)
