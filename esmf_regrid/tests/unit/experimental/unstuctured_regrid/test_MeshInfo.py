@@ -90,14 +90,22 @@ def test_regrid_with_mesh():
 def test_regrid_bilinear_with_mesh():
     """Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
     mesh_args = _make_small_mesh_args()
-    mesh = MeshInfo(*mesh_args, location="node")
+    elem_coords = np.array([[5, 0], [5, 10]])
+    node_mesh = MeshInfo(*mesh_args, location="node")
+    face_mesh = MeshInfo(*mesh_args, elem_coords=elem_coords, location="face")
 
     grid_args = [ar * 2 for ar in make_grid_args(2, 3)]
     grid = GridInfo(*grid_args, center=True)
 
-    mesh_to_grid_regridder = Regridder(mesh, grid, method="bilinear")
+    mesh_to_grid_regridder = Regridder(node_mesh, grid, method="bilinear")
     mesh_input = np.arange(5)
     grid_output = mesh_to_grid_regridder.regrid(mesh_input)
+    # For a flat surface, we would expect the fractional part of these values
+    # to be either 1/3 or 2/3. Since the actual surface lies on a sphere, and
+    # due to the way ESMF approximates these values, the expected output is
+    # slightly different. It's worth noting that the finer the resolution, the
+    # more accurate these numbers are. Since the grids/meshes lie on coarse
+    # steps of about 10 degrees, we can expect most cases to be more accurate.
     expected_grid_output = np.array(
         [
             [0.0, 2.0],
@@ -109,11 +117,17 @@ def test_regrid_bilinear_with_mesh():
     expected_grid_output = ma.array(expected_grid_output, mask=expected_grid_mask)
     assert ma.allclose(expected_grid_output, grid_output)
 
-    grid_to_mesh_regridder = Regridder(grid, mesh, method="bilinear")
+    grid_to_mesh_regridder = Regridder(grid, node_mesh, method="bilinear")
     grid_input = np.array([[0, 0], [1, 0], [2, 1]])
     mesh_output = grid_to_mesh_regridder.regrid(grid_input)
     expected_mesh_output = ma.array([0.0, 1.5, 0.0, 0.5, -1], mask=[0, 0, 0, 0, 1])
     assert ma.allclose(expected_mesh_output, mesh_output)
+
+    grid_to_face_mesh_regridder = Regridder(grid, face_mesh, method="bilinear")
+    grid_input_2 = np.array([[0, 0], [1, 0], [4, 1]])
+    face_mesh_output = grid_to_face_mesh_regridder.regrid(grid_input_2)
+    expected_face_mesh_output = np.array([0.0, 1.4888258584989558])
+    assert ma.allclose(expected_face_mesh_output, face_mesh_output)
 
     def _give_extra_dims(array):
         result = np.stack([array, array + 1])
