@@ -15,6 +15,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridI
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
+    _gridlike_mesh_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
@@ -213,12 +214,11 @@ def test_default_mdtol():
 
     Checks that default mdtol values are as expected.
     """
-    tgt = _flat_mesh_cube()
-
     n_lons = 6
     n_lats = 5
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
+    tgt = _gridlike_mesh_cube(n_lons, n_lats)
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     rg_con = GridToMeshESMFRegridder(src, tgt, method="conservative")
