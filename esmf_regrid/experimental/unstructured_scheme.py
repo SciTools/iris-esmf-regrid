@@ -425,6 +425,8 @@ class MeshToGridESMFRegridder:
         #  typically be a copy of the mesh, though given the potential size of
         #  the mesh, it may make sense to either retain a reference to the actual
         #  mesh or else something like a hash of the mesh.
+        if method not in ["conservative", "bilinear"]:
+            raise (ValueError("method must be either bilinear or conservative."))
 
         # Missing data tolerance.
         # Code directly copied from iris.
@@ -745,6 +747,8 @@ class GridToMeshESMFRegridder:
             if all the contributing elements of data are masked.
 
         """
+        if method not in ["conservative", "bilinear"]:
+            raise (ValueError("method must be either bilinear or conservative."))
         # Missing data tolerance.
         # Code directly copied from iris.
         if mdtol is None:

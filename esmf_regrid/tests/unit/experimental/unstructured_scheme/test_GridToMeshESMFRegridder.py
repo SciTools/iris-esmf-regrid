@@ -223,7 +223,7 @@ def test_default_mdtol():
 
     rg_con = GridToMeshESMFRegridder(src, tgt, method="conservative")
     assert rg_con.mdtol == 1
-    rg_bi = GridToMeshESMFRegridder(src, tgt, mdtol="bilinear")
+    rg_bi = GridToMeshESMFRegridder(src, tgt, method="bilinear")
     assert rg_bi.mdtol == 0
 
 
