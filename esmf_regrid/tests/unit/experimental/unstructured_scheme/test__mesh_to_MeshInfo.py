@@ -135,6 +135,13 @@ def _gridlike_mesh(n_lons, n_lats):
     node_lons[0] = 0
     node_lons[-1] = 0
 
+    # Center Latitude and Longitude values are set.
+    lon_centers = np.linspace(-180, 180, (2 * n_lons) + 1)[1::2]
+    lat_centers = np.linspace(-90, 90, (2 * n_lats) + 1)[1::2]
+    lon_center_array, lat_center_array = np.meshgrid(lon_centers, lat_centers)
+    face_lons = lon_center_array.flatten()
+    face_lats = lat_center_array.flatten()
+
     # Translate the mesh information into iris objects.
     fnc = Connectivity(
         fnc_ma,
@@ -146,20 +153,21 @@ def _gridlike_mesh(n_lons, n_lats):
     mesh = Mesh(2, ((lons, "x"), (lats, "y")), fnc)
 
     # In order to add a mesh to a cube, face locations must be added.
-    # These are not used in calculations and are here given a value of zero.
-    mesh_length = mesh.face_node_connectivity.shape[0]
-    dummy_face_lon = AuxCoord(np.zeros(mesh_length), standard_name="longitude")
-    dummy_face_lat = AuxCoord(np.zeros(mesh_length), standard_name="latitude")
-    mesh.add_coords(face_x=dummy_face_lon, face_y=dummy_face_lat)
+    face_lon_coord = AuxCoord(face_lons, standard_name="longitude")
+    face_lat_coord = AuxCoord(face_lats, standard_name="latitude")
+    mesh.add_coords(face_x=face_lon_coord, face_y=face_lat_coord)
     mesh.long_name = "example mesh"
     return mesh
 
 
-def _gridlike_mesh_cube(n_lons, n_lats):
+def _gridlike_mesh_cube(n_lons, n_lats, location="face"):
     mesh = _gridlike_mesh(n_lons, n_lats)
-    data = np.zeros([n_lons * n_lats])
+    if location == "face":
+        data = np.zeros([n_lons * n_lats])
+    elif location == "node":
+        data = np.zeros([(n_lons * (n_lats - 1)) + 2])
     cube = Cube(data)
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords(location)
     cube.add_aux_coord(mesh_coord_x, 0)
     cube.add_aux_coord(mesh_coord_y, 0)
     return cube

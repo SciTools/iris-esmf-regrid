@@ -82,11 +82,12 @@ class Regridder:
         self.tgt = tgt
 
         if method == "conservative":
-            self.regrid_method = ESMF.RegridMethod.CONSERVE
+            esmf_regrid_method = ESMF.RegridMethod.CONSERVE
         elif method == "bilinear":
-            self.regrid_method = ESMF.RegridMethod.BILINEAR
+            esmf_regrid_method = ESMF.RegridMethod.BILINEAR
         else:
             raise ValueError("method must be either bilinear or conservative.")
+        self.method = method
 
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
@@ -94,7 +95,7 @@ class Regridder:
             weights_dict = _get_regrid_weights_dict(
                 src.make_esmf_field(),
                 tgt.make_esmf_field(),
-                regrid_method=self.regrid_method,
+                regrid_method=esmf_regrid_method,
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
