@@ -84,16 +84,8 @@ def test_bilinear():
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
-    tgt_mesh = _gridlike_mesh(n_lons, n_lats)
-    face_mesh_coord_x, face_mesh_coord_y = tgt_mesh.to_MeshCoords("face")
-    face_tgt = Cube(np.zeros_like(face_mesh_coord_x.points))
-    face_tgt.add_aux_coord(face_mesh_coord_x, 0)
-    face_tgt.add_aux_coord(face_mesh_coord_y, 0)
-
-    node_mesh_coord_x, node_mesh_coord_y = tgt_mesh.to_MeshCoords("node")
-    node_tgt = Cube(np.zeros_like(node_mesh_coord_x.points))
-    node_tgt.add_aux_coord(node_mesh_coord_x, 0)
-    node_tgt.add_aux_coord(node_mesh_coord_y, 0)
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
