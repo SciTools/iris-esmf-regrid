@@ -276,14 +276,21 @@ def _regrid_unstructured_to_rectilinear__prepare(
     grid_x, grid_y = get_xy_dim_coords(target_grid_cube)
     mesh = src_mesh_cube.mesh
     location = src_mesh_cube.location
-    # TODO: Improve the checking of mesh validity. Check the mesh location and
-    #  raise appropriate error messages.
-    assert mesh is not None
+    if mesh is None:
+        raise ValueError("The given cube is not defined on a mesh.")
     if method == "conservative":
-        assert location == "face"
+        if location != "face":
+            raise ValueError(
+                f"Conservative regridding requires a source cube located on "
+                f"the face of a cube, target cube had the {location} location."
+            )
         center = False
     elif method == "bilinear":
-        assert location in ["face", "node"]
+        if location not in ["face", "node"]:
+            raise ValueError(
+                f"Bilinear regridding requires a source cube with a node "
+                f"or face location, target cube had the {location} location."
+            )
         center = True
     else:
         raise ValueError("method must be either bilinear or conservative.")
@@ -477,10 +484,15 @@ class MeshToGridESMFRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
-        assert cube.location == self.location
         mesh = cube.mesh
+        if mesh is None:
+            raise ValueError("The given cube is not defined on a mesh.")
+        if cube.location != self.location:
+            raise ValueError(
+                "The given cube is not defined on a the same"
+                "mesh location as this regridder."
+            )
         # TODO: replace temporary hack when iris issues are sorted.
-        assert mesh is not None
         # Ignore differences in var_name that might be caused by saving.
         # TODO: uncomment this when iris issue with masked array comparison is sorted.
         # self_mesh = copy.deepcopy(self.mesh)
@@ -594,14 +606,21 @@ def _regrid_rectilinear_to_unstructured__prepare(
     grid_x, grid_y = get_xy_dim_coords(src_grid_cube)
     mesh = target_mesh_cube.mesh
     location = target_mesh_cube.location
-    # TODO: Improve the checking of mesh validity. Check the mesh location and
-    #  raise appropriate error messages.
-    assert mesh is not None
+    if mesh is None:
+        raise ValueError("The given cube is not defined on a mesh.")
     if method == "conservative":
-        assert location == "face"
+        if location != "face":
+            raise ValueError(
+                f"Conservative regridding requires a target cube located on "
+                f"the face of a cube, target cube had the {location} location."
+            )
         center = False
     elif method == "bilinear":
-        assert location in ["face", "node"]
+        if location not in ["face", "node"]:
+            raise ValueError(
+                f"Bilinear regridding requires a target cube with a node "
+                f"or face location, target cube had the {location} location."
+            )
         center = True
     else:
         raise ValueError("method must be either bilinear or conservative.")

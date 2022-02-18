@@ -255,7 +255,7 @@ class GridInfo(SDO):
         grid_corner_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CORNER)
         grid_corner_y[:] = truecornerlats
 
-        # Grid center points would be added here, this is not necessary for
+        # Grid center points are added here, this is not necessary for
         # conservative area weighted regridding
         if self.center:
             grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER)

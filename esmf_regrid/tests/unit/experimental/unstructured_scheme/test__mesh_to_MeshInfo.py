@@ -162,12 +162,9 @@ def _gridlike_mesh(n_lons, n_lats):
 
 def _gridlike_mesh_cube(n_lons, n_lats, location="face"):
     mesh = _gridlike_mesh(n_lons, n_lats)
-    if location == "face":
-        data = np.zeros([n_lons * n_lats])
-    elif location == "node":
-        data = np.zeros([(n_lons * (n_lats - 1)) + 2])
-    cube = Cube(data)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords(location)
+    data = np.zeros_like(mesh_coord_x.points)
+    cube = Cube(data)
     cube.add_aux_coord(mesh_coord_x, 0)
     cube.add_aux_coord(mesh_coord_y, 0)
     return cube

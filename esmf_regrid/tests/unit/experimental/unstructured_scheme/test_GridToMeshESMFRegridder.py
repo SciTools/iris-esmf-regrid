@@ -186,18 +186,34 @@ def test_invalid_method():
     """
     Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
-    Checks that an error is raised when mdtol is out of range.
+    Checks that an error is raised when the method is invalid.
     """
-    tgt = _flat_mesh_cube()
-
     n_lons = 6
     n_lats = 5
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    edge_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError):
-        _ = GridToMeshESMFRegridder(src, tgt, method="other")
+        _ = GridToMeshESMFRegridder(src, face_tgt, method="other")
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, node_tgt, method="conservative")
+    expected_message = (
+        "Conservative regridding requires a target cube located on "
+        "the face of a cube, target cube had the node location."
+    )
+    assert expected_message in str(excinfo.values)
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, edge_tgt, method="bilinear")
+
+    expected_message = (
+        "Bilinear regridding requires a target cube with a node "
+        "or face location, target cube had the edge location."
+    )
+    assert expected_message in str(excinfo.values)
 
 
 def test_default_mdtol():
