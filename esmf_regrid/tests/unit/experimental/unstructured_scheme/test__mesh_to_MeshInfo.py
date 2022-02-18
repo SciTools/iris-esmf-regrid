@@ -113,6 +113,16 @@ def _gridlike_mesh(n_lons, n_lats):
     # The face node connectivity is flattened to the correct dimensionality.
     fnc_ma = fnc_ma.reshape([-1, 4])
 
+    # Describe the edge node connectivity.
+    enc_array = np.empty([(n_lats * 2) - 1, n_lons, 2], dtype=int)
+    enc_array[1:n_lats, :, 0] = fnc_template
+    enc_array[: n_lats - 1, :, 1] = fnc_template
+    enc_array[0, :, 0] = 0
+    enc_array[n_lats - 1, :, 1] = num_nodes + 1
+    enc_array[n_lats:, :, 0] = fnc_template
+    enc_array[n_lats:, :, 1] = np.roll(fnc_template, -1, 1)
+    enc_array = enc_array.reshape([-1, 2])
+
     # Latitude and longitude values are set.
     lat_values = np.linspace(-90, 90, n_lats + 1)
     lon_values = np.linspace(-180, 180, n_lons, endpoint=False)
@@ -148,14 +158,30 @@ def _gridlike_mesh(n_lons, n_lats):
         cf_role="face_node_connectivity",
         start_index=0,
     )
+    enc = Connectivity(
+        enc_array,
+        cf_role="edge_node_connectivity",
+        start_index=0,
+    )
     lons = AuxCoord(node_lons, standard_name="longitude")
     lats = AuxCoord(node_lats, standard_name="latitude")
-    mesh = Mesh(2, ((lons, "x"), (lats, "y")), fnc)
+    mesh = Mesh(2, ((lons, "x"), (lats, "y")), [fnc, enc])
 
     # In order to add a mesh to a cube, face locations must be added.
     face_lon_coord = AuxCoord(face_lons, standard_name="longitude")
     face_lat_coord = AuxCoord(face_lats, standard_name="latitude")
-    mesh.add_coords(face_x=face_lon_coord, face_y=face_lat_coord)
+
+    # Add dummy edge coords.
+    dummy_points = np.zeros([((n_lats * 2) - 1) * n_lons])
+    edge_lon_coord = AuxCoord(dummy_points, standard_name="longitude")
+    edge_lat_coord = AuxCoord(dummy_points, standard_name="latitude")
+
+    mesh.add_coords(
+        face_x=face_lon_coord,
+        face_y=face_lat_coord,
+        edge_x=edge_lon_coord,
+        edge_y=edge_lat_coord,
+    )
     mesh.long_name = "example mesh"
     return mesh
 

@@ -205,7 +205,7 @@ def test_invalid_method():
         "Conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."
     )
-    assert expected_message in str(excinfo.values)
+    assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, edge_tgt, method="bilinear")
 
@@ -213,7 +213,7 @@ def test_invalid_method():
         "Bilinear regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
-    assert expected_message in str(excinfo.values)
+    assert expected_message in str(excinfo.value)
 
 
 def test_default_mdtol():
