@@ -193,8 +193,8 @@ def test_invalid_method():
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    edge_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    edge_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="edge")
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError):

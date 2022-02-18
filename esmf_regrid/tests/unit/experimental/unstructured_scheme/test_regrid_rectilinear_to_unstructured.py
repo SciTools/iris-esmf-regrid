@@ -89,7 +89,7 @@ def test_bilinear():
     src.data[:] = 1  # Ensure all data in the source is one.
     result = regrid_rectilinear_to_unstructured(src, tgt, method="bilinear")
 
-    expected_data = np.ones([n_lats, n_lons])
+    expected_data = np.ones_like(tgt.data)
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.

@@ -188,21 +188,21 @@ def test_invalid_method():
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     face_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    edge_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    node_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    edge_src = _gridlike_mesh_cube(n_lons, n_lats, location="edge")
+    node_src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError):
         _ = MeshToGridESMFRegridder(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(node_src, tgt, method="conservative")
+        _ = MeshToGridESMFRegridder(node_src, tgt, method="conservative")
     expected_message = (
         "Conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.values)
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(edge_src, tgt, method="bilinear")
+        _ = MeshToGridESMFRegridder(edge_src, tgt, method="bilinear")
 
     expected_message = (
         "Bilinear regridding requires a source cube with a node "
