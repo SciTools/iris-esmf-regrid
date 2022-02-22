@@ -12,23 +12,18 @@
 
 ## Overview
 
-This project aims to provide a bridge between [iris](https://github.com/SciTools/iris)
+This project aims to provide a bridge between [Iris](https://github.com/SciTools/iris)
 and [ESMF](https://github.com/esmf-org/esmf). This takes the form of regridder classes
-which take iris cubes as their arguments and use ESMF to perform regridding
+which take Iris cubes as their arguments and use ESMF to perform regridding
 calculations. These classes are designed to perform well on cubes which have multiple
-non-horizontal dimensions and lazy ([dask](https://github.com/dask/dask)) data.
-Both rectilinear and curvilinear grids as well ass UGRID meshes have been supported
-(though not all combinations of these are supported yet).
+non-horizontal dimensions and lazy ([Dask](https://github.com/dask/dask)) data.
+Both rectilinear and curvilinear grids as well as UGRID meshes have been supported.
 
 ## Regridding Example
 
-There are currently three regridder classes: `ESMFAreaWeightedRegridder`,
-`MeshToGridESMFRegridder` and `GridToMeshESMFRegridder`. The first of these works
-on cubes based on logically rectangular grids, the others are designed for the case
-where either the source or target cube is based on a UGRID type mesh. Except for
-the types of cubes that these take as arguments, all three of these work in essentially
-the same way. We can illustrate how regridding works generally by focusing on the
-`MeshToGridESMFRegridder` class:
+There are a range of regridder classes (e.g `MeshToGridESMFRegridder` and
+`GridToMeshESMFRegridder`). For an example of the regridding process, the
+`MeshToGridESMFRegridder` class works as follows:
 
 ```python
 import iris
@@ -45,12 +40,9 @@ regridder = MeshToGridESMFRegridder(source_mesh_cube, target_grid_cube)
 result = regridder(source_mesh_cube)
 ```
 
-Note that this pattern allows the reuse of an initialised regridder so long as the
-source and target grid/mesh are the same. Since initialisation often contains the
-most computationally intensive part of the regridding process, this pattern can save
+Note that this pattern allows the reuse of an initialised regridder, saving
 significant amounts of time when regridding. To make use of this efficiency across
-sessions, we support the saving of certain regridders (currently
-`MeshToGridESMFRegridder` and `GridToMeshESMFRegridder`). We can do this as follows:
+sessions, we support the saving of certain regridders. We can do this as follows:
 
 ```python
 from esmf_regrid.experimental.io import load_regridder, save_regridder
