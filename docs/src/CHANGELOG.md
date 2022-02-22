@@ -24,7 +24,8 @@ This release added the ability to regrid data stored on a UGRID mesh.
   work from [@abooton](https://github.com/abooton) and
   [@jamesp](https://github.com/jamesp) with benchmarking help from
   [@trexfeathers](https://github.com/trexfeathers)
-- [PR#132](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/132)
+- [PR#130](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/130)
+  [PR#137](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/137)
   Added functions for saving of the unstructured regridders.
   [@stephenworsley](https://github.com/stephenworsley)
 
