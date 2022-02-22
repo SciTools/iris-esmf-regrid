@@ -20,7 +20,7 @@ non-horizontal dimensions and lazy ([dask](https://github.com/dask/dask)) data.
 Both rectilinear and curvilinear grids as well ass UGRID meshes have been supported
 (though not all combinations of these are supported yet).
 
-## Example
+## Regridding Example
 
 There are currently three regridder classes: `ESMFAreaWeightedRegridder`,
 `MeshToGridESMFRegridder` and `GridToMeshESMFRegridder`. The first of these works
@@ -37,7 +37,30 @@ from esmf_regrid.experimental.unstructured_scheme import MeshToGridESMFRegridder
 source_mesh_cube = iris.load("mesh_cube.nc")
 target_grid_cube = iris.load("grid_cube.nc")
 
+# Initialise the regridder with a source mesh and target grid.
 regridder = MeshToGridESMFRegridder(source_mesh_cube, target_grid_cube)
 
+# use the initialised regridder to regrid the data from the source cube
+# onto a cube with the same grid as `target_grid_cube`.
 result = regridder(source_mesh_cube)
+```
+
+Note that this pattern allows the reuse of an initialised regridder so long as the
+source and target grid/mesh are the same. Since initialisation often contains the
+most computationally intensive part of the regridding process, this pattern can save
+significant amounts of time when regridding. To make use of this efficiency across
+sessions, we support the saving of certain regridders (currently
+`MeshToGridESMFRegridder` and `GridToMeshESMFRegridder`). We can do this as follows:
+
+```python
+from esmf_regrid.experimental.io import load_regridder, save_regridder
+
+# Save the regridder.
+save_regridder(regridder, "saved_regridder.nc")
+
+# Load saved regridder.
+loaded_regridder = load_regridder("saved_regridder.nc")
+
+# Use loaded regridder.
+result = loaded_regridder(source_mesh_cube)
 ```
