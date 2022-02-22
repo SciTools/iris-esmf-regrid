@@ -11,18 +11,22 @@ This release added the ability to regrid data stored on a UGRID mesh.
 
 ### Added
 
-- [PR#51](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/51)
+- [PR#31](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/31)
+  [PR#32](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/32)
+  [PR#36](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/36)
+  [PR#39](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/39)
+  [PR#46](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/46)
   [PR#55](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/55)
   [PR#96](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/96)
   Added the unstructured regridders `GridToMeshESMFRegridder` and
   `MeshToGridESMFRegridder`.
-  [@stephenworsley](https://github.com/stephenworsley)
+  [@stephenworsley](https://github.com/stephenworsley) with extensive review
+  work from [@abooton](https://github.com/abooton) and
+  [@jamesp](https://github.com/jamesp) with benchmarking help from
+  [@trexfeathers](https://github.com/trexfeathers)
 - [PR#132](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/132)
   Added functions for saving of the unstructured regridders.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#132](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/132)
-  improved generation of benchmark data to allow caching of generated data.
-  [@trexfeathers](https://github.com/trexfeathers)
 
 ## [0.3] - 2021-12-21
 
