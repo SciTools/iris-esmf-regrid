@@ -7,7 +7,7 @@ conda:
     environment: requirements/dev.yml
 
 sphinx:
-    configuration: doc/source/conf.py
+    configuration: docs/src/conf.py
     fail_on_warning: false
 
 python:
