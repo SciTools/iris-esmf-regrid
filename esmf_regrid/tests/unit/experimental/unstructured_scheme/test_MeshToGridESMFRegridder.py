@@ -237,22 +237,34 @@ def test_mistmatched_mesh():
     Checks that an error is raised when the regridder is called with a cube
     whose mesh does not match the one used for initialisation.
     """
-    src = _flat_mesh_cube()
-
     n_lons = 6
     n_lats = 5
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
+    src = _gridlike_mesh_cube(n_lons, n_lats)
+    other_loc = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+    other_src = _flat_mesh_cube()
+
     rg = MeshToGridESMFRegridder(src, tgt)
 
-    other_src = _gridlike_mesh_cube(n_lons, n_lats)
-
+    with pytest.raises(ValueError)as excinfo:
+        _ = rg(tgt)
+    expected_message = (
+        "The given cube is not defined on a mesh."
+    )
+    assert expected_message in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        _ = rg(other_loc)
+    expected_message = (
+        "The given cube is not defined on the same source mesh as this regridder."
+    )
+    assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = rg(other_src)
     expected_message = (
-        "The given cube is not defined on the same " "source mesh as this regridder."
+        "The given cube is not defined on the same source mesh as this regridder."
     )
     assert expected_message in str(excinfo.value)
 

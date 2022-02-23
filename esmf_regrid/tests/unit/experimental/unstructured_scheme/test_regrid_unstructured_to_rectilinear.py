@@ -99,7 +99,7 @@ def test_invalid_args():
     """
     Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
-    Tests that an appropriate error is raised when arguments ar invalid.
+    Tests that an appropriate error is raised when arguments are invalid.
     """
     n_lons = 6
     n_lats = 5
@@ -110,6 +110,8 @@ def test_invalid_args():
     face_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
+    with pytest.raises(ValueError):
+        _ = regrid_unstructured_to_rectilinear(tgt, tgt, method="bilinear")
     with pytest.raises(ValueError):
         _ = regrid_unstructured_to_rectilinear(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
