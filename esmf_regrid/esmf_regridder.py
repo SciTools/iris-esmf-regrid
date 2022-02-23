@@ -5,6 +5,7 @@ import numpy as np
 from numpy import ma
 import scipy.sparse
 
+import esmf_regrid
 from ._esmf_sdo import GridInfo
 
 __all__ = [
@@ -78,7 +79,9 @@ class Regridder:
         self.src = src
         self.tgt = tgt
 
+        self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
+            self.esmf_version = ESMF.__version__
             weights_dict = _get_regrid_weights_dict(
                 src.make_esmf_field(), tgt.make_esmf_field()
             )
@@ -100,6 +103,7 @@ class Regridder:
                         precomputed_weights.shape,
                     )
                 )
+            self.esmf_version = None
             self.weight_matrix = precomputed_weights
 
     def regrid(self, src_array, norm_type="fracarea", mdtol=1):
