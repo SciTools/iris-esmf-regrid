@@ -323,7 +323,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
-    """
+    r"""
     Regrid unstructured :class:`~iris.cube.Cube` onto rectilinear grid.
 
     Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
@@ -369,7 +369,7 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 
 
 class MeshToGridESMFRegridder:
-    """Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
@@ -607,7 +607,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
-    """
+    r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
 
     Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
@@ -657,7 +657,7 @@ def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
 
 
 class GridToMeshESMFRegridder:
-    """Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
+    r"""Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None

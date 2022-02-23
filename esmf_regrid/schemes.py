@@ -224,7 +224,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_rectilinear_to_rectilinear(src_cube, grid_cube, mdtol=0):
-    """
+    r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto another rectilinear grid.
 
     Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
@@ -318,7 +318,7 @@ class ESMFAreaWeighted:
 
 
 class ESMFAreaWeightedRegridder:
-    """Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(self, src_grid, tgt_grid, mdtol=0):
         """
