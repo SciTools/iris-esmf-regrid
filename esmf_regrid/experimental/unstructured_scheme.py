@@ -497,7 +497,7 @@ class MeshToGridESMFRegridder:
             raise ValueError("The given cube is not defined on a mesh.")
         if cube.location != self.location:
             raise ValueError(
-                "The given cube is not defined on a the same"
+                "The given cube is not defined on a the same "
                 "mesh location as this regridder."
             )
         # TODO: replace temporary hack when iris issues are sorted.
