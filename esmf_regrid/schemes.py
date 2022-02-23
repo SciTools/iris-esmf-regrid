@@ -235,7 +235,7 @@ def regrid_rectilinear_to_rectilinear(src_cube, grid_cube, mdtol=0):
     Parameters
     ----------
     src_cube : :class:`iris.cube.Cube`
-        An un-rectilinear instance of :class:`~iris.cube.Cube` that supplies the data,
+        A rectilinear instance of :class:`~iris.cube.Cube` that supplies the data,
         metadata and coordinates.
     grid_cube : :class:`iris.cube.Cube`
         A rectilinear instance of :class:`~iris.cube.Cube` that supplies the desired
