@@ -38,7 +38,6 @@ release = esmf_r_version
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    # "sphinx.ext.autosummary",
     "sphinx_copybutton",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
@@ -83,8 +82,8 @@ html_static_path = ["_static"]
 
 
 # -- api generation configuration ---------------------------------------------
+autoclass_content = "both"
 autodoc_typehints = "none"
-# autosummary_imported_members = True
 modindex_common_prefix = ["esmf_regrid"]
 
 
@@ -115,6 +114,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
+    "ESMF": ("https://earthsystemmodeling.org/esmpy_doc/release/latest/html/", None),
 }
 
 

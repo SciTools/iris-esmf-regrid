@@ -79,11 +79,14 @@ class GridInfo(SDO):
     This class holds information about lat-lon type grids. That is, grids
     defined by lists of latitude and longitude values for points/bounds
     (with respect to some coordinate reference system i.e. rotated pole).
-    It contains methods for translating this information into ESMF objects.
-    In particular, there are methods for representing as an ESMF Grid and
-    as an ESMF Field containing that Grid. This ESMF Field is designed to
+    It contains methods for translating this information into :mod:`ESMF` objects.
+    In particular, there are methods for representing as a
+    :class:`ESMF.api.grid.Grid` and
+    as a :class:`ESMF.api.field.Field` containing that
+    :class:`~ESMF.api.grid.Grid`. This ESMF :class:`~ESMF.api.field.Field`
+    is designed to
     contain enough information for area weighted regridding and may be
-    inappropriate for other ESMF regridding schemes.
+    inappropriate for other :mod:`ESMF` regridding schemes.
 
     """
 
@@ -98,31 +101,32 @@ class GridInfo(SDO):
         areas=None,
     ):
         """
-        Create a GridInfo object describing the grid.
+        Create a :class:`GridInfo` object describing the grid.
 
         Parameters
         ----------
-        lons : array_like
-            A 1D or 2D numpy array or list describing the longitudes of the
+        lons : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the longitudes of the
             grid points.
-        lats : array_like
-            A 1D or 2D numpy array or list describing the latitudes of the
+        lats : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the latitudes of the
             grid points.
-        lonbounds : array_like
-            A 1D or 2D numpy array or list describing the longitude bounds of
-            the grid. Should have length one greater than lons.
-        latbounds : array_like
-            A 1D or 2D numpy array or list describing the latitude bounds of
-            the grid. Should have length one greater than lats.
-        crs : cartopy projection, optional
-            None or a cartopy.crs projection describing how to interpret the
-            above arguments. If None, defaults to Geodetic().
-        circular : bool, optional
-            A boolean value describing if the final longitude bounds should
-            be considered contiguous with the first. Defaults to False.
-        areas : array_line, optional
-            either None or a numpy array describing the areas associated with
-            each face. If None, then ESMF will use its own calculated areas.
+        lonbounds : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the longitude bounds of
+            the grid. Should have length one greater than ``lons``.
+        latbounds : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the latitude bounds of
+            the grid. Should have length one greater than ``lats``.
+        crs : :class:`cartopy.crs.CRS`, optional
+            Describes how to interpret the
+            above arguments. If ``None``, defaults to :class:`~cartopy.crs.Geodetic`.
+        circular : bool, default=False
+            Describes if the final longitude bounds should
+            be considered contiguous with the first.
+        areas : :obj:`~numpy.typing.ArrayLike`, optional
+            Array describing the areas associated with
+            each face. If ``None``, then :mod:`ESMF` will use its own
+            calculated areas.
 
         """
         self.lons = lons
