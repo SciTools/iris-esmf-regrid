@@ -249,11 +249,9 @@ def test_mistmatched_mesh():
 
     rg = MeshToGridESMFRegridder(src, tgt)
 
-    with pytest.raises(ValueError)as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         _ = rg(tgt)
-    expected_message = (
-        "The given cube is not defined on a mesh."
-    )
+    expected_message = "The given cube is not defined on a mesh."
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = rg(other_loc)
