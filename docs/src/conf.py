@@ -44,6 +44,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinxcontrib.apidoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -118,6 +119,17 @@ intersphinx_mapping = {
 }
 
 
-# -- todo_ configuration -----------------------------------------------
+# -- todo_ extension ----------------------------------------------------------
 # See https://www.sphinx-doc.org/en/master/usage/extensions/todo.html
 todo_include_todos = True
+
+
+# -- apidoc extension ---------------------------------------------------------
+# See https://github.com/sphinx-contrib/apidoc
+module_dir = source_code_root / "esmf_regrid"
+
+apidoc_module_dir = str(module_dir)
+apidoc_output_dir = str(Path(__file__).parent / "_api_generated")
+apidoc_excluded_paths = [str(module_dir / "tests")]
+apidoc_separate_modules = True
+apidoc_extra_args = ["-H", "API"]
