@@ -1,4 +1,4 @@
-"""Provides ESMF representations of UGRID meshes."""
+"""Provides :mod:`ESMF` representations of UGRID meshes."""
 
 import ESMF
 import numpy as np
@@ -11,11 +11,12 @@ class MeshInfo(SDO):
     Class for handling unstructured meshes.
 
     This class holds information about Meshes in a form similar to UGRID.
-    It contains methods for translating this information into ESMF objects.
-    In particular, there are methods for representing as an ESMF Mesh and
-    as an ESMF Field containing that Mesh. This ESMF Field is designed to
+    It contains methods for translating this information into :mod:`ESMF` objects.
+    In particular, there are methods for representing as an :class:`ESMF.api.mesh.Mesh`
+    and as an :class:`ESMF.api.field.Field` containing that
+    :class:`~ESMF.api.mesh.Mesh`. This ESMF :class:`~ESMF.api.field.Field` is designed to
     contain enough information for area weighted regridding and may be
-    inappropriate for other ESMF regridding schemes.
+    inappropriate for other :mod:`ESMF` regridding schemes.
     """
 
     def __init__(
@@ -27,34 +28,32 @@ class MeshInfo(SDO):
         areas=None,
     ):
         """
-        Create a MeshInfo object describing a UGRID-like mesh.
+        Create a :class:`MeshInfo` object describing a UGRID-like mesh.
 
         Parameters
         ----------
-        node_coords: array_like
-            An Nx2 numpy array describing the location of the nodes of the mesh.
-            node_coords[:,0] describes the longitudes in degrees and
-            node_coords[:,1] describes the latitudes in degrees
-        face_node_connectivity: array_like
-            A numpy masked array describing the face node connectivity of the
-            mesh. The unmasked points of face_node_connectivity[i] describe
-            which nodes are connected to the i'th face.
+        node_coords: :obj:`~numpy.typing.ArrayLike`
+            An ``Nx2`` array describing the location of the nodes of the mesh.
+            ``node_coords[:,0]`` describes the longitudes in degrees and
+            ``node_coords[:,1]`` describes the latitudes in degrees
+        face_node_connectivity: :obj:`~numpy.typing.ArrayLike`
+            A masked array describing the face node connectivity of the
+            mesh. The unmasked points of ``face_node_connectivity[i]`` describe
+            which nodes are connected to the ``i``'th face.
         node_start_index: int
-            An integer the value which, appearing in the face_node_connectivity
-            array, indicates the first node in the node_coords array.
-            UGRID supports both 0 based and 1 based indexing, so both must be
+            A value which, appearing in the ``face_node_connectivity``
+            array, indicates the first node in the ``node_coords`` array.
+            UGRID supports both ``0`` based and ``1`` based indexing, so both must be
             accounted for here:
             https://ugrid-conventions.github.io/ugrid-conventions/#zero-or-one
-        elem_start_index: int, optional
-            An integer describing what index should be considered by ESMF to be
+        elem_start_index: int, default=0
+            Describes what index should be considered by :mod:`ESMF` to be
             the start index for describing its elements. This makes no
             difference to the regridding calculation and will only affect the
-            intermediate ESMF objects, should the user need access to them.
-            Defaults to 0.
-        areas: array_like, optional
-            Either None or a numpy array describing the areas associated with
-            each face. If None, then ESMF will use its own calculated areas.
-            Defaults to None.
+            intermediate :mod:`ESMF` objects, should the user need access to them.
+        areas: :obj:`~numpy.typing.ArrayLike`, optional
+            Array describing the areas associated with
+            each face. If ``None``, then :mod:`ESMF` will use its own calculated areas.
         """
         self.node_coords = node_coords
         self.fnc = face_node_connectivity

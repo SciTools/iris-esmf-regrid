@@ -10,6 +10,8 @@
 
 ---
 
+[Click here for the API documentation](https://iris-esmf-regrid.readthedocs.io/en/latest)
+
 ## Overview
 
 This project aims to provide a bridge between [Iris](https://github.com/SciTools/iris)

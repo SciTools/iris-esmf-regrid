@@ -50,30 +50,31 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 
 
 class Regridder:
-    """Regridder for directly interfacing with ESMF."""
+    """Regridder for directly interfacing with :mod:`ESMF`."""
 
     def __init__(self, src, tgt, precomputed_weights=None):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
 
-        Weights will be calculated using ESMF and stored as a scipy.sparse
-        matrix for use in regridding. If precomputed weights are provided,
-        these will be used instead of calculating via ESMF.
+        Weights will be calculated using :mod:`ESMF` and stored as a
+        :class:`scipy.sparse.csr_matrix`
+        for use in regridding. If precomputed weights are provided,
+        these will be used instead of calculating via :mod:`ESMF`.
 
         Parameters
         ----------
-        src : object
-            A MeshInfo or GridInfo object describing the source mesh/grid.
-            Data supplied to this regridder should be in a numpy array
-            whose shape is compatible with src.
-        tgt : object
-            A MeshInfo or GridInfo oject describing the target mesh/grid.
-            Data output by this regridder will be a numpy array whose
-            shape is compatible with tgt.
-        precomputed_weights : sparse-matix object, optional
-            None or a scipy.sparse matrix. If None, ESMF will be used to
-            calculate regridding weights. Otherwise, ESMF will be bypassed
-            and precomputed_weights will be used as the regridding weights.
+        src : :class:`~esmf_regrid.experimental.unstructured_regrid.MeshInfo` or :class:`GridInfo`
+            Describes the source mesh/grid.
+            Data supplied to this regridder should be in a :class:`numpy.ndarray`
+            whose shape is compatible with ``src``.
+        tgt : :class:`~esmf_regrid.experimental.unstructured_regrid.MeshInfo` or :class:`GridInfo`
+            Describes the target mesh/grid.
+            Data output by this regridder will be a :class:`numpy.ndarray` whose
+            shape is compatible with ``tgt``.
+        precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
+            If ``None``, :mod:`ESMF` will be used to
+            calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
+            and ``precomputed_weights`` will be used as the regridding weights.
         """
         self.src = src
         self.tgt = tgt
@@ -111,26 +112,27 @@ class Regridder:
 
         Parameters
         ----------
-        src_array : array_like
-            A numpy array whose shape is compatible with self.src
-        norm_type : string
-            Either "fracarea" or "dstarea", defaults to "fracarea". Determines the
+        src_array : :obj:`~numpy.typing.ArrayLike`
+            Array whose shape is compatible with ``self.src``
+        norm_type : str
+            Either ``fracarea`` or ``dstarea``, defaults to ``fracarea``. Determines the
             type of normalisation applied to the weights. Normalisations correspond
-            to ESMF constants ESMF.NormType.FRACAREA and ESMF.NormType.DSTAREA.
-        mdtol : float, optional
+            to :mod:`ESMF` constants :attr:`~ESMF.api.constants.NormType.FRACAREA` and
+            :attr:`~ESMF.api.constants.NormType.DSTAREA`.
+        mdtol : float, default=1
             A number between 0 and 1 describing the missing data tolerance.
-            Depending on the value of `mdtol`, if a cell in the target grid is not
+            Depending on the value of ``mdtol``, if a cell in the target grid is not
             sufficiently covered by unmasked cells of the source grid, then it will
-            be masked. An `mdtol` of 1 means that only target cells which are not
-            covered at all will be masked, an `mdtol` of 0 means that all target
-            cells that are not entirely covered will be masked, and an `mdtol` of
-            0.5 means that all target cells that are less than half covered will
+            be masked. ``mdtol=1`` means that only target cells which are not
+            covered at all will be masked, ``mdtol=0`` means that all target
+            cells that are not entirely covered will be masked, and ``mdtol=0.5``
+            means that all target cells that are less than half covered will
             be masked.
 
         Returns
         -------
-        array_like
-            A numpy array whose shape is compatible with self.tgt.
+        :obj:`~numpy.typing.ArrayLike`
+            An array whose shape is compatible with ``self.tgt``.
 
         """
         array_shape = src_array.shape
