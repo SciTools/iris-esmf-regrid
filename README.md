@@ -27,10 +27,17 @@ There are a range of regridder classes (e.g `MeshToGridESMFRegridder` and
 
 ```python
 import iris
+from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 from esmf_regrid.experimental.unstructured_scheme import MeshToGridESMFRegridder
 
-source_mesh_cube = iris.load("mesh_cube.nc")
-target_grid_cube = iris.load("grid_cube.nc")
+# An example such a file can be found at:
+# https://github.com/SciTools/iris-test-data/blob/master/test_data/NetCDF/unstructured_grid/data_C4.nc
+with PARSE_UGRID_ON_LOAD.context():
+    source_mesh_cube = iris.load_cube("mesh_cube.nc")
+
+# An example of such a file can be found at:
+# https://github.com/SciTools/iris-test-data/blob/master/test_data/NetCDF/global/xyt/SMALL_hires_wind_u_for_ipcc4.nc
+target_grid_cube = iris.load_cube("grid_cube.nc")
 
 # Initialise the regridder with a source mesh and target grid.
 regridder = MeshToGridESMFRegridder(source_mesh_cube, target_grid_cube)
