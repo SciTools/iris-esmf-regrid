@@ -73,6 +73,9 @@ class Regridder:
             Describes the target mesh/grid.
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
+        method : str
+            Either "conservative" or "bilinear". Describes the regrid
+            method :mod:`ESMF` uses to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
