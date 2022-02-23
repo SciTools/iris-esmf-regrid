@@ -4,7 +4,6 @@ Configuration file for the Sphinx documentation builder.
 Created originally using sphinx-quickstart on 2022-02-21.
 """
 
-from datetime import datetime
 from pathlib import Path
 import sys
 
@@ -21,10 +20,8 @@ sys.path.append(str(source_code_root))
 
 from esmf_regrid import __version__ as esmf_r_version
 
-copyright_years = f"2020 - {datetime.now().year}"
-
 project = "iris-esmf-regrid"
-copyright = f"{copyright_years}, SciTools-incubator"
+copyright = "2020, SciTools-incubator"
 author = "iris-esmf-regrid Contributors"
 
 # The full version, including alpha/beta/rc tags
