@@ -115,14 +115,14 @@ def test_invalid_args():
     with pytest.raises(ValueError) as excinfo:
         _ = regrid_unstructured_to_rectilinear(node_src, tgt, method="conservative")
     expected_message = (
-        "Conservative regridding requires a target cube located on "
+        "Conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method="bilinear")
     expected_message = (
-        "Bilinear regridding requires a target cube with a node "
+        "Bilinear regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
