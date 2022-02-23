@@ -35,11 +35,14 @@ def save_regridder(rg, filename):
     """
     Save a regridder scheme instance.
 
-    Saves either a `GridToMeshESMFRegridder` or a `MeshToGridESMFRegridder`.
+    Saves either a
+    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`
+    or a
+    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Parameters
     ----------
-    rg : GridToMeshESMFRegridder, MeshToGridESMFRegridder
+    rg : :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder` or :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`
         The regridder instance to save.
     filename : str
         The file name to save to.
@@ -136,12 +139,19 @@ def load_regridder(filename):
     """
     Load a regridder scheme instance.
 
-    Loads either a `GridToMeshESMFRegridder` or a `MeshToGridESMFRegridder`.
+    Loads either a
+    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`
+    or a
+    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Parameters
     ----------
     filename : str
         The file name to load from.
+
+    Returns
+    -------
+    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder` or :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`
     """
     with PARSE_UGRID_ON_LOAD.context():
         cubes = iris.load(filename)

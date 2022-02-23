@@ -324,40 +324,43 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
     """
-    Regrid unstructured cube onto rectilinear grid.
+    Regrid unstructured :class:`~iris.cube.Cube` onto rectilinear grid.
 
-    Return a new cube with data values calculated using the area weighted
-    mean of data values from unstructured cube src_cube regridded onto the
-    horizontal grid of grid_cube. The dimension on the cube belonging to
-    the mesh will replaced by the two dimensions associated with the grid.
-    This function requires that the horizontal dimension of src_cube is
+    Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
+    values calculated using the area weighted
+    mean of :attr:`~iris.cube.Cube.data` values from ``src_cube`` regridded onto the
+    horizontal grid of ``grid_cube``. The dimension on the :class:`~iris.cube.Cube`
+    belonging to the :attr:`~iris.cube.Cube.mesh`
+    will replaced by the two dimensions associated with the grid.
+    This function requires that the horizontal dimension of ``src_cube`` is
     described by a 2D mesh with data located on the faces of that mesh.
-    This function requires that the horizontal grid of grid_cube is
+    This function requires that the horizontal grid of ``grid_cube`` is
     rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
-    This function also requires that the coordinates describing the
-    horizontal grid have bounds.
+    This function also requires that the :class:`~iris.coords.Coord`\\ s describing the
+    horizontal grid have :attr:`~iris.coords.Coord.bounds`.
 
     Parameters
     ----------
-    src_cube : cube
-        An unstructured instance of iris.cube.Cube that supplies the data,
+    src_cube : :class:`iris.cube.Cube`
+        An unstructured instance of :class:`~iris.cube.Cube` that supplies the data,
         metadata and coordinates.
-    grid_cube : cube
-        A rectilinear instance of iris.cube.Cube that supplies the desired
+    grid_cube : :class:`iris.cube.Cube`
+        A rectilinear instance of :class:`~iris.cube.Cube` that supplies the desired
         horizontal grid definition.
-    mdtol : float, optional
+    mdtol : float, default=0
         Tolerance of missing data. The value returned in each element of the
-        returned cube's data array will be masked if the fraction of masked
-        data in the overlapping cells of the source cube exceeds mdtol. This
+        returned :class:`~iris.cube.Cube`\\ 's :attr:`~iris.cube.Cube.data`
+        array will be masked if the fraction of masked
+        data in the overlapping cells of ``src_cube`` exceeds ``mdtol``. This
         fraction is calculated based on the area of masked cells within each
-        target cell. mdtol=0 means no missing data is tolerated while mdtol=1
+        target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
-        overlapping cells of the source cube are masked. Defaults to 0.
+        overlapping cells of ``src_cube`` are masked.
 
     Returns
     -------
-    cube
-        A new iris.cube.Cube instance.
+    :class:`iris.cube.Cube`
+        A new :class:`~iris.cube.Cube` instance.
 
     """
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(src_cube, grid_cube)
@@ -366,7 +369,7 @@ def regrid_unstructured_to_rectilinear(src_cube, grid_cube, mdtol=0):
 
 
 class MeshToGridESMFRegridder:
-    """Regridder class for unstructured to rectilinear cubes."""
+    """Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
@@ -376,17 +379,16 @@ class MeshToGridESMFRegridder:
 
         Parameters
         ----------
-        src_grid_cube : cube
-            The unstructured iris cube providing the source grid.
-        target_grid_cube : cube
-            The rectilinear iris cube providing the target grid.
-        mdtol : float, optional
+        src_mesh_cube : :class:`iris.cube.Cube`
+            The unstructured :class:`~iris.cube.Cube` providing the source grid.
+        target_grid_cube : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+        mdtol : float, default=1
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
-            exceeds mdtol. mdtol=0 means no missing data is tolerated while
-            mdtol=1 will mean the resulting element will be masked if and only
+            exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
+            ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-            Defaults to 1.
 
         """
         # TODO: Record information about the identity of the mesh. This would
@@ -413,21 +415,23 @@ class MeshToGridESMFRegridder:
 
     def __call__(self, cube):
         """
-        Regrid this cube onto the target grid of this regridder instance.
+        Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
 
-        The given cube must be defined with the same mesh as the source
-        cube used to create this MeshToGridESMFRegridder instance.
+        The given :class:`~iris.cube.Cube` must be defined with the same mesh as the source
+        cube used to create this :class:`MeshToGridESMFRegridder` instance.
 
         Parameters
         ----------
-        cube : cube
-            A iris.cube.Cube instance to be regridded.
+        cube : :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` instance to be regridded.
 
         Returns
         -------
-            A cube defined with the horizontal dimensions of the target
-            and the other dimensions from this cube. The data values of
-            this cube will be converted to values on the new grid using
+        :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
+            and the other dimensions from this :class:`~iris.cube.Cube`. The
+            :attr:`~iris.cube.Cube.data` values of
+            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
             area-weighted regridding via ESMF generated weights.
 
         """
@@ -604,44 +608,47 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
     """
-    Regrid rectilinear cube onto unstructured mesh.
+    Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
 
-    Return a new cube with data values calculated using the area weighted
-    mean of data values from rectilinear cube src_cube regridded onto the
-    horizontal mesh of mesh_cube. The dimensions on the cube associated
-    with the grid will replaced by a dimension associated with the mesh.
+    Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
+    values calculated using the area weighted
+    mean of :attr:`~iris.cube.Cube.data` values from ``src_cube`` regridded onto the
+    horizontal mesh of ``mesh_cube``. The dimensions on the :class:`~iris.cube.Cube` associated
+    with the grid will replaced by a dimension associated with the
+    :attr:`~iris.cube.Cube.mesh`.
     That dimension will be the the first of the grid dimensions, whether
-    it is associated with the x or y coordinate. Since two dimensions are
+    it is associated with the ``x`` or ``y`` coordinate. Since two dimensions are
     being replaced by one, coordinates associated with dimensions after
     the grid will become associated with dimensions one lower.
-    This function requires that the horizontal dimension of mesh_cube is
+    This function requires that the horizontal dimension of ``mesh_cube`` is
     described by a 2D mesh with data located on the faces of that mesh.
-    This function requires that the horizontal grid of src_cube is
+    This function requires that the horizontal grid of ``src_cube`` is
     rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
-    This function also requires that the coordinates describing the
-    horizontal grid have bounds.
+    This function also requires that the :class:`~iris.coords.Coord`\\ s describing the
+    horizontal grid have :attr:`~iris.coords.Coord.bounds`.
 
     Parameters
     ----------
-    src_cube : cube
-        A rectilinear instance of iris.cube.Cube that supplies the data,
+    src_cube : :class:`iris.cube.Cube`
+        A rectilinear instance of :class:`~iris.cube.Cube` that supplies the data,
         metadata and coordinates.
-    mesh_cube : cube
-        An unstructured instance of iris.cube.Cube that supplies the desired
+    mesh_cube : :class:`iris.cube.Cube`
+        An unstructured instance of :class:`~iris.cube.Cube` that supplies the desired
         horizontal mesh definition.
-    mdtol : float, optional
+    mdtol : float, default=0
         Tolerance of missing data. The value returned in each element of the
-        returned cube's data array will be masked if the fraction of masked
-        data in the overlapping cells of the source cube exceeds mdtol. This
+        returned :class:`~iris.cube.Cube`\\ 's :attr:`~iris.cube.Cube.data` array
+        will be masked if the fraction of masked
+        data in the overlapping cells of the source cube exceeds ``mdtol``. This
         fraction is calculated based on the area of masked cells within each
-        target cell. mdtol=0 means no missing data is tolerated while mdtol=1
+        target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
-        overlapping cells of the source cube are masked. Defaults to 0.
+        overlapping cells of the ``src_cube`` are masked.
 
     Returns
     -------
-    cube
-        A new iris.cube.Cube instance.
+    :class:`iris.cube.Cube`
+        A new :class:`~iris.cube.Cube` instance.
 
     """
     regrid_info = _regrid_rectilinear_to_unstructured__prepare(src_cube, mesh_cube)
@@ -650,7 +657,7 @@ def regrid_rectilinear_to_unstructured(src_cube, mesh_cube, mdtol=0):
 
 
 class GridToMeshESMFRegridder:
-    """Regridder class for rectilinear to unstructured cubes."""
+    """Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self, src_mesh_cube, target_grid_cube, mdtol=1, precomputed_weights=None
@@ -660,17 +667,16 @@ class GridToMeshESMFRegridder:
 
         Parameters
         ----------
-        src_grid_cube : cube
-            The unstructured iris cube providing the source grid.
-        target_grid_cube : cube
-            The rectilinear iris cube providing the target mesh.
-        mdtol : float, optional
+        src_grid_cube : :class:`iris.cube.Cube`
+            The unstructured :class:`~iris.cube.Cube` cube providing the source grid.
+        target_grid_cube : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the target mesh.
+        mdtol : float, default=1
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
-            exceeds mdtol. mdtol=0 means no missing data is tolerated while
-            mdtol=1 will mean the resulting element will be masked if and only
+            exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
+            ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-            Defaults to 1.
 
         """
         # Missing data tolerance.
@@ -689,21 +695,23 @@ class GridToMeshESMFRegridder:
 
     def __call__(self, cube):
         """
-        Regrid this cube onto the target mesh of this regridder instance.
+        Regrid this :class:`~iris.cube.Cube` onto the target mesh of this regridder instance.
 
-        The given cube must be defined with the same grid as the source
-        cube used to create this MeshToGridESMFRegridder instance.
+        The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
+        cube used to create this :class:`MeshToGridESMFRegridder` instance.
 
         Parameters
         ----------
-        cube : cube
-            A iris.cube.Cube instance to be regridded.
+        cube : :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` instance to be regridded.
 
         Returns
         -------
-            A cube defined with the horizontal dimensions of the target
-            and the other dimensions from this cube. The data values of
-            this cube will be converted to values on the new grid using
+        :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
+            and the other dimensions from this :class:`~iris.cube.Cube`. The
+            :attr:`~iris.cube.Cube.data` values of
+            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
             area-weighted regridding via ESMF generated weights.
 
         """
