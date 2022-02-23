@@ -429,10 +429,10 @@ class MeshToGridESMFRegridder:
         -------
         :class:`iris.cube.Cube`
             A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
-            and the other dimensions from this :class:`~iris.cube.Cube`. The
+            and the other dimensions from ``cube``. The
             :attr:`~iris.cube.Cube.data` values of
-            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
-            area-weighted regridding via ESMF generated weights.
+            ``cube`` will be converted to values on the new grid using
+            area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
         mesh = cube.mesh
@@ -709,10 +709,10 @@ class GridToMeshESMFRegridder:
         -------
         :class:`iris.cube.Cube`
             A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
-            and the other dimensions from this :class:`~iris.cube.Cube`. The
+            and the other dimensions from ``cube``. The
             :attr:`~iris.cube.Cube.data` values of
-            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
-            area-weighted regridding via ESMF generated weights.
+            ``cube`` will be converted to values on the new grid using
+            area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
         grid_x, grid_y = get_xy_dim_coords(cube)

@@ -328,7 +328,7 @@ class ESMFAreaWeightedRegridder:
         ----------
         src_grid : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt_grid : cube
+        tgt_grid : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
