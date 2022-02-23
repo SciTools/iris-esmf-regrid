@@ -89,11 +89,25 @@ def test_regrid_with_mesh():
 
 def test_regrid_bilinear_with_mesh():
     """Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
+    # We create a mesh with the following shape:
+    # 20     ,+                  ,+ 4
+    #       / |  with nodes:    / |
+    # 10  +' ,+             1 +' ,+ 3
+    #     | / |               | / |
+    #  0  +---+             0 +---+ 2
+    #     0  10
     mesh_args = _make_small_mesh_args()
     elem_coords = np.array([[5, 0], [5, 10]])
     node_mesh = MeshInfo(*mesh_args, location="node")
     face_mesh = MeshInfo(*mesh_args, elem_coords=elem_coords, location="face")
 
+    # We create a grid with the following shape:
+    # 20/3 +---+
+    #      |   |
+    # 10/3 +---+
+    #      |   |
+    #  0   +---+
+    #      0  10
     grid_args = [ar * 2 for ar in make_grid_args(2, 3)]
     grid = GridInfo(*grid_args, center=True)
 
