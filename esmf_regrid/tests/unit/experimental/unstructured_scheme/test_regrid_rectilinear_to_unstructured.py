@@ -100,6 +100,39 @@ def test_bilinear():
     assert expected_cube == result
 
 
+def test_invalid_args():
+    """
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+
+    Tests that an appropriate error is raised when arguments ar invalid.
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+    edge_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="edge")
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    with pytest.raises(ValueError):
+        _ = regrid_rectilinear_to_unstructured(src, face_tgt, method="other")
+    with pytest.raises(ValueError) as excinfo:
+        _ = regrid_rectilinear_to_unstructured(src, node_tgt, method="conservative")
+    expected_message = (
+        "Conservative regridding requires a target cube located on "
+        "the face of a cube, target cube had the node location."
+    )
+    assert expected_message in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method="bilinear")
+    expected_message = (
+        "Bilinear regridding requires a target cube with a node "
+        "or face location, target cube had the edge location."
+    )
+    assert expected_message in str(excinfo.value)
+
+
 def test_multidim_cubes():
     """
     Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.

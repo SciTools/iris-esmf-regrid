@@ -208,7 +208,6 @@ def test_invalid_method():
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, edge_tgt, method="bilinear")
-
     expected_message = (
         "Bilinear regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
