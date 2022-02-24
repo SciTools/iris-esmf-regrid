@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
-## [Unreleased]
+## [0.4] - 2022-02-24
 
 This release added the ability to regrid data stored on a UGRID mesh.
 
