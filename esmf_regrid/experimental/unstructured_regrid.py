@@ -37,7 +37,7 @@ class MeshInfo(SDO):
         node_coords: :obj:`~numpy.typing.ArrayLike`
             An ``Nx2`` array describing the location of the nodes of the mesh.
             ``node_coords[:,0]`` describes the longitudes in degrees and
-            ``node_coords[:,1]`` describes the latitudes in degrees
+            ``node_coords[:,1]`` describes the latitudes in degrees.
         face_node_connectivity: :obj:`~numpy.typing.ArrayLike`
             A masked array describing the face node connectivity of the
             mesh. The unmasked points of ``face_node_connectivity[i]`` describe
@@ -56,6 +56,12 @@ class MeshInfo(SDO):
         areas: :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
             each face. If ``None``, then :mod:`ESMF` will use its own calculated areas.
+        elem_coords : :obj:`~numpy.typing.ArrayLike`
+            An ``Nx2`` array describing the location of the face centers of the mesh.
+            ``elem_coords[:,0]`` describes the longitudes in degrees and
+            ``elem_coords[:,1]`` describes the latitudes in degrees.
+        location : str, default="face"
+            Either "face" or "node". Describes the location for data on the mesh.
         """
         self.node_coords = node_coords
         self.fnc = face_node_connectivity
@@ -69,6 +75,11 @@ class MeshInfo(SDO):
         elif location == "node":
             field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
             shape = (len(node_coords),)
+        else:
+            raise ValueError(
+                f"The mesh location '{location}' is not supported, only "
+                f"'face' and 'node' are supported."
+            )
         super().__init__(
             shape=shape,
             index_offset=self.esi,

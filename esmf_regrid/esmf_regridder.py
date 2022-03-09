@@ -14,9 +14,7 @@ __all__ = [
 ]
 
 
-def _get_regrid_weights_dict(
-    src_field, tgt_field, regrid_method=ESMF.RegridMethod.CONSERVE
-):
+def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
     regridder = ESMF.Regrid(
         src_field,
         tgt_field,

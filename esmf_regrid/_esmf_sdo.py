@@ -128,6 +128,9 @@ class GridInfo(SDO):
             Array describing the areas associated with
             each face. If ``None``, then :mod:`ESMF` will use its own
             calculated areas.
+        center : bool, default=False
+            Describes if the center points of the grid cells are used in regridding
+            calculations.
 
         """
         self.lons = lons

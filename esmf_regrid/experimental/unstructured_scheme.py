@@ -388,9 +388,9 @@ def regrid_unstructured_to_rectilinear(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
-    method : str
+    method : str, default="conservative"
         The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-        either "conservative" or "bilinear", defaults to "conservative".
+        either "conservative" or "bilinear".
 
     Returns
     -------
@@ -431,9 +431,9 @@ class MeshToGridESMFRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-        method : str
+        method : str, default="conservative"
             The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-            either "conservative" or "bilinear", defaults to "conservative".
+            either "conservative" or "bilinear".
 
         """
         # TODO: Record information about the identity of the mesh. This would
@@ -564,6 +564,8 @@ def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location="fa
     mesh : Mesh
         The :class:`iris.experimental.ugrid.Mesh` for the new
         Cube.
+    location : str, default="face"
+        Either "face" or "node". Describes the location for data on the mesh.
 
     Returns
     -------
@@ -734,9 +736,9 @@ def regrid_rectilinear_to_unstructured(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of the ``src_cube`` are masked.
-    method : str
+    method : str, default="conservative"
         The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-        either "conservative" or "bilinear", defaults to "conservative".
+        either "conservative" or "bilinear".
 
     Returns
     -------
@@ -777,9 +779,9 @@ class GridToMeshESMFRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-        method : str
+        method : str, default="conservative"
             The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-            either "conservative" or "bilinear", defaults to "conservative".
+            either "conservative" or "bilinear".
 
         """
         if method not in ["conservative", "bilinear"]:
