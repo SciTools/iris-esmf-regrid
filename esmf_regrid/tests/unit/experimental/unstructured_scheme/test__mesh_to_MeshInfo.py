@@ -172,7 +172,7 @@ def _gridlike_mesh(n_lons, n_lats):
     face_lat_coord = AuxCoord(face_lats, standard_name="latitude")
 
     # Add dummy edge coords.
-    dummy_points = np.zeros([((n_lats * 2) - 1) * n_lons])
+    dummy_points = np.zeros(enc_array.shape[0])
     edge_lon_coord = AuxCoord(dummy_points, standard_name="longitude")
     edge_lat_coord = AuxCoord(dummy_points, standard_name="latitude")
 
