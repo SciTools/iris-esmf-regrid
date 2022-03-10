@@ -72,8 +72,9 @@ class Regridder:
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
         method : str
-            Either "conservative" or "bilinear". Describes the regrid
-            method :mod:`ESMF` uses to calculate weights.
+            Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+            :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
+            to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
@@ -87,7 +88,9 @@ class Regridder:
         elif method == "bilinear":
             esmf_regrid_method = ESMF.RegridMethod.BILINEAR
         else:
-            raise ValueError("method must be either bilinear or conservative.")
+            raise ValueError(
+                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            )
         self.method = method
 
         self.esmf_regrid_version = esmf_regrid.__version__

@@ -116,7 +116,7 @@ def _bounds_cf_to_simple_1d(cf_bounds):
     return simple_bounds
 
 
-def _mesh_to_MeshInfo(mesh, location="face"):
+def _mesh_to_MeshInfo(mesh, location):
     # Returns a MeshInfo object describing the mesh of the cube.
     assert mesh.topology_dimension == 2
     if None in mesh.face_coords:
@@ -133,7 +133,7 @@ def _mesh_to_MeshInfo(mesh, location="face"):
     return meshinfo
 
 
-def _cube_to_GridInfo(cube, center=False):
+def _cube_to_GridInfo(cube, center):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
@@ -254,8 +254,8 @@ def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
 def _regrid_unstructured_to_rectilinear__prepare(
     src_mesh_cube,
     target_grid_cube,
+    method,
     precomputed_weights=None,
-    method="conservative",
 ):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
@@ -293,7 +293,9 @@ def _regrid_unstructured_to_rectilinear__prepare(
             )
         center = True
     else:
-        raise ValueError("method must be either bilinear or conservative.")
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
     # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
     # mesh belongs to.
     mesh_dim = src_mesh_cube.mesh_dim()
@@ -389,8 +391,9 @@ def regrid_unstructured_to_rectilinear(
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
     method : str, default="conservative"
-        The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-        either "conservative" or "bilinear".
+        Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+        :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
+        to calculate weights.
 
     Returns
     -------
@@ -425,15 +428,21 @@ class MeshToGridESMFRegridder:
             The unstructured :class:`~iris.cube.Cube` providing the source grid.
         target_grid_cube : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
-        mdtol : float, default=1
+        mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
-            if all the contributing elements of data are masked.
+            if all the contributing elements of data are masked. Defaults to 1
+            for conservative regregridding and 0 for bilinear regridding.
         method : str, default="conservative"
-            The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-            either "conservative" or "bilinear".
+            Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+            :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
+            to calculate weights.
+        precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
+            If ``None``, :mod:`ESMF` will be used to
+            calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
+            and ``precomputed_weights`` will be used as the regridding weights.
 
         """
         # TODO: Record information about the identity of the mesh. This would
@@ -441,7 +450,9 @@ class MeshToGridESMFRegridder:
         #  the mesh, it may make sense to either retain a reference to the actual
         #  mesh or else something like a hash of the mesh.
         if method not in ["conservative", "bilinear"]:
-            raise (ValueError("method must be either bilinear or conservative."))
+            raise ValueError(
+                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            )
 
         # Missing data tolerance.
         # Code directly copied from iris.
@@ -459,7 +470,7 @@ class MeshToGridESMFRegridder:
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
             src_mesh_cube,
             target_grid_cube,
-            method=method,
+            method=self.method,
             precomputed_weights=precomputed_weights,
         )
 
@@ -539,7 +550,7 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
     return result
 
 
-def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location="face"):
+def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location):
     """
     Return a new cube for the result of regridding.
 
@@ -564,7 +575,7 @@ def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location="fa
     mesh : Mesh
         The :class:`iris.experimental.ugrid.Mesh` for the new
         Cube.
-    location : str, default="face"
+    location : str
         Either "face" or "node". Describes the location for data on the mesh.
 
     Returns
@@ -603,7 +614,7 @@ def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location="fa
 def _regrid_rectilinear_to_unstructured__prepare(
     src_grid_cube,
     target_mesh_cube,
-    method="conservative",
+    method,
     precomputed_weights=None,
 ):
     """
@@ -633,7 +644,9 @@ def _regrid_rectilinear_to_unstructured__prepare(
             )
         center = True
     else:
-        raise ValueError("method must be either bilinear or conservative.")
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
     assert mesh is not None
     grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
     grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
@@ -737,8 +750,9 @@ def regrid_rectilinear_to_unstructured(
         will mean the resulting element will be masked if and only if all the
         overlapping cells of the ``src_cube`` are masked.
     method : str, default="conservative"
-        The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-        either "conservative" or "bilinear".
+        Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+        :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
+        to calculate weights.
 
     Returns
     -------
@@ -773,19 +787,27 @@ class GridToMeshESMFRegridder:
             The unstructured :class:`~iris.cube.Cube` cube providing the source grid.
         target_grid_cube : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target mesh.
-        mdtol : float, default=1
+        mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
-            if all the contributing elements of data are masked.
+            if all the contributing elements of data are masked. Defaults to 1
+            for conservative regregridding and 0 for bilinear regridding.
         method : str, default="conservative"
-            The regridding method which :mod:`ESMF` uses to calculate weights. Can be
-            either "conservative" or "bilinear".
+            Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+            :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
+            to calculate weights.
+        precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
+            If ``None``, :mod:`ESMF` will be used to
+            calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
+            and ``precomputed_weights`` will be used as the regridding weights.
 
         """
         if method not in ["conservative", "bilinear"]:
-            raise (ValueError("method must be either bilinear or conservative."))
+            raise ValueError(
+                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            )
         # Missing data tolerance.
         # Code directly copied from iris.
         if mdtol is None:
@@ -802,7 +824,7 @@ class GridToMeshESMFRegridder:
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
             src_mesh_cube,
             target_grid_cube,
-            method=method,
+            method=self.method,
             precomputed_weights=precomputed_weights,
         )
 

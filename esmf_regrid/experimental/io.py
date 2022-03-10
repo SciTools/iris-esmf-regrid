@@ -59,16 +59,18 @@ def save_regridder(rg, filename):
 
         tgt_mesh = rg.mesh
         tgt_location = rg.location
-        tgt_data = np.zeros(tgt_mesh.to_MeshCoords(tgt_location)[0].points.shape[0])
+        tgt_mesh_coords = tgt_mesh.to_MeshCoords(tgt_location)
+        tgt_data = np.zeros(tgt_mesh_coords[0].points.shape[0])
         tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
-        for coord in tgt_mesh.to_MeshCoords(tgt_location):
+        for coord in tgt_mesh_coords:
             tgt_cube.add_aux_coord(coord, 0)
     elif regridder_type == "MeshToGridESMFRegridder":
         src_mesh = rg.mesh
         src_location = rg.location
-        src_data = np.zeros(src_mesh.to_MeshCoords(src_location)[0].points.shape[0])
+        src_mesh_coords = src_mesh.to_MeshCoords(src_location)
+        src_data = np.zeros(src_mesh_coords[0].points.shape[0])
         src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
-        for coord in src_mesh.to_MeshCoords(src_location):
+        for coord in src_mesh_coords:
             src_cube.add_aux_coord(coord, 0)
 
         tgt_grid = (rg.grid_y, rg.grid_x)

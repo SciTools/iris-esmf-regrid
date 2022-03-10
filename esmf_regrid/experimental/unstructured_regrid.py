@@ -56,7 +56,7 @@ class MeshInfo(SDO):
         areas: :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
             each face. If ``None``, then :mod:`ESMF` will use its own calculated areas.
-        elem_coords : :obj:`~numpy.typing.ArrayLike`
+        elem_coords : :obj:`~numpy.typing.ArrayLike`, optional
             An ``Nx2`` array describing the location of the face centers of the mesh.
             ``elem_coords[:,0]`` describes the longitudes in degrees and
             ``elem_coords[:,1]`` describes the latitudes in degrees.
