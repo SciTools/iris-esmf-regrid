@@ -41,7 +41,7 @@ def test_global_grid():
     lat_bounds = (-90, 90)
 
     cube = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
-    gridinfo = _cube_to_GridInfo(cube)
+    gridinfo = _cube_to_GridInfo(cube, center=False)
     # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
 
@@ -61,7 +61,7 @@ def test_local_grid():
     lat_bounds = (20, 60)
 
     cube = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds)
-    gridinfo = _cube_to_GridInfo(cube)
+    gridinfo = _cube_to_GridInfo(cube, center=False)
     # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
 
@@ -84,7 +84,7 @@ def test_grid_with_scalars():
     cube = cube[:, 0]
     assert len(cube.shape) == 1
 
-    gridinfo = _cube_to_GridInfo(cube)
+    gridinfo = _cube_to_GridInfo(cube, center=False)
     # Ensure conversion to ESMF works without error
     _ = gridinfo.make_esmf_field()
 
