@@ -114,13 +114,18 @@ def _gridlike_mesh(n_lons, n_lats):
     fnc_ma = fnc_ma.reshape([-1, 4])
 
     # Describe the edge node connectivity.
+    # There are n_lats * n_lons vertical edges and (n_lats - 1) * n_lons horizontal
+    # edges which we arrange into an array for convenience of calculation.
     enc_array = np.empty([(n_lats * 2) - 1, n_lons, 2], dtype=int)
+    # The vertical edges make up enc_array[:n_lats].
     enc_array[1:n_lats, :, 0] = fnc_template
     enc_array[: n_lats - 1, :, 1] = fnc_template
     enc_array[0, :, 0] = 0
+    # The horizontal edges make up enc_array[n_lats:].
     enc_array[n_lats - 1, :, 1] = num_nodes + 1
     enc_array[n_lats:, :, 0] = fnc_template
     enc_array[n_lats:, :, 1] = np.roll(fnc_template, -1, 1)
+    # The array is flattened to its proper shape of (N, 2).
     enc_array = enc_array.reshape([-1, 2])
 
     # Latitude and longitude values are set.
