@@ -116,10 +116,11 @@ def test_regrid_bilinear_with_mesh():
     grid_output = mesh_to_grid_regridder.regrid(mesh_input)
     # For a flat surface, we would expect the fractional part of these values
     # to be either 1/3 or 2/3. Since the actual surface lies on a sphere, and
-    # due to the way ESMF approximates these values, the expected output is
+    # due to the way ESMF calculates these values, the expected output is
     # slightly different. It's worth noting that the finer the resolution, the
-    # more accurate these numbers are. Since the grids/meshes lie on coarse
-    # steps of about 10 degrees, we can expect most cases to be more accurate.
+    # closer these numbers are. Since the grids/meshes lie on coarse steps of
+    # about 10 degrees, we can expect most cases to behave more similarly to
+    # bilinear regridders on flat surfaces.
     expected_grid_output = np.array(
         [
             [0.0, 2.0],
