@@ -392,8 +392,8 @@ def regrid_unstructured_to_rectilinear(
         overlapping cells of ``src_cube`` are masked.
     method : str, default="conservative"
         Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
-        :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
-        to calculate weights.
+        :attr:`ESMF.api.constants.RegridMethod.CONSERVE` or
+        :attr:`ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
 
     Returns
     -------
@@ -437,8 +437,8 @@ class MeshToGridESMFRegridder:
             for conservative regregridding and 0 for bilinear regridding.
         method : str, default="conservative"
             Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
-            :attr:`ESMF.RegridMethod.CONSERVE` or :attr:`ESMF.RegridMethod.BILINEAR` used
-            to calculate weights.
+            :attr:`ESMF.api.constants.RegridMethod.CONSERVE` or
+            :attr:`ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
