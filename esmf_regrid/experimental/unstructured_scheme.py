@@ -291,6 +291,11 @@ def _regrid_unstructured_to_rectilinear__prepare(
                 f"Bilinear regridding requires a source cube with a node "
                 f"or face location, target cube had the {location} location."
             )
+        if location == "face" and None in mesh.face_coords:
+            raise ValueError(
+                "Bilinear regridding requires a source cube on a face location to have "
+                "a face center."
+            )
         center = True
     else:
         raise ValueError(
@@ -641,6 +646,11 @@ def _regrid_rectilinear_to_unstructured__prepare(
             raise ValueError(
                 f"Bilinear regridding requires a target cube with a node "
                 f"or face location, target cube had the {location} location."
+            )
+        if location == "face" and None in mesh.face_coords:
+            raise ValueError(
+                "Bilinear regridding requires a target cube on a face location to have "
+                "a face center."
             )
         center = True
     else:
