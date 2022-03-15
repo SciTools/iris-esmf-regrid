@@ -26,6 +26,8 @@ class MeshInfo(SDO):
         node_start_index,
         elem_start_index=0,
         areas=None,
+        elem_coords=None,
+        location="face",
     ):
         """
         Create a :class:`MeshInfo` object describing a UGRID-like mesh.
@@ -35,7 +37,7 @@ class MeshInfo(SDO):
         node_coords: :obj:`~numpy.typing.ArrayLike`
             An ``Nx2`` array describing the location of the nodes of the mesh.
             ``node_coords[:,0]`` describes the longitudes in degrees and
-            ``node_coords[:,1]`` describes the latitudes in degrees
+            ``node_coords[:,1]`` describes the latitudes in degrees.
         face_node_connectivity: :obj:`~numpy.typing.ArrayLike`
             A masked array describing the face node connectivity of the
             mesh. The unmasked points of ``face_node_connectivity[i]`` describe
@@ -54,16 +56,34 @@ class MeshInfo(SDO):
         areas: :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
             each face. If ``None``, then :mod:`ESMF` will use its own calculated areas.
+        elem_coords : :obj:`~numpy.typing.ArrayLike`, optional
+            An ``Nx2`` array describing the location of the face centers of the mesh.
+            ``elem_coords[:,0]`` describes the longitudes in degrees and
+            ``elem_coords[:,1]`` describes the latitudes in degrees.
+        location : str, default="face"
+            Either "face" or "node". Describes the location for data on the mesh.
         """
         self.node_coords = node_coords
         self.fnc = face_node_connectivity
         self.nsi = node_start_index
         self.esi = elem_start_index
         self.areas = areas
+        self.elem_coords = elem_coords
+        if location == "face":
+            field_kwargs = {"meshloc": ESMF.MeshLoc.ELEMENT}
+            shape = (len(face_node_connectivity),)
+        elif location == "node":
+            field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
+            shape = (len(node_coords),)
+        else:
+            raise ValueError(
+                f"The mesh location '{location}' is not supported, only "
+                f"'face' and 'node' are supported."
+            )
         super().__init__(
-            shape=(len(face_node_connectivity),),
+            shape=shape,
             index_offset=self.esi,
-            field_kwargs={"meshloc": ESMF.MeshLoc.ELEMENT},
+            field_kwargs=field_kwargs,
         )
 
     def _as_esmf_info(self):
@@ -78,6 +98,7 @@ class MeshInfo(SDO):
         elemType = self.fnc.count(axis=1)
         # Experiments seem to indicate that ESMF is using 0 indexing here
         elemConn = self.fnc.compressed() - self.nsi
+        elemCoord = self.elem_coords
         result = (
             num_node,
             num_elem,
@@ -88,6 +109,7 @@ class MeshInfo(SDO):
             elemType,
             elemConn,
             self.areas,
+            elemCoord,
         )
         return result
 
@@ -103,6 +125,7 @@ class MeshInfo(SDO):
             elemType,
             elemConn,
             areas,
+            elemCoord,
         ) = info
         # ESMF can handle other dimensionalities, but we are unlikely
         # to make such a use of ESMF
@@ -111,5 +134,12 @@ class MeshInfo(SDO):
         )
 
         emesh.add_nodes(num_node, nodeId, nodeCoord, nodeOwner)
-        emesh.add_elements(num_elem, elemId, elemType, elemConn, element_area=areas)
+        emesh.add_elements(
+            num_elem,
+            elemId,
+            elemType,
+            elemConn,
+            element_area=areas,
+            element_coords=elemCoord,
+        )
         return emesh

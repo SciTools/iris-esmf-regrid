@@ -14,12 +14,12 @@ __all__ = [
 ]
 
 
-def _get_regrid_weights_dict(src_field, tgt_field):
+def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
     regridder = ESMF.Regrid(
         src_field,
         tgt_field,
         ignore_degenerate=True,
-        regrid_method=ESMF.RegridMethod.CONSERVE,
+        regrid_method=regrid_method,
         unmapped_action=ESMF.UnmappedAction.IGNORE,
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
@@ -52,7 +52,7 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 class Regridder:
     """Regridder for directly interfacing with :mod:`ESMF`."""
 
-    def __init__(self, src, tgt, precomputed_weights=None):
+    def __init__(self, src, tgt, method="conservative", precomputed_weights=None):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
 
@@ -71,6 +71,10 @@ class Regridder:
             Describes the target mesh/grid.
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
+        method : str
+            Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+            :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
+            :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
@@ -79,11 +83,23 @@ class Regridder:
         self.src = src
         self.tgt = tgt
 
+        if method == "conservative":
+            esmf_regrid_method = ESMF.RegridMethod.CONSERVE
+        elif method == "bilinear":
+            esmf_regrid_method = ESMF.RegridMethod.BILINEAR
+        else:
+            raise ValueError(
+                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            )
+        self.method = method
+
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
             self.esmf_version = ESMF.__version__
             weights_dict = _get_regrid_weights_dict(
-                src.make_esmf_field(), tgt.make_esmf_field()
+                src.make_esmf_field(),
+                tgt.make_esmf_field(),
+                regrid_method=esmf_regrid_method,
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,

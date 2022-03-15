@@ -99,6 +99,7 @@ class GridInfo(SDO):
         crs=None,
         circular=False,
         areas=None,
+        center=False,
     ):
         """
         Create a :class:`GridInfo` object describing the grid.
@@ -127,6 +128,9 @@ class GridInfo(SDO):
             Array describing the areas associated with
             each face. If ``None``, then :mod:`ESMF` will use its own
             calculated areas.
+        center : bool, default=False
+            Describes if the center points of the grid cells are used in regridding
+            calculations.
 
         """
         self.lons = lons
@@ -173,6 +177,7 @@ class GridInfo(SDO):
             self.crs = crs
         self.circular = circular
         self.areas = areas
+        self.center = center
         super().__init__(
             shape=shape,
             index_offset=1,
@@ -253,13 +258,14 @@ class GridInfo(SDO):
         grid_corner_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CORNER)
         grid_corner_y[:] = truecornerlats
 
-        # Grid center points would be added here, this is not necessary for
+        # Grid center points are added here, this is not necessary for
         # conservative area weighted regridding
-        # grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER)
-        # grid_center_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CENTER)
-        # grid_center_x[:] = truecenterlons
-        # grid_center_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CENTER)
-        # grid_center_y[:] = truecenterlats
+        if self.center:
+            grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER)
+            grid_center_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CENTER)
+            grid_center_x[:] = truecenterlons
+            grid_center_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CENTER)
+            grid_center_y[:] = truecenterlats
 
         if areas is not None:
             grid.add_item(ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER)

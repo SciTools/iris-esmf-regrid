@@ -29,6 +29,7 @@ REGRIDDER_TYPE = "regridder_type"
 VERSION_ESMF = "ESMF_version"
 VERSION_INITIAL = "esmf_regrid_version_on_initialise"
 MDTOL = "mdtol"
+METHOD = "method"
 
 
 def save_regridder(rg, filename):
@@ -57,15 +58,19 @@ def save_regridder(rg, filename):
         src_cube.add_dim_coord(src_grid[1], 1)
 
         tgt_mesh = rg.mesh
-        tgt_data = np.zeros(tgt_mesh.face_node_connectivity.indices.shape[0])
+        tgt_location = rg.location
+        tgt_mesh_coords = tgt_mesh.to_MeshCoords(tgt_location)
+        tgt_data = np.zeros(tgt_mesh_coords[0].points.shape[0])
         tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
-        for coord in tgt_mesh.to_MeshCoords("face"):
+        for coord in tgt_mesh_coords:
             tgt_cube.add_aux_coord(coord, 0)
     elif regridder_type == "MeshToGridESMFRegridder":
         src_mesh = rg.mesh
-        src_data = np.zeros(src_mesh.face_node_connectivity.indices.shape[0])
+        src_location = rg.location
+        src_mesh_coords = src_mesh.to_MeshCoords(src_location)
+        src_data = np.zeros(src_mesh_coords[0].points.shape[0])
         src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
-        for coord in src_mesh.to_MeshCoords("face"):
+        for coord in src_mesh_coords:
             src_cube.add_aux_coord(coord, 0)
 
         tgt_grid = (rg.grid_y, rg.grid_x)
@@ -80,6 +85,8 @@ def save_regridder(rg, filename):
             f"`MeshToGridESMFRegridder`, got type {regridder_type}."
         )
         raise TypeError(msg)
+
+    method = rg.method
 
     weight_matrix = rg.regridder.weight_matrix
     reformatted_weight_matrix = weight_matrix.tocoo()
@@ -104,6 +111,7 @@ def save_regridder(rg, filename):
         "esmf_regrid_version_on_save": save_version,
         "normalization": normalization,
         MDTOL: mdtol,
+        METHOD: method,
     }
 
     weights_cube = Cube(weight_data, var_name=WEIGHTS_NAME, long_name=WEIGHTS_NAME)
@@ -167,6 +175,10 @@ def load_regridder(filename):
     assert regridder_type in REGRIDDER_NAME_MAP.keys()
     scheme = REGRIDDER_NAME_MAP[regridder_type]
 
+    # Determine the regridding method, allowing for files created when
+    # conservative regridding was the only method.
+    method = weights_cube.attributes.get(METHOD, "conservative")
+
     # Reconstruct the weight matrix.
     weight_data = weights_cube.data
     weight_rows = weights_cube.coord(WEIGHTS_ROW_NAME).points
@@ -179,7 +191,11 @@ def load_regridder(filename):
     mdtol = weights_cube.attributes[MDTOL]
 
     regridder = scheme(
-        src_cube, tgt_cube, mdtol=mdtol, precomputed_weights=weight_matrix
+        src_cube,
+        tgt_cube,
+        mdtol=mdtol,
+        method=method,
+        precomputed_weights=weight_matrix,
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]

@@ -15,10 +15,23 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridI
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
+    _gridlike_mesh_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
 )
+
+
+def _add_metadata(cube):
+    result = cube.copy()
+    result.units = "K"
+    result.attributes = {"a": 1}
+    result.standard_name = "air_temperature"
+    scalar_height = AuxCoord([5], units="m", standard_name="height")
+    scalar_time = DimCoord([10], units="s", standard_name="time")
+    result.add_aux_coord(scalar_height)
+    result.add_aux_coord(scalar_time)
+    return result
 
 
 def test_flat_cubes():
@@ -37,17 +50,6 @@ def test_flat_cubes():
     # Ensure data in the target grid is different to the expected data.
     # i.e. target grid data is all zero, expected data is all one
     tgt.data[:] = 0
-
-    def _add_metadata(cube):
-        result = cube.copy()
-        result.units = "K"
-        result.attributes = {"a": 1}
-        result.standard_name = "air_temperature"
-        scalar_height = AuxCoord([5], units="m", standard_name="height")
-        scalar_time = DimCoord([10], units="s", standard_name="time")
-        result.add_aux_coord(scalar_height)
-        result.add_aux_coord(scalar_time)
-        return result
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
@@ -69,6 +71,46 @@ def test_flat_cubes():
     assert expected_cube == result
     expected_cube.data = result_transposed.data
     assert expected_cube == result_transposed
+
+
+def test_bilinear():
+    """
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Tests with method="bilinear".
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+
+    src = _add_metadata(src)
+    src.data[:] = 1  # Ensure all data in the source is one.
+    face_regridder = GridToMeshESMFRegridder(src, face_tgt, method="bilinear")
+    node_regridder = GridToMeshESMFRegridder(src, node_tgt, method="bilinear")
+
+    assert face_regridder.regridder.method == "bilinear"
+    assert node_regridder.regridder.method == "bilinear"
+
+    face_expected_data = np.ones_like(face_tgt.data)
+    node_expected_data = np.ones_like(node_tgt.data)
+    face_result = face_regridder(src)
+    node_result = node_regridder(src)
+
+    # Lenient check for data.
+    assert np.allclose(face_expected_data, face_result.data)
+    assert np.allclose(node_expected_data, node_result.data)
+
+    # Check metadata and scalar coords.
+    face_expected_cube = _add_metadata(face_tgt)
+    node_expected_cube = _add_metadata(node_tgt)
+    face_expected_cube.data = face_result.data
+    node_expected_cube.data = node_result.data
+    assert face_expected_cube == face_result
+    assert node_expected_cube == node_result
 
 
 def test_multidim_cubes():
@@ -138,6 +180,58 @@ def test_invalid_mdtol():
         _ = GridToMeshESMFRegridder(src, tgt, mdtol=2)
     with pytest.raises(ValueError):
         _ = GridToMeshESMFRegridder(src, tgt, mdtol=-1)
+
+
+def test_invalid_method():
+    """
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Checks that an error is raised when the method is invalid.
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    edge_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="edge")
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    with pytest.raises(ValueError):
+        _ = GridToMeshESMFRegridder(src, face_tgt, method="other")
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, node_tgt, method="conservative")
+    expected_message = (
+        "Conservative regridding requires a target cube located on "
+        "the face of a cube, target cube had the node location."
+    )
+    assert expected_message in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, edge_tgt, method="bilinear")
+    expected_message = (
+        "Bilinear regridding requires a target cube with a node "
+        "or face location, target cube had the edge location."
+    )
+    assert expected_message in str(excinfo.value)
+
+
+def test_default_mdtol():
+    """
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Checks that default mdtol values are as expected.
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    tgt = _gridlike_mesh_cube(n_lons, n_lats)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    rg_con = GridToMeshESMFRegridder(src, tgt, method="conservative")
+    assert rg_con.mdtol == 1
+    rg_bi = GridToMeshESMFRegridder(src, tgt, method="bilinear")
+    assert rg_bi.mdtol == 0
 
 
 def test_mismatched_grids():

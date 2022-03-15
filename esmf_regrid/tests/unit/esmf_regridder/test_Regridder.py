@@ -55,6 +55,17 @@ def test_Regridder_init():
     assert np.allclose(result.toarray(), expected.toarray())
 
 
+def test_Regridder_init_fail():
+    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
+    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
+    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    with pytest.raises(ValueError):
+        _ = Regridder(src_grid, tgt_grid, method="other")
+
+
 def test_Regridder_regrid():
     """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`."""
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
