@@ -73,8 +73,8 @@ class Regridder:
             shape is compatible with ``tgt``.
         method : str
             Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
-            :attr:`ESMF.api.constants.RegridMethod.CONSERVE` or
-            :attr:`ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+            :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
+            :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
