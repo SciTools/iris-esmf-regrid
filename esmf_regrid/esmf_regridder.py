@@ -6,7 +6,7 @@ from numpy import ma
 import scipy.sparse
 
 import esmf_regrid
-from ._esmf_sdo import GridInfo
+from ._esmf_sdo import GridInfo, RefinedGridInfo
 
 __all__ = [
     "GridInfo",
@@ -103,9 +103,13 @@ class Regridder:
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
-                (self.tgt.size, self.src.size),
+                (self.tgt._extended_size, self.src._extended_size),
                 (self.tgt.index_offset, self.src.index_offset),
             )
+            if type(tgt) is RefinedGridInfo:
+                self.weight_matrix = tgt._collapse_weights() * self.weight_matrix
+            if type(src) is RefinedGridInfo:
+                self.weight_matrix = self.weight_matrix * src._collapse_weights().T
         else:
             if not scipy.sparse.isspmatrix(precomputed_weights):
                 raise ValueError(

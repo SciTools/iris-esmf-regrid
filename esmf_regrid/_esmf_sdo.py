@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 import cartopy.crs as ccrs
 import ESMF
 import numpy as np
+import scipy.sparse
 
 
 class SDO(ABC):
@@ -36,6 +37,11 @@ class SDO(ABC):
         return self._shape
 
     @property
+    def _extended_shape(self):
+        """Return shape passed to ESMF."""
+        return self._shape
+
+    @property
     def dims(self):
         """Return number of dimensions."""
         return len(self._shape)
@@ -44,6 +50,11 @@ class SDO(ABC):
     def size(self):
         """Return the number of cells in the sdo."""
         return np.prod(self._shape)
+
+    @property
+    def _extended_size(self):
+        """Return the number of cells passed to ESMF."""
+        return np.prod(self._extended_shape)
 
     @property
     def index_offset(self):
@@ -170,7 +181,9 @@ class GridInfo(SDO):
             shape = self.lons.shape
 
         self.lonbounds = lonbounds
+        self._refined_lonbounds = lonbounds
         self.latbounds = latbounds
+        self._refined_latbounds = latbounds
         if crs is None:
             self.crs = ccrs.Geodetic()
         else:
@@ -185,17 +198,19 @@ class GridInfo(SDO):
         )
 
     def _as_esmf_info(self):
-        shape = np.array(self._shape)
+        shape = np.array(self._extended_shape)
 
         londims = len(self.lons.shape)
 
         if londims == 1:
             if self.circular:
-                adjustedlonbounds = self.lonbounds[:-1]
+                adjustedlonbounds = self._refined_lonbounds[:-1]
             else:
-                adjustedlonbounds = self.lonbounds
+                adjustedlonbounds = self._refined_lonbounds
             centerlons, centerlats = np.meshgrid(self.lons, self.lats)
-            cornerlons, cornerlats = np.meshgrid(adjustedlonbounds, self.latbounds)
+            cornerlons, cornerlats = np.meshgrid(
+                adjustedlonbounds, self._refined_latbounds
+            )
         elif londims == 2:
             if self.circular:
                 slice = np.s_[:, :-1]
@@ -275,3 +290,117 @@ class GridInfo(SDO):
             grid_areas[:] = areas.T
 
         return grid
+
+
+class RefinedGridInfo(GridInfo):
+    """
+    Class for handling structured grids represented in ESMF in higher resolution.
+
+    This class holds information about lat-lon type grids. That is, grids
+    defined by lists of latitude and longitude values for points/bounds
+    (with respect to some coordinate reference system i.e. rotated pole).
+    It contains methods for translating this information into :mod:`ESMF` objects.
+    In particular, there are methods for representing as a
+    :class:`ESMF.api.grid.Grid` and
+    as a :class:`ESMF.api.field.Field` containing that
+    :class:`~ESMF.api.grid.Grid`. This ESMF :class:`~ESMF.api.field.Field`
+    is designed to be a higher resolution version of the given grid and should
+    contain enough information for area weighted regridding though this may be
+    inappropriate for other :mod:`ESMF` regridding schemes.
+
+    """
+
+    def __init__(
+        self,
+        lonbounds,
+        latbounds,
+        resolution=400,
+        crs=None,
+    ):
+        """
+        Create a :class:`GridInfo` object describing the grid.
+
+        Parameters
+        ----------
+        lons : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the longitudes of the
+            grid points.
+        lats : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the latitudes of the
+            grid points.
+        lonbounds : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the longitude bounds of
+            the grid. Should have length one greater than ``lons``.
+        latbounds : :obj:`~numpy.typing.ArrayLike`
+            A 1D or 2D array or list describing the latitude bounds of
+            the grid. Should have length one greater than ``lats``.
+        resolution : int, default=400
+            A number describing how many latitude slices each cell should
+            be divided into when passing a higher resolution grid to ESMF.
+        crs : :class:`cartopy.crs.CRS`, optional
+            Describes how to interpret the
+            above arguments. If ``None``, defaults to :class:`~cartopy.crs.Geodetic`.
+
+        """
+        self.resolution = resolution
+        self.n_lons_orig = len(lonbounds) - 1
+        self.n_lats_orig = len(latbounds) - 1
+
+        # Create dummy lat/lon values
+        lons = np.zeros(self.n_lons_orig)
+        lats = np.zeros(self.n_lats_orig)
+        super().__init__(lons, lats, lonbounds, latbounds, crs=crs)
+
+        if self.n_lats_orig == 1 and np.allclose(latbounds, [-90, 90]):
+            self._refined_latbounds = np.array(-90, 0, 90)
+            self._refined_lonbounds = lonbounds
+            self.lon_expansion = 1
+            self.lat_expansion = 2
+        else:
+            self._refined_latbounds = latbounds
+            self._refined_lonbounds = np.append(
+                np.linspace(
+                    lonbounds[:-1],
+                    lonbounds[1:],
+                    self.resolution,
+                    endpoint=False,
+                    axis=1,
+                ).flatten(),
+                lonbounds[-1],
+            )
+            self.lon_expansion = self.resolution
+            self.lat_expansion = 1
+
+    @property
+    def _extended_shape(self):
+        """Return shape passed to ESMF."""
+        return (
+            self.n_lats_orig * self.lat_expansion,
+            self.n_lons_orig * self.lon_expansion,
+        )
+
+    def _collapse_weights(self):
+        if self.lat_expansion > 1:
+            indices = np.empty(
+                [
+                    self.n_lons_orig,
+                    self.n_lats_orig * self.lat_expansion,
+                ]
+            )
+            indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig)[:, np.newaxis]
+        else:
+            indices = np.empty([self.n_lons_orig, self.lon_expansion, self.n_lats_orig])
+            indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig).reshape(
+                [self.n_lons_orig, self.n_lats_orig]
+            )[:, np.newaxis, :]
+        indices = indices.flatten()
+        matrix_shape = (self.size, self._extended_size)
+        refinement_weights = scipy.sparse.csr_matrix(
+            (
+                np.ones(self._extended_size)
+                / (self.lon_expansion * self.lat_expansion),
+                (indices, np.arange(self._extended_size)),
+            ),
+            shape=matrix_shape,
+        )
+        return refinement_weights
