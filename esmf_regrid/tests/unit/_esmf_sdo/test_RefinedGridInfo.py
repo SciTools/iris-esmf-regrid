@@ -3,9 +3,9 @@
 import numpy as np
 from numpy import ma
 
-from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
+from esmf_regrid.esmf_regridder import RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.tests import get_result_path, make_grid_args
+from esmf_regrid.tests import make_grid_args
 from esmf_regrid.tests.unit.experimental.unstructured_regrid.test_MeshInfo import (
     _make_small_mesh_args,
 )
