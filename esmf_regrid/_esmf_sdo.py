@@ -352,7 +352,7 @@ class RefinedGridInfo(GridInfo):
         super().__init__(lons, lats, lonbounds, latbounds, crs=crs)
 
         if self.n_lats_orig == 1 and np.allclose(latbounds, [-90, 90]):
-            self._refined_latbounds = np.array(-90, 0, 90)
+            self._refined_latbounds = np.array([-90, 0, 90])
             self._refined_lonbounds = lonbounds
             self.lon_expansion = 1
             self.lat_expansion = 2
