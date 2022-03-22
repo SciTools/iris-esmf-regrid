@@ -7,7 +7,7 @@ import iris
 from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
-from esmf_regrid.esmf_regridder import GridInfo, Regridder
+from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
 
@@ -133,7 +133,7 @@ def _mesh_to_MeshInfo(mesh, location):
     return meshinfo
 
 
-def _cube_to_GridInfo(cube, center):
+def _cube_to_GridInfo(cube, center, resolution):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
@@ -147,14 +147,22 @@ def _cube_to_GridInfo(cube, center):
     # TODO: accommodate other x/y coords.
     # TODO: perform checks on lat/lon.
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
-    return GridInfo(
-        lon.points,
-        lat.points,
-        _bounds_cf_to_simple_1d(lon.bounds),
-        _bounds_cf_to_simple_1d(lat.bounds),
-        circular=lon.circular,
-        center=center,
-    )
+    if resolution is None:
+        grid_info = GridInfo(
+            lon.points,
+            lat.points,
+            _bounds_cf_to_simple_1d(lon.bounds),
+            _bounds_cf_to_simple_1d(lat.bounds),
+            circular=lon.circular,
+            center=center,
+        )
+    else:
+        grid_info = RefinedGridInfo(
+            _bounds_cf_to_simple_1d(lon.bounds),
+            _bounds_cf_to_simple_1d(lat.bounds),
+            resolution=resolution,
+        )
+    return grid_info
 
 
 def _regrid_along_mesh_dim(regridder, data, mesh_dim, mdtol):
@@ -256,6 +264,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     target_grid_cube,
     method,
     precomputed_weights=None,
+    resolution=None,
 ):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
@@ -306,7 +315,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     mesh_dim = src_mesh_cube.mesh_dim()
 
     meshinfo = _mesh_to_MeshInfo(mesh, location)
-    gridinfo = _cube_to_GridInfo(target_grid_cube, center=center)
+    gridinfo = _cube_to_GridInfo(target_grid_cube, center=center, resolution=resolution)
 
     regridder = Regridder(
         meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
@@ -358,7 +367,11 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_unstructured_to_rectilinear(
-    src_cube, grid_cube, mdtol=0, method="conservative"
+    src_cube,
+    grid_cube,
+    mdtol=0,
+    method="conservative",
+    resolution=None,
 ):
     r"""
     Regrid unstructured :class:`~iris.cube.Cube` onto rectilinear grid.
@@ -399,6 +412,9 @@ def regrid_unstructured_to_rectilinear(
         Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
         :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
         :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+    resolution : int, optional
+        If present, represents the amount of latitude slices per cell
+        given to ESMF for calculation.
 
     Returns
     -------
@@ -407,7 +423,10 @@ def regrid_unstructured_to_rectilinear(
 
     """
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-        src_cube, grid_cube, method=method
+        src_cube,
+        grid_cube,
+        method=method,
+        resolution=resolution,
     )
     result = _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
@@ -423,6 +442,7 @@ class MeshToGridESMFRegridder:
         mdtol=None,
         method="conservative",
         precomputed_weights=None,
+        resolution=None,
     ):
         """
         Create regridder for conversions between source mesh and target grid.
@@ -448,6 +468,9 @@ class MeshToGridESMFRegridder:
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
+        resolution : int, optional
+            If present, represents the amount of latitude slices per cell
+            given to ESMF for calculation.
 
         """
         # TODO: Record information about the identity of the mesh. This would
@@ -471,12 +494,14 @@ class MeshToGridESMFRegridder:
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
         self.method = method
+        self.resolution = resolution
 
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
             src_mesh_cube,
             target_grid_cube,
             method=self.method,
             precomputed_weights=precomputed_weights,
+            resolution=resolution,
         )
 
         # Record source mesh.
@@ -621,6 +646,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     target_mesh_cube,
     method,
     precomputed_weights=None,
+    resolution=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
@@ -662,7 +688,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
 
     meshinfo = _mesh_to_MeshInfo(mesh, location)
-    gridinfo = _cube_to_GridInfo(src_grid_cube, center=center)
+    gridinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=resolution)
 
     regridder = Regridder(
         gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
@@ -718,7 +744,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_rectilinear_to_unstructured(
-    src_cube, mesh_cube, mdtol=0, method="conservative"
+    src_cube, mesh_cube, mdtol=0, method="conservative", resolution=None,
 ):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
@@ -763,6 +789,9 @@ def regrid_rectilinear_to_unstructured(
         Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
         :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
         :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+    resolution : int, optional
+        If present, represents the amount of latitude slices per cell
+        given to ESMF for calculation.
 
     Returns
     -------
@@ -771,7 +800,7 @@ def regrid_rectilinear_to_unstructured(
 
     """
     regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-        src_cube, mesh_cube, method=method
+        src_cube, mesh_cube, method=method, resolution=resolution,
     )
     result = _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol)
     return result
@@ -787,6 +816,7 @@ class GridToMeshESMFRegridder:
         mdtol=None,
         method="conservative",
         precomputed_weights=None,
+        resolution=None,
     ):
         """
         Create regridder for conversions between source grid and target mesh.
@@ -812,6 +842,9 @@ class GridToMeshESMFRegridder:
             If ``None``, :mod:`ESMF` will be used to
             calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
+        resolution : int, optional
+            If present, represents the amount of latitude slices per cell
+            given to ESMF for calculation.
 
         """
         if method not in ["conservative", "bilinear"]:
@@ -830,12 +863,14 @@ class GridToMeshESMFRegridder:
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
         self.method = method
+        self.resolution = resolution
 
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
             src_mesh_cube,
             target_grid_cube,
             method=self.method,
             precomputed_weights=precomputed_weights,
+            resolution=resolution,
         )
 
         # Store regrid info.

@@ -298,3 +298,42 @@ def test_laziness():
     expected_chunks = ((1,), (3, 3, 3), (10,), (12,), (2, 2))
     assert out_chunks == expected_chunks
     assert np.allclose(result.data.reshape([1, i, -1, h]), src_data)
+
+
+def test_resolution():
+    """
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Tests for the resolution keyword.
+    """
+    mesh = _full_mesh()
+    mesh_length = mesh.connectivity(contains_face=True).shape[0]
+
+    h = 2
+    t = 3
+    height = DimCoord(np.arange(h), standard_name="height")
+    time = DimCoord(np.arange(t), standard_name="time")
+
+    src_data = np.empty([t, mesh_length, h])
+    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, :]
+    mesh_cube = Cube(src_data)
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    mesh_cube.add_aux_coord(mesh_coord_x, 1)
+    mesh_cube.add_aux_coord(mesh_coord_y, 1)
+    mesh_cube.add_dim_coord(time, 0)
+    mesh_cube.add_dim_coord(height, 2)
+
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    lon_bands = _grid_cube(1, 4, lon_bounds, lat_bounds)
+    lat_bands = _grid_cube(4, 1, lon_bounds, lat_bounds)
+
+    resolution = 8
+
+    lon_band_rg = MeshToGridESMFRegridder(mesh_cube, lon_bands, resolution=resolution)
+    assert lon_band_rg.resolution == resolution
+    assert lon_band_rg.regridder.tgt.resolution == resolution
+
+    lat_band_rg = MeshToGridESMFRegridder(mesh_cube, lat_bands, resolution=resolution)
+    assert lat_band_rg.resolution == resolution
+    assert lat_band_rg.regridder.tgt.resolution == resolution
