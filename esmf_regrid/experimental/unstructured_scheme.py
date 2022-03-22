@@ -744,7 +744,11 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_rectilinear_to_unstructured(
-    src_cube, mesh_cube, mdtol=0, method="conservative", resolution=None,
+    src_cube,
+    mesh_cube,
+    mdtol=0,
+    method="conservative",
+    resolution=None,
 ):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
@@ -800,7 +804,10 @@ def regrid_rectilinear_to_unstructured(
 
     """
     regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-        src_cube, mesh_cube, method=method, resolution=resolution,
+        src_cube,
+        mesh_cube,
+        method=method,
+        resolution=resolution,
     )
     result = _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol)
     return result
