@@ -494,6 +494,14 @@ class MeshToGridESMFRegridder:
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
         self.method = method
+
+        if resolution is not None:
+            if not (isinstance(resolution, int) and resolution > 0):
+                raise ValueError("resolution must be a positive integer.")
+            if method != "conservative":
+                raise ValueError(
+                    "resolution can only be set for conservative regridding."
+                )
         self.resolution = resolution
 
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
@@ -858,6 +866,14 @@ class GridToMeshESMFRegridder:
             raise ValueError(
                 f"method must be either 'bilinear' or 'conservative', got '{method}'."
             )
+
+        if resolution is not None:
+            if not (isinstance(resolution, int) and resolution > 0):
+                raise ValueError("resolution must be a positive integer.")
+            if method != "conservative":
+                raise ValueError(
+                    "resolution can only be set for conservative regridding."
+                )
         # Missing data tolerance.
         # Code directly copied from iris.
         if mdtol is None:
