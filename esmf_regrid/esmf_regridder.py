@@ -161,7 +161,7 @@ class Regridder:
         extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
-        weight_sums = self.weight_matrix * src_inverted_mask
+        weight_sums = self.weight_matrix @ src_inverted_mask
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
@@ -177,7 +177,7 @@ class Regridder:
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
-        flat_tgt = self.weight_matrix * flat_src
+        flat_tgt = self.weight_matrix @ flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array
