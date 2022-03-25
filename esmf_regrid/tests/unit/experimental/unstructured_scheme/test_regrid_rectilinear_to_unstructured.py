@@ -233,3 +233,42 @@ def test_mask_handling():
     assert ma.allclose(expected_0, result_0.data)
     assert ma.allclose(expected_05, result_05.data)
     assert ma.allclose(expected_1, result_1.data)
+
+
+def test_resolution():
+    """
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+
+    Tests the resolution keyword with grids that would otherwise not work.
+    """
+    tgt = _flat_mesh_cube()
+
+    # The resulting grid has full latitude bounds and cells must be split up.
+    n_lons = 1
+    n_lats = 4
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    # Ensure data in the target grid is different to the expected data.
+    # i.e. target grid data is all zero, expected data is all one
+    tgt.data[:] = 0
+
+    src = _add_metadata(src)
+    src.data[:] = 1  # Ensure all data in the source is one.
+    result = regrid_rectilinear_to_unstructured(src, tgt)
+    src_T = src.copy()
+    src_T.transpose()
+    result_transposed = regrid_rectilinear_to_unstructured(src_T, tgt, resolution=8)
+
+    expected_data = np.ones([n_lats, n_lons])
+    expected_cube = _add_metadata(tgt)
+
+    # Lenient check for data.
+    assert np.allclose(expected_data, result.data)
+    assert np.allclose(expected_data, result_transposed.data)
+
+    # Check metadata and scalar coords.
+    expected_cube.data = result.data
+    assert expected_cube == result
+    expected_cube.data = result_transposed.data
+    assert expected_cube == result_transposed

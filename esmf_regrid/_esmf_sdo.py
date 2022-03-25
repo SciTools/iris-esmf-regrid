@@ -380,26 +380,41 @@ class RefinedGridInfo(GridInfo):
         )
 
     def _collapse_weights(self):
+        """
+        Return a matrix to collapse the weight matrix.
+
+        The refined grid may contain more cells than the represented grid. When this is
+        the case, the generated weight matrix will refer to too many points and will have
+        to be collapsed. This is done by multiplying by this matrix, pre-multiplying when
+        the target grid is represented and post multiplying when the source grid is
+        represented.
+        """
+        # The column indices represent each of the cells in the refined grid.
+        column_indices = np.arange(self._extended_size)
+
+        # The row indices represent the cells of the represented grid. These are broadcast
+        # so that each index coincides with all column indices of the refined cells which
+        # make the represented cell is split into.
         if self.lat_expansion > 1:
-            indices = np.empty(
+            row_indices = np.empty(
                 [
                     self.n_lons_orig,
                     self.n_lats_orig * self.lat_expansion,
                 ]
             )
-            indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig)[:, np.newaxis]
+            row_indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig)[:, np.newaxis]
         else:
-            indices = np.empty([self.n_lons_orig, self.lon_expansion, self.n_lats_orig])
-            indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig).reshape(
+            row_indices = np.empty([self.n_lons_orig, self.lon_expansion, self.n_lats_orig])
+            row_indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig).reshape(
                 [self.n_lons_orig, self.n_lats_orig]
             )[:, np.newaxis, :]
-        indices = indices.flatten()
+        row_indices = row_indices.flatten()
         matrix_shape = (self.size, self._extended_size)
         refinement_weights = scipy.sparse.csr_matrix(
             (
                 np.ones(self._extended_size)
                 / (self.lon_expansion * self.lat_expansion),
-                (indices, np.arange(self._extended_size)),
+                (row_indices, column_indices),
             ),
             shape=matrix_shape,
         )
