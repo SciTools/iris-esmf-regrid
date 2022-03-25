@@ -177,6 +177,7 @@ def test_multidim_cubes():
     result.data = expected_data
     assert expected_cube == result
 
+
 def test_resolution():
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.

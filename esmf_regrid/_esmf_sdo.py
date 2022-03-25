@@ -402,9 +402,13 @@ class RefinedGridInfo(GridInfo):
                     self.n_lats_orig * self.lat_expansion,
                 ]
             )
-            row_indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig)[:, np.newaxis]
+            row_indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig)[
+                :, np.newaxis
+            ]
         else:
-            row_indices = np.empty([self.n_lons_orig, self.lon_expansion, self.n_lats_orig])
+            row_indices = np.empty(
+                [self.n_lons_orig, self.lon_expansion, self.n_lats_orig]
+            )
             row_indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig).reshape(
                 [self.n_lons_orig, self.n_lats_orig]
             )[:, np.newaxis, :]
