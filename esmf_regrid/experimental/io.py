@@ -183,6 +183,8 @@ def load_regridder(filename):
     # conservative regridding was the only method.
     method = weights_cube.attributes.get(METHOD, "conservative")
     resolution = weights_cube.attributes.get(RESOLUTION, None)
+    if resolution is not None:
+        resolution = int(resolution)
 
     # Reconstruct the weight matrix.
     weight_data = weights_cube.data
