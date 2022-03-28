@@ -100,12 +100,16 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     )
 
     # Ensure resolution is equal.
-    assert original_rg.regridder.resolution == loaded_rg.regridder.resolution
+    assert original_rg.resolution == loaded_rg.resolution
     original_res_rg, _ = _make_grid_to_mesh_regridder(resolution=8)
     res_filename = tmp_path / "regridder_res.nc"
     save_regridder(original_res_rg, res_filename)
     loaded_res_rg = load_regridder(str(res_filename))
-    assert original_res_rg.regridder.resolution == loaded_res_rg.regridder.resolution
+    assert original_res_rg.resolution == loaded_res_rg.resolution
+    assert (
+        original_res_rg.regridder.tgt.resolution
+        == loaded_res_rg.regridder.tgt.resolution
+    )
 
 
 def test_GridToMeshESMFRegridder_bilinear_round_trip(tmp_path):
@@ -197,12 +201,16 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     )
 
     # Ensure resolution is equal.
-    assert original_rg.regridder.resolution == loaded_rg.regridder.resolution
+    assert original_rg.resolution == loaded_rg.resolution
     original_res_rg, _ = _make_grid_to_mesh_regridder(resolution=8)
     res_filename = tmp_path / "regridder_res.nc"
     save_regridder(original_res_rg, res_filename)
     loaded_res_rg = load_regridder(str(res_filename))
-    assert original_res_rg.regridder.resolution == loaded_res_rg.regridder.resolution
+    assert original_res_rg.resolution == loaded_res_rg.resolution
+    assert (
+        original_res_rg.regridder.src.resolution
+        == loaded_res_rg.regridder.src.resolution
+    )
 
 
 def test_MeshToGridESMFRegridder_bilinear_round_trip(tmp_path):

@@ -56,7 +56,7 @@ def test_flat_cubes():
     src_T.transpose()
     result_transposed = regrid_rectilinear_to_unstructured(src_T, tgt)
 
-    expected_data = np.ones([n_lats, n_lons])
+    expected_data = np.ones_like(tgt.data)
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
@@ -257,7 +257,7 @@ def test_resolution():
     src.data[:] = 1  # Ensure all data in the source is one.
     result = regrid_rectilinear_to_unstructured(src, tgt, resolution=8)
 
-    expected_data = np.ones([n_lats, n_lons])
+    expected_data = np.ones_like(tgt.data)
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.

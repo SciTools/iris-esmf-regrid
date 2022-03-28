@@ -379,7 +379,7 @@ class RefinedGridInfo(GridInfo):
             self.n_lons_orig * self.lon_expansion,
         )
 
-    def _collapse_weights(self):
+    def _collapse_weights(self, tgt):
         """
         Return a matrix to collapse the weight matrix.
 
@@ -388,6 +388,11 @@ class RefinedGridInfo(GridInfo):
         to be collapsed. This is done by multiplying by this matrix, pre-multiplying when
         the target grid is represented and post multiplying when the source grid is
         represented.
+
+        Parameters
+        ----------
+        tgt : bool
+            True if the target field is being represented, False otherwise.
         """
         # The column indices represent each of the cells in the refined grid.
         column_indices = np.arange(self._extended_size)
@@ -416,10 +421,15 @@ class RefinedGridInfo(GridInfo):
         matrix_shape = (self.size, self._extended_size)
         refinement_weights = scipy.sparse.csr_matrix(
             (
-                np.ones(self._extended_size)
-                / (self.lon_expansion * self.lat_expansion),
+                np.ones(self._extended_size),
                 (row_indices, column_indices),
             ),
             shape=matrix_shape,
         )
+        if tgt:
+            refinement_weights = refinement_weights / (
+                self.lon_expansion * self.lat_expansion
+            )
+        else:
+            refinement_weights = refinement_weights.T
         return refinement_weights
