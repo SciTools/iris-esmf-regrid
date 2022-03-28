@@ -360,4 +360,4 @@ def test_resolution():
 
     result = GridToMeshESMFRegridder(grid, tgt, resolution=resolution)
     assert result.resolution == resolution
-    assert result.regridder.tgt.resolution == resolution
+    assert result.regridder.src.resolution == resolution

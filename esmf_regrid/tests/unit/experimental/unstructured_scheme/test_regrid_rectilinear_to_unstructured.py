@@ -255,20 +255,14 @@ def test_resolution():
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_rectilinear_to_unstructured(src, tgt)
-    src_T = src.copy()
-    src_T.transpose()
-    result_transposed = regrid_rectilinear_to_unstructured(src_T, tgt, resolution=8)
+    result = regrid_rectilinear_to_unstructured(src, tgt, resolution=8)
 
     expected_data = np.ones([n_lats, n_lons])
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
     assert np.allclose(expected_data, result.data)
-    assert np.allclose(expected_data, result_transposed.data)
 
     # Check metadata and scalar coords.
     expected_cube.data = result.data
     assert expected_cube == result
-    expected_cube.data = result_transposed.data
-    assert expected_cube == result_transposed
