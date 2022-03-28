@@ -114,8 +114,9 @@ def save_regridder(rg, filename):
         "normalization": normalization,
         MDTOL: mdtol,
         METHOD: method,
-        RESOLUTION: resolution,
     }
+    if resolution is not None:
+        attributes[RESOLUTION] = resolution
 
     weights_cube = Cube(weight_data, var_name=WEIGHTS_NAME, long_name=WEIGHTS_NAME)
     row_coord = AuxCoord(
