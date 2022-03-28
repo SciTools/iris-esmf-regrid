@@ -107,8 +107,8 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     loaded_res_rg = load_regridder(str(res_filename))
     assert original_res_rg.resolution == loaded_res_rg.resolution
     assert (
-        original_res_rg.regridder.tgt.resolution
-        == loaded_res_rg.regridder.tgt.resolution
+        original_res_rg.regridder.src.resolution
+        == loaded_res_rg.regridder.src.resolution
     )
 
 
@@ -202,14 +202,14 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
 
     # Ensure resolution is equal.
     assert original_rg.resolution == loaded_rg.resolution
-    original_res_rg, _ = _make_grid_to_mesh_regridder(resolution=8)
+    original_res_rg, _ = _make_mesh_to_grid_regridder(resolution=8)
     res_filename = tmp_path / "regridder_res.nc"
     save_regridder(original_res_rg, res_filename)
     loaded_res_rg = load_regridder(str(res_filename))
     assert original_res_rg.resolution == loaded_res_rg.resolution
     assert (
-        original_res_rg.regridder.src.resolution
-        == loaded_res_rg.regridder.src.resolution
+        original_res_rg.regridder.tgt.resolution
+        == loaded_res_rg.regridder.tgt.resolution
     )
 
 
