@@ -397,20 +397,19 @@ class RefinedGridInfo(GridInfo):
         # The column indices represent each of the cells in the refined grid.
         column_indices = np.arange(self._extended_size)
 
-        # The row indices represent the cells of the represented grid. These are broadcast
-        # so that each index coincides with all column indices of the refined cells which
-        # make the represented cell is split into.
+        # The row indices represent the cells of the unrefined grid. These are broadcast
+        # so that each row index coincides with all column indices of the refined cells
+        # which the unrefined cell is split into.
         if self.lat_expansion > 1:
-            row_indices = np.empty(
-                [
-                    self.n_lons_orig,
-                    self.n_lats_orig * self.lat_expansion,
-                ]
-            )
-            row_indices[:] = np.arange(self.n_lons_orig * self.n_lats_orig)[
-                :, np.newaxis
-            ]
+            # The latitudes are expanded only in the case where there is one latitude
+            # bound from -90 to 90. In this case, there is no longitude expansion.
+            row_indices = np.empty([self.n_lons_orig, self.lat_expansion])
+            row_indices[:] = np.arange(self.n_lons_orig)[:, np.newaxis]
         else:
+            # The row indices are broadcast across a dimension representing the expansion
+            # of the longitude. Each row index is broadcast and flattened so that all the
+            # row indices representing the unrefined cell match up with the column indices
+            # representing the refined cells it is split into.
             row_indices = np.empty(
                 [self.n_lons_orig, self.lon_expansion, self.n_lats_orig]
             )
@@ -427,9 +426,28 @@ class RefinedGridInfo(GridInfo):
             shape=matrix_shape,
         )
         if tgt:
+            # When the RefinedGridInfo is the target of the regridder, we want to take
+            # the average of the weights of each refined target cell. This is because
+            # these weights represent the proportion of area of the target cells which
+            # is covered by a given source cell. Since the refined cells are divided in
+            # such a way that they have equal area, the weights for the unrefined cells
+            # can be reconstructed by taking an average. This is done via matrix
+            # multiplication, with the returned matrix pre-multiplying the weight matrix
+            # so that it operates on the rows of the weight matrix (representing the
+            # target cells). At this point the returned matrix consists of ones, so we
+            # divided by the number of refined cells per unrefined cell.
             refinement_weights = refinement_weights / (
                 self.lon_expansion * self.lat_expansion
             )
         else:
+            # When the RefinedGridInfo is the source of the regridder, we want to take
+            # the sum of the weights of each refined target cell. This is because those
+            # weights represent the proportion of the area of a given target cell which
+            # is covered by each refined source cell. The total proportion covered by
+            # each unrefined source cell is then the sum of the weights from each of its
+            # refined cells. This sum is done by matrix multiplication, the returned
+            # matrix post-multiplying the weight matrix so that it operates on the columns
+            # of the weight matrix (representing the source cells). In order for the
+            # post-multiplication to work, the returned matrix must be transposed.
             refinement_weights = refinement_weights.T
         return refinement_weights
