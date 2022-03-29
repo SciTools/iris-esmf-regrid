@@ -89,7 +89,7 @@ def save_regridder(rg, filename):
     method = rg.method
 
     weight_matrix = rg.regridder.weight_matrix
-    reformatted_weight_matrix = weight_matrix.tocoo()
+    reformatted_weight_matrix = scipy.sparse.coo_matrix(weight_matrix)
     weight_data = reformatted_weight_matrix.data
     weight_rows = reformatted_weight_matrix.row
     weight_cols = reformatted_weight_matrix.col
