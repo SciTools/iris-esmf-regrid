@@ -103,7 +103,7 @@ class Regridder:
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
-                (self.tgt._extended_size, self.src._extended_size),
+                (self.tgt._refined_size, self.src._refined_size),
                 (self.tgt.index_offset, self.src.index_offset),
             )
             if isinstance(tgt, RefinedGridInfo):

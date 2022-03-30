@@ -367,19 +367,6 @@ def test_resolution():
     lat_bounds = (-90, 90)
     grid = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    h = 2
-    t = 3
-    height = DimCoord(np.arange(h), standard_name="height")
-    time = DimCoord(np.arange(t), standard_name="time")
-
-    src_data = np.empty([t, n_lats, n_lons, h])
-    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, np.newaxis, :]
-    cube = Cube(src_data)
-    cube.add_dim_coord(grid.coord("latitude"), 1)
-    cube.add_dim_coord(grid.coord("longitude"), 2)
-    cube.add_dim_coord(time, 0)
-    cube.add_dim_coord(height, 3)
-
     resolution = 8
 
     result = GridToMeshESMFRegridder(grid, tgt, resolution=resolution)

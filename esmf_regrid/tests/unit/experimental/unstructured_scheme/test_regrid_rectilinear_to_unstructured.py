@@ -248,7 +248,7 @@ def test_resolution():
     n_lats = 4
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
-    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds)
     # Ensure data in the target grid is different to the expected data.
     # i.e. target grid data is all zero, expected data is all one
     tgt.data[:] = 0
@@ -261,6 +261,7 @@ def test_resolution():
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
+    # Note that when resolution=None, this would be a fully masked array.
     assert np.allclose(expected_data, result.data)
 
     # Check metadata and scalar coords.

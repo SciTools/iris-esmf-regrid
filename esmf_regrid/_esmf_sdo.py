@@ -37,7 +37,7 @@ class SDO(ABC):
         return self._shape
 
     @property
-    def _extended_shape(self):
+    def _refined_shape(self):
         """Return shape passed to ESMF."""
         return self._shape
 
@@ -52,9 +52,9 @@ class SDO(ABC):
         return np.prod(self._shape)
 
     @property
-    def _extended_size(self):
+    def _refined_size(self):
         """Return the number of cells passed to ESMF."""
-        return np.prod(self._extended_shape)
+        return np.prod(self._refined_shape)
 
     @property
     def index_offset(self):
@@ -198,7 +198,7 @@ class GridInfo(SDO):
         )
 
     def _as_esmf_info(self):
-        shape = np.array(self._extended_shape)
+        shape = np.array(self._refined_shape)
 
         londims = len(self.lons.shape)
 
@@ -373,7 +373,7 @@ class RefinedGridInfo(GridInfo):
             self.lat_expansion = 1
 
     @property
-    def _extended_shape(self):
+    def _refined_shape(self):
         """Return shape passed to ESMF."""
         return (
             self.n_lats_orig * self.lat_expansion,
@@ -396,7 +396,7 @@ class RefinedGridInfo(GridInfo):
             True if the target field is being represented, False otherwise.
         """
         # The column indices represent each of the cells in the refined grid.
-        column_indices = np.arange(self._extended_size)
+        column_indices = np.arange(self._refined_size)
 
         # The row indices represent the cells of the unrefined grid. These are broadcast
         # so that each row index coincides with all column indices of the refined cells
@@ -418,10 +418,10 @@ class RefinedGridInfo(GridInfo):
                 [self.n_lons_orig, self.n_lats_orig]
             )[:, np.newaxis, :]
         row_indices = row_indices.flatten()
-        matrix_shape = (self.size, self._extended_size)
+        matrix_shape = (self.size, self._refined_size)
         refinement_weights = scipy.sparse.csr_matrix(
             (
-                np.ones(self._extended_size),
+                np.ones(self._refined_size),
                 (row_indices, column_indices),
             ),
             shape=matrix_shape,

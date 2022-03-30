@@ -330,22 +330,7 @@ def test_resolution():
 
     Tests for the resolution keyword.
     """
-    mesh = _full_mesh()
-    mesh_length = mesh.connectivity(contains_face=True).shape[0]
-
-    h = 2
-    t = 3
-    height = DimCoord(np.arange(h), standard_name="height")
-    time = DimCoord(np.arange(t), standard_name="time")
-
-    src_data = np.empty([t, mesh_length, h])
-    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, :]
-    mesh_cube = Cube(src_data)
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
-    mesh_cube.add_aux_coord(mesh_coord_x, 1)
-    mesh_cube.add_aux_coord(mesh_coord_y, 1)
-    mesh_cube.add_dim_coord(time, 0)
-    mesh_cube.add_dim_coord(height, 2)
+    mesh_cube = _flat_mesh_cube()
 
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
