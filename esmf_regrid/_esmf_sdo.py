@@ -370,8 +370,12 @@ class RefinedGridInfo(GridInfo):
                 ).flatten(),
                 lonbounds[-1],
             )
-        self.lon_expansion = len(self._refined_lonbounds) / len(self.lonbounds)
-        self.lat_expansion = len(self._refined_latbounds) / len(self.latbounds)
+        self.lon_expansion = int(
+            (len(self._refined_lonbounds) - 1) / (len(self.lonbounds) - 1)
+        )
+        self.lat_expansion = int(
+            (len(self._refined_latbounds) - 1) / (len(self.latbounds) - 1)
+        )
 
     @property
     def _refined_shape(self):
