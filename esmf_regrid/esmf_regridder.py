@@ -106,19 +106,19 @@ class Regridder:
                 (self.tgt._extended_size, self.src._extended_size),
                 (self.tgt.index_offset, self.src.index_offset),
             )
-            if type(tgt) is RefinedGridInfo:
+            if isinstance(tgt, RefinedGridInfo):
                 # At this point, the weight matrix represents more target points than
                 # tgt respresents. In order to collapse these points, we collapse the
                 # weights matrix by the appropriate matrix multiplication.
                 self.weight_matrix = (
-                    tgt._collapse_weights(tgt=True) @ self.weight_matrix
+                    tgt._collapse_weights(is_tgt=True) @ self.weight_matrix
                 )
-            if type(src) is RefinedGridInfo:
+            if isinstance(src, RefinedGridInfo):
                 # At this point, the weight matrix represents more source points than
                 # src respresents. In order to collapse these points, we collapse the
                 # weights matrix by the appropriate matrix multiplication.
                 self.weight_matrix = self.weight_matrix @ src._collapse_weights(
-                    tgt=False
+                    is_tgt=False
                 )
         else:
             if not scipy.sparse.isspmatrix(precomputed_weights):

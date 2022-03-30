@@ -218,8 +218,8 @@ class GridInfo(SDO):
                 slice = np.s_[:]
             centerlons = self.lons[slice]
             centerlats = self.lats[slice]
-            cornerlons = self.lonbounds[slice]
-            cornerlats = self.latbounds[slice]
+            cornerlons = self._refined_lonbounds[slice]
+            cornerlats = self._refined_latbounds[slice]
 
         truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
         truecorners = ccrs.Geodetic().transform_points(self.crs, cornerlons, cornerlats)
@@ -294,18 +294,15 @@ class GridInfo(SDO):
 
 class RefinedGridInfo(GridInfo):
     """
-    Class for handling structured grids represented in ESMF in higher resolution.
+    Class for handling structured grids represented in :mod:`ESMF` in higher resolution.
 
-    This class holds information about lat-lon type grids. That is, grids
-    defined by lists of latitude and longitude values for points/bounds
-    (with respect to some coordinate reference system i.e. rotated pole).
-    It contains methods for translating this information into :mod:`ESMF` objects.
-    In particular, there are methods for representing as a
-    :class:`ESMF.api.grid.Grid` and
-    as a :class:`ESMF.api.field.Field` containing that
-    :class:`~ESMF.api.grid.Grid`. This ESMF :class:`~ESMF.api.field.Field`
+    A specialised version of :class:`GridInfo`. Designed to provide higher
+    accuracy conservative regridding for rectilinear grids, especially those with
+    particularly large cells which may not be well represented by :mod:`ESMF`. This
+    class differs from :class:`GridInfo` primarily in the way it represents itself
+    as a :class:`~ESMF.api.field.Field` in :mod:`ESMF`. This :class:`~ESMF.api.field.Field`
     is designed to be a higher resolution version of the given grid and should
-    contain enough information for area weighted regridding though this may be
+    contain enough information for area weighted regridding but may be
     inappropriate for other :mod:`ESMF` regridding schemes.
 
     """
@@ -314,7 +311,7 @@ class RefinedGridInfo(GridInfo):
         self,
         lonbounds,
         latbounds,
-        resolution=400,
+        resolution=3,
         crs=None,
     ):
         """
@@ -341,9 +338,9 @@ class RefinedGridInfo(GridInfo):
             latbounds = np.array(latbounds)
 
         # Ensure bounds are strictly increasing.
-        if not np.all(lonbounds[:-1] > lonbounds[1:]):
+        if not np.all(lonbounds[:-1] < lonbounds[1:]):
             raise ValueError("The longitude bounds must be strictly increasing.")
-        if not np.all(latbounds[:-1] > latbounds[1:]):
+        if not np.all(latbounds[:-1] < latbounds[1:]):
             raise ValueError("The latitude bounds must be strictly increasing.")
 
         self.resolution = resolution
@@ -383,7 +380,7 @@ class RefinedGridInfo(GridInfo):
             self.n_lons_orig * self.lon_expansion,
         )
 
-    def _collapse_weights(self, tgt):
+    def _collapse_weights(self, is_tgt):
         """
         Return a matrix to collapse the weight matrix.
 
@@ -395,7 +392,7 @@ class RefinedGridInfo(GridInfo):
 
         Parameters
         ----------
-        tgt : bool
+        is_tgt : bool
             True if the target field is being represented, False otherwise.
         """
         # The column indices represent each of the cells in the refined grid.
@@ -429,7 +426,7 @@ class RefinedGridInfo(GridInfo):
             ),
             shape=matrix_shape,
         )
-        if tgt:
+        if is_tgt:
             # When the RefinedGridInfo is the target of the regridder, we want to take
             # the average of the weights of each refined target cell. This is because
             # these weights represent the proportion of area of the target cells which
