@@ -318,22 +318,14 @@ class RefinedGridInfo(GridInfo):
         crs=None,
     ):
         """
-        Create a :class:`GridInfo` object describing the grid.
+        Create a :class:`RefinedGridInfo` object describing the grid.
 
         Parameters
         ----------
-        lons : :obj:`~numpy.typing.ArrayLike`
-            A 1D or 2D array or list describing the longitudes of the
-            grid points.
-        lats : :obj:`~numpy.typing.ArrayLike`
-            A 1D or 2D array or list describing the latitudes of the
-            grid points.
         lonbounds : :obj:`~numpy.typing.ArrayLike`
-            A 1D or 2D array or list describing the longitude bounds of
-            the grid. Should have length one greater than ``lons``.
+            A 1D array or list describing the longitude bounds of the grid.
         latbounds : :obj:`~numpy.typing.ArrayLike`
-            A 1D or 2D array or list describing the latitude bounds of
-            the grid. Should have length one greater than ``lats``.
+            A 1D array or list describing the latitude bounds of the grid.
         resolution : int, default=400
             A number describing how many latitude slices each cell should
             be divided into when passing a higher resolution grid to ESMF.
@@ -342,6 +334,18 @@ class RefinedGridInfo(GridInfo):
             above arguments. If ``None``, defaults to :class:`~cartopy.crs.Geodetic`.
 
         """
+        # Convert bounds to numpy arrays where necessary.
+        if not isinstance(lonbounds, np.ndarray):
+            lonbounds = np.array(lonbounds)
+        if not isinstance(latbounds, np.ndarray):
+            latbounds = np.array(latbounds)
+
+        # Ensure bounds are strictly increasing.
+        if not np.all(lonbounds[:-1] > lonbounds[1:]):
+            raise ValueError("The longitude bounds must be strictly increasing.")
+        if not np.all(latbounds[:-1] > latbounds[1:]):
+            raise ValueError("The latitude bounds must be strictly increasing.")
+
         self.resolution = resolution
         self.n_lons_orig = len(lonbounds) - 1
         self.n_lats_orig = len(latbounds) - 1
