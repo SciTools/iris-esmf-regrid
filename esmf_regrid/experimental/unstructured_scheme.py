@@ -893,7 +893,7 @@ class GridToMeshESMFRegridder:
             target_grid_cube,
             method=self.method,
             precomputed_weights=precomputed_weights,
-            resolution=resolution,
+            resolution=self.resolution,
         )
 
         # Store regrid info.
