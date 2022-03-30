@@ -210,6 +210,30 @@ def test_invalid_method():
     assert expected_message in str(excinfo.value)
 
 
+def test_invalid_resolution():
+    """
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Checks that an error is raised when the resolution is invalid.
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = MeshToGridESMFRegridder(src, tgt, method="conservative", resolution=-1)
+    expected_message = "resolution must be a positive integer."
+    assert expected_message in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = MeshToGridESMFRegridder(src, tgt, method="bilinear", resolution=4)
+    expected_message = "resolution can only be set for conservative regridding."
+    assert expected_message in str(excinfo.value)
+
+
 def test_default_mdtol():
     """
     Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
@@ -298,3 +322,27 @@ def test_laziness():
     expected_chunks = ((1,), (3, 3, 3), (10,), (12,), (2, 2))
     assert out_chunks == expected_chunks
     assert np.allclose(result.data.reshape([1, i, -1, h]), src_data)
+
+
+def test_resolution():
+    """
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Tests for the resolution keyword.
+    """
+    mesh_cube = _flat_mesh_cube()
+
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    lon_bands = _grid_cube(1, 4, lon_bounds, lat_bounds)
+    lat_bands = _grid_cube(4, 1, lon_bounds, lat_bounds)
+
+    resolution = 8
+
+    lon_band_rg = MeshToGridESMFRegridder(mesh_cube, lon_bands, resolution=resolution)
+    assert lon_band_rg.resolution == resolution
+    assert lon_band_rg.regridder.tgt.resolution == resolution
+
+    lat_band_rg = MeshToGridESMFRegridder(mesh_cube, lat_bands, resolution=resolution)
+    assert lat_band_rg.resolution == resolution
+    assert lat_band_rg.regridder.tgt.resolution == resolution

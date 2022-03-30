@@ -215,6 +215,30 @@ def test_invalid_method():
     assert expected_message in str(excinfo.value)
 
 
+def test_invalid_resolution():
+    """
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Checks that an error is raised when the resolution is invalid.
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, tgt, method="conservative", resolution=-1)
+    expected_message = "resolution must be a positive integer."
+    assert expected_message in str(excinfo.value)
+
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, tgt, method="bilinear", resolution=4)
+    expected_message = "resolution can only be set for conservative regridding."
+    assert expected_message in str(excinfo.value)
+
+
 def test_default_mdtol():
     """
     Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
@@ -328,3 +352,23 @@ def test_laziness():
     expected_chunks = ((120,), (2, 2))
     assert out_chunks == expected_chunks
     assert np.allclose(result.data, src_data.reshape([-1, h]))
+
+
+def test_resolution():
+    """
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Tests for the resolution keyword.
+    """
+    tgt = _flat_mesh_cube()
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    grid = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    resolution = 8
+
+    result = GridToMeshESMFRegridder(grid, tgt, resolution=resolution)
+    assert result.resolution == resolution
+    assert result.regridder.src.resolution == resolution

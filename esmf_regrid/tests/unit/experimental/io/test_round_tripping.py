@@ -18,7 +18,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshI
 )
 
 
-def _make_grid_to_mesh_regridder(method="conservative"):
+def _make_grid_to_mesh_regridder(method="conservative", resolution=None):
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -35,11 +35,13 @@ def _make_grid_to_mesh_regridder(method="conservative"):
         location = "face"
     tgt = _gridlike_mesh_cube(tgt_lons, tgt_lats, location=location)
 
-    rg = GridToMeshESMFRegridder(src, tgt, method=method, mdtol=0.5)
+    rg = GridToMeshESMFRegridder(
+        src, tgt, method=method, mdtol=0.5, resolution=resolution
+    )
     return rg, src
 
 
-def _make_mesh_to_grid_regridder(method="conservative"):
+def _make_mesh_to_grid_regridder(method="conservative", resolution=None):
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -54,7 +56,9 @@ def _make_mesh_to_grid_regridder(method="conservative"):
         location = "face"
     src = _gridlike_mesh_cube(src_lons, src_lats, location=location)
 
-    rg = MeshToGridESMFRegridder(src, tgt, method=method, mdtol=0.5)
+    rg = MeshToGridESMFRegridder(
+        src, tgt, method=method, mdtol=0.5, resolution=resolution
+    )
     return rg, src
 
 
@@ -93,6 +97,18 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     assert (
         original_rg.regridder.esmf_regrid_version
         == loaded_rg.regridder.esmf_regrid_version
+    )
+
+    # Ensure resolution is equal.
+    assert original_rg.resolution == loaded_rg.resolution
+    original_res_rg, _ = _make_grid_to_mesh_regridder(resolution=8)
+    res_filename = tmp_path / "regridder_res.nc"
+    save_regridder(original_res_rg, res_filename)
+    loaded_res_rg = load_regridder(str(res_filename))
+    assert original_res_rg.resolution == loaded_res_rg.resolution
+    assert (
+        original_res_rg.regridder.src.resolution
+        == loaded_res_rg.regridder.src.resolution
     )
 
 
@@ -182,6 +198,18 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     assert (
         original_rg.regridder.esmf_regrid_version
         == loaded_rg.regridder.esmf_regrid_version
+    )
+
+    # Ensure resolution is equal.
+    assert original_rg.resolution == loaded_rg.resolution
+    original_res_rg, _ = _make_mesh_to_grid_regridder(resolution=8)
+    res_filename = tmp_path / "regridder_res.nc"
+    save_regridder(original_res_rg, res_filename)
+    loaded_res_rg = load_regridder(str(res_filename))
+    assert original_res_rg.resolution == loaded_res_rg.resolution
+    assert (
+        original_res_rg.regridder.tgt.resolution
+        == loaded_res_rg.regridder.tgt.resolution
     )
 
 

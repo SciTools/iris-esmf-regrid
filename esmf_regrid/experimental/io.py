@@ -30,6 +30,7 @@ VERSION_ESMF = "ESMF_version"
 VERSION_INITIAL = "esmf_regrid_version_on_initialise"
 MDTOL = "mdtol"
 METHOD = "method"
+RESOLUTION = "resolution"
 
 
 def save_regridder(rg, filename):
@@ -87,6 +88,7 @@ def save_regridder(rg, filename):
         raise TypeError(msg)
 
     method = rg.method
+    resolution = rg.resolution
 
     weight_matrix = rg.regridder.weight_matrix
     reformatted_weight_matrix = scipy.sparse.coo_matrix(weight_matrix)
@@ -113,6 +115,8 @@ def save_regridder(rg, filename):
         MDTOL: mdtol,
         METHOD: method,
     }
+    if resolution is not None:
+        attributes[RESOLUTION] = resolution
 
     weights_cube = Cube(weight_data, var_name=WEIGHTS_NAME, long_name=WEIGHTS_NAME)
     row_coord = AuxCoord(
@@ -178,6 +182,9 @@ def load_regridder(filename):
     # Determine the regridding method, allowing for files created when
     # conservative regridding was the only method.
     method = weights_cube.attributes.get(METHOD, "conservative")
+    resolution = weights_cube.attributes.get(RESOLUTION, None)
+    if resolution is not None:
+        resolution = int(resolution)
 
     # Reconstruct the weight matrix.
     weight_data = weights_cube.data
@@ -196,6 +203,7 @@ def load_regridder(filename):
         mdtol=mdtol,
         method=method,
         precomputed_weights=weight_matrix,
+        resolution=resolution,
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]
