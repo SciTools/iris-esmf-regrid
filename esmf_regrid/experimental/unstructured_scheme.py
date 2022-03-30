@@ -470,7 +470,9 @@ class MeshToGridESMFRegridder:
             and ``precomputed_weights`` will be used as the regridding weights.
         resolution : int, optional
             If present, represents the amount of latitude slices per cell
-            given to ESMF for calculation.
+            given to ESMF for calculation. If resolution is set, target_grid_cube
+            must have strictly increasing bounds (bounds may be transposed plus or
+            minus 360 degrees to make the bounds strictly increasing).
 
         """
         # TODO: Record information about the identity of the mesh. This would
@@ -826,8 +828,8 @@ class GridToMeshESMFRegridder:
 
     def __init__(
         self,
-        src_mesh_cube,
-        target_grid_cube,
+        src_grid_cube,
+        target_mesh_cube,
         mdtol=None,
         method="conservative",
         precomputed_weights=None,
@@ -839,9 +841,9 @@ class GridToMeshESMFRegridder:
         Parameters
         ----------
         src_grid_cube : :class:`iris.cube.Cube`
-            The unstructured :class:`~iris.cube.Cube` cube providing the source grid.
-        target_grid_cube : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target mesh.
+            The rectilinear :class:`~iris.cube.Cube` cube providing the source grid.
+        target_mesh_cube : :class:`iris.cube.Cube`
+            The unstructured :class:`~iris.cube.Cube` providing the target mesh.
         mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -859,7 +861,9 @@ class GridToMeshESMFRegridder:
             and ``precomputed_weights`` will be used as the regridding weights.
         resolution : int, optional
             If present, represents the amount of latitude slices per cell
-            given to ESMF for calculation.
+            given to ESMF for calculation. If resolution is set, src_grid_cube
+            must have strictly increasing bounds (bounds may be transposed plus or
+            minus 360 degrees to make the bounds strictly increasing).
 
         """
         if method not in ["conservative", "bilinear"]:
@@ -889,8 +893,8 @@ class GridToMeshESMFRegridder:
         self.resolution = resolution
 
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-            src_mesh_cube,
-            target_grid_cube,
+            src_grid_cube,
+            target_mesh_cube,
             method=self.method,
             precomputed_weights=precomputed_weights,
             resolution=self.resolution,

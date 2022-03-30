@@ -321,8 +321,11 @@ class RefinedGridInfo(GridInfo):
         ----------
         lonbounds : :obj:`~numpy.typing.ArrayLike`
             A 1D array or list describing the longitude bounds of the grid.
+            Must be strictly increasing (for example, if a bound goes from
+            170 to -170 consider transposing -170 to 190).
         latbounds : :obj:`~numpy.typing.ArrayLike`
             A 1D array or list describing the latitude bounds of the grid.
+            Must be strictly increasing.
         resolution : int, default=400
             A number describing how many latitude slices each cell should
             be divided into when passing a higher resolution grid to ESMF.
@@ -355,8 +358,6 @@ class RefinedGridInfo(GridInfo):
         if self.n_lats_orig == 1 and np.allclose(latbounds, [-90, 90]):
             self._refined_latbounds = np.array([-90, 0, 90])
             self._refined_lonbounds = lonbounds
-            self.lon_expansion = 1
-            self.lat_expansion = 2
         else:
             self._refined_latbounds = latbounds
             self._refined_lonbounds = np.append(
@@ -369,8 +370,8 @@ class RefinedGridInfo(GridInfo):
                 ).flatten(),
                 lonbounds[-1],
             )
-            self.lon_expansion = self.resolution
-            self.lat_expansion = 1
+        self.lon_expansion = len(self._refined_lonbounds) / len(self.lonbounds)
+        self.lat_expansion = len(self._refined_latbounds) / len(self.latbounds)
 
     @property
     def _refined_shape(self):
