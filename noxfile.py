@@ -240,6 +240,7 @@ def update_lockfiles(session: nox.sessions.Session):
         conda_lock_cmd = [
             "conda-lock",
             "lock",
+            "--kind=explicit",
             f"--filename-template={filename_template}",
             f"--file={req_file_local}",
             f"--platform={LOCKFILE_PLATFORM}",
