@@ -9,6 +9,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
+from esmf_regrid.schemes import _cube_to_GridInfo, _create_cube
 
 
 def _map_complete_blocks(src, func, dims, out_sizes):
@@ -107,15 +108,6 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     )
 
 
-# Taken from PR #26
-def _bounds_cf_to_simple_1d(cf_bounds):
-    assert (cf_bounds[1:, 0] == cf_bounds[:-1, 1]).all()
-    simple_bounds = np.empty((cf_bounds.shape[0] + 1,), dtype=np.float64)
-    simple_bounds[:-1] = cf_bounds[:, 0]
-    simple_bounds[-1] = cf_bounds[-1, 1]
-    return simple_bounds
-
-
 def _mesh_to_MeshInfo(mesh, location):
     # Returns a MeshInfo object describing the mesh of the cube.
     assert mesh.topology_dimension == 2
@@ -133,38 +125,6 @@ def _mesh_to_MeshInfo(mesh, location):
     return meshinfo
 
 
-def _cube_to_GridInfo(cube, center, resolution):
-    # This is a simplified version of an equivalent function/method in PR #26.
-    # It is anticipated that this function will be replaced by the one in PR #26.
-    #
-    # Returns a GridInfo object describing the horizontal grid of the cube.
-    # This may be inherited from code written for the rectilinear regridding scheme.
-    lon = cube.coord("longitude")
-    lat = cube.coord("latitude")
-    # Ensure coords come from a proper grid.
-    assert isinstance(lon, iris.coords.DimCoord)
-    assert isinstance(lat, iris.coords.DimCoord)
-    # TODO: accommodate other x/y coords.
-    # TODO: perform checks on lat/lon.
-    #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
-    if resolution is None:
-        grid_info = GridInfo(
-            lon.points,
-            lat.points,
-            _bounds_cf_to_simple_1d(lon.bounds),
-            _bounds_cf_to_simple_1d(lat.bounds),
-            circular=lon.circular,
-            center=center,
-        )
-    else:
-        grid_info = RefinedGridInfo(
-            _bounds_cf_to_simple_1d(lon.bounds),
-            _bounds_cf_to_simple_1d(lat.bounds),
-            resolution=resolution,
-        )
-    return grid_info
-
-
 def _regrid_along_mesh_dim(regridder, data, mesh_dim, mdtol):
     # Before regridding, data is transposed to a standard form.
     # In the future, this may be done within the regridder by specifying args.
@@ -178,85 +138,6 @@ def _regrid_along_mesh_dim(regridder, data, mesh_dim, mdtol):
     result = np.moveaxis(result, [-2, -1], [mesh_dim, mesh_dim + 1])
 
     return result
-
-
-def _create_cube(data, src_cube, mesh_dim, grid_x, grid_y):
-    """
-    Return a new cube for the result of regridding.
-
-    Returned cube represents the result of regridding the source cube
-    onto the new grid.
-    All the metadata and coordinates of the result cube are copied from
-    the source cube, with two exceptions:
-        - Grid dimension coordinates are copied from the grid cube.
-        - Auxiliary coordinates which span the grid dimensions are
-          ignored.
-
-    Parameters
-    ----------
-    data : array
-        The regridded data as an N-dimensional NumPy array.
-    src_cube : cube
-        The source Cube.
-    mesh_dim : int
-        The dimension of the mesh within the source Cube.
-    grid_x : DimCoord
-        The :class:`iris.coords.DimCoord` for the new grid's X
-        coordinate.
-    grid_y : DimCoord
-        The :class:`iris.coords.DimCoord` for the new grid's Y
-        coordinate.
-
-    Returns
-    -------
-    cube
-        A new iris.cube.Cube instance.
-
-    """
-    new_cube = iris.cube.Cube(data)
-
-    # TODO: The following code is rigid with respect to which dimensions
-    #  the x coord and y coord are assigned to. We should decide if it is
-    #  appropriate to copy the dimension ordering from the target cube
-    #  instead.
-    new_cube.add_dim_coord(grid_x, mesh_dim + 1)
-    new_cube.add_dim_coord(grid_y, mesh_dim)
-
-    new_cube.metadata = copy.deepcopy(src_cube.metadata)
-
-    # TODO: Handle derived coordinates. The following code is taken from
-    #  iris, the parts dealing with derived coordinates have been
-    #  commented out for the time being.
-    # coord_mapping = {}
-
-    def copy_coords(src_coords, add_method):
-        for coord in src_coords:
-            dims = src_cube.coord_dims(coord)
-            if hasattr(coord, "mesh") or mesh_dim in dims:
-                continue
-            # Since the mesh will be replaced by a 2D grid, dims which are
-            # beyond the mesh_dim are increased by one.
-            dims = [dim if dim < mesh_dim else dim + 1 for dim in dims]
-            result_coord = coord.copy()
-            # Add result_coord to the owner of add_method.
-            add_method(result_coord, dims)
-            # coord_mapping[id(coord)] = result_coord
-
-    copy_coords(src_cube.dim_coords, new_cube.add_dim_coord)
-    copy_coords(src_cube.aux_coords, new_cube.add_aux_coord)
-
-    # for factory in src_cube.aux_factories:
-    #     # TODO: Regrid dependant coordinates which span mesh_dim.
-    #     try:
-    #         result.add_aux_factory(factory.updated(coord_mapping))
-    #     except KeyError:
-    #         msg = (
-    #             "Cannot update aux_factory {!r} because of dropped"
-    #             " coordinates.".format(factory.name())
-    #         )
-    #         warnings.warn(msg)
-
-    return new_cube
 
 
 def _regrid_unstructured_to_rectilinear__prepare(
@@ -356,9 +237,9 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     new_cube = _create_cube(
         new_data,
         src_cube,
-        mesh_dim,
-        grid_x,
-        grid_y,
+        (mesh_dim,),
+        (grid_x, grid_y),
+        2,
     )
 
     # TODO: apply tweaks to created cube (slice out length 1 dimensions)
@@ -590,67 +471,6 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
     return result
 
 
-def _create_mesh_cube(data, src_cube, grid_x_dim, grid_y_dim, mesh, location):
-    """
-    Return a new cube for the result of regridding.
-
-    Returned cube represents the result of regridding the source cube
-    onto the new mesh.
-    All the metadata and coordinates of the result cube are copied from
-    the source cube, with two exceptions:
-        - Grid dimension coordinates are copied from the grid cube.
-        - Auxiliary coordinates which span the mesh dimension are
-          ignored.
-
-    Parameters
-    ----------
-    data : array
-        The regridded data as an N-dimensional NumPy array.
-    src_cube : cube
-        The source Cube.
-    grid_x_dim : int
-        The dimension of the x dimension on the source Cube.
-    grid_y_dim : int
-        The dimension of the y dimension on the source Cube.
-    mesh : Mesh
-        The :class:`iris.experimental.ugrid.Mesh` for the new
-        Cube.
-    location : str
-        Either "face" or "node". Describes the location for data on the mesh.
-
-    Returns
-    -------
-    cube
-        A new iris.cube.Cube instance.
-
-    """
-    new_cube = iris.cube.Cube(data)
-
-    min_grid_dim = min(grid_x_dim, grid_y_dim)
-    max_grid_dim = max(grid_x_dim, grid_y_dim)
-    for coord in mesh.to_MeshCoords(location):
-        new_cube.add_aux_coord(coord, min_grid_dim)
-
-    new_cube.metadata = copy.deepcopy(src_cube.metadata)
-
-    def copy_coords(src_coords, add_method):
-        for coord in src_coords:
-            dims = src_cube.coord_dims(coord)
-            if grid_x_dim in dims or grid_y_dim in dims:
-                continue
-            # Since the 2D grid will be replaced by a 1D mesh, dims which are
-            # beyond the max_grid_dim are decreased by one.
-            dims = [dim if dim < max_grid_dim else dim - 1 for dim in dims]
-            result_coord = coord.copy()
-            # Add result_coord to the owner of add_method.
-            add_method(result_coord, dims)
-
-    copy_coords(src_cube.dim_coords, new_cube.add_dim_coord)
-    copy_coords(src_cube.aux_coords, new_cube.add_aux_coord)
-
-    return new_cube
-
-
 def _regrid_rectilinear_to_unstructured__prepare(
     src_grid_cube,
     target_mesh_cube,
@@ -742,13 +562,12 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         (n_faces,),
     )
 
-    new_cube = _create_mesh_cube(
+    new_cube = _create_cube(
         new_data,
         src_cube,
-        grid_x_dim,
-        grid_y_dim,
-        mesh,
-        location=location,
+        (grid_x_dim, grid_y_dim),
+        mesh.to_MeshCoords(location),
+        1,
     )
     return new_cube
 
