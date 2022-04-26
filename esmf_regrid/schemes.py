@@ -6,6 +6,7 @@ import functools
 
 from cf_units import Unit
 import iris
+from iris.coords import DimCoord
 from iris._lazy_data import map_complete_blocks
 import numpy as np
 
