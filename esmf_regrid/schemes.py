@@ -146,7 +146,7 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         )
     if num_tgt_dims == 1:
         grid_dim_x = grid_dim_y = min(src_dims)
-    for tgt_coord, dim in tgt_coords, (grid_dim_x, grid_dim_y):
+    for tgt_coord, dim in zip(tgt_coords, (grid_dim_x, grid_dim_y)):
         if len(tgt_coord.shape) == 1:
             if isinstance(tgt_coord, DimCoord):
                 new_cube.add_dim_coord(tgt_coord, dim)
