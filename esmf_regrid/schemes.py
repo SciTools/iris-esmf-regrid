@@ -165,8 +165,7 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
                 if src_dim in dims:
                     continue
             offset = num_tgt_dims - len(src_dims)
-            if len(src_dims) == 1:
-                dims = [dim if dim < max(src_dims) else dim + offset for dim in dims]
+            dims = [dim if dim < max(src_dims) else dim + offset for dim in dims]
             result_coord = coord.copy()
             # Add result_coord to the owner of add_method.
             add_method(result_coord, dims)
