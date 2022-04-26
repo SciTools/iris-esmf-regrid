@@ -58,7 +58,6 @@ def _cube_to_GridInfo(cube, center=False, resolution=None):
             crs=crs,
             circular=circular,
             center=center,
-            resolution=resolution,
         )
     else:
         grid_info = RefinedGridInfo(
