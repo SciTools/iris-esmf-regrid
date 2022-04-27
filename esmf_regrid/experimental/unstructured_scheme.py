@@ -162,7 +162,8 @@ def _regrid_unstructured_to_rectilinear__prepare(
 
     # TODO: Record appropriate dimensions (i.e. which dimension the mesh belongs to)
 
-    grid_x, grid_y = get_xy_dim_coords(target_grid_cube)
+    grid_x = target_grid_cube.coord(axis="x")
+    grid_y = target_grid_cube.coord(axis="y")
     mesh = src_mesh_cube.mesh
     location = src_mesh_cube.location
     if mesh is None:
@@ -226,11 +227,15 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
+    if len(grid_x.shape) == 1:
+        chunk_shape = (len(grid_x.points), len(grid_y.points))
+    else:
+        chunk_shape = grid_x.shape
     new_data = _map_complete_blocks(
         src_cube,
         regrid,
         (mesh_dim,),
-        (len(grid_x.points), len(grid_y.points)),
+        chunk_shape,
     )
 
     new_cube = _create_cube(
@@ -484,7 +489,8 @@ def _regrid_rectilinear_to_unstructured__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
-    grid_x, grid_y = get_xy_dim_coords(src_grid_cube)
+    grid_x = src_grid_cube.coord(axis="x")
+    grid_y = src_grid_cube.coord(axis="y")
     mesh = target_mesh_cube.mesh
     location = target_mesh_cube.location
     if mesh is None:
@@ -513,8 +519,11 @@ def _regrid_rectilinear_to_unstructured__prepare(
             f"method must be either 'bilinear' or 'conservative', got '{method}'."
         )
     assert mesh is not None
-    grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
-    grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
+    if len(grid_x.shape) == 1:
+        grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
+        grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
+    else:
+        grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
     meshinfo = _mesh_to_MeshInfo(mesh, location)
     gridinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=resolution)
@@ -751,7 +760,8 @@ class GridToMeshESMFRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
-        grid_x, grid_y = get_xy_dim_coords(cube)
+        grid_x = cube.coord(axis="x")
+        grid_y = cube.coord(axis="y")
         # Ignore differences in var_name that might be caused by saving.
         self_grid_x = copy.deepcopy(self.grid_x)
         self_grid_x.var_name = grid_x.var_name
@@ -763,8 +773,11 @@ class GridToMeshESMFRegridder:
                 "source grid as this regridder."
             )
 
-        grid_x_dim = cube.coord_dims(grid_x)[0]
-        grid_y_dim = cube.coord_dims(grid_y)[0]
+        if len(grid_x.shape) == 1:
+            grid_x_dim = cube.coord_dims(grid_x)[0]
+            grid_y_dim = cube.coord_dims(grid_y)[0]
+        else:
+            grid_y_dim, grid_x_dim = cube.coord_dims(grid_x)
 
         regrid_info = (
             grid_x_dim,
