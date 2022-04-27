@@ -27,7 +27,7 @@ def test_create_cube_2D():
     grid_x = DimCoord(np.arange(3), standard_name="longitude")
     grid_y = DimCoord(np.arange(2), standard_name="latitude")
 
-    cube = _create_cube(data, src_cube, mesh_dim, grid_x, grid_y)
+    cube = _create_cube(data, src_cube, (mesh_dim,), (grid_x, grid_y), 2)
     src_metadata = src_cube.metadata
 
     expected_cube = Cube(data)
@@ -66,7 +66,7 @@ def test_create_cube_4D():
     grid_x = iris.coords.DimCoord(np.arange(3), standard_name="longitude")
     grid_y = iris.coords.DimCoord(np.arange(2), standard_name="latitude")
 
-    cube = _create_cube(data, src_cube, mesh_dim, grid_x, grid_y)
+    cube = _create_cube(data, src_cube, (mesh_dim,), (grid_x, grid_y), 2)
     src_metadata = src_cube.metadata
 
     expected_cube = iris.cube.Cube(data)
