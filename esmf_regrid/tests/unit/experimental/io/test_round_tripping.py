@@ -10,15 +10,16 @@ from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
-    _grid_cube,
-)
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
+    _curvilinear_cube,
+    _grid_cube,
+)
 
 
-def _make_grid_to_mesh_regridder(method="conservative", resolution=None):
+def _make_grid_to_mesh_regridder(method="conservative", resolution=None, grid_dims=1):
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -26,7 +27,10 @@ def _make_grid_to_mesh_regridder(method="conservative", resolution=None):
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     # TODO check that circularity is preserved.
-    src = _grid_cube(src_lons, src_lats, lon_bounds, lat_bounds, circular=True)
+    if grid_dims == 1:
+        src = _grid_cube(src_lons, src_lats, lon_bounds, lat_bounds, circular=True)
+    else:
+        src = _curvilinear_cube(src_lons, src_lats, lon_bounds, lat_bounds)
     src.coord("longitude").var_name = "longitude"
     src.coord("latitude").var_name = "latitude"
     if method == "bilinear":
@@ -41,7 +45,7 @@ def _make_grid_to_mesh_regridder(method="conservative", resolution=None):
     return rg, src
 
 
-def _make_mesh_to_grid_regridder(method="conservative", resolution=None):
+def _make_mesh_to_grid_regridder(method="conservative", resolution=None, grid_dims=1):
     src_lons = 3
     src_lats = 4
     tgt_lons = 5
@@ -49,7 +53,12 @@ def _make_mesh_to_grid_regridder(method="conservative", resolution=None):
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     # TODO check that circularity is preserved.
-    tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
+    if grid_dims == 1:
+        tgt = _grid_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds, circular=True)
+    else:
+        tgt = _curvilinear_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds)
+    tgt.coord("longitude").var_name = "longitude"
+    tgt.coord("latitude").var_name = "latitude"
     if method == "bilinear":
         location = "node"
     else:
@@ -150,6 +159,25 @@ def test_GridToMeshESMFRegridder_bilinear_round_trip(tmp_path):
     )
 
 
+def test_GridToMeshESMFRegridder_curvilinear_round_trip(tmp_path):
+    """Test save/load round tripping for `GridToMeshESMFRegridder`."""
+    original_rg, src = _make_grid_to_mesh_regridder(grid_dims=2)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(str(filename))
+
+    assert original_rg.grid_x == loaded_rg.grid_x
+    assert original_rg.grid_y == loaded_rg.grid_y
+
+    # Demonstrate regridding still gives the same results.
+    src_data = np.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_mask = np.zeros(src.data.shape)
+    src_mask[0, 0] = 1
+    src.data = ma.array(src_data, mask=src_mask)
+    # TODO: make this a cube comparison when mesh comparison becomes available.
+    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
+
+
 def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
     original_rg, src = _make_mesh_to_grid_regridder()
@@ -160,12 +188,8 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     assert original_rg.location == loaded_rg.location
     assert original_rg.method == loaded_rg.method
     assert original_rg.mdtol == loaded_rg.mdtol
-    loaded_grid_x = deepcopy(loaded_rg.grid_x)
-    loaded_grid_x.var_name = original_rg.grid_x.var_name
-    assert original_rg.grid_x == loaded_grid_x
-    loaded_grid_y = deepcopy(loaded_rg.grid_y)
-    loaded_grid_y.var_name = original_rg.grid_y.var_name
-    assert original_rg.grid_y == loaded_grid_y
+    assert original_rg.grid_x == loaded_rg.grid_x
+    assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
 
@@ -181,17 +205,7 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     src_mask = np.zeros(src.data.shape)
     src_mask[0] = 1
     src.data = ma.array(src_data, mask=src_mask)
-    # Compare results, ignoring var_name changes due to saving.
-    original_result = original_rg(src)
-    loaded_result = loaded_rg(src)
-    original_result.var_name = loaded_result.var_name
-    original_result.coord("latitude").var_name = loaded_result.coord(
-        "latitude"
-    ).var_name
-    original_result.coord("longitude").var_name = loaded_result.coord(
-        "longitude"
-    ).var_name
-    assert original_result == loaded_result
+    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
@@ -223,12 +237,8 @@ def test_MeshToGridESMFRegridder_bilinear_round_trip(tmp_path):
     assert original_rg.location == loaded_rg.location
     assert original_rg.method == loaded_rg.method
     assert original_rg.mdtol == loaded_rg.mdtol
-    loaded_grid_x = deepcopy(loaded_rg.grid_x)
-    loaded_grid_x.var_name = original_rg.grid_x.var_name
-    assert original_rg.grid_x == loaded_grid_x
-    loaded_grid_y = deepcopy(loaded_rg.grid_y)
-    loaded_grid_y.var_name = original_rg.grid_y.var_name
-    assert original_rg.grid_y == loaded_grid_y
+    assert original_rg.grid_x == loaded_rg.grid_x
+    assert original_rg.grid_y == loaded_rg.grid_y
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
 
@@ -244,17 +254,7 @@ def test_MeshToGridESMFRegridder_bilinear_round_trip(tmp_path):
     src_mask = np.zeros(src.data.shape)
     src_mask[0] = 1
     src.data = ma.array(src_data, mask=src_mask)
-    # Compare results, ignoring var_name changes due to saving.
-    original_result = original_rg(src)
-    loaded_result = loaded_rg(src)
-    original_result.var_name = loaded_result.var_name
-    original_result.coord("latitude").var_name = loaded_result.coord(
-        "latitude"
-    ).var_name
-    original_result.coord("longitude").var_name = loaded_result.coord(
-        "longitude"
-    ).var_name
-    assert original_result == loaded_result
+    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
@@ -262,3 +262,21 @@ def test_MeshToGridESMFRegridder_bilinear_round_trip(tmp_path):
         original_rg.regridder.esmf_regrid_version
         == loaded_rg.regridder.esmf_regrid_version
     )
+
+
+def test_MeshToGridESMFRegridder_curvilinear_round_trip(tmp_path):
+    """Test save/load round tripping for `MeshToGridESMFRegridder`."""
+    original_rg, src = _make_mesh_to_grid_regridder(grid_dims=2)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(str(filename))
+
+    assert original_rg.grid_x == loaded_rg.grid_x
+    assert original_rg.grid_y == loaded_rg.grid_y
+
+    # Demonstrate regridding still gives the same results.
+    src_data = np.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_mask = np.zeros(src.data.shape)
+    src_mask[0] = 1
+    src.data = ma.array(src_data, mask=src_mask)
+    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
