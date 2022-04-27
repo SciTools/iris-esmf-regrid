@@ -5,12 +5,12 @@ import copy
 import functools
 
 from cf_units import Unit
-import iris
-from iris.coords import DimCoord
 from iris._lazy_data import map_complete_blocks
+import iris.coords
+import iris.cube
 import numpy as np
 
-from esmf_regrid.esmf_regridder import GridInfo, Regridder
+from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 
 __all__ = [
     "ESMFAreaWeighted",
@@ -149,7 +149,7 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         grid_dim_x = grid_dim_y = min(src_dims)
     for tgt_coord, dim in zip(tgt_coords, (grid_dim_x, grid_dim_y)):
         if len(tgt_coord.shape) == 1:
-            if isinstance(tgt_coord, DimCoord):
+            if isinstance(tgt_coord, iris.coords.DimCoord):
                 new_cube.add_dim_coord(tgt_coord, dim)
             else:
                 new_cube.add_aux_coord(tgt_coord, dim)
@@ -161,9 +161,8 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
     def copy_coords(src_coords, add_method):
         for coord in src_coords:
             dims = src_cube.coord_dims(coord)
-            for src_dim in src_dims:
-                if src_dim in dims:
-                    continue
+            if set(src_dims).intersection(set(dims)):
+                continue
             offset = num_tgt_dims - len(src_dims)
             dims = [dim if dim < max(src_dims) else dim + offset for dim in dims]
             result_coord = coord.copy()

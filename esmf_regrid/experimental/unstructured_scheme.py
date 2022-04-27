@@ -9,7 +9,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.schemes import _cube_to_GridInfo, _create_cube
+from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo
 
 
 def _map_complete_blocks(src, func, dims, out_sizes):
