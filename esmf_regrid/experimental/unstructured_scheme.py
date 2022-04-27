@@ -3,7 +3,6 @@
 import copy
 import functools
 
-from iris.analysis._interpolation import get_xy_dim_coords
 import numpy as np
 
 from esmf_regrid.esmf_regridder import Regridder

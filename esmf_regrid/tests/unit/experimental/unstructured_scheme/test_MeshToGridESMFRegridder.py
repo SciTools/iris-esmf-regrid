@@ -10,8 +10,8 @@ from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
-    _grid_cube,
     _curvilinear_cube,
+    _grid_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
