@@ -100,7 +100,7 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
 
 
 def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
-    """
+    r"""
     Return a new cube for the result of regridding.
 
     Returned cube represents the result of regridding the source cube
@@ -119,10 +119,10 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         The source Cube.
     src_dims : tuple of int
         The dimensions of the X and Y coordinate within the source Cube.
-    tgt_coords : tuple of :class:`iris.coords.Coord`\\'s
-        Either two 1D :class:`iris.coords.DimCoord`\\'s, two 1D
-        :class:`iris.experimental.ugrid.DimCoord`\\'s or two 2D
-        :class:`iris.coords.AuxCoord`\\'s representing the new grid's
+    tgt_coords : tuple of :class:`iris.coords.Coord`\\ 's
+        Either two 1D :class:`iris.coords.DimCoord`\\ 's, two 1D
+        :class:`iris.experimental.ugrid.DimCoord`\\ 's or two 2D
+        :class:`iris.coords.AuxCoord`\\ 's representing the new grid's
         X and Y coordinates.
     num_tgt_dims : int
         The number of dimensions that the target grid/mesh spans.
