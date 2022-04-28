@@ -152,15 +152,6 @@ def _regrid_unstructured_to_rectilinear__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
-    # TODO: Perform checks on the arguments. (grid coords are contiguous,
-    #  spherical and monotonic. Mesh is defined on faces)
-
-    # TODO: Account for differences in units.
-
-    # TODO: Account for differences in coord systems.
-
-    # TODO: Record appropriate dimensions (i.e. which dimension the mesh belongs to)
-
     grid_x = target_grid_cube.coord(axis="x")
     grid_y = target_grid_cube.coord(axis="y")
     mesh = src_mesh_cube.mesh
@@ -270,8 +261,9 @@ def regrid_unstructured_to_rectilinear(
     described by a 2D mesh with data located on the faces of that mesh
     for conservative regridding and located on either faces or nodes for
     bilinear regridding.
-    This function requires that the horizontal grid of ``grid_cube`` is
-    rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
+    This function allows the horizontal grid of ``grid_cube`` to be either
+    rectilinear or curvilinear (i.e. expressed in terms of two orthogonal
+    1D coordinates or via a pair of 2D coordinates).
     This function also requires that the :class:`~iris.coords.Coord`\\ s describing the
     horizontal grid have :attr:`~iris.coords.Coord.bounds`.
 
@@ -281,7 +273,7 @@ def regrid_unstructured_to_rectilinear(
         An unstructured instance of :class:`~iris.cube.Cube` that supplies the data,
         metadata and coordinates.
     grid_cube : :class:`iris.cube.Cube`
-        A rectilinear instance of :class:`~iris.cube.Cube` that supplies the desired
+        An instance of :class:`~iris.cube.Cube` that supplies the desired
         horizontal grid definition.
     mdtol : float, default=0
         Tolerance of missing data. The value returned in each element of the
@@ -334,9 +326,9 @@ class MeshToGridESMFRegridder:
         Parameters
         ----------
         src_mesh_cube : :class:`iris.cube.Cube`
-            The unstructured :class:`~iris.cube.Cube` providing the source grid.
+            The unstructured :class:`~iris.cube.Cube` providing the source mesh.
         target_grid_cube : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The :class:`~iris.cube.Cube` providing the target grid.
         mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -603,8 +595,9 @@ def regrid_rectilinear_to_unstructured(
     described by a 2D mesh with data located on the faces of that mesh
     for conservative regridding and located on either faces or nodes for
     bilinear regridding.
-    This function requires that the horizontal grid of ``src_cube`` is
-    rectilinear (i.e. expressed in terms of two orthogonal 1D coordinates).
+    This function allows the horizontal grid of ``grid_cube`` to be either
+    rectilinear or curvilinear (i.e. expressed in terms of two orthogonal
+    1D coordinates or via a pair of 2D coordinates).
     This function also requires that the :class:`~iris.coords.Coord`\\ s describing the
     horizontal grid have :attr:`~iris.coords.Coord.bounds`.
 

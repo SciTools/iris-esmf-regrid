@@ -104,10 +104,10 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
     Return a new cube for the result of regridding.
 
     Returned cube represents the result of regridding the source cube
-    onto the new grid.
+    onto the new grid/mesh.
     All the metadata and coordinates of the result cube are copied from
     the source cube, with two exceptions:
-        - Grid dimension coordinates are copied from the grid cube.
+        - Grid/mesh coordinates are copied from the target cube.
         - Auxiliary coordinates which span the grid dimensions are
           ignored.
 
@@ -117,16 +117,15 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         The regridded data as an N-dimensional NumPy array.
     src_cube : cube
         The source Cube.
-    grid_dim_x : int
-        The dimension of the X coordinate within the source Cube.
-    grid_dim_y : int
-        The dimension of the Y coordinate within the source Cube.
-    grid_x : DimCoord
-        The :class:`iris.coords.DimCoord` for the new grid's X
-        coordinate.
-    grid_y : DimCoord
-        The :class:`iris.coords.DimCoord` for the new grid's Y
-        coordinate.
+    src_dims : tuple of int
+        The dimensions of the X and Y coordinate within the source Cube.
+    tgt_coords : tuple of :class:`iris.coords.Coord`\\'s
+        Either two 1D :class:`iris.coords.DimCoord`\\'s, two 1D
+        :class:`iris.experimental.ugrid.DimCoord`\\'s or two 2D
+        :class:`iris.coords.AuxCoord`\\'s representing the new grid's
+        X and Y coordinates.
+    num_tgt_dims : int
+        The number of dimensions that the target grid/mesh spans.
 
     Returns
     -------
