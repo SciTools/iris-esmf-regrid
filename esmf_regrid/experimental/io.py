@@ -50,20 +50,25 @@ def save_regridder(rg, filename):
         The file name to save to.
     """
     regridder_type = rg.__class__.__name__
+
+    def _standard_grid_cube(grid, name):
+        if grid[0].ndim == 1:
+            shape = [coord.points.size for coord in grid]
+        else:
+            shape = src_grid[0].shape
+        data = np.zeros(shape)
+        cube = Cube(data, var_name=name, long_name=name)
+        if grid[0].ndim == 1:
+            cube.add_dim_coord(grid[0], 0)
+            cube.add_dim_coord(grid[1], 1)
+        else:
+            cube.add_aux_coord(grid[0], [0, 1])
+            cube.add_aux_coord(grid[1], [0, 1])
+        return cube
+
     if regridder_type == "GridToMeshESMFRegridder":
         src_grid = (rg.grid_y, rg.grid_x)
-        if len(src_grid[0].shape) == 1:
-            src_shape = [len(coord.points) for coord in src_grid]
-        else:
-            src_shape = src_grid[0].shape
-        src_data = np.zeros(src_shape)
-        src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
-        if len(src_grid[0].shape) == 1:
-            src_cube.add_dim_coord(src_grid[0], 0)
-            src_cube.add_dim_coord(src_grid[1], 1)
-        else:
-            src_cube.add_aux_coord(src_grid[0], [0, 1])
-            src_cube.add_aux_coord(src_grid[1], [0, 1])
+        src_cube = _standard_grid_cube(src_grid, SOURCE_NAME)
 
         tgt_mesh = rg.mesh
         tgt_location = rg.location
@@ -82,18 +87,7 @@ def save_regridder(rg, filename):
             src_cube.add_aux_coord(coord, 0)
 
         tgt_grid = (rg.grid_y, rg.grid_x)
-        if len(tgt_grid[0].shape) == 1:
-            tgt_shape = [len(coord.points) for coord in tgt_grid]
-        else:
-            tgt_shape = tgt_grid[0].shape
-        tgt_data = np.zeros(tgt_shape)
-        tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
-        if len(tgt_grid[0].shape) == 1:
-            tgt_cube.add_dim_coord(tgt_grid[0], 0)
-            tgt_cube.add_dim_coord(tgt_grid[1], 1)
-        else:
-            tgt_cube.add_aux_coord(tgt_grid[0], [0, 1])
-            tgt_cube.add_aux_coord(tgt_grid[1], [0, 1])
+        tgt_cube = _standard_grid_cube(tgt_grid, TARGET_NAME)
     else:
         msg = (
             f"Expected a regridder of type `GridToMeshESMFRegridder` or "
