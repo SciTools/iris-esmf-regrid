@@ -64,6 +64,7 @@ def _cube_to_GridInfo(cube, center=False, resolution=None):
         grid_info = RefinedGridInfo(
             lon_bound_array,
             lat_bound_array,
+            crs=crs,
             resolution=resolution,
         )
     return grid_info

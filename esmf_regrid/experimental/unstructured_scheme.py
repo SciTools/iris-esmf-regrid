@@ -510,9 +510,9 @@ def _regrid_rectilinear_to_unstructured__prepare(
             f"method must be either 'bilinear' or 'conservative', got '{method}'."
         )
     assert mesh is not None
-    if len(grid_x.shape) == 1:
-        grid_x_dim = src_grid_cube.coord_dims(grid_x)[0]
-        grid_y_dim = src_grid_cube.coord_dims(grid_y)[0]
+    if grid_x.ndim == 1:
+        (grid_x_dim,) = src_grid_cube.coord_dims(grid_x)
+        (grid_y_dim,) = src_grid_cube.coord_dims(grid_y)
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
