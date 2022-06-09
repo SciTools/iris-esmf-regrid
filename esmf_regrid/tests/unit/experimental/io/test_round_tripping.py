@@ -94,13 +94,14 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
-    src_data = np.arange(np.product(src.data.shape)).reshape(src.data.shape)
-    src_mask = np.zeros(src.data.shape)
-    src_mask[0, 0] = 1
-    src.data = ma.array(src_data, mask=src_mask)
+    src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_data[0, 0] = ma.masked
+    src.data = src_data
     # TODO: make this a cube comparison when mesh comparison becomes available.
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
-    assert np.array_equal(original_rg(src).data.mask, loaded_rg(src).data.mask)
+    original_result = original_rg(src).data
+    loaded_result = loaded_rg(src).data
+    assert np.array_equal(original_result, loaded_result)
+    assert np.array_equal(original_result.mask, loaded_result.mask)
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
@@ -155,9 +156,12 @@ def test_GridToMeshESMFRegridder_bilinear_round_trip(tmp_path):
     # Demonstrate regridding still gives the same results.
     src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
     src_data[0, 0] = ma.masked
+    src.data = src_data
     # TODO: make this a cube comparison when mesh comparison becomes available.
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
-    assert np.array_equal(original_rg(src).data.mask, loaded_rg(src).data.mask)
+    original_result = original_rg(src).data
+    loaded_result = loaded_rg(src).data
+    assert np.array_equal(original_result, loaded_result)
+    assert np.array_equal(original_result.mask, loaded_result.mask)
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
@@ -180,9 +184,12 @@ def test_GridToMeshESMFRegridder_curvilinear_round_trip(tmp_path):
     # Demonstrate regridding still gives the same results.
     src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
     src_data[0, 0] = ma.masked
+    src.data = src_data
     # TODO: make this a cube comparison when mesh comparison becomes available.
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
-    assert np.array_equal(original_rg(src).data.mask, loaded_rg(src).data.mask)
+    original_result = original_rg(src).data
+    loaded_result = loaded_rg(src).data
+    assert np.array_equal(original_result, loaded_result)
+    assert np.array_equal(original_result.mask, loaded_result.mask)
 
 
 def test_MeshToGridESMFRegridder_round_trip(tmp_path):
@@ -210,8 +217,11 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path):
     # Demonstrate regridding still gives the same results.
     src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
     src_data[0] = ma.masked
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
-    assert np.array_equal(original_rg(src).data.mask, loaded_rg(src).data.mask)
+    src.data = src_data
+    original_result = original_rg(src).data
+    loaded_result = loaded_rg(src).data
+    assert np.array_equal(original_result, loaded_result)
+    assert np.array_equal(original_result.mask, loaded_result.mask)
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
@@ -266,8 +276,11 @@ def test_MeshToGridESMFRegridder_bilinear_round_trip(tmp_path):
     # Demonstrate regridding still gives the same results.
     src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
     src_data[0] = ma.masked
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
-    assert np.array_equal(original_rg(src).data.mask, loaded_rg(src).data.mask)
+    src.data = src_data
+    original_result = original_rg(src).data
+    loaded_result = loaded_rg(src).data
+    assert np.array_equal(original_result, loaded_result)
+    assert np.array_equal(original_result.mask, loaded_result.mask)
 
     # Ensure version data is equal.
     assert original_rg.regridder.esmf_version == loaded_rg.regridder.esmf_version
@@ -288,9 +301,10 @@ def test_MeshToGridESMFRegridder_curvilinear_round_trip(tmp_path):
     assert original_rg.grid_y == loaded_rg.grid_y
 
     # Demonstrate regridding still gives the same results.
-    src_data = np.arange(np.product(src.data.shape)).reshape(src.data.shape)
-    src_mask = np.zeros(src.data.shape)
-    src_mask[0] = 1
-    src.data = ma.array(src_data, mask=src_mask)
-    assert np.array_equal(original_rg(src).data, loaded_rg(src).data)
-    assert np.array_equal(original_rg(src).data.mask, loaded_rg(src).data.mask)
+    src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_data[0] = ma.masked
+    src.data = src_data
+    original_result = original_rg(src).data
+    loaded_result = loaded_rg(src).data
+    assert np.array_equal(original_result, loaded_result)
+    assert np.array_equal(original_result.mask, loaded_result.mask)

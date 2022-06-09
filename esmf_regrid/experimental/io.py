@@ -55,7 +55,7 @@ def save_regridder(rg, filename):
         if grid[0].ndim == 1:
             shape = [coord.points.size for coord in grid]
         else:
-            shape = src_grid[0].shape
+            shape = grid[0].shape
         data = np.zeros(shape)
         cube = Cube(data, var_name=name, long_name=name)
         if grid[0].ndim == 1:
