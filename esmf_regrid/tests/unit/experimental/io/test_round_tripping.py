@@ -24,7 +24,10 @@ def _make_grid_to_mesh_regridder(
     src_lats = 4
     tgt_lons = 5
     tgt_lats = 6
-    lon_bounds = (-180, 180)
+    if circular:
+        lon_bounds = (-180, 180)
+    else:
+        lon_bounds = (-180, 170)
     lat_bounds = (-90, 90)
     if grid_dims == 1:
         src = _grid_cube(src_lons, src_lats, lon_bounds, lat_bounds, circular=circular)
