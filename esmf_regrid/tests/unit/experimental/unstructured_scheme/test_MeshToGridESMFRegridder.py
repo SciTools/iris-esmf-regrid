@@ -9,9 +9,6 @@ import pytest
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
-    _grid_cube,
-)
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
     _gridlike_mesh_cube,
@@ -19,6 +16,10 @@ from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshI
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
     _full_mesh,
+)
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
+    _curvilinear_cube,
+    _grid_cube,
 )
 
 
@@ -346,3 +347,53 @@ def test_resolution():
     lat_band_rg = MeshToGridESMFRegridder(mesh_cube, lat_bands, resolution=resolution)
     assert lat_band_rg.resolution == resolution
     assert lat_band_rg.regridder.tgt.resolution == resolution
+
+
+def test_curvilinear():
+    """
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+
+    Tests with curvilinear source cube.
+    """
+    mesh = _full_mesh()
+    mesh_length = mesh.connectivity(contains_face=True).shape[0]
+
+    h = 2
+    t = 3
+    height = DimCoord(np.arange(h), standard_name="height")
+    time = DimCoord(np.arange(t), standard_name="time")
+
+    src_data = np.empty([t, mesh_length, h])
+    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, :]
+    mesh_cube = Cube(src_data)
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    mesh_cube.add_aux_coord(mesh_coord_x, 1)
+    mesh_cube.add_aux_coord(mesh_coord_y, 1)
+    mesh_cube.add_dim_coord(time, 0)
+    mesh_cube.add_dim_coord(height, 2)
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    tgt = _curvilinear_cube(n_lons, n_lats, lon_bounds, lat_bounds)
+
+    src_cube = mesh_cube.copy()
+    src_cube.transpose([1, 0, 2])
+    regridder = MeshToGridESMFRegridder(src_cube, tgt)
+    result = regridder(mesh_cube)
+
+    # Lenient check for data.
+    expected_data = np.empty([t, n_lats, n_lons, h])
+    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, np.newaxis, :]
+    assert np.allclose(expected_data, result.data)
+
+    expected_cube = Cube(expected_data)
+    expected_cube.add_dim_coord(time, 0)
+    expected_cube.add_aux_coord(tgt.coord("latitude"), [1, 2])
+    expected_cube.add_aux_coord(tgt.coord("longitude"), [1, 2])
+    expected_cube.add_dim_coord(height, 3)
+
+    # Check metadata and scalar coords.
+    result.data = expected_data
+    assert expected_cube == result

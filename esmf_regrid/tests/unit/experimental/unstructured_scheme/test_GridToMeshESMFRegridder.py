@@ -10,15 +10,16 @@ import pytest
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
-    _grid_cube,
-)
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
     _gridlike_mesh_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
+)
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
+    _curvilinear_cube,
+    _grid_cube,
 )
 
 
@@ -372,3 +373,51 @@ def test_resolution():
     result = GridToMeshESMFRegridder(grid, tgt, resolution=resolution)
     assert result.resolution == resolution
     assert result.regridder.src.resolution == resolution
+
+
+def test_curvilinear():
+    """
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+
+    Tests with curvilinear target cube.
+    """
+    tgt = _flat_mesh_cube()
+    mesh = tgt.mesh
+    mesh_length = mesh.connectivity(contains_face=True).shape[0]
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    grid = _curvilinear_cube(n_lons, n_lats, lon_bounds, lat_bounds)
+
+    h = 2
+    t = 3
+    height = DimCoord(np.arange(h), standard_name="height")
+    time = DimCoord(np.arange(t), standard_name="time")
+
+    src_data = np.empty([t, n_lats, n_lons, h])
+    src_data[:] = np.arange(t * h).reshape([t, h])[:, np.newaxis, np.newaxis, :]
+    cube = Cube(src_data)
+    cube.add_aux_coord(grid.coord("latitude"), [1, 2])
+    cube.add_aux_coord(grid.coord("longitude"), [1, 2])
+    cube.add_dim_coord(time, 0)
+    cube.add_dim_coord(height, 3)
+
+    regridder = GridToMeshESMFRegridder(grid, tgt)
+    result = regridder(cube)
+
+    # Lenient check for data.
+    expected_data = np.empty([t, mesh_length, h])
+    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, :]
+    assert np.allclose(expected_data, result.data)
+
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    expected_cube = Cube(expected_data)
+    expected_cube.add_dim_coord(time, 0)
+    expected_cube.add_aux_coord(mesh_coord_x, 1)
+    expected_cube.add_aux_coord(mesh_coord_y, 1)
+    expected_cube.add_dim_coord(height, 2)
+
+    # Check metadata and scalar coords.
+    result.data = expected_data
+    assert expected_cube == result
