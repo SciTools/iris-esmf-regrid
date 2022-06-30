@@ -590,11 +590,13 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         grid_y_dim=grid_y_dim,
         mdtol=mdtol,
     )
-
-    face_node = mesh.face_node_connectivity
-    # In face_node_connectivity: `location`= face, `connected` = node, so
-    # you want to get the length of the `location` dimension.
-    n_faces = face_node.shape[face_node.location_axis]
+    if location == "face":
+        face_node = mesh.face_node_connectivity
+        # In face_node_connectivity: `location`= face, `connected` = node, so
+        # you want to get the length of the `location` dimension.
+        chunk_shape = (face_node.shape[face_node.location_axis],)
+    elif location == "node":
+        chunk_shape = mesh.node_x.shape
 
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
@@ -603,7 +605,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         src_cube,
         regrid,
         (grid_x_dim, grid_y_dim),
-        (n_faces,),
+        chunk_shape,
     )
 
     new_cube = _create_cube(

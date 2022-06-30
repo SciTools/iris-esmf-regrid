@@ -206,6 +206,23 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     return grid_info
 
 
+def _mesh_to_MeshInfo(mesh, location):
+    # Returns a MeshInfo object describing the mesh of the cube.
+    assert mesh.topology_dimension == 2
+    if None in mesh.face_coords:
+        elem_coords = None
+    else:
+        elem_coords = np.stack([coord.points for coord in mesh.face_coords], axis=-1)
+    meshinfo = MeshInfo(
+        np.stack([coord.points for coord in mesh.node_coords], axis=-1),
+        mesh.face_node_connectivity.indices_by_location(),
+        mesh.face_node_connectivity.start_index,
+        elem_coords=elem_coords,
+        location=location,
+    )
+    return meshinfo
+
+
 def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
     """
     Perform regridding on data over specific dimensions.
@@ -234,6 +251,117 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
 
     result = np.moveaxis(result, [-1, -2], [grid_x_dim, grid_y_dim])
     return result
+
+
+def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
+    standard_in_dims = [-1, -2][: len(dims)]
+    data = np.moveaxis(data, dims, standard_in_dims)
+    result = regridder.regrid(data, mdtol=mdtol)
+    num_dims = len(dims)
+
+    standard_out_dims = [-1, -2][:num_out_dims]
+    if num_dims == 2 and num_out_dims == 1:
+        dims = [min(dims)]
+    if num_dims == 1 and num_out_dims == 2:
+        dims = [dims[0] + 1, dims[0]]
+    result = np.moveaxis(result, standard_out_dims, dims)
+    return result
+
+
+def _map_complete_blocks(src, func, dims, out_sizes):
+    """
+    Apply a function to complete blocks.
+
+    Based on :func:`iris._lazy_data.map_complete_blocks`.
+    By "complete blocks" we mean that certain dimensions are enforced to be
+    spanned by single chunks.
+    Unlike the iris version of this function, this function also handles
+    cases where the input and output have a different number of dimensions.
+    The particular cases this function is designed for involves collapsing
+    a 2D grid to a 1D mesh and expanding a 1D mesh to a 2D grid. Cases
+    involving the mapping between the same number of dimensions should still
+    behave the same as before.
+
+    Parameters
+    ----------
+    src : cube
+        Source :class:`~iris.cube.Cube` that function is applied to.
+    func : function
+        Function to apply.
+    dims : tuple of int
+        Dimensions that cannot be chunked.
+    out_sizes : tuple of int
+        Output size of dimensions that cannot be chunked.
+
+    Returns
+    -------
+    array
+        Either a :class:`dask.array.array`, or :class:`numpy.ndarray`
+        depending on the laziness of the data in src.
+
+    """
+    if not src.has_lazy_data():
+        return func(src.data)
+
+    data = src.lazy_data()
+
+    # Ensure dims are not chunked
+    in_chunks = list(data.chunks)
+    for dim in dims:
+        in_chunks[dim] = src.shape[dim]
+    data = data.rechunk(in_chunks)
+
+    # Determine output chunks
+    sorted_dims = sorted(dims)
+    out_chunks = list(data.chunks)
+    for dim, size in zip(sorted_dims, out_sizes):
+        out_chunks[dim] = size
+
+    num_dims = len(dims)
+    num_out = len(out_sizes)
+    dropped_dims = []
+    new_axis = None
+    if num_out > num_dims:
+        # While this code should be robust for cases where num_out > num_dims > 1,
+        # there is some ambiguity as to what their behaviour ought to be.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_dims == 1
+        # While this code should be robust for cases where num_out > 2,
+        # we expect to handle at most 2D grids.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_out == 2
+        slice_index = sorted_dims[-1]
+        # Insert the remaining contents of out_sizes in the position immediately
+        # after the last dimension.
+        out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
+        new_axis = range(slice_index, slice_index + num_out - num_dims)
+    elif num_dims > num_out:
+        # While this code should be robust for cases where num_dims > num_out > 1,
+        # there is some ambiguity as to what their behaviour ought to be.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_out == 1
+        # While this code should be robust for cases where num_dims > 2,
+        # we expect to handle at most 2D grids.
+        # Since these cases are out of our own scope, we explicitly ignore them
+        # for the time being.
+        assert num_dims == 2
+        dropped_dims = sorted_dims[num_out:]
+        # Remove the remaining dimensions from the expected output shape.
+        for dim in dropped_dims[::-1]:
+            out_chunks.pop(dim)
+    else:
+        pass
+
+    return data.map_blocks(
+        func,
+        chunks=out_chunks,
+        drop_axis=dropped_dims,
+        new_axis=new_axis,
+        dtype=src.dtype,
+    )
 
 
 def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
@@ -317,7 +445,14 @@ RegridInfo = namedtuple(
 
 
 def _regrid_rectilinear_to_rectilinear__prepare(
-    src_grid_cube, tgt_grid_cube, src_mask=None, tgt_mask=None
+    src_grid_cube,
+    tgt_grid_cube,
+    method,
+    precomputed_weights=None,
+    srcres=None,
+    tgtres=None,
+    src_mask=None,
+    tgt_mask=None,
 ):
     tgt_x = _get_coord(tgt_grid_cube, "x")
     tgt_y = _get_coord(tgt_grid_cube, "y")
@@ -330,10 +465,20 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(src_x)
 
-    srcinfo = _cube_to_GridInfo(src_grid_cube, mask=src_mask)
-    tgtinfo = _cube_to_GridInfo(tgt_grid_cube, mask=tgt_mask)
+    if method == "conservative":
+        center = False
+    elif method == "bilinear":
+        center = True
+    else:
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
+    srcinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=srcres, mask=src_mask)
+    tgtinfo = _cube_to_GridInfo(tgt_grid_cube, center=center, resolution=tgtres, mask=tgt_mask)
 
-    regridder = Regridder(srcinfo, tgtinfo)
+    regridder = Regridder(
+        srcinfo, tgtinfo, method=method, precomputed_weights=precomputed_weights
+    )
 
     regrid_info = RegridInfo(
         x_dim=grid_x_dim,
@@ -366,7 +511,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     else:
         # Due to structural reasons, the order here must be reversed.
         chunk_shape = grid_x.shape[::-1]
-    new_data = map_complete_blocks(
+    new_data = _map_complete_blocks(
         src_cube,
         regrid,
         (grid_x_dim, grid_y_dim),
@@ -383,7 +528,219 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     return new_cube
 
 
-def regrid_rectilinear_to_rectilinear(src_cube, grid_cube, mdtol=0):
+def _regrid_unstructured_to_rectilinear__prepare(
+    src_mesh_cube,
+    target_grid_cube,
+    method,
+    precomputed_weights=None,
+    resolution=None,
+):
+    """
+    First (setup) part of 'regrid_unstructured_to_rectilinear'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
+    grid_x = _get_coord(target_grid_cube, "x")
+    grid_y = _get_coord(target_grid_cube, "y")
+    mesh = src_mesh_cube.mesh
+    location = src_mesh_cube.location
+    if mesh is None:
+        raise ValueError("The given cube is not defined on a mesh.")
+    if method == "conservative":
+        if location != "face":
+            raise ValueError(
+                f"Conservative regridding requires a source cube located on "
+                f"the face of a cube, target cube had the {location} location."
+            )
+        center = False
+    elif method == "bilinear":
+        if location not in ["face", "node"]:
+            raise ValueError(
+                f"Bilinear regridding requires a source cube with a node "
+                f"or face location, target cube had the {location} location."
+            )
+        if location == "face" and None in mesh.face_coords:
+            raise ValueError(
+                "Bilinear regridding requires a source cube on a face location to have "
+                "a face center."
+            )
+        center = True
+    else:
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
+    # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
+    # mesh belongs to.
+    mesh_dim = src_mesh_cube.mesh_dim()
+
+    meshinfo = _mesh_to_MeshInfo(mesh, location)
+    gridinfo = _cube_to_GridInfo(target_grid_cube, center=center, resolution=resolution)
+
+    regridder = Regridder(
+        meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
+    )
+
+    regrid_info = (mesh_dim, grid_x, grid_y, regridder)
+
+    return regrid_info
+
+
+def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_unstructured_to_rectilinear'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
+    mesh_dim, grid_x, grid_y, regridder = regrid_info
+
+    # Set up a function which can accept just chunk of data as an argument.
+    regrid = functools.partial(
+        _regrid_along_mesh_dim,
+        regridder,
+        mesh_dim=mesh_dim,
+        mdtol=mdtol,
+    )
+
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
+    if len(grid_x.shape) == 1:
+        chunk_shape = (len(grid_x.points), len(grid_y.points))
+    else:
+        chunk_shape = grid_x.shape
+    new_data = _map_complete_blocks(
+        src_cube,
+        regrid,
+        (mesh_dim,),
+        chunk_shape,
+    )
+
+    new_cube = _create_cube(
+        new_data,
+        src_cube,
+        (mesh_dim,),
+        (grid_x, grid_y),
+        2,
+    )
+
+    # TODO: apply tweaks to created cube (slice out length 1 dimensions)
+
+    return new_cube
+
+
+def _regrid_rectilinear_to_unstructured__prepare(
+    src_grid_cube,
+    target_mesh_cube,
+    method,
+    precomputed_weights=None,
+    resolution=None,
+):
+    """
+    First (setup) part of 'regrid_rectilinear_to_unstructured'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
+    grid_x = _get_coord(src_grid_cube, "x")
+    grid_y = _get_coord(src_grid_cube, "y")
+    mesh = target_mesh_cube.mesh
+    location = target_mesh_cube.location
+    if mesh is None:
+        raise ValueError("The given cube is not defined on a mesh.")
+    if method == "conservative":
+        if location != "face":
+            raise ValueError(
+                f"Conservative regridding requires a target cube located on "
+                f"the face of a cube, target cube had the {location} location."
+            )
+        center = False
+    elif method == "bilinear":
+        if location not in ["face", "node"]:
+            raise ValueError(
+                f"Bilinear regridding requires a target cube with a node "
+                f"or face location, target cube had the {location} location."
+            )
+        if location == "face" and None in mesh.face_coords:
+            raise ValueError(
+                "Bilinear regridding requires a target cube on a face location to have "
+                "a face center."
+            )
+        center = True
+    else:
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
+    assert mesh is not None
+    if grid_x.ndim == 1:
+        (grid_x_dim,) = src_grid_cube.coord_dims(grid_x)
+        (grid_y_dim,) = src_grid_cube.coord_dims(grid_y)
+    else:
+        grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
+
+    meshinfo = _mesh_to_MeshInfo(mesh, location)
+    gridinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=resolution)
+
+    regridder = Regridder(
+        gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
+    )
+
+    regrid_info = (grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, location, regridder)
+
+    return regrid_info
+
+
+def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_rectilinear_to_unstructured'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
+    grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, location, regridder = regrid_info
+
+    # Set up a function which can accept just chunk of data as an argument.
+    regrid = functools.partial(
+        _regrid_along_grid_dims,
+        regridder,
+        grid_x_dim=grid_x_dim,
+        grid_y_dim=grid_y_dim,
+        mdtol=mdtol,
+    )
+    if location == "face":
+        face_node = mesh.face_node_connectivity
+        # In face_node_connectivity: `location`= face, `connected` = node, so
+        # you want to get the length of the `location` dimension.
+        chunk_shape = (face_node.shape[face_node.location_axis],)
+    elif location == "node":
+        chunk_shape = mesh.node_x.shape
+
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
+    new_data = _map_complete_blocks(
+        src_cube,
+        regrid,
+        (grid_x_dim, grid_y_dim),
+        chunk_shape,
+    )
+
+    new_cube = _create_cube(
+        new_data,
+        src_cube,
+        (grid_x_dim, grid_y_dim),
+        mesh.to_MeshCoords(location),
+        1,
+    )
+    return new_cube
+
+
+def regrid_rectilinear_to_rectilinear(
+    src_cube, grid_cube, mdtol=0, method="conservative", srcres=None, tgtres=None
+):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto another rectilinear grid.
 
@@ -409,6 +766,16 @@ def regrid_rectilinear_to_rectilinear(src_cube, grid_cube, mdtol=0):
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
+    method : str, default="conservative"
+        Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
+        :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
+        :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+    srcres : int, optional
+        If present, represents the amount of latitude slices per source cell
+        given to ESMF for calculation.
+    tgtres : int, optional
+        If present, represents the amount of latitude slices per target cell
+        given to ESMF for calculation.
 
     Returns
     -------
@@ -416,7 +783,9 @@ def regrid_rectilinear_to_rectilinear(src_cube, grid_cube, mdtol=0):
         A new :class:`~iris.cube.Cube` instance.
 
     """
-    regrid_info = _regrid_rectilinear_to_rectilinear__prepare(src_cube, grid_cube)
+    regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
+        src_cube, grid_cube, method=method, srcres=srcres, tgtres=tgtres
+    )
     result = _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
 
@@ -501,11 +870,110 @@ class ESMFAreaWeighted:
         )
 
 
+class _ESMFRegridder:
+    r"""Generic regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+
+    def __init__(
+        self,
+        src_grid,
+        tgt_grid,
+        method,
+        **kwargs,
+    ):
+        """
+        Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
+
+        Parameters
+        ----------
+        src_grid : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
+        tgt_grid : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+        mdtol : float, default=0
+            Tolerance of missing data. The value returned in each element of
+            the returned array will be masked if the fraction of masked data
+            exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
+            ``mdtol=1`` will mean the resulting element will be masked if and only
+            if all the contributing elements of data are masked.
+
+        """
+        if not (0 <= mdtol <= 1):
+            msg = "Value for mdtol must be in range 0 - 1, got {}."
+            raise ValueError(msg.format(mdtol))
+        self.mdtol = mdtol
+
+        regrid_info = _regrid_rectilinear_to_rectilinear__prepare(src_grid, tgt_grid)
+
+        # Store regrid info.
+        self.grid_x = regrid_info.x_coord
+        self.grid_y = regrid_info.y_coord
+        self.regridder = regrid_info.regridder
+
+        # Record the source grid.
+        self.src_grid = (_get_coord(src_grid, "x"), _get_coord(src_grid, "y"))
+
+    def __call__(self, cube):
+        """
+        Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
+
+        The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
+        :class:`~iris.cube.Cube` used to create this :class:`ESMFAreaWeightedRegridder` instance.
+
+        Parameters
+        ----------
+        cube : :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` instance to be regridded.
+
+        Returns
+        -------
+        :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
+            and the other dimensions from this :class:`~iris.cube.Cube`. The data values of
+            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
+            area-weighted regridding via :mod:`ESMF` generated weights.
+
+        """
+        src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+
+        # Check the source grid matches that used in initialisation
+        if self.src_grid != (src_x, src_y):
+            raise ValueError(
+                "The given cube is not defined on the same "
+                "source grid as this regridder."
+            )
+
+        if len(src_x.shape) == 1:
+            grid_x_dim = cube.coord_dims(src_x)[0]
+            grid_y_dim = cube.coord_dims(src_y)[0]
+        else:
+            grid_y_dim, grid_x_dim = cube.coord_dims(src_x)
+
+        regrid_info = RegridInfo(
+            x_dim=grid_x_dim,
+            y_dim=grid_y_dim,
+            x_coord=self.grid_x,
+            y_coord=self.grid_y,
+            regridder=self.regridder,
+        )
+
+        return _regrid_rectilinear_to_rectilinear__perform(
+            cube, regrid_info, self.mdtol
+        )
+
+
 class ESMFAreaWeightedRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
-        self, src_grid, tgt_grid, mdtol=0, use_src_mask=False, use_tgt_mask=False
+        self,
+        src_grid,
+        tgt_grid,
+        mdtol=0,
+        precomputed_weights=None,
+        srcres=None,
+        tgtres=None,
+        use_src_mask=False,
+        use_tgt_mask=False,
     ):
         """
         Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
