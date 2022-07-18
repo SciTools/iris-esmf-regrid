@@ -314,7 +314,7 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     # Determine output chunks
     sorted_dims = sorted(dims)
     out_chunks = list(data.chunks)
-    for dim, size in zip(sorted_dims, out_sizes):
+    for dim, size in sorted(zip(dims, out_sizes)):
         out_chunks[dim] = size
 
     num_dims = len(dims)
@@ -401,24 +401,24 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
     new_cube = iris.cube.Cube(data)
 
     if len(src_dims) == 2:
-        grid_dim_x, grid_dim_y = src_dims
+        grid_x_dim, grid_y_dim = src_dims
     elif len(src_dims) == 1:
-        grid_dim_y = src_dims[0]
-        grid_dim_x = grid_dim_y + 1
+        grid_y_dim = src_dims[0]
+        grid_x_dim = grid_y_dim + 1
     else:
         raise ValueError(
             f"Source grid must be described by 1 or 2 dimensions, got {len(src_dims)}"
         )
     if num_tgt_dims == 1:
-        grid_dim_x = grid_dim_y = min(src_dims)
-    for tgt_coord, dim in zip(tgt_coords, (grid_dim_x, grid_dim_y)):
+        grid_y_dim = grid_x_dim = min(src_dims)
+    for tgt_coord, dim in zip(tgt_coords, (grid_x_dim, grid_y_dim)):
         if len(tgt_coord.shape) == 1:
             if isinstance(tgt_coord, iris.coords.DimCoord):
                 new_cube.add_dim_coord(tgt_coord, dim)
             else:
                 new_cube.add_aux_coord(tgt_coord, dim)
         else:
-            new_cube.add_aux_coord(tgt_coord, (grid_dim_y, grid_dim_x))
+            new_cube.add_aux_coord(tgt_coord, (grid_y_dim, grid_x_dim))
 
     new_cube.metadata = copy.deepcopy(src_cube.metadata)
 
@@ -507,7 +507,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
     if len(grid_x.shape) == 1:
-        chunk_shape = (len(grid_x.points), len(grid_y.points))
+        chunk_shape = (len(grid_y.points), len(grid_x.points))
     else:
         # Due to structural reasons, the order here must be reversed.
         chunk_shape = grid_x.shape[::-1]
@@ -608,7 +608,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
     if len(grid_x.shape) == 1:
-        chunk_shape = (len(grid_x.points), len(grid_y.points))
+        chunk_shape = (len(grid_y.points), len(grid_x.points))
     else:
         chunk_shape = grid_x.shape
     new_data = _map_complete_blocks(
@@ -1011,7 +1011,7 @@ class ESMFAreaWeightedRegridder:
         self.tgt_mask = _get_mask(tgt_grid, use_tgt_mask)
 
         regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
-            src_grid, tgt_grid, src_mask=self.src_mask, tgt_mask=self.tgt_mask
+            src_grid, tgt_grid, "conservative", src_mask=self.src_mask, tgt_mask=self.tgt_mask
         )
 
         # Store regrid info.
