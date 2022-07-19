@@ -716,7 +716,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         # you want to get the length of the `location` dimension.
         chunk_shape = (face_node.shape[face_node.location_axis],)
     elif location == "node":
-        chunk_shape = mesh.node_x.shape
+        chunk_shape = mesh.node_coords[0].shape
 
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
