@@ -1017,8 +1017,8 @@ class _ESMFRegridder:
             regridder=self.regridder,
         )
 
-        if src.mesh is None:
-            if tgt.mesh is None:
+        if cube.mesh is None:
+            if type(self.target[1]) is not str:
                 result = _regrid_rectilinear_to_rectilinear__perform(
                     cube, regrid_info, self.mdtol
                 )
@@ -1027,7 +1027,7 @@ class _ESMFRegridder:
                     cube, regrid_info, self.mdtol
                 )
         else:
-            if tgt.mesh is None:
+            if type(self.target[1]) is not str:
                 result = _regrid_unstructured_to_rectilinear__perform(
                     cube, regrid_info, self.mdtol
                 )
