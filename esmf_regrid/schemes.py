@@ -992,13 +992,13 @@ class _ESMFRegridder:
 
         """
         if cube.mesh is not None:
-            src_mesh = cube.mesh
-            location = cube.location
-            if self.src != (src_mesh, location):
-                raise ValueError(
-                    "The given cube is not defined on the same "
-                    "source mesh as this regridder."
-                )
+            # src_mesh = cube.mesh
+            # location = cube.location
+            # if self.src != (src_mesh, location):
+            #     raise ValueError(
+            #         "The given cube is not defined on the same "
+            #         "source mesh as this regridder."
+            #     )
             dims = [cube.mesh_dim()]
 
         else:
@@ -1014,7 +1014,7 @@ class _ESMFRegridder:
             if len(src_x.shape) == 1:
                 dims = [cube.coord_dims(src_x)[0], cube.coord_dims(src_y)[0]]
             else:
-                dims = cube.coord_dims(src_x)
+                dims = cube.coord_dims(src_x)[::-1]
 
         regrid_info = _RegridInfo(
             dims=dims,
