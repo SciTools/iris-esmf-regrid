@@ -910,6 +910,7 @@ class _ESMFRegridder:
         src,
         tgt,
         method,
+        mdtol=0,
         **kwargs,
     ):
         """
@@ -929,7 +930,6 @@ class _ESMFRegridder:
             if all the contributing elements of data are masked.
 
         """
-        mdtol = kwargs["mdtol"]
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
@@ -1052,15 +1052,20 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgtres=None,
         resolution=None,
     ):
+        kwargs = dict()
+        if srcres is not None:
+            kwargs["srcres"] = srcres
+        if tgtres is not None:
+            kwargs["tgtres"] = tgtres
+        if resolution is not None:
+            kwargs["srcres"] = resolution
         super().__init__(
             src,
             tgt,
             "conservative",
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
-            srcres=srcres,
-            tgtres=tgtres,
-            resolution=resolution,
+            **kwargs,
         )
 
 
