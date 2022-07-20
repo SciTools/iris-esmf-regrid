@@ -13,6 +13,7 @@ from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
+from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
 __all__ = [
     "ESMFAreaWeighted",
@@ -312,13 +313,16 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     data = data.rechunk(in_chunks)
 
     # Determine output chunks
-    sorted_dims = sorted(dims)
-    out_chunks = list(data.chunks)
-    for dim, size in zip(dims, out_sizes):
-        out_chunks[dim] = size
-
     num_dims = len(dims)
     num_out = len(out_sizes)
+    out_chunks = list(data.chunks)
+    sorted_dims = sorted(dims)
+    if num_out == 1:
+        out_chunks[sorted_dims[0]] = out_sizes[0]
+    else:
+        for dim, size in zip(dims, out_sizes):
+            out_chunks[dim] = size
+
     dropped_dims = []
     new_axis = None
     if num_out > num_dims:
@@ -442,6 +446,7 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
 RegridInfo = namedtuple(
     "RegridInfo", ["x_dim", "y_dim", "x_coord", "y_coord", "regridder"]
 )
+_RegridInfo = namedtuple("RegridInfo", ["dims", "target", "regridder"])
 
 
 def _regrid_rectilinear_to_rectilinear__prepare(
@@ -480,11 +485,9 @@ def _regrid_rectilinear_to_rectilinear__prepare(
         srcinfo, tgtinfo, method=method, precomputed_weights=precomputed_weights
     )
 
-    regrid_info = RegridInfo(
-        x_dim=grid_x_dim,
-        y_dim=grid_y_dim,
-        x_coord=tgt_x,
-        y_coord=tgt_y,
+    regrid_info = _RegridInfo(
+        dims=[grid_x_dim, grid_y_dim],
+        target=[tgt_x, tgt_y],
         regridder=regridder,
     )
 
@@ -492,14 +495,16 @@ def _regrid_rectilinear_to_rectilinear__prepare(
 
 
 def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
-    grid_x_dim, grid_y_dim, grid_x, grid_y, regridder = regrid_info
+    grid_x_dim, grid_y_dim = regrid_info.dims
+    grid_x, grid_y = regrid_info.target
+    regridder = regrid_info.regridder
 
     # Set up a function which can accept just chunk of data as an argument.
     regrid = functools.partial(
-        _regrid_along_grid_dims,
+        _regrid_along_dims,
         regridder,
-        grid_x_dim=grid_x_dim,
-        grid_y_dim=grid_y_dim,
+        dims=[grid_x_dim, grid_y_dim],
+        num_out_dims=2,
         mdtol=mdtol,
     )
 
@@ -582,7 +587,11 @@ def _regrid_unstructured_to_rectilinear__prepare(
         meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
     )
 
-    regrid_info = (mesh_dim, grid_x, grid_y, regridder)
+    regrid_info = _RegridInfo(
+        dims=[mesh_dim],
+        target=[grid_x, grid_y],
+        regridder=regridder,
+    )
 
     return regrid_info
 
@@ -594,13 +603,16 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     Perform the prepared regrid calculation on a single cube.
 
     """
-    mesh_dim, grid_x, grid_y, regridder = regrid_info
+    (mesh_dim,) = regrid_info.dims
+    grid_x, grid_y = regrid_info.target
+    regridder = regrid_info.regridder
 
     # Set up a function which can accept just chunk of data as an argument.
     regrid = functools.partial(
-        _regrid_along_mesh_dim,
+        _regrid_along_dims,
         regridder,
-        mesh_dim=mesh_dim,
+        dims=[mesh_dim],
+        num_out_dims=2,
         mdtol=mdtol,
     )
 
@@ -688,7 +700,11 @@ def _regrid_rectilinear_to_unstructured__prepare(
         gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
     )
 
-    regrid_info = (grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, location, regridder)
+    regrid_info = _RegridInfo(
+        dims=[grid_x_dim, grid_y_dim],
+        target=[mesh, location],
+        regridder=regridder,
+    )
 
     return regrid_info
 
@@ -700,14 +716,16 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     Perform the prepared regrid calculation on a single cube.
 
     """
-    grid_x_dim, grid_y_dim, grid_x, grid_y, mesh, location, regridder = regrid_info
+    grid_x_dim, grid_y_dim = regrid_info.dims
+    mesh, location = regrid_info.target
+    regridder = regrid_info.regridder
 
     # Set up a function which can accept just chunk of data as an argument.
     regrid = functools.partial(
-        _regrid_along_grid_dims,
+        _regrid_along_dims,
         regridder,
-        grid_x_dim=grid_x_dim,
-        grid_y_dim=grid_y_dim,
+        dims=[grid_x_dim, grid_y_dim],
+        num_out_dims=1,
         mdtol=mdtol,
     )
     if location == "face":
@@ -736,6 +754,20 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         1,
     )
     return new_cube
+
+
+def _regrid_rectilinear_to_unstructured__prepare(
+    src_grid_cube,
+    target_mesh_cube,
+    method,
+    precomputed_weights=None,
+    resolution=None,
+):
+    raise NotImplementedError
+
+
+def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
+    raise NotImplementedError
 
 
 def regrid_rectilinear_to_rectilinear(
@@ -875,8 +907,8 @@ class _ESMFRegridder:
 
     def __init__(
         self,
-        src_grid,
-        tgt_grid,
+        src,
+        tgt,
         method,
         **kwargs,
     ):
@@ -885,9 +917,9 @@ class _ESMFRegridder:
 
         Parameters
         ----------
-        src_grid : :class:`iris.cube.Cube`
+        src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
+        tgt : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
@@ -897,20 +929,41 @@ class _ESMFRegridder:
             if all the contributing elements of data are masked.
 
         """
+        mdtol = kwargs["mdtol"]
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+        self.method = method
 
-        regrid_info = _regrid_rectilinear_to_rectilinear__prepare(src_grid, tgt_grid)
+        if src_grid.mesh is None:
+            if tgt_grid.mesh is None:
+                regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
+                    src, tgt, method, **kwargs
+                )
+            else:
+                regrid_info = _regrid_rectilinear_to_unstructured__prepare(
+                    src, tgt, method, **kwargs
+                )
+        else:
+            if tgt_grid.mesh is None:
+                regrid_info = _regrid_unstructured_to_rectilinear__prepare(
+                    src, tgt, method, **kwargs
+                )
+            else:
+                regrid_info = _regrid_unstructured_to_unstructured__prepare(
+                    src, tgt, method, **kwargs
+                )
 
         # Store regrid info.
-        self.grid_x = regrid_info.x_coord
-        self.grid_y = regrid_info.y_coord
+        self.target = regrid_info.target
         self.regridder = regrid_info.regridder
 
         # Record the source grid.
-        self.src_grid = (_get_coord(src_grid, "x"), _get_coord(src_grid, "y"))
+        if src.mesh is not None:
+            self.src = (src.mesh, src.location)
+        else:
+            self.src = (_get_coord(src, "x"), _get_coord(src, "y"))
 
     def __call__(self, cube):
         """
@@ -933,35 +986,107 @@ class _ESMFRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
-        src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+        if src.mesh is not None:
+            src_mesh = src.mesh
+            location = src.location
+            if self.src != (src_mesh, location):
+                raise ValueError(
+                    "The given cube is not defined on the same "
+                    "source mesh as this regridder."
+                )
+            dims = [src.mesh_dim()]
 
-        # Check the source grid matches that used in initialisation
-        if self.src_grid != (src_x, src_y):
-            raise ValueError(
-                "The given cube is not defined on the same "
-                "source grid as this regridder."
-            )
-
-        if len(src_x.shape) == 1:
-            grid_x_dim = cube.coord_dims(src_x)[0]
-            grid_y_dim = cube.coord_dims(src_y)[0]
         else:
-            grid_y_dim, grid_x_dim = cube.coord_dims(src_x)
+            src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
-        regrid_info = RegridInfo(
-            x_dim=grid_x_dim,
-            y_dim=grid_y_dim,
-            x_coord=self.grid_x,
-            y_coord=self.grid_y,
-            regridder=self.regridder,
+            # Check the source grid matches that used in initialisation
+            if self.src != (src_x, src_y):
+                raise ValueError(
+                    "The given cube is not defined on the same "
+                    "source grid as this regridder."
+                )
+
+            if len(src_x.shape) == 1:
+                dims = [cube.coord_dims(src_x)[0], cube.coord_dims(src_y)[0]]
+            else:
+                dims = cube.coord_dims(src_x)
+
+        regrid_info = _RegridInfo(
+            dims=dims,
+            target=self.target,
+            regridder=regridder,
         )
 
-        return _regrid_rectilinear_to_rectilinear__perform(
-            cube, regrid_info, self.mdtol
+        if src_grid.mesh is None:
+            if tgt_grid.mesh is None:
+                result = _regrid_rectilinear_to_rectilinear__perform(
+                    cube, regrid_info, self.mdtol
+                )
+            else:
+                result = _regrid_rectilinear_to_unstructured__perform(
+                    cube, regrid_info, self.mdtol
+                )
+        else:
+            if tgt_grid.mesh is None:
+                result = _regrid_unstructured_to_rectilinear__perform(
+                    cube, regrid_info, self.mdtol
+                )
+            else:
+                result = _regrid_unstructured_to_unstructured__perform(
+                    cube, regrid_info, self.mdtol
+                )
+
+        return result
+
+
+class ESMFAreaWeightedRegridder(_ESMFRegridder):
+    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+
+    def __init__(
+        self,
+        src,
+        tgt,
+        mdtol=0,
+        precomputed_weights=None,
+        srcres=None,
+        tgtres=None,
+        resolution=None,
+    ):
+        super().__init__(
+            src,
+            tgt,
+            "conservative",
+            mdtol=mdtol,
+            precomputed_weights=precomputed_weights,
+            srcres=srcres,
+            tgtres=tgtres,
+            resolution=resolution,
         )
 
 
-class ESMFAreaWeightedRegridder:
+class ESMFBilinearRegridder(_ESMFRegridder):
+    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+
+    def __init__(
+        self,
+        src,
+        tgt,
+        mdtol=0,
+        precomputed_weights=None,
+    ):
+        super().__init__(
+            src,
+            tgt,
+            "bilinear",
+            mdtol=mdtol,
+            precomputed_weights=precomputed_weights,
+            srcres=srcres,
+            tgtres=tgtres,
+            resolution=resolution,
+        )
+
+
+class _ESMFAreaWeightedRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
