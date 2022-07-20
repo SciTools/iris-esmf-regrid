@@ -643,7 +643,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     return new_cube
 
 
-def _regrid_rectilinear_to_unstructured__prepare(
+def _regrid_unstructured_to_unstructured__prepare(
     src_grid_cube,
     target_mesh_cube,
     method,
@@ -766,7 +766,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     raise NotImplementedError
 
 
-def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
+def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
     raise NotImplementedError
 
 
@@ -936,8 +936,8 @@ class _ESMFRegridder:
         self.mdtol = mdtol
         self.method = method
 
-        if src_grid.mesh is None:
-            if tgt_grid.mesh is None:
+        if src.mesh is None:
+            if tgt.mesh is None:
                 regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
                     src, tgt, method, **kwargs
                 )
@@ -946,7 +946,7 @@ class _ESMFRegridder:
                     src, tgt, method, **kwargs
                 )
         else:
-            if tgt_grid.mesh is None:
+            if tgt.mesh is None:
                 regrid_info = _regrid_unstructured_to_rectilinear__prepare(
                     src, tgt, method, **kwargs
                 )
@@ -986,15 +986,15 @@ class _ESMFRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
-        if src.mesh is not None:
-            src_mesh = src.mesh
-            location = src.location
+        if cube.mesh is not None:
+            src_mesh = cube.mesh
+            location = cube.location
             if self.src != (src_mesh, location):
                 raise ValueError(
                     "The given cube is not defined on the same "
                     "source mesh as this regridder."
                 )
-            dims = [src.mesh_dim()]
+            dims = [cube.mesh_dim()]
 
         else:
             src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
@@ -1014,11 +1014,11 @@ class _ESMFRegridder:
         regrid_info = _RegridInfo(
             dims=dims,
             target=self.target,
-            regridder=regridder,
+            regridder=self.regridder,
         )
 
-        if src_grid.mesh is None:
-            if tgt_grid.mesh is None:
+        if src.mesh is None:
+            if tgt.mesh is None:
                 result = _regrid_rectilinear_to_rectilinear__perform(
                     cube, regrid_info, self.mdtol
                 )
@@ -1027,7 +1027,7 @@ class _ESMFRegridder:
                     cube, regrid_info, self.mdtol
                 )
         else:
-            if tgt_grid.mesh is None:
+            if tgt.mesh is None:
                 result = _regrid_unstructured_to_rectilinear__perform(
                     cube, regrid_info, self.mdtol
                 )
@@ -1080,9 +1080,6 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             "bilinear",
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
-            srcres=srcres,
-            tgtres=tgtres,
-            resolution=resolution,
         )
 
 
