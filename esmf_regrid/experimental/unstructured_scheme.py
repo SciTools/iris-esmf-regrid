@@ -7,7 +7,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo, _get_coord, _get_mask
+from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo, _ESMFRegridder, _get_coord, _get_mask
 
 
 def _map_complete_blocks(src, func, dims, out_sizes):
@@ -331,7 +331,33 @@ def regrid_unstructured_to_rectilinear(
     return result
 
 
-class MeshToGridESMFRegridder:
+class MeshToGridESMFRegridder(_ESMFRegridder):
+    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+
+    def __init__(
+        self,
+        src,
+        tgt,
+        mdtol=None,
+        method="conservative",
+        precomputed_weights=None,
+        resolution=None,
+        use_src_mask=False,
+        use_tgt_mask=False,
+    ):
+        super().__init__(
+            src,
+            tgt,
+            method,
+            mdtol=mdtol,
+            precomputed_weights=precomputed_weights,
+            resolution=resolution,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
+
+
+class _MeshToGridESMFRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
@@ -706,7 +732,33 @@ def regrid_rectilinear_to_unstructured(
     return result
 
 
-class GridToMeshESMFRegridder:
+class GridToMeshESMFRegridder(_ESMFRegridder):
+    r"""Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
+
+    def __init__(
+        self,
+        src,
+        tgt,
+        mdtol=None,
+        method="conservative",
+        precomputed_weights=None,
+        resolution=None,
+        use_src_mask=False,
+        use_tgt_mask=False,
+    ):
+        super().__init__(
+            src,
+            tgt,
+            method,
+            mdtol=mdtol,
+            precomputed_weights=precomputed_weights,
+            resolution=resolution,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
+
+
+class _GridToMeshESMFRegridder:
     r"""Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(

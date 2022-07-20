@@ -910,7 +910,7 @@ class _ESMFRegridder:
         src,
         tgt,
         method,
-        mdtol=0,
+        mdtol=None,
         **kwargs,
     ):
         """
@@ -930,6 +930,11 @@ class _ESMFRegridder:
             if all the contributing elements of data are masked.
 
         """
+        if mdtol is None:
+            if method == "conservative":
+                mdtol = 1
+            elif method == "bilinear":
+                mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
