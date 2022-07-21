@@ -355,6 +355,9 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
         )
+        self.resolution = resolution
+        self.mesh, self.location = self.src
+        self.grid_x, self.grid_y = self.target
 
 
 class _MeshToGridESMFRegridder:
@@ -756,6 +759,9 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
         )
+        self.resolution = resolution
+        self.mesh, self.location = self.target
+        self.grid_x, self.grid_y = self.src
 
 
 class _GridToMeshESMFRegridder:
