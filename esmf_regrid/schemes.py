@@ -547,6 +547,11 @@ def _regrid_unstructured_to_rectilinear__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
+    if resolution is not None:
+        if not (isinstance(resolution, int) and resolution > 0):
+            raise ValueError("resolution must be a positive integer.")
+        if method != "conservative":
+            raise ValueError("resolution can only be set for conservative regridding.")
     grid_x = _get_coord(target_grid_cube, "x")
     grid_y = _get_coord(target_grid_cube, "y")
     mesh = src_mesh_cube.mesh
@@ -657,6 +662,11 @@ def _regrid_unstructured_to_unstructured__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
+    if resolution is not None:
+        if not (isinstance(resolution, int) and resolution > 0):
+            raise ValueError("resolution must be a positive integer.")
+        if method != "conservative":
+            raise ValueError("resolution can only be set for conservative regridding.")
     grid_x = _get_coord(src_grid_cube, "x")
     grid_y = _get_coord(src_grid_cube, "y")
     mesh = target_mesh_cube.mesh
@@ -930,6 +940,10 @@ class _ESMFRegridder:
             if all the contributing elements of data are masked.
 
         """
+        if method not in ["conservative", "bilinear"]:
+            raise ValueError(
+                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            )
         if mdtol is None:
             if method == "conservative":
                 mdtol = 1
