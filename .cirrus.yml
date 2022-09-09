@@ -10,7 +10,7 @@
 # Global defaults.
 #
 container:
-  image: python:3.8
+  image: python:3.10
   cpu: 2
   memory: 4G
 
@@ -111,11 +111,11 @@ test_task:
   matrix:
     env:
       PY_VER: "3.8"
-      COVERAGE: "true"
     env:
       PY_VER: "3.9"
     env:
       PY_VER: "3.10"
+      COVERAGE: "true"
   name: "${CIRRUS_OS}: py${PY_VER} tests"
   << : *LINUX_CONDA_TEMPLATE
   nox_cache:
@@ -138,7 +138,7 @@ benchmark_task:
   only_if: ${SKIP_BENCHMARK_TASK} == ""
   auto_cancellation: true
   env:
-    PY_VER: "3.8"
+    PY_VER: "3.10"
   name: "${CIRRUS_OS}: performance benchmarking"
   # Custom clone behaviour to enable ASV to access the PR base branch (if on a
   #  PR).
