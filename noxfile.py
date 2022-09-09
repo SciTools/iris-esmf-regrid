@@ -82,7 +82,7 @@ def _venv_populated(session: nox.sessions.Session) -> bool:
 
 def _venv_changed(session: nox.sessions.Session) -> bool:
     """Return True if the installed session is different to that specified in the lockfile."""
-    result = False
+    result = True
     if _venv_populated(session):
         expected = _file_content(_session_lockfile(session))
         actual = _file_content(_session_cachefile(session))
