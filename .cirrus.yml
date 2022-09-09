@@ -114,10 +114,8 @@ test_task:
       COVERAGE: "true"
     env:
       PY_VER: "3.9"
-      COVERAGE: "true"
     env:
       PY_VER: "3.10"
-      COVERAGE: "true"
   name: "${CIRRUS_OS}: py${PY_VER} tests"
   << : *LINUX_CONDA_TEMPLATE
   nox_cache:
