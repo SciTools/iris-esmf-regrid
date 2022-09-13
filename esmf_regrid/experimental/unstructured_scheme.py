@@ -7,14 +7,8 @@ import numpy as np
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.schemes import (
-    _create_cube,
-    _cube_to_GridInfo,
     _ESMFRegridder,
     _get_mask,
-    _map_complete_blocks,
-    _mesh_to_MeshInfo,
-    _regrid_along_grid_dims,
-    _regrid_along_mesh_dim,
     _regrid_rectilinear_to_unstructured__perform,
     _regrid_rectilinear_to_unstructured__prepare,
     _regrid_unstructured_to_rectilinear__perform,
