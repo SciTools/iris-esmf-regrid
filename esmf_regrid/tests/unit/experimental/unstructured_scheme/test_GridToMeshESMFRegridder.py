@@ -7,7 +7,7 @@ import numpy as np
 from numpy import ma
 import pytest
 
-from esmf_regrid.experimental.unstrucutred_scheme import (
+from esmf_regrid.experimental.unstructred_scheme import (
     GridToMeshESMFRegridder,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (

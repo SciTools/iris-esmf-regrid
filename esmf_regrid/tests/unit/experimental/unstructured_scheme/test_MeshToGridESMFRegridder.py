@@ -6,7 +6,7 @@ from iris.cube import Cube
 import numpy as np
 import pytest
 
-from esmf_regrid.experimental.unstrucutred_scheme import (
+from esmf_regrid.experimental.unstructred_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
