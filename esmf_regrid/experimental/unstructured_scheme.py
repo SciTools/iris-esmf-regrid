@@ -345,35 +345,6 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
     ):
-        super().__init__(
-            src,
-            tgt,
-            method,
-            mdtol=mdtol,
-            precomputed_weights=precomputed_weights,
-            resolution=resolution,
-            use_src_mask=use_src_mask,
-            use_tgt_mask=use_tgt_mask,
-        )
-        self.resolution = resolution
-        self.mesh, self.location = self.src
-        self.grid_x, self.grid_y = self.target
-
-
-class _MeshToGridESMFRegridder:
-    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
-
-    def __init__(
-        self,
-        src_mesh_cube,
-        target_grid_cube,
-        mdtol=None,
-        method="conservative",
-        precomputed_weights=None,
-        resolution=None,
-        use_src_mask=False,
-        use_tgt_mask=False,
-    ):
         """
         Create regridder for conversions between source mesh and target grid.
 
@@ -416,113 +387,19 @@ class _MeshToGridESMFRegridder:
 
 
         """
-        # TODO: Record information about the identity of the mesh. This would
-        #  typically be a copy of the mesh, though given the potential size of
-        #  the mesh, it may make sense to either retain a reference to the actual
-        #  mesh or else something like a hash of the mesh.
-        if method not in ["conservative", "bilinear"]:
-            raise ValueError(
-                f"method must be either 'bilinear' or 'conservative', got '{method}'."
-            )
-
-        # Missing data tolerance.
-        # Code directly copied from iris.
-        if mdtol is None:
-            if method == "conservative":
-                mdtol = 1
-            elif method == "bilinear":
-                mdtol = 0
-        if not (0 <= mdtol <= 1):
-            msg = "Value for mdtol must be in range 0 - 1, got {}."
-            raise ValueError(msg.format(mdtol))
-        self.mdtol = mdtol
-        self.method = method
-
-        if resolution is not None:
-            if not (isinstance(resolution, int) and resolution > 0):
-                raise ValueError("resolution must be a positive integer.")
-            if method != "conservative":
-                raise ValueError(
-                    "resolution can only be set for conservative regridding."
-                )
-        self.resolution = resolution
-
-        self.src_mask = _get_mask(src_mesh_cube, use_src_mask)
-        self.tgt_mask = _get_mask(target_grid_cube, use_tgt_mask)
-
-        partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-            src_mesh_cube,
-            target_grid_cube,
-            method=self.method,
+        super().__init__(
+            src,
+            tgt,
+            method,
+            mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             resolution=resolution,
             src_mask=self.src_mask,
             tgt_mask=self.tgt_mask,
         )
-
-        # Record source mesh.
-        self.mesh = src_mesh_cube.mesh
-        self.location = src_mesh_cube.location
-
-        # Store regrid info.
-        _, self.grid_x, self.grid_y, self.regridder = partial_regrid_info
-
-    def __call__(self, cube):
-        """
-        Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
-
-        The given :class:`~iris.cube.Cube` must be defined with the same mesh as the source
-        cube used to create this :class:`MeshToGridESMFRegridder` instance.
-
-        Parameters
-        ----------
-        cube : :class:`iris.cube.Cube`
-            A :class:`~iris.cube.Cube` instance to be regridded.
-
-        Returns
-        -------
-        :class:`iris.cube.Cube`
-            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
-            and the other dimensions from ``cube``. The
-            :attr:`~iris.cube.Cube.data` values of
-            ``cube`` will be converted to values on the new grid using
-            :mod:`esmpy` generated weights.
-
-        """
-        mesh = cube.mesh
-        if mesh is None:
-            raise ValueError("The given cube is not defined on a mesh.")
-        if cube.location != self.location:
-            raise ValueError(
-                "The given cube is not defined on a the same "
-                "mesh location as this regridder."
-            )
-        # TODO: replace temporary hack when iris issues are sorted.
-        # Ignore differences in var_name that might be caused by saving.
-        # TODO: uncomment this when iris issue with masked array comparison is sorted.
-        # self_mesh = copy.deepcopy(self.mesh)
-        # self_mesh.var_name = mesh.var_name
-        # for self_coord, other_coord in zip(self_mesh.all_coords, mesh.all_coords):
-        #     if self_coord is not None:
-        #         self_coord.var_name = other_coord.var_name
-        # for self_con, other_con in zip(
-        #     self_mesh.all_connectivities, mesh.all_connectivities
-        # ):
-        #     if self_con is not None:
-        #         self_con.var_name = other_con.var_name
-        # if self_mesh != mesh:
-        #     raise ValueError(
-        #         "The given cube is not defined on the same "
-        #         "source mesh as this regridder."
-        #     )
-
-        mesh_dim = cube.mesh_dim()
-
-        regrid_info = (mesh_dim, self.grid_x, self.grid_y, self.regridder)
-
-        return _regrid_unstructured_to_rectilinear__perform(
-            cube, regrid_info, self.mdtol
-        )
+        self.resolution = resolution
+        self.mesh, self.location = self.src
+        self.grid_x, self.grid_y = self.target
 
 
 def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
@@ -749,35 +626,6 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
     ):
-        super().__init__(
-            src,
-            tgt,
-            method,
-            mdtol=mdtol,
-            precomputed_weights=precomputed_weights,
-            resolution=resolution,
-            use_src_mask=use_src_mask,
-            use_tgt_mask=use_tgt_mask,
-        )
-        self.resolution = resolution
-        self.mesh, self.location = self.target
-        self.grid_x, self.grid_y = self.src
-
-
-class _GridToMeshESMFRegridder:
-    r"""Regridder class for rectilinear to unstructured :class:`~iris.cube.Cube`\\ s."""
-
-    def __init__(
-        self,
-        src_grid_cube,
-        target_mesh_cube,
-        mdtol=None,
-        method="conservative",
-        precomputed_weights=None,
-        resolution=None,
-        use_src_mask=False,
-        use_tgt_mask=False,
-    ):
         """
         Create regridder for conversions between source grid and target mesh.
 
@@ -819,107 +667,16 @@ class _GridToMeshESMFRegridder:
             will be used in weights calculation.
 
         """
-        if method not in ["conservative", "bilinear"]:
-            raise ValueError(
-                f"method must be either 'bilinear' or 'conservative', got '{method}'."
-            )
-
-        if resolution is not None:
-            if not (isinstance(resolution, int) and resolution > 0):
-                raise ValueError("resolution must be a positive integer.")
-            if method != "conservative":
-                raise ValueError(
-                    "resolution can only be set for conservative regridding."
-                )
-        # Missing data tolerance.
-        # Code directly copied from iris.
-        if mdtol is None:
-            if method == "conservative":
-                mdtol = 1
-            elif method == "bilinear":
-                mdtol = 0
-        if not (0 <= mdtol <= 1):
-            msg = "Value for mdtol must be in range 0 - 1, got {}."
-            raise ValueError(msg.format(mdtol))
-        self.mdtol = mdtol
-        self.method = method
-        self.resolution = resolution
-
-        self.src_mask = _get_mask(src_grid_cube, use_src_mask)
-        self.tgt_mask = _get_mask(target_mesh_cube, use_tgt_mask)
-
-        partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-            src_grid_cube,
-            target_mesh_cube,
-            method=self.method,
+        super().__init__(
+            src,
+            tgt,
+            method,
+            mdtol=mdtol,
             precomputed_weights=precomputed_weights,
-            resolution=self.resolution,
-            src_mask=self.src_mask,
-            tgt_mask=self.tgt_mask,
+            resolution=resolution,
+            src_mask=use_src_mask,
+            tgt_mask=use_tgt_mask,
         )
-
-        # Store regrid info.
-        (
-            _,
-            _,
-            self.grid_x,
-            self.grid_y,
-            self.mesh,
-            self.location,
-            self.regridder,
-        ) = partial_regrid_info
-
-    def __call__(self, cube):
-        """
-        Regrid this :class:`~iris.cube.Cube` onto the target mesh of this regridder instance.
-
-        The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
-        cube used to create this :class:`MeshToGridESMFRegridder` instance.
-
-        Parameters
-        ----------
-        cube : :class:`iris.cube.Cube`
-            A :class:`~iris.cube.Cube` instance to be regridded.
-
-        Returns
-        -------
-        :class:`iris.cube.Cube`
-            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
-            and the other dimensions from ``cube``. The
-            :attr:`~iris.cube.Cube.data` values of
-            ``cube`` will be converted to values on the new grid using
-            area-weighted regridding via :mod:`esmpy` generated weights.
-
-        """
-        grid_x = _get_coord(cube, "x")
-        grid_y = _get_coord(cube, "y")
-        # Ignore differences in var_name that might be caused by saving.
-        self_grid_x = copy.deepcopy(self.grid_x)
-        self_grid_x.var_name = grid_x.var_name
-        self_grid_y = copy.deepcopy(self.grid_y)
-        self_grid_y.var_name = grid_y.var_name
-        if (grid_x != self_grid_x) or (grid_y != self_grid_y):
-            raise ValueError(
-                "The given cube is not defined on the same "
-                "source grid as this regridder."
-            )
-
-        if len(grid_x.shape) == 1:
-            grid_x_dim = cube.coord_dims(grid_x)[0]
-            grid_y_dim = cube.coord_dims(grid_y)[0]
-        else:
-            grid_y_dim, grid_x_dim = cube.coord_dims(grid_x)
-
-        regrid_info = (
-            grid_x_dim,
-            grid_y_dim,
-            self.grid_x,
-            self.grid_y,
-            self.mesh,
-            self.location,
-            self.regridder,
-        )
-
-        return _regrid_rectilinear_to_unstructured__perform(
-            cube, regrid_info, self.mdtol
-        )
+        self.resolution = resolution
+        self.mesh, self.location = self.target
+        self.grid_x, self.grid_y = self.src

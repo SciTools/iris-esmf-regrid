@@ -835,6 +835,7 @@ def regrid_rectilinear_to_rectilinear(
 class ESMFAreaWeighted:
     """
     A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
+
     This class describes an area-weighted regridding scheme for regridding
     between horizontal grids/meshes. It uses :mod:`esmpy` to handle
     calculations and allows for different coordinate systems.
