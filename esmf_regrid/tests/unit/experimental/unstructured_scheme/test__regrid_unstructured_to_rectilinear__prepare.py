@@ -63,7 +63,7 @@ def test_flat_cubes():
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
         src, tgt, method="conservative"
     )
-    mesh_dim, grid_x, grid_y, regridder = regrid_info
+    (mesh_dim,), (grid_x, grid_y), regridder = regrid_info
 
     assert mesh_dim == 0
     assert grid_x == tgt.coord("longitude")
