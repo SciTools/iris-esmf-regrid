@@ -1,11 +1,5 @@
 """Provides an iris interface for unstructured regridding."""
 
-import functools
-
-import numpy as np
-
-from esmf_regrid.esmf_regridder import Regridder
-from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
