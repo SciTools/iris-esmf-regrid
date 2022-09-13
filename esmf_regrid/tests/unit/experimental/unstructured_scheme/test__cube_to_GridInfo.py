@@ -6,7 +6,7 @@ import numpy as np
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
-from esmf_regrid.experimental.unstructured_scheme import _cube_to_GridInfo
+from esmf_regrid.schemes import _cube_to_GridInfo
 
 
 def _generate_points_and_bounds(n, outer_bounds):

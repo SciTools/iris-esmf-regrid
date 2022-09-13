@@ -6,7 +6,7 @@ import numpy as np
 from numpy import ma
 import pytest
 
-from esmf_regrid.experimental.unstructured_scheme import (
+from esmf_regrid.schemes import (
     regrid_rectilinear_to_unstructured,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (

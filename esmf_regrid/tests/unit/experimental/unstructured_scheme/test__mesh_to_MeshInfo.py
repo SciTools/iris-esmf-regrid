@@ -8,7 +8,7 @@ from numpy import ma
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
-from esmf_regrid.experimental.unstructured_scheme import _mesh_to_MeshInfo
+from esmf_regrid.schemes import _mesh_to_MeshInfo
 
 
 def _pyramid_topology_connectivity_array():

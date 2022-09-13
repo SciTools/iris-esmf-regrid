@@ -6,7 +6,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.experimental.unstructured_scheme import (
+from esmf_regrid.schemes import (
     _regrid_unstructured_to_rectilinear__prepare,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
