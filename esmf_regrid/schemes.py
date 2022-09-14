@@ -224,7 +224,7 @@ def _mesh_to_MeshInfo(mesh, location):
     return meshinfo
 
 
-def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
+def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
     """
     Perform regridding on data over specific dimensions.
 
@@ -234,10 +234,10 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
         An instance of Regridder initialised to perfomr regridding.
     data : array
         The data to be regrid.
-    grid_x_dim : int
-        The dimension of the X axis.
-    grid_y_dim : int
-        The dimension of the Y axis.
+    dims : tuple of int
+        The dimensions in the source data to regrid along.
+    num_out_dims : int
+        The dimensionality of the target grid/mesh.
     mdtol : float
         Tolerance of missing data.
 
@@ -247,14 +247,6 @@ def _regrid_along_grid_dims(regridder, data, grid_x_dim, grid_y_dim, mdtol):
         The result of regridding the data.
 
     """
-    data = np.moveaxis(data, [grid_x_dim, grid_y_dim], [-1, -2])
-    result = regridder.regrid(data, mdtol=mdtol)
-
-    result = np.moveaxis(result, [-1, -2], [grid_x_dim, grid_y_dim])
-    return result
-
-
-def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
     standard_in_dims = [-1, -2][: len(dims)]
     data = np.moveaxis(data, dims, standard_in_dims)
     result = regridder.regrid(data, mdtol=mdtol)
@@ -962,7 +954,7 @@ class ESMFBilinear:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
-        return ESMFAreaWeightedRegridder(src_grid, tgt_grid, mdtol=self.mdtol)
+        return ESMFBilinearRegridder(src_grid, tgt_grid, mdtol=self.mdtol)
 
 
 class _ESMFRegridder:
