@@ -153,7 +153,7 @@ benchmark_task:
     fi
   << : *LINUX_CONDA_TEMPLATE
   asv_cache:
-    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
+    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv/env
     reupload_on_changes: true
     fingerprint_script:
       - echo "${CIRRUS_TASK_NAME}"
@@ -169,4 +169,4 @@ benchmark_task:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session=tests --install-only
     - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests*bin/python"))
-    - nox --session="benchmarks(ci compare)"
+    - nox --session="benchmarks(branch)" -- "${CIRRUS_BASE_BRANCH}"

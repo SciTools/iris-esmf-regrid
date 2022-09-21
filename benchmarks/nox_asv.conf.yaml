@@ -1,6 +1,0 @@
-# The commit to checkout to first run Nox to set up the environment.
-setup_commit: "HEAD"
-# The path of the noxfile's location relative to the project root.
-noxfile_rel_path: "noxfile.py"
-# The --session arg to be used with --install-only to prep an environment.
-session_name: "tests"
