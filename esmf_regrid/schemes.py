@@ -1158,7 +1158,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         if tgtres is not None:
             kwargs["tgtres"] = tgtres
         if resolution is not None:
-            kwargs["srcres"] = resolution
+            kwargs["resolution"] = resolution
         super().__init__(
             src,
             tgt,
