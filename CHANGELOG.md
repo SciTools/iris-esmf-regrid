@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.5] - 2022-10-14
 
-N/A
+This release improves the support for features such as Bilinear regridding,
+curvilinear grids and low resolution grids.
+
+### Added
+
+- [PR#148](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/148)
+  Added support for Bilinear regridding for unstructured regridding.
+- [PR#165](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/165)
+  Added RefinedGridInfo and resolution keyword for unstructured regridders.
+- [PR#166](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/166)
+  Made weights array handling more robust for different formats of
+  pre-computed weights matrices.
+- [PR#175](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/175)
+  Add curvilinear support for unstructured regridders.
+- [PR#208](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/208)
+  Unpin Python.
  
 ## [0.4] - 2022-02-24
 
