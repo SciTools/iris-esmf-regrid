@@ -19,13 +19,21 @@ __all__ = [
 ]
 
 
+def _get_coord(cube, axis):
+    try:
+        coord = cube.coord(axis=axis, dim_coords=True)
+    except KeyError:
+        coord = cube.coord(axis=axis)
+    return coord
+
+
 def _cube_to_GridInfo(cube, center=False, resolution=None):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
     # Returns a GridInfo object describing the horizontal grid of the cube.
     # This may be inherited from code written for the rectilinear regridding scheme.
-    lon, lat = cube.coord(axis="x"), cube.coord(axis="y")
+    lon, lat = _get_coord(cube, "x"), _get_coord(cube, "y")
     #  Checks may cover units, coord systems (e.g. rotated pole), contiguous bounds.
     if cube.coord_system() is None:
         crs = None
@@ -181,10 +189,10 @@ RegridInfo = namedtuple(
 
 
 def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
-    tgt_x = tgt_grid_cube.coord(axis="x")
-    tgt_y = tgt_grid_cube.coord(axis="y")
-    src_x = src_grid_cube.coord(axis="x")
-    src_y = src_grid_cube.coord(axis="y")
+    tgt_x = _get_coord(tgt_grid_cube, "x")
+    tgt_y = _get_coord(tgt_grid_cube, "y")
+    src_x = _get_coord(src_grid_cube, "x")
+    src_y = _get_coord(src_grid_cube, "y")
 
     if len(src_x.shape) == 1:
         grid_x_dim = src_grid_cube.coord_dims(src_x)[0]
@@ -372,7 +380,7 @@ class ESMFAreaWeightedRegridder:
         self.regridder = regrid_info.regridder
 
         # Record the source grid.
-        self.src_grid = (src_grid.coord(axis="x"), src_grid.coord(axis="y"))
+        self.src_grid = (_get_coord(src_grid, "x"), _get_coord(src_grid, "y"))
 
     def __call__(self, cube):
         """
@@ -395,7 +403,7 @@ class ESMFAreaWeightedRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
-        src_x, src_y = (cube.coord(axis="x"), cube.coord(axis="y"))
+        src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
         # Check the source grid matches that used in initialisation
         if self.src_grid != (src_x, src_y):
