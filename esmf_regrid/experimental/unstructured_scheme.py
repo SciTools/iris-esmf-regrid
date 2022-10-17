@@ -7,7 +7,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo
+from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo, _get_coord
 
 
 def _map_complete_blocks(src, func, dims, out_sizes):
@@ -152,8 +152,8 @@ def _regrid_unstructured_to_rectilinear__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
-    grid_x = target_grid_cube.coord(axis="x")
-    grid_y = target_grid_cube.coord(axis="y")
+    grid_x = _get_coord(target_grid_cube, "x")
+    grid_y = _get_coord(target_grid_cube, "y")
     mesh = src_mesh_cube.mesh
     location = src_mesh_cube.location
     if mesh is None:
@@ -480,8 +480,8 @@ def _regrid_rectilinear_to_unstructured__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
-    grid_x = src_grid_cube.coord(axis="x")
-    grid_y = src_grid_cube.coord(axis="y")
+    grid_x = _get_coord(src_grid_cube, "x")
+    grid_y = _get_coord(src_grid_cube, "y")
     mesh = target_mesh_cube.mesh
     location = target_mesh_cube.location
     if mesh is None:
@@ -752,8 +752,8 @@ class GridToMeshESMFRegridder:
             area-weighted regridding via :mod:`ESMF` generated weights.
 
         """
-        grid_x = cube.coord(axis="x")
-        grid_y = cube.coord(axis="y")
+        grid_x = _get_coord(cube, "x")
+        grid_y = _get_coord(cube, "y")
         # Ignore differences in var_name that might be caused by saving.
         self_grid_x = copy.deepcopy(self.grid_x)
         self_grid_x.var_name = grid_x.var_name
