@@ -146,10 +146,10 @@ def test_curvilinear_and_rectilinear():
     tgt = curv_tgt.copy()
     grid_lat_tgt = grid_tgt.coord("latitude")
     grid_lat_tgt.standard_name = "grid_latitude"
-    src.add_dim_coord(grid_lat_tgt, 0)
-    grid_lon_tgt = grid_src.coord("longitude")
+    tgt.add_dim_coord(grid_lat_tgt, 0)
+    grid_lon_tgt = grid_tgt.coord("longitude")
     grid_lon_tgt.standard_name = "grid_longitude"
-    src.add_dim_coord(grid_lon_tgt, 1)
+    tgt.add_dim_coord(grid_lon_tgt, 1)
 
     rg = ESMFAreaWeightedRegridder(src, tgt)
     _ = rg(src)
