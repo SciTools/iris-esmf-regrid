@@ -169,7 +169,7 @@ def _prepare_env(session: nox.sessions.Session) -> None:
         # Destroy the environment and rebuild it.
         logger.debug(f"Lockfile changed. Recreating conda env: {venv_dir}")
         _reuse_original = session.virtualenv.reuse_existing
-        session.virtualenv.reuse_existing = False
+        session.virtualenv.reuse_existing = True
         session.virtualenv.create()
         _install_and_cache_venv(session)
         session.virtualenv.reuse_existing = _reuse_original
