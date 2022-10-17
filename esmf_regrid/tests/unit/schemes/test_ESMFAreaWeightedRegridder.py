@@ -123,6 +123,7 @@ def test_curvilinear_and_rectilinear():
     Test :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that a cube with both curvilinear and rectilinear coords still works.
+    Checks that the DimCoords have priority over AuxCoords.
     """
     n_lons_src = 6
     n_lons_tgt = 3
@@ -142,6 +143,7 @@ def test_curvilinear_and_rectilinear():
     grid_lon_src = grid_src.coord("longitude")
     grid_lon_src.standard_name = "grid_longitude"
     src.add_dim_coord(grid_lon_src, 1)
+    src.data[:] = 1
 
     tgt = curv_tgt.copy()
     grid_lat_tgt = grid_tgt.coord("latitude")
@@ -151,8 +153,18 @@ def test_curvilinear_and_rectilinear():
     grid_lon_tgt.standard_name = "grid_longitude"
     tgt.add_dim_coord(grid_lon_tgt, 1)
 
+    # Change the AuxCoords to check that the DimCoords have priority.
+    src.coord("latitude").bounds[:] = 0
+    src.coord("longitude").bounds[:] = 0
+    tgt.coord("latitude").bounds[:] = 0
+    tgt.coord("longitude").bounds[:] = 0
+
     rg = ESMFAreaWeightedRegridder(src, tgt)
-    _ = rg(src)
+    result = rg(src)
+
+    expected = grid_tgt.copy()
+    expected.data[:] = 1
+    assert expected == result
 
 
 def test_unit_equivalence():
