@@ -8,6 +8,7 @@ from cf_units import Unit
 from iris._lazy_data import map_complete_blocks
 import iris.coords
 import iris.cube
+from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
@@ -22,7 +23,7 @@ __all__ = [
 def _get_coord(cube, axis):
     try:
         coord = cube.coord(axis=axis, dim_coords=True)
-    except KeyError:
+    except CoordinateNotFoundError:
         coord = cube.coord(axis=axis)
     return coord
 

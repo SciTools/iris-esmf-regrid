@@ -143,7 +143,6 @@ def test_curvilinear_and_rectilinear():
     grid_lon_src = grid_src.coord("longitude")
     grid_lon_src.standard_name = "grid_longitude"
     src.add_dim_coord(grid_lon_src, 1)
-    src.data[:] = 1
 
     tgt = curv_tgt.copy()
     grid_lat_tgt = grid_tgt.coord("latitude")
@@ -159,12 +158,16 @@ def test_curvilinear_and_rectilinear():
     tgt.coord("latitude").bounds[:] = 0
     tgt.coord("longitude").bounds[:] = 0
 
+    # Ensure the source data is all ones.
+    src.data[:] = 1
+
     rg = ESMFAreaWeightedRegridder(src, tgt)
     result = rg(src)
 
     expected = grid_tgt.copy()
     expected.data[:] = 1
     assert expected == result
+    assert not np.ma.is_masked(result)
 
 
 def test_unit_equivalence():
