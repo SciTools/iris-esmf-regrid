@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- [PR#217](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/217)
+  Changed the behaviour of coordinate fetching to allow Cubes with both
+  1D DimCoords and 2D AuxCoords. In this case the DimCoords are prioritised.
+
 ## [0.5] - 2022-10-14
 
 This release improves the support for features such as Bilinear regridding,

@@ -118,6 +118,59 @@ def test_curvilinear_equivalence():
         assert np.allclose(extract_weights(grid_to_grid), extract_weights(regridder))
 
 
+def test_curvilinear_and_rectilinear():
+    """
+    Test :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
+    Checks that a cube with both curvilinear and rectilinear coords still works.
+    Checks that the DimCoords have priority over AuxCoords.
+    """
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    grid_src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+    grid_tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+    curv_src = _curvilinear_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds)
+    curv_tgt = _curvilinear_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
+
+    src = curv_src.copy()
+    grid_lat_src = grid_src.coord("latitude")
+    grid_lat_src.standard_name = "grid_latitude"
+    src.add_dim_coord(grid_lat_src, 0)
+    grid_lon_src = grid_src.coord("longitude")
+    grid_lon_src.standard_name = "grid_longitude"
+    src.add_dim_coord(grid_lon_src, 1)
+
+    tgt = curv_tgt.copy()
+    grid_lat_tgt = grid_tgt.coord("latitude")
+    grid_lat_tgt.standard_name = "grid_latitude"
+    tgt.add_dim_coord(grid_lat_tgt, 0)
+    grid_lon_tgt = grid_tgt.coord("longitude")
+    grid_lon_tgt.standard_name = "grid_longitude"
+    tgt.add_dim_coord(grid_lon_tgt, 1)
+
+    # Change the AuxCoords to check that the DimCoords have priority.
+    src.coord("latitude").bounds[:] = 0
+    src.coord("longitude").bounds[:] = 0
+    tgt.coord("latitude").bounds[:] = 0
+    tgt.coord("longitude").bounds[:] = 0
+
+    # Ensure the source data is all ones.
+    src.data[:] = 1
+
+    rg = ESMFAreaWeightedRegridder(src, tgt)
+    result = rg(src)
+
+    expected = grid_tgt.copy()
+    # If the aux coords had been prioritised, expected.data would be a fully masked array.
+    expected.data[:] = 1
+    assert expected == result
+    assert not np.ma.is_masked(result)
+
+
 def test_unit_equivalence():
     """
     Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
