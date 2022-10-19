@@ -165,6 +165,7 @@ def test_curvilinear_and_rectilinear():
     result = rg(src)
 
     expected = grid_tgt.copy()
+    # If the aux coords had been prioritised, expected.data would be a fully masked array.
     expected.data[:] = 1
     assert expected == result
     assert not np.ma.is_masked(result)
