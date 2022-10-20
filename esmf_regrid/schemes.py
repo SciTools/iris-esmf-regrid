@@ -28,6 +28,31 @@ def _get_coord(cube, axis):
     return coord
 
 
+def _contiguous_masked(bounds, mask):
+    mask = np.array(mask, dtype=int)
+
+    blank_filter = np.zeros([size + 1 for size in mask.shape], dtype=int)
+    filter_0 = blank_filter.copy()
+    filter_0[:-1, :-1] = 1 - mask
+    filter_0[0, 0] = 1
+    filter_1 = blank_filter.copy()
+    filter_1[:-1, 1:] = 1 - mask
+    filter_1[0, 1:] = 1
+    filter_1 = filter_1 * (1 - filter_0)
+    filter_3 = blank_filter.copy()
+    filter_3[1:, :-1] = 1 - mask
+    filter_3[1:, 0] = 1
+    filter_3 = filter_3 * (1 - filter_0 - filter_1)
+    filter_2 = 1 - filter_0 - filter_1 - filter_3
+
+    contiguous_bounds = blank_filter.astype(bounds.dtype)
+    contiguous_bounds[:-1, :-1] += bounds[:, :, 0] * filter_0[:-1, :-1]
+    contiguous_bounds[:-1, 1:] += bounds[:, :, 1] * filter_1[:-1, 1:]
+    contiguous_bounds[1:, 1:] += bounds[:, :, 2] * filter_2[1:, 1:]
+    contiguous_bounds[1:, :-1] += bounds[:, :, 3] * filter_3[1:, :-1]
+    return contiguous_bounds
+
+
 def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
@@ -57,9 +82,13 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
         # 2D coords must be AuxCoords, which do not have a circular attribute.
         circular = False
     # TODO: This should be replaced by another method when there is a mask.
-    lon_bound_array = lon.contiguous_bounds()
+    if mask is None:
+        lon_bound_array = lon.contiguous_bounds()
+        lat_bound_array = lat.contiguous_bounds()
+    else:
+        lon_bound_array = _contiguous_masked(lon.bounds, mask)
+        lat_bound_array = _contiguous_masked(lat.bounds, mask)
     lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
-    lat_bound_array = lat.contiguous_bounds()
     lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
     if resolution is None:
         grid_info = GridInfo(
