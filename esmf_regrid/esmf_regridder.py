@@ -24,6 +24,8 @@ def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
         norm_type=esmpy.NormType.DSTAREA,
+        src_mask_values=np.array([True]),
+        dst_mask_values=np.array([True]),
         factors=True,
     )
     # Without specifying deep_copy=true, the information in weights_dict

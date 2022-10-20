@@ -28,7 +28,7 @@ def _get_coord(cube, axis):
     return coord
 
 
-def _cube_to_GridInfo(cube, center=False, resolution=None):
+def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     # This is a simplified version of an equivalent function/method in PR #26.
     # It is anticipated that this function will be replaced by the one in PR #26.
     #
@@ -51,10 +51,12 @@ def _cube_to_GridInfo(cube, center=False, resolution=None):
         # TODO: perform checks on lat/lon.
     elif londim == 2:
         assert cube.coord_dims(lon) == cube.coord_dims(lat)
-        assert lon.is_contiguous()
-        assert lat.is_contiguous()
+        if mask is None:
+            assert lon.is_contiguous()
+            assert lat.is_contiguous()
         # 2D coords must be AuxCoords, which do not have a circular attribute.
         circular = False
+    # TODO: This should be replaced by another method when there is a mask.
     lon_bound_array = lon.contiguous_bounds()
     lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
     lat_bound_array = lat.contiguous_bounds()
@@ -68,6 +70,7 @@ def _cube_to_GridInfo(cube, center=False, resolution=None):
             crs=crs,
             circular=circular,
             center=center,
+            mask=mask,
         )
     else:
         grid_info = RefinedGridInfo(
@@ -189,7 +192,9 @@ RegridInfo = namedtuple(
 )
 
 
-def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
+def _regrid_rectilinear_to_rectilinear__prepare(
+    src_grid_cube, tgt_grid_cube, src_mask=None, tgt_mask=None
+):
     tgt_x = _get_coord(tgt_grid_cube, "x")
     tgt_y = _get_coord(tgt_grid_cube, "y")
     src_x = _get_coord(src_grid_cube, "x")
@@ -201,8 +206,8 @@ def _regrid_rectilinear_to_rectilinear__prepare(src_grid_cube, tgt_grid_cube):
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(src_x)
 
-    srcinfo = _cube_to_GridInfo(src_grid_cube)
-    tgtinfo = _cube_to_GridInfo(tgt_grid_cube)
+    srcinfo = _cube_to_GridInfo(src_grid_cube, mask=src_mask)
+    tgtinfo = _cube_to_GridInfo(tgt_grid_cube, mask=tgt_mask)
 
     regridder = Regridder(srcinfo, tgtinfo)
 
@@ -301,7 +306,7 @@ class ESMFAreaWeighted:
     :mod:`esmpy` to be able to handle grids in different coordinate systems.
     """
 
-    def __init__(self, mdtol=0):
+    def __init__(self, mdtol=0, src_mask=None, tgt_mask=None):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -321,6 +326,8 @@ class ESMFAreaWeighted:
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+        self.src_mask = src_mask
+        self.tgt_mask = tgt_mask
 
     def __repr__(self):
         """Return a representation of the class."""
@@ -345,13 +352,19 @@ class ESMFAreaWeighted:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
-        return ESMFAreaWeightedRegridder(src_grid, tgt_grid, mdtol=self.mdtol)
+        return ESMFAreaWeightedRegridder(
+            src_grid,
+            tgt_grid,
+            mdtol=self.mdtol,
+            src_mask=self.src_mask,
+            tgt_mask=self.tgt_mask,
+        )
 
 
 class ESMFAreaWeightedRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
-    def __init__(self, src_grid, tgt_grid, mdtol=0):
+    def __init__(self, src_grid, tgt_grid, mdtol=0, src_mask=None, tgt_mask=None):
         """
         Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
 
@@ -374,7 +387,9 @@ class ESMFAreaWeightedRegridder:
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
 
-        regrid_info = _regrid_rectilinear_to_rectilinear__prepare(src_grid, tgt_grid)
+        regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
+            src_grid, tgt_grid, src_mask=src_mask, tgt_mask=tgt_mask
+        )
 
         # Store regrid info.
         self.grid_x = regrid_info.x_coord

@@ -229,3 +229,40 @@ def test_unit_equivalence():
         curv_to_curv_rad,
     ]:
         assert np.allclose(extract_weights(grid_to_grid), extract_weights(regridder))
+
+
+def test_masks():
+    """
+    Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
+    Checks that the `src_mask` and `tgt_mask` keywords work properly.
+    """
+    # TODO: check that this handles discontiguities appropriately.
+    src = _curvilinear_cube(7, 6, [-180, 180], [-90, 90])
+    tgt = _curvilinear_cube(6, 7, [-180, 180], [-90, 90])
+
+    src_mask = np.zeros([6, 7], dtype=bool)
+    src_mask[0, 0] = True
+
+    tgt_mask = np.zeros([7, 6], dtype=bool)
+    tgt_mask[0, 0] = True
+
+    rg_src_masked = ESMFAreaWeightedRegridder(src, tgt, src_mask=src_mask)
+    rg_tgt_masked = ESMFAreaWeightedRegridder(src, tgt, tgt_mask=tgt_mask)
+    rg_unmasked = ESMFAreaWeightedRegridder(src, tgt)
+
+    weights_src_masked = rg_src_masked.regridder.weight_matrix
+    weights_tgt_masked = rg_tgt_masked.regridder.weight_matrix
+    weights_unmasked = rg_unmasked.regridder.weight_matrix
+
+    # Check there are no weights associated with the masked point.
+    assert weights_src_masked[:, 0].nnz == 0
+    assert weights_tgt_masked[0].nnz == 0
+
+    # Check all other weights are correct.
+    assert np.allclose(
+        weights_src_masked[:, 1:].todense(), weights_unmasked[:, 1:].todense()
+    )
+    assert np.allclose(
+        weights_tgt_masked[1:].todense(), weights_unmasked[1:].todense()
+    )
