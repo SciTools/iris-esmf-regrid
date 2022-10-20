@@ -263,6 +263,4 @@ def test_masks():
     assert np.allclose(
         weights_src_masked[:, 1:].todense(), weights_unmasked[:, 1:].todense()
     )
-    assert np.allclose(
-        weights_tgt_masked[1:].todense(), weights_unmasked[1:].todense()
-    )
+    assert np.allclose(weights_tgt_masked[1:].todense(), weights_unmasked[1:].todense())
