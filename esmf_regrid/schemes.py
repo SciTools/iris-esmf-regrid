@@ -392,7 +392,7 @@ class ESMFAreaWeighted:
     :mod:`esmpy` to be able to handle grids in different coordinate systems.
     """
 
-    def __init__(self, mdtol=0, src_mask=None, tgt_mask=None):
+    def __init__(self, mdtol=0, src_mask=False, tgt_mask=False):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -406,12 +406,12 @@ class ESMFAreaWeighted:
             data is tolerated while ``mdtol=1`` will mean the resulting element
             will be masked if and only if all the overlapping elements of the
             source grid are masked.
-        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
-            Array describing which elements :mod:`ESMF` will ignore on the source grid.
-            If True, the mask will be derived from the cube.
-        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
-            Array describing which elements :mod:`ESMF` will ignore on the target grid.
-            If True, the mask will be derived from the cube.
+        src_mask : bool, default=False
+            If True, derive a mask from source cube which will tell :mod:`ESMF`
+            which points to ignore.
+        tgt_mask : bool, default=False
+            If True, derive a mask from target cube which will tell :mod:`ESMF`
+            which points to ignore.
 
         """
         if not (0 <= mdtol <= 1):
@@ -456,7 +456,7 @@ class ESMFAreaWeighted:
 class ESMFAreaWeightedRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
-    def __init__(self, src_grid, tgt_grid, mdtol=0, src_mask=None, tgt_mask=None):
+    def __init__(self, src_grid, tgt_grid, mdtol=0, src_mask=False, tgt_mask=False):
         """
         Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
 
@@ -473,11 +473,11 @@ class ESMFAreaWeightedRegridder:
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
         src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
-            Array describing which elements :mod:`ESMF` will ignore on the source grid.
-            If True, the mask will be derived from the cube.
+            Array describing which elements :mod:`ESMF` will ignore on the src_grid.
+            If True, the mask will be derived from src_grid.
         tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
-            Array describing which elements :mod:`ESMF` will ignore on the target grid.
-            If True, the mask will be derived from the cube.
+            Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
+            If True, the mask will be derived from tgt_grid.
 
         """
         if not (0 <= mdtol <= 1):
@@ -487,8 +487,12 @@ class ESMFAreaWeightedRegridder:
 
         if src_mask is True:
             src_mask = _get_mask(src_grid)
+        elif src_mask is False:
+            src_mask = None
         if tgt_mask is True:
             tgt_mask = _get_mask(tgt_grid)
+        elif tgt_mask is False:
+            tgt_mask = None
 
         regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
             src_grid, tgt_grid, src_mask=src_mask, tgt_mask=tgt_mask
