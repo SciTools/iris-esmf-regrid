@@ -237,15 +237,19 @@ def test_masks():
 
     Checks that the `src_mask` and `tgt_mask` keywords work properly.
     """
-    # TODO: check that this handles discontiguities appropriately.
     src = _curvilinear_cube(7, 6, [-180, 180], [-90, 90])
     tgt = _curvilinear_cube(6, 7, [-180, 180], [-90, 90])
 
+    # Make src and tgt discontiguous at (0, 0)
     src_mask = np.zeros([6, 7], dtype=bool)
     src_mask[0, 0] = True
+    src.coord("latitude").bounds[0, 0] = 0
+    src.coord("longitude").bounds[0, 0] = 0
 
     tgt_mask = np.zeros([7, 6], dtype=bool)
     tgt_mask[0, 0] = True
+    tgt.coord("latitude").bounds[0, 0] = 0
+    tgt.coord("longitude").bounds[0, 0] = 0
 
     rg_src_masked = ESMFAreaWeightedRegridder(src, tgt, src_mask=src_mask)
     rg_tgt_masked = ESMFAreaWeightedRegridder(src, tgt, tgt_mask=tgt_mask)

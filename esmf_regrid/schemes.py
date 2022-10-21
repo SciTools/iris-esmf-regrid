@@ -30,7 +30,7 @@ def _get_coord(cube, axis):
 
 def _contiguous_masked(bounds, mask):
     """
-    Returns the (N+1, M+1) bound values for bounds of 2D coordinate of shape (N,M).
+    Return the (N+1, M+1) bound values for bounds of 2D coordinate of shape (N,M).
 
     Assumes the bounds are contiguous outside of the mask. The returned bounds
     fully describe the unmasked bounds when this is the case. This function is
