@@ -243,16 +243,20 @@ def test_masks():
     # Make src and tgt discontiguous at (0, 0)
     src_mask = np.zeros([6, 7], dtype=bool)
     src_mask[0, 0] = True
-    src.coord("latitude").bounds[0, 0] = 0
-    src.coord("longitude").bounds[0, 0] = 0
+    src.data = np.ma.array(src.data, mask=src_mask)
+    src_discontiguous = src.copy()
+    src_discontiguous.coord("latitude").bounds[0, 0] = 0
+    src_discontiguous.coord("longitude").bounds[0, 0] = 0
 
     tgt_mask = np.zeros([7, 6], dtype=bool)
     tgt_mask[0, 0] = True
-    tgt.coord("latitude").bounds[0, 0] = 0
-    tgt.coord("longitude").bounds[0, 0] = 0
+    tgt.data = np.ma.array(tgt.data, mask=tgt_mask)
+    tgt_discontiguous = tgt.copy()
+    tgt_discontiguous.coord("latitude").bounds[0, 0] = 0
+    tgt_discontiguous.coord("longitude").bounds[0, 0] = 0
 
-    rg_src_masked = ESMFAreaWeightedRegridder(src, tgt, src_mask=src_mask)
-    rg_tgt_masked = ESMFAreaWeightedRegridder(src, tgt, tgt_mask=tgt_mask)
+    rg_src_masked = ESMFAreaWeightedRegridder(src_discontiguous, tgt, src_mask=True)
+    rg_tgt_masked = ESMFAreaWeightedRegridder(src, tgt_discontiguous, tgt_mask=True)
     rg_unmasked = ESMFAreaWeightedRegridder(src, tgt)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix

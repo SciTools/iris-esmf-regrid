@@ -26,6 +26,7 @@ class MeshInfo(SDO):
         node_start_index,
         elem_start_index=0,
         areas=None,
+        mask=None,
         elem_coords=None,
         location="face",
     ):
@@ -56,6 +57,8 @@ class MeshInfo(SDO):
         areas: :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
             each face. If ``None``, then :mod:`esmpy` will use its own calculated areas.
+        mask: :obj:`~numpy.typing.ArrayLike`, optional
+            Array describing which elements :mod:`esmpy` will ignore.
         elem_coords : :obj:`~numpy.typing.ArrayLike`, optional
             An ``Nx2`` array describing the location of the face centers of the mesh.
             ``elem_coords[:,0]`` describes the longitudes in degrees and
@@ -84,6 +87,7 @@ class MeshInfo(SDO):
             shape=shape,
             index_offset=self.esi,
             field_kwargs=field_kwargs,
+            mask=mask,
         )
 
     def _as_esmf_info(self):
@@ -108,6 +112,7 @@ class MeshInfo(SDO):
             elemId,
             elemType,
             elemConn,
+            self.mask,
             self.areas,
             elemCoord,
         )
@@ -124,6 +129,7 @@ class MeshInfo(SDO):
             elemId,
             elemType,
             elemConn,
+            mask,
             areas,
             elemCoord,
         ) = info
@@ -139,6 +145,7 @@ class MeshInfo(SDO):
             elemId,
             elemType,
             elemConn,
+            element_mask=mask,
             element_area=areas,
             element_coords=elemCoord,
         )

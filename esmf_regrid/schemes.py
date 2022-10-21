@@ -28,6 +28,23 @@ def _get_coord(cube, axis):
     return coord
 
 
+def _get_mask(cube):
+    src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+
+    if cube.coord_dims(src_x) == cube.coord_dims(src_y):
+        slices = cube.slices([src_x])
+    else:
+        slices = cube.slices([src_x, src_y])
+    data = next(slices).data
+    if np.ma.is_masked(data):
+        mask = data.mask
+        if cube.coord_dims(src_x) != cube.coord_dims(src_y):
+            mask = mask.T
+    else:
+        mask = None
+    return mask
+
+
 def _contiguous_masked(bounds, mask):
     """
     Return the (N+1, M+1) bound values for bounds of 2D coordinate of shape (N,M).
@@ -113,21 +130,21 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
         assert isinstance(lon, iris.coords.DimCoord)
         assert isinstance(lat, iris.coords.DimCoord)
         circular = lon.circular
+        lon_bound_array = lon.contiguous_bounds()
+        lat_bound_array = lat.contiguous_bounds()
         # TODO: perform checks on lat/lon.
     elif londim == 2:
         assert cube.coord_dims(lon) == cube.coord_dims(lat)
         if mask is None:
             assert lon.is_contiguous()
             assert lat.is_contiguous()
+            lon_bound_array = lon.contiguous_bounds()
+            lat_bound_array = lat.contiguous_bounds()
+        else:
+            lon_bound_array = _contiguous_masked(lon.bounds, mask)
+            lat_bound_array = _contiguous_masked(lat.bounds, mask)
         # 2D coords must be AuxCoords, which do not have a circular attribute.
         circular = False
-    # TODO: This should be replaced by another method when there is a mask.
-    if mask is None:
-        lon_bound_array = lon.contiguous_bounds()
-        lat_bound_array = lat.contiguous_bounds()
-    else:
-        lon_bound_array = _contiguous_masked(lon.bounds, mask)
-        lat_bound_array = _contiguous_masked(lat.bounds, mask)
     lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
     lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
     if resolution is None:
@@ -389,6 +406,12 @@ class ESMFAreaWeighted:
             data is tolerated while ``mdtol=1`` will mean the resulting element
             will be masked if and only if all the overlapping elements of the
             source grid are masked.
+        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+            Array describing which elements :mod:`ESMF` will ignore on the source grid.
+            If True, the mask will be derived from the cube.
+        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+            Array describing which elements :mod:`ESMF` will ignore on the target grid.
+            If True, the mask will be derived from the cube.
 
         """
         if not (0 <= mdtol <= 1):
@@ -449,12 +472,23 @@ class ESMFAreaWeightedRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
+        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+            Array describing which elements :mod:`ESMF` will ignore on the source grid.
+            If True, the mask will be derived from the cube.
+        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+            Array describing which elements :mod:`ESMF` will ignore on the target grid.
+            If True, the mask will be derived from the cube.
 
         """
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+
+        if src_mask is True:
+            src_mask = _get_mask(src_grid)
+        if tgt_mask is True:
+            tgt_mask = _get_mask(tgt_grid)
 
         regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
             src_grid, tgt_grid, src_mask=src_mask, tgt_mask=tgt_mask
@@ -464,6 +498,8 @@ class ESMFAreaWeightedRegridder:
         self.grid_x = regrid_info.x_coord
         self.grid_y = regrid_info.y_coord
         self.regridder = regrid_info.regridder
+        self.src_mask = src_mask
+        self.tgt_mask = tgt_mask
 
         # Record the source grid.
         self.src_grid = (_get_coord(src_grid, "x"), _get_coord(src_grid, "y"))
