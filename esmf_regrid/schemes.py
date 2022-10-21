@@ -29,23 +29,63 @@ def _get_coord(cube, axis):
 
 
 def _contiguous_masked(bounds, mask):
+    """
+    Returns the (N+1, M+1) bound values for bounds of 2D coordinate of shape (N,M).
+
+    Assumes the bounds are contiguous outside of the mask. The returned bounds
+    fully describe the unmasked bounds when this is the case. This function is
+    designed to replicate the behaviour of coord.contiguous_bounds() for unmasked
+    bounds.
+
+    For example, suppose we have a masked array:
+
+    # 0 0 0 0
+    # 0 - - 0
+    # 0 - - 0
+    # 0 0 0 0
+
+    The indices of the bounds which the final array will derive from are as follows:
+
+    # (0, 0, 0) (0, 1, 0) (0, 2, 0) (0, 3, 0) (0, 3, 1)
+    # (1, 0, 0) (1, 0, 1) (0, 2, 3) (1, 3, 0) (1, 3, 1)
+    # (2, 0, 0) (2, 0, 1) (1, 1, 2) (2, 3, 0) (2, 3, 1)
+    # (3, 0, 0) (3, 1, 0) (3, 2, 0) (3, 3, 0) (3, 3, 1)
+    # (3, 0, 3) (3, 1, 3) (3, 3, 3) (3, 3, 3) (3, 3, 2)
+
+    Note that only the center bound derives from a masked cell.
+    """
     mask = np.array(mask, dtype=int)
 
-    blank_filter = np.zeros([size + 1 for size in mask.shape], dtype=int)
-    filter_0 = blank_filter.copy()
+    # Construct a blank template array in the shape of the output.
+    blank_template = np.zeros([size + 1 for size in mask.shape], dtype=int)
+
+    # Define the bounds which will derive from the bounds in index 0.
+    filter_0 = blank_template.copy()
     filter_0[:-1, :-1] = 1 - mask
+    # Ensure the corner points are covered appropriately.
     filter_0[0, 0] = 1
-    filter_1 = blank_filter.copy()
+
+    # Define the bounds which will derive from the bounds in index 1.
+    filter_1 = blank_template.copy()
     filter_1[:-1, 1:] = 1 - mask
+    # Ensure the corner and edge bounds are covered appropriately.
     filter_1[0, 1:] = 1
+    # Do not cover any points already covered.
     filter_1 = filter_1 * (1 - filter_0)
-    filter_3 = blank_filter.copy()
+
+    # Define the bounds which will derive from the bounds in index 3.
+    filter_3 = blank_template.copy()
     filter_3[1:, :-1] = 1 - mask
+    # Ensure the corner and edge bounds are covered appropriately.
     filter_3[1:, 0] = 1
+    # Do not cover any points already covered.
     filter_3 = filter_3 * (1 - filter_0 - filter_1)
+
+    # The bounds deriving from index 2 will be all those not already covered.
     filter_2 = 1 - filter_0 - filter_1 - filter_3
 
-    contiguous_bounds = blank_filter.astype(bounds.dtype)
+    # Copy the bounds information over into the appropriate places.
+    contiguous_bounds = blank_template.astype(bounds.dtype)
     contiguous_bounds[:-1, :-1] += bounds[:, :, 0] * filter_0[:-1, :-1]
     contiguous_bounds[:-1, 1:] += bounds[:, :, 1] * filter_1[:-1, 1:]
     contiguous_bounds[1:, 1:] += bounds[:, :, 2] * filter_2[1:, 1:]
