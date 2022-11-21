@@ -9,7 +9,6 @@ import iris
 from iris.cube import Cube
 from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 
-from benchmarks import disable_repeat_between_setup
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -17,6 +16,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 
+from .. import disable_repeat_between_setup
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 

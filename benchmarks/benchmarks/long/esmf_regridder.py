@@ -8,13 +8,14 @@ import dask.array as da
 import iris
 from iris.cube import Cube
 
-from benchmarks import disable_repeat_between_setup, skip_benchmark
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
+
+from .. import disable_repeat_between_setup, skip_benchmark
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
