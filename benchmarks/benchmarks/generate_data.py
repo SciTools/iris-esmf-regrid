@@ -17,6 +17,7 @@ from os import environ
 from pathlib import Path
 import re
 from textwrap import dedent
+from warnings import warn
 
 from iris import load_cube
 from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
@@ -35,15 +36,23 @@ except (CalledProcessError, FileNotFoundError, PermissionError):
     error = "Env variable DATA_GEN_PYTHON not a runnable python executable path."
     raise ValueError(error)
 
+# The default location of data files used in benchmarks. Used by CI.
 default_data_dir = (Path(__file__).parent.parent / ".data").resolve()
+# Optionally override the default data location with environment variable.
 BENCHMARK_DATA = Path(environ.get("BENCHMARK_DATA", default_data_dir))
 if BENCHMARK_DATA == default_data_dir:
     BENCHMARK_DATA.mkdir(exist_ok=True)
+    message = (
+        f"No BENCHMARK_DATA env var, defaulting to {BENCHMARK_DATA}. "
+        "Note that some benchmark files are GB in size."
+    )
+    warn(message)
 elif not BENCHMARK_DATA.is_dir():
     message = f"Not a directory: {BENCHMARK_DATA} ."
     raise ValueError(message)
 
-# Flag to allow the rebuilding of synthetic data.
+# Manual flag to allow the rebuilding of synthetic data.
+#  False forces a benchmark run to re-make all the data files.
 REUSE_DATA = True
 
 
@@ -74,6 +83,7 @@ def run_function_elsewhere(func_to_run, *args, **kwargs):
 
     """
     func_string = dedent(getsource(func_to_run))
+    func_string = func_string.replace("@staticmethod\n", "")
     func_call_term_strings = [repr(arg) for arg in args]
     func_call_term_strings += [f"{name}={repr(val)}" for name, val in kwargs.items()]
     func_call_string = (
