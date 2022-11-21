@@ -1,4 +1,4 @@
-"""Quick running benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
+"""Benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
 import os
 from pathlib import Path

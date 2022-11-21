@@ -1,4 +1,4 @@
-"""Slower benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
+"""Scalability benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
 import os
 from pathlib import Path

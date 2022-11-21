@@ -449,7 +449,6 @@ def benchmarks(
                 "continuous",
                 merge_base,
                 "HEAD",
-                "--bench=ci",
                 f"--factor={COMPARE_FACTOR}",
                 "--strict",
             ]
