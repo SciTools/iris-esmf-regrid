@@ -349,6 +349,7 @@ def benchmarks(
 ):
     """
     Perform iris-esmf-regrid performance benchmarks (using Airspeed Velocity).
+
     All run types require a single Nox positional argument (e.g.
     ``nox --session="foo" -- my_pos_arg``) - detailed in the parameters
     section - and can optionally accept a series of further arguments that will
@@ -370,6 +371,7 @@ def benchmarks(
           preset arguments - must all be supplied by the user. So just like
           running ASV manually, with the convenience of re-using the session's
           scripted setup steps.
+
     Examples
     --------
     * ``nox --session="benchmarks(branch)" -- upstream/main``
