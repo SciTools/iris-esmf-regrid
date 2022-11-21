@@ -15,7 +15,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 
-from .. import disable_repeat_between_setup, skip_benchmark
+from .. import skip_benchmark
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
@@ -126,7 +126,6 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
         super().time_prepare(n)
 
 
-@disable_repeat_between_setup
 class PerformScalabilityGridToGrid:
     params = [100, 200, 400, 600, 800, 1000]
     param_names = ["height"]
@@ -192,8 +191,10 @@ class PerformScalabilityGridToGrid:
         _ = rg(self.src)
 
     def time_lazy_perform(self, cache, height):
+        # Don't touch result.data - permanent realisation plays badly with
+        #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
-        _ = self.result.data
+        self.result.core_data().compute()
 
 
 class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):

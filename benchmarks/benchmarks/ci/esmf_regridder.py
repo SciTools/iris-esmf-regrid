@@ -16,7 +16,6 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 
-from .. import disable_repeat_between_setup
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
@@ -124,7 +123,6 @@ class TimeRegridding(MultiGridCompare):
         _ = self.regridder(self.src)
 
 
-@disable_repeat_between_setup
 class TimeLazyRegridding:
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
@@ -172,8 +170,10 @@ class TimeLazyRegridding:
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
+        # Don't touch result.data - permanent realisation plays badly with
+        #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
-        _ = self.result.data
+        self.result.core_data().compute()
 
 
 class TimeMeshToGridRegridding(TimeRegridding):
@@ -208,7 +208,6 @@ class TimeMeshToGridRegridding(TimeRegridding):
         self.tgt = tgt
 
 
-@disable_repeat_between_setup
 class TimeLazyMeshToGridRegridding:
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
@@ -252,8 +251,10 @@ class TimeLazyMeshToGridRegridding:
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
+        # Don't touch result.data - permanent realisation plays badly with
+        #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
-        _ = self.result.data
+        self.result.core_data().compute()
 
 
 class TimeGridToMeshRegridding(TimeRegridding):
@@ -288,7 +289,6 @@ class TimeGridToMeshRegridding(TimeRegridding):
         self.tgt = tgt
 
 
-@disable_repeat_between_setup
 class TimeLazyGridToMeshRegridding:
     def setup_cache(self):
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
@@ -328,8 +328,10 @@ class TimeLazyGridToMeshRegridding:
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
+        # Don't touch result.data - permanent realisation plays badly with
+        #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
-        _ = self.result.data
+        self.result.core_data().compute()
 
 
 class TimeRegridderIO(MultiGridCompare):
