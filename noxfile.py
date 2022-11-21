@@ -475,6 +475,8 @@ def benchmarks(
         )
         publish_subdir.mkdir()
 
+        # Activate on demand benchmarks (C/SPerf are deactivated for 'standard' runs).
+        session.env["ON_DEMAND_BENCHMARKS"] = "True"
         commit_range = "upstream/main^!"
 
         asv_command = [
