@@ -36,6 +36,23 @@ decorated with `@on_demand_benchmark` are included in the ASV run. Usually
 coupled with the ASV `--bench` argument to only run the benchmark(s) of
 interest. Is set during the Nox `sperf` session.
 
+### Reducing run time
+
+Before benchmarks are run on a commit, the benchmark environment is
+automatically aligned with the lock-file for that commit. You can significantly
+speed up any environment updates by co-locating the benchmark environment and your
+[Conda package cache](https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#specify-package-directories-pkgs-dirs)
+on the same [file system](https://en.wikipedia.org/wiki/File_system). This can
+be done in several ways:
+
+* Move your iris-esmf-regrid checkout, this being the default location for the
+  benchmark environment.
+* Move your package cache by editing
+  [`pkgs_dirs` in Conda config](https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#specify-package-directories-pkgs-dirs).
+* Move the benchmark environment by **locally** editing the environment path of
+  `delegated_env_commands` and `delegated_env_parent` in
+  [asv.conf.json](asv.conf.json).
+
 ## Writing benchmarks
 
 [See the ASV docs](https://asv.readthedocs.io/) for full detail.
