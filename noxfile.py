@@ -337,7 +337,7 @@ def tests(session: nox.sessions.Session):
         session.run("pytest")
 
 
-@nox.session
+@nox.session(reuse_venv=False)
 @nox.parametrize(
     "run_type",
     ["branch", "sperf", "custom"],
