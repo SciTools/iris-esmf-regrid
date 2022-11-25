@@ -24,7 +24,7 @@ env:
   # Increment the build number to force new conda cache upload.
   CONDA_CACHE_BUILD: "1"
   # Increment the build number to force new nox cache upload.
-  NOX_CACHE_BUILD: "1"
+  NOX_CACHE_BUILD: "3"
   # Increment the build number to force new pip cache upload.
   PIP_CACHE_BUILD: "0"
   # Pip package to be installed.
@@ -153,7 +153,7 @@ benchmark_task:
     fi
   << : *LINUX_CONDA_TEMPLATE
   asv_cache:
-    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv-env
+    folder: ${CIRRUS_WORKING_DIR}/benchmarks/.asv/env
     reupload_on_changes: true
     fingerprint_script:
       - echo "${CIRRUS_TASK_NAME}"
@@ -169,4 +169,4 @@ benchmark_task:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session=tests --install-only
     - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests*bin/python"))
-    - nox --session="benchmarks(ci compare)"
+    - nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${CIRRUS_BASE_SHA}"

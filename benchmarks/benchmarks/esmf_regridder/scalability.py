@@ -1,4 +1,4 @@
-"""Slower benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
+"""Scalability benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
 import os
 from pathlib import Path
@@ -8,17 +8,18 @@ import dask.array as da
 import iris
 from iris.cube import Cube
 
-from benchmarks import disable_repeat_between_setup, skip_benchmark
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
+
+from .. import on_demand_benchmark, skip_benchmark
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
-class PrepareScalabilityGridToGrid:
+class PrepareScalabilityMixin:
     timeout = 180
     params = [50, 100, 200, 400, 600, 800]
     param_names = ["grid width"]
@@ -41,11 +42,18 @@ class PrepareScalabilityGridToGrid:
         self.src = self.src_cube(n)
         self.tgt = self.tgt_cube(n)
 
-    def time_prepare(self, n):
+    def _time_prepare(self, n):
         _ = self.regridder(self.src, self.tgt)
 
 
-class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
+@on_demand_benchmark
+class PrepareScalabilityGridToGrid(PrepareScalabilityMixin):
+    def time_prepare(self, n):
+        super()._time_prepare(n)
+
+
+@on_demand_benchmark
+class PrepareScalabilityMeshToGrid(PrepareScalabilityMixin):
     regridder = MeshToGridESMFRegridder
 
     def src_cube(self, n):
@@ -82,10 +90,11 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityGridToGrid):
         save_regridder(self.rg, self.destination_file)
 
     def time_prepare(self, _, n):
-        super().time_prepare(n)
+        super()._time_prepare(n)
 
 
-class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
+@on_demand_benchmark
+class PrepareScalabilityGridToMesh(PrepareScalabilityMixin):
     regridder = GridToMeshESMFRegridder
 
     def tgt_cube(self, n):
@@ -122,11 +131,10 @@ class PrepareScalabilityGridToMesh(PrepareScalabilityGridToGrid):
         save_regridder(self.rg, self.destination_file)
 
     def time_prepare(self, _, n):
-        super().time_prepare(n)
+        super()._time_prepare(n)
 
 
-@disable_repeat_between_setup
-class PerformScalabilityGridToGrid:
+class PerformScalabilityMixin:
     params = [100, 200, 400, 600, 800, 1000]
     param_names = ["height"]
     grid_size = 400
@@ -185,19 +193,31 @@ class PerformScalabilityGridToGrid:
         cube = self.add_src_metadata(cube)
         self.result = regridder(cube)
 
-    def time_perform(self, cache, height):
+    def _time_perform(self, cache, height):
         assert not self.src.has_lazy_data()
         rg, _ = cache
         _ = rg(self.src)
 
-    def time_lazy_perform(self, cache, height):
+    def _time_lazy_perform(self, cache, height):
+        # Don't touch result.data - permanent realisation plays badly with
+        #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
-        _ = self.result.data
+        self.result.core_data().compute()
 
 
-class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
+@on_demand_benchmark
+class PerformScalabilityGridToGrid(PerformScalabilityMixin):
+    def time_perform(self, cache, height):
+        super()._time_perform(cache, height)
+
+    def time_lazy_perform(self, cache, height):
+        super()._time_lazy_perform(cache, height)
+
+
+@on_demand_benchmark
+class PerformScalabilityMeshToGrid(PerformScalabilityMixin):
     regridder = MeshToGridESMFRegridder
-    chunk_size = [PerformScalabilityGridToGrid.grid_size ^ 2, 10]
+    chunk_size = [PerformScalabilityMixin.grid_size ^ 2, 10]
     file_name = "chunked_cube_1d.nc"
 
     def setup_cache(self):
@@ -221,8 +241,15 @@ class PerformScalabilityMeshToGrid(PerformScalabilityGridToGrid):
         cube.add_aux_coord(mesh_coord_y, 0)
         return cube
 
+    def time_perform(self, cache, height):
+        super()._time_perform(cache, height)
 
-class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
+    def time_lazy_perform(self, cache, height):
+        super()._time_lazy_perform(cache, height)
+
+
+@on_demand_benchmark
+class PerformScalabilityGridToMesh(PerformScalabilityMixin):
     regridder = GridToMeshESMFRegridder
 
     def setup_cache(self):
@@ -240,11 +267,17 @@ class PerformScalabilityGridToMesh(PerformScalabilityGridToGrid):
         tgt.add_aux_coord(mesh_coord_y, 0)
         return tgt
 
+    def time_perform(self, cache, height):
+        super()._time_perform(cache, height)
+
+    def time_lazy_perform(self, cache, height):
+        super()._time_lazy_perform(cache, height)
+
 
 # These benchmarks unusually long and are resource intensive so are skipped.
 # They can be run by manually removing the skip.
 @skip_benchmark
-class PerformScalability1kGridToGrid(PerformScalabilityGridToGrid):
+class PerformScalability1kGridToGrid(PerformScalabilityMixin):
     timeout = 600
     grid_size = 1100
     chunk_size = [grid_size, grid_size, 10]
@@ -257,11 +290,17 @@ class PerformScalability1kGridToGrid(PerformScalabilityGridToGrid):
     def setup_cache(self):
         return super().setup_cache()
 
+    def time_perform(self, cache, height):
+        super()._time_perform(cache, height)
+
+    def time_lazy_perform(self, cache, height):
+        super()._time_lazy_perform(cache, height)
+
 
 # These benchmarks unusually long and are resource intensive so are skipped.
 # They can be run by manually removing the skip.
 @skip_benchmark
-class PerformScalability2kGridToGrid(PerformScalabilityGridToGrid):
+class PerformScalability2kGridToGrid(PerformScalabilityMixin):
     timeout = 600
     grid_size = 2200
     chunk_size = [grid_size, grid_size, 10]
@@ -273,3 +312,9 @@ class PerformScalability2kGridToGrid(PerformScalabilityGridToGrid):
 
     def setup_cache(self):
         return super().setup_cache()
+
+    def time_perform(self, cache, height):
+        super()._time_perform(cache, height)
+
+    def time_lazy_perform(self, cache, height):
+        super()._time_lazy_perform(cache, height)

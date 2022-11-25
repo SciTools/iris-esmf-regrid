@@ -1,6 +1,9 @@
 """Benchmark tests for iris-esmf-regrid"""
 
 
+from os import environ
+
+
 def disable_repeat_between_setup(benchmark_object):
     """
     Decorator for benchmarks where object persistence would be inappropriate.
@@ -30,15 +33,38 @@ def disable_repeat_between_setup(benchmark_object):
 def skip_benchmark(benchmark_object):
     """
     Decorator for benchmarks skipping benchmarks.
+
+    Simply doesn't return the object.
+
+    Warnings
+    --------
+    ASV's architecture means decorated classes cannot be sub-classed. Code for
+    inheritance should be in a mixin class that doesn't include any methods
+    which ASV will recognise as benchmarks
+    (e.g. ``def time_something(self):`` ).
+
     """
+    pass
 
-    def setup_cache(self):
-        pass
 
-    def setup(*args):
-        raise NotImplementedError
+def on_demand_benchmark(benchmark_object):
+    """
+    Decorator. Disables these benchmark(s) unless ON_DEMAND_BENCHARKS env var is set.
 
-    benchmark_object.setup_cache = setup_cache
-    benchmark_object.setup = setup
+    For benchmarks that, for whatever reason, should not be run by default.
+    E.g:
+        * Require a local file
+        * Used for scalability analysis instead of commit monitoring.
 
-    return benchmark_object
+    Can be applied to benchmark classes/methods/functions.
+
+    Warnings
+    --------
+    ASV's architecture means decorated classes cannot be sub-classed. Code for
+    inheritance should be in a mixin class that doesn't include any methods
+    which ASV will recognise as benchmarks
+    (e.g. ``def time_something(self):`` ).
+
+    """
+    if "ON_DEMAND_BENCHMARKS" in environ:
+        return benchmark_object

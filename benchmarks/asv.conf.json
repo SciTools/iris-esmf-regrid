@@ -1,15 +1,27 @@
 {
     "version": 1,
     "project": "esmf_regrid",
-    "repo": "..",
-    "environment_type": "nox-conda",
-    "pythons": [],
-    "branches": ["main"],
-    "benchmark_dir": "benchmarks",
-    "env_dir": ".asv-env",
-    "results_dir": ".asv-results",
-    "html_dir": ".asv-html",
     "project_url": "https://github.com/SciTools-incubator/iris-esmf-regrid",
+    "repo": "..",
+    "environment_type": "conda-delegated",
     "show_commit_url": "https://github.com/SciTools-incubator/iris-esmf-regrid/commit/",
-    "plugins": [".nox_asv_plugin"],
+    "branches": ["upstream/main"],
+
+    "benchmark_dir": "./benchmarks",
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html",
+    "plugins": [".asv_delegated_conda"],
+
+    // The command(s) that create/update an environment correctly for the
+    //  checked-out commit.
+    // Interpreted the same as build_command, with following exceptions:
+    //  * No build-time environment variables.
+    //  * Is run in the same environment as the ASV install itself.
+    "delegated_env_commands": [
+        "PY_VER=3.10 nox --envdir={conf_dir}/.asv/env/nox01 --session=tests --install-only --no-error-on-external-run --verbose"
+    ],
+    // The parent directory of the above environment.
+    //  The most recently modified environment in the directory will be used.
+    "delegated_env_parent": "{conf_dir}/.asv/env/nox01"
 }
