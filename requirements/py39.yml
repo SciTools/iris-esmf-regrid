@@ -21,7 +21,7 @@ dependencies:
   - asv
   - black=22.3.0
   - codecov
-  - flake8<6
+  - flake8
   - flake8-docstrings
   - flake8-import-order
   - nox
