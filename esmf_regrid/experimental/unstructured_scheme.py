@@ -138,6 +138,21 @@ def _regrid_along_mesh_dim(regridder, data, mesh_dim, mdtol):
     return result
 
 
+def _regrid_along_dim(regridder, data, dim, mdtol):
+    # Before regridding, data is transposed to a standard form.
+    # In the future, this may be done within the regridder by specifying args.
+
+    # Move the mesh axis to be the last dimension.
+    data = np.moveaxis(data, dim, -1)
+
+    result = regridder.regrid(data, mdtol=mdtol)
+
+    # Move grid axes back into the original position of the mesh.
+    result = np.moveaxis(result, -1, dim)
+
+    return result
+
+
 def _regrid_unstructured_to_rectilinear__prepare(
     src_mesh_cube,
     target_grid_cube,
@@ -494,11 +509,11 @@ def _regrid_rectilinear_to_unstructured__prepare(
             )
         center = False
     elif method == "bilinear":
-        if location not in ["face", "node"]:
-            raise ValueError(
-                f"Bilinear regridding requires a target cube with a node "
-                f"or face location, target cube had the {location} location."
-            )
+        # if location not in ["face", "node"]:
+        #     raise ValueError(
+        #         f"Bilinear regridding requires a target cube with a node "
+        #         f"or face location, target cube had the {location} location."
+        #     )
         if location == "face" and None in mesh.face_coords:
             raise ValueError(
                 "Bilinear regridding requires a target cube on a face location to have "
@@ -784,3 +799,117 @@ class GridToMeshESMFRegridder:
         return _regrid_rectilinear_to_unstructured__perform(
             cube, regrid_info, self.mdtol
         )
+def _regrid_unstructured_to_unstructured__prepare(
+    src_cube,
+    tgt_cube,
+    method,
+    precomputed_weights=None,
+    resolution=None,
+):
+    """
+    First (setup) part of 'regrid_unstructured_to_unstructured'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
+    src_mesh = src_cube.mesh
+    tgt_mesh = tgt_cube.mesh
+    src_location = src_cube.location
+    tgt_location = tgt_cube.location
+    if src_mesh is None or tgt_mesh is None:
+        raise ValueError("The given cube is not defined on a mesh.")
+    if method == "conservative":
+        if src_location != "face" or tgt_location != "face":
+            # TODO:
+            raise ValueError(
+                f"Conservative regridding requires a target cube located on "
+                f"the face of a cube, target cube had the {tgt_location} location."
+            )
+        center = False
+    elif method == "bilinear":
+        # if location not in ["face", "node"]:
+        #     raise ValueError(
+        #         f"Bilinear regridding requires a target cube with a node "
+        #         f"or face location, target cube had the {location} location."
+        #     )
+        if src_location == "face" and None in mesh.face_coords:
+            raise ValueError(
+                "Bilinear regridding requires a target cube on a face location to have "
+                "a face center."
+            )
+        center = True
+    else:
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
+    assert src_mesh is not None and tgt_mesh is not None
+    mesh_dim = src_cube.mesh_dim()
+
+    tgt_meshinfo = _mesh_to_MeshInfo(tgt_mesh, tgt_location)
+    src_meshinfo = _mesh_to_MeshInfo(src_mesh, src_location)
+
+    regridder = Regridder(
+        src_meshinfo, tgt_meshinfo, method=method, precomputed_weights=precomputed_weights
+    )
+
+    regrid_info = (mesh_dim, src_mesh, src_location, tgt_mesh, tgt_location, regridder)
+
+    return regrid_info
+
+
+def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_unstructured_to_unstructured'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
+    mesh_dim, src_mesh, src_location, tgt_mesh, tgt_location, regridder = regrid_info
+
+    # Set up a function which can accept just chunk of data as an argument.
+    regrid = functools.partial(
+        _regrid_along_dim,
+        regridder,
+        dim=mesh_dim,
+        mdtol=mdtol,
+    )
+
+    face_node = tgt_mesh.face_node_connectivity
+    # In face_node_connectivity: `location`= face, `connected` = node, so
+    # you want to get the length of the `location` dimension.
+    n_faces = face_node.shape[face_node.location_axis]
+
+    # Apply regrid to all the chunks of src_cube, ensuring first that all
+    # chunks cover the entire horizontal plane (otherwise they would break
+    # the regrid function).
+    new_data = _map_complete_blocks(
+        src_cube,
+        regrid,
+        (mesh_dim,),
+        (n_faces,),
+    )
+
+    new_cube = _create_cube(
+        new_data,
+        src_cube,
+        (mesh_dim,),
+        tgt_mesh.to_MeshCoords(tgt_location),
+        1,
+    )
+    return new_cube
+
+
+def regrid_unstructured_to_unstructured(
+    src_cube,
+    tgt_cube,
+    mdtol=0,
+    method="conservative",
+):
+    regrid_info = _regrid_unstructured_to_unstructured__prepare(
+        src_cube,
+        tgt_cube,
+        method=method,
+    )
+    result = _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol)
+    return result, regrid_info
