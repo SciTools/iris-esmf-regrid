@@ -287,7 +287,7 @@ def flake8(session: nox.sessions.Session):
 
     """
     # Pip install the session requirements.
-    session.install("flake8<6", "flake8-docstrings", "flake8-import-order")
+    session.install("flake8", "flake8-docstrings", "flake8-import-order")
     # Execute the flake8 linter on the package.
     session.run("flake8", PACKAGE)
     # Execute the flake8 linter on this file.
