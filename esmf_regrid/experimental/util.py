@@ -47,13 +47,15 @@ def node_to_ac_edges(n2de, f2de, ne):
             de2de[des[i - 1]] = (des[i] + ne) % (2 * ne)
     on2de = []
     for des in n2de:
+        if len(des) <= 2:
+            continue
         des = des.copy()
         e0 = des.pop(0)
         runs = [[e0]]
         while len(des) > 0:
             current_edge = runs[0][-1]
             next_edge = de2de[current_edge]
-            if next_edge == ma.masked:
+            if ma.is_masked(next_edge):
                 next_edge = des.pop(0)
                 runs.insert(0, [])
             else:
@@ -99,17 +101,10 @@ def mesh_line_graph(mesh):
     for i, face in enumerate(new_fnc):
         fnc_array[i, : len(face)] = face
     fnc = Connectivity(fnc_array, cf_role="face_node_connectivity", start_index=0)
-    fflon, fflat = mesh.face_coords
-    fnlon, fnlat = mesh.node_coords
-    flon = np.concatenate([fflon.points, fnlon.points])
-    face_lon = AuxCoord(flon, standard_name="longitude")
-    flat = np.concatenate([fflat.points, fnlat.points])
-    face_lat = AuxCoord(flat, standard_name="latitude")
     new_mesh = Mesh(
         2,
         ((new_node_lon, "x"), (new_node_lat, "y")),
         fnc,
-        face_coords_and_axes=((face_lon, "x"), (face_lat, "y")),
     )
 
     return new_mesh

@@ -875,10 +875,10 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
         mdtol=mdtol,
     )
 
-    face_node = tgt_mesh.face_node_connectivity
+    node_coord = tgt_mesh.node_coords.node_x
     # In face_node_connectivity: `location`= face, `connected` = node, so
     # you want to get the length of the `location` dimension.
-    n_faces = face_node.shape[face_node.location_axis]
+    n_nodes = node_coord.shape[0]
 
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
@@ -887,9 +887,8 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
         src_cube,
         regrid,
         (mesh_dim,),
-        (n_faces,),
+        (n_nodes,),
     )
-
     new_cube = _create_cube(
         new_data,
         src_cube,
@@ -912,4 +911,4 @@ def regrid_unstructured_to_unstructured(
         method=method,
     )
     result = _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol)
-    return result, regrid_info
+    return result
