@@ -166,7 +166,8 @@ benchmark_task:
       - echo "${NOX_CACHE_BUILD}"
       - if [ -n "${IRIS_SOURCE}" ]; then echo "${IRIS_SOURCE}"; fi
   benchmarks_script:
+    - if [ -z "$CIRRUS_BASE_SHA" ]; then export COMPARE="HEAD~" else export COMPARE="${CIRRUS_BASE_SHA}" fi
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session=tests --install-only
     - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests*bin/python"))
-    - nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${CIRRUS_BASE_SHA}"
+    - nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${COMPARE}"
