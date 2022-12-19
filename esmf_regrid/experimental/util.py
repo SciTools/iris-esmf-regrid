@@ -118,6 +118,7 @@ def convert_edge_cube(cube):
         new_cube.add_aux_coord(coord, 0)
     return new_cube
 
+
 def add_edge_centers(mesh):
     lon_coord = mesh.to_MeshCoord("edge", "x")
     lat_coord = mesh.to_MeshCoord("edge", "y")
@@ -129,8 +130,8 @@ def add_edge_centers(mesh):
         if ma.is_masked(lonbds):
             offset = offset.filled(0)
         return np.mean(lonbds, axis=-1) + offset
+
     new_lons = lon_mean(ma.array(lon_coord.bounds, mask=lat_mask))
     mesh.edge_coords.edge_x.points = new_lons
     mesh.edge_coords.edge_y.points = new_lats
     return mesh
-

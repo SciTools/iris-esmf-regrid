@@ -4,7 +4,9 @@ import iris
 from iris.cube import Cube
 from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 from esmf_regrid.experimental import util
-from esmf_regrid.experimental.unstructured_scheme import regrid_unstructured_to_unstructured
+from esmf_regrid.experimental.unstructured_scheme import (
+    regrid_unstructured_to_unstructured,
+)
 
 
 # Load and tweak input meshes
@@ -44,10 +46,18 @@ tgt_cubes.append(dummy_lon2)
 tgt_cubes.append(dummy_lat2)
 tgt_cubes.append(dummy_face_lon2)
 tgt_cubes.append(dummy_face_lat2)
-main_cube = Cube(np.zeros(3072), long_name="main", attributes={"location": "edge", "mesh": "unit_test"})
+main_cube = Cube(
+    np.zeros(3072),
+    long_name="main",
+    attributes={"location": "edge", "mesh": "unit_test"},
+)
 tgt_cubes.append(main_cube)
-tgt_cubes.extract_cube("Topology data of 2D unstructured mesh").attributes["edge_coordinates"] = "lon2 lat2"
-tgt_cubes.extract_cube("Topology data of 2D unstructured mesh").attributes["face_coordinates"] = "lon3 lat3"
+tgt_cubes.extract_cube("Topology data of 2D unstructured mesh").attributes[
+    "edge_coordinates"
+] = "lon2 lat2"
+tgt_cubes.extract_cube("Topology data of 2D unstructured mesh").attributes[
+    "face_coordinates"
+] = "lon3 lat3"
 
 new_tgt_fn = "new_tgt.nc"
 iris.save(tgt_cubes, new_tgt_fn)
@@ -67,14 +77,14 @@ src_dual = util.convert_edge_cube(src_cube)
 tgt_dual = util.convert_edge_cube(tgt_cube)
 
 u_src = src_dual.copy()
-u_src.data = np.cos(u_src.coord("latitude").points * (np.pi/180))
+u_src.data = np.cos(u_src.coord("latitude").points * (np.pi / 180))
 v_src = src_dual.copy()
-v_src.data = np.sin(u_src.coord("longitude").points * (np.pi/180))
+v_src.data = np.sin(u_src.coord("longitude").points * (np.pi / 180))
 
 u_tgt = tgt_dual.copy()
-u_tgt.data = np.cos(u_tgt.coord("latitude").points * (np.pi/180))
+u_tgt.data = np.cos(u_tgt.coord("latitude").points * (np.pi / 180))
 v_tgt = tgt_dual.copy()
-v_tgt.data = np.sin(u_tgt.coord("longitude").points * (np.pi/180))
+v_tgt.data = np.sin(u_tgt.coord("longitude").points * (np.pi / 180))
 
 iris.save(u_src, "u_src.nc")
 iris.save(v_src, "v_src.nc")

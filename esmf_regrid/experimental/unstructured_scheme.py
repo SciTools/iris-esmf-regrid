@@ -799,6 +799,8 @@ class GridToMeshESMFRegridder:
         return _regrid_rectilinear_to_unstructured__perform(
             cube, regrid_info, self.mdtol
         )
+
+
 def _regrid_unstructured_to_unstructured__prepare(
     src_cube,
     tgt_cube,
@@ -850,7 +852,10 @@ def _regrid_unstructured_to_unstructured__prepare(
     src_meshinfo = _mesh_to_MeshInfo(src_mesh, src_location)
 
     regridder = Regridder(
-        src_meshinfo, tgt_meshinfo, method=method, precomputed_weights=precomputed_weights
+        src_meshinfo,
+        tgt_meshinfo,
+        method=method,
+        precomputed_weights=precomputed_weights,
     )
 
     regrid_info = (mesh_dim, src_mesh, src_location, tgt_mesh, tgt_location, regridder)
