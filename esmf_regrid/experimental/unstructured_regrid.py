@@ -1,6 +1,9 @@
 """Provides :mod:`ESMF` representations of UGRID meshes."""
 
-import ESMF
+try:
+    import esmpy as ESMF
+except:
+    import ESMF
 import numpy as np
 
 from .._esmf_sdo import SDO

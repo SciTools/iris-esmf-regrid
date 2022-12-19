@@ -3,7 +3,10 @@
 from abc import ABC, abstractmethod
 
 import cartopy.crs as ccrs
-import ESMF
+try:
+    import esmpy as ESMF
+except:
+    import ESMF
 import numpy as np
 import scipy.sparse
 

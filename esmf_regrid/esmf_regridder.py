@@ -1,6 +1,9 @@
 """Provides ESMF representations of grids/UGRID meshes and a modified regridder."""
 
-import ESMF
+try:
+    import esmpy as ESMF
+except:
+    import ESMF
 import numpy as np
 from numpy import ma
 import scipy.sparse
