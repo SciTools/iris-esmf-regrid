@@ -3,7 +3,15 @@
 from abc import ABC, abstractmethod
 
 import cartopy.crs as ccrs
-import ESMF
+
+try:
+    import esmpy
+except ImportError as exc:
+    # Prior to v8.4.0, `esmpy`` could be imported as `ESMF`.
+    try:
+        import ESMF as esmpy  # noqa: N811
+    except ImportError:
+        raise exc
 import numpy as np
 import scipy.sparse
 
@@ -28,7 +36,7 @@ class SDO(ABC):
     def make_esmf_field(self):
         """Return an ESMF field representing the spatial discretisation object."""
         sdo = self._make_esmf_sdo()
-        field = ESMF.Field(sdo, **self._field_kwargs)
+        field = esmpy.Field(sdo, **self._field_kwargs)
         return field
 
     @property
@@ -90,14 +98,14 @@ class GridInfo(SDO):
     This class holds information about lat-lon type grids. That is, grids
     defined by lists of latitude and longitude values for points/bounds
     (with respect to some coordinate reference system i.e. rotated pole).
-    It contains methods for translating this information into :mod:`ESMF` objects.
+    It contains methods for translating this information into :mod:`esmpy` objects.
     In particular, there are methods for representing as a
-    :class:`ESMF.api.grid.Grid` and
-    as a :class:`ESMF.api.field.Field` containing that
-    :class:`~ESMF.api.grid.Grid`. This ESMF :class:`~ESMF.api.field.Field`
+    :class:`esmpy.api.grid.Grid` and
+    as a :class:`esmpy.api.field.Field` containing that
+    :class:`~esmpy.api.grid.Grid`. This esmpy :class:`~esmpy.api.field.Field`
     is designed to
     contain enough information for area weighted regridding and may be
-    inappropriate for other :mod:`ESMF` regridding schemes.
+    inappropriate for other :mod:`esmpy` regridding schemes.
 
     """
 
@@ -137,7 +145,7 @@ class GridInfo(SDO):
             be considered contiguous with the first.
         areas : :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
-            each face. If ``None``, then :mod:`ESMF` will use its own
+            each face. If ``None``, then :mod:`esmpy` will use its own
             calculated areas.
         center : bool, default=False
             Describes if the center points of the grid cells are used in regridding
@@ -194,7 +202,7 @@ class GridInfo(SDO):
         super().__init__(
             shape=shape,
             index_offset=1,
-            field_kwargs={"staggerloc": ESMF.StaggerLoc.CENTER},
+            field_kwargs={"staggerloc": esmpy.StaggerLoc.CENTER},
         )
 
     def _as_esmf_info(self):
@@ -257,7 +265,7 @@ class GridInfo(SDO):
         ) = info
 
         if circular:
-            grid = ESMF.Grid(
+            grid = esmpy.Grid(
                 shape,
                 pole_kind=[1, 1],
                 num_peri_dims=1,
@@ -265,27 +273,27 @@ class GridInfo(SDO):
                 pole_dim=0,
             )
         else:
-            grid = ESMF.Grid(shape, pole_kind=[1, 1])
+            grid = esmpy.Grid(shape, pole_kind=[1, 1])
 
-        grid.add_coords(staggerloc=ESMF.StaggerLoc.CORNER)
-        grid_corner_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CORNER)
+        grid.add_coords(staggerloc=esmpy.StaggerLoc.CORNER)
+        grid_corner_x = grid.get_coords(0, staggerloc=esmpy.StaggerLoc.CORNER)
         grid_corner_x[:] = truecornerlons
-        grid_corner_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CORNER)
+        grid_corner_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CORNER)
         grid_corner_y[:] = truecornerlats
 
         # Grid center points are added here, this is not necessary for
         # conservative area weighted regridding
         if self.center:
-            grid.add_coords(staggerloc=ESMF.StaggerLoc.CENTER)
-            grid_center_x = grid.get_coords(0, staggerloc=ESMF.StaggerLoc.CENTER)
+            grid.add_coords(staggerloc=esmpy.StaggerLoc.CENTER)
+            grid_center_x = grid.get_coords(0, staggerloc=esmpy.StaggerLoc.CENTER)
             grid_center_x[:] = truecenterlons
-            grid_center_y = grid.get_coords(1, staggerloc=ESMF.StaggerLoc.CENTER)
+            grid_center_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CENTER)
             grid_center_y[:] = truecenterlats
 
         if areas is not None:
-            grid.add_item(ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER)
+            grid.add_item(esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER)
             grid_areas = grid.get_item(
-                ESMF.GridItem.AREA, staggerloc=ESMF.StaggerLoc.CENTER
+                esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER
             )
             grid_areas[:] = areas.T
 
@@ -294,16 +302,16 @@ class GridInfo(SDO):
 
 class RefinedGridInfo(GridInfo):
     """
-    Class for handling structured grids represented in :mod:`ESMF` in higher resolution.
+    Class for handling structured grids represented in :mod:`esmpy` in higher resolution.
 
     A specialised version of :class:`GridInfo`. Designed to provide higher
     accuracy conservative regridding for rectilinear grids, especially those with
-    particularly large cells which may not be well represented by :mod:`ESMF`. This
+    particularly large cells which may not be well represented by :mod:`esmpy`. This
     class differs from :class:`GridInfo` primarily in the way it represents itself
-    as a :class:`~ESMF.api.field.Field` in :mod:`ESMF`. This :class:`~ESMF.api.field.Field`
+    as a :class:`~esmpy.api.field.Field` in :mod:`esmpy`. This :class:`~esmpy.api.field.Field`
     is designed to be a higher resolution version of the given grid and should
     contain enough information for area weighted regridding but may be
-    inappropriate for other :mod:`ESMF` regridding schemes.
+    inappropriate for other :mod:`esmpy` regridding schemes.
 
     """
 
