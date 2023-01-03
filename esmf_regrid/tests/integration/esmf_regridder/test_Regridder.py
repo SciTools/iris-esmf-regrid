@@ -1,6 +1,13 @@
 """Unit tests for :class:`esmf_regrid.esmf_regridder.Regridder`."""
 
-import ESMF
+try:
+    import esmpy
+except ImportError as exc:
+    # Prior to v8.4.0, `esmpy`` could be imported as `ESMF`.
+    try:
+        import ESMF as esmpy  # noqa: N811
+    except ImportError:
+        raise exc
 import numpy as np
 from numpy import ma
 
@@ -33,9 +40,9 @@ def test_esmpy_normalisation():
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
     src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
     src_esmpy_grid = src_grid._make_esmf_sdo()
-    src_esmpy_grid.add_item(ESMF.GridItem.MASK, staggerloc=ESMF.StaggerLoc.CENTER)
+    src_esmpy_grid.add_item(esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER)
     src_esmpy_grid.mask[0][...] = src_mask
-    src_field = ESMF.Field(src_esmpy_grid)
+    src_field = esmpy.Field(src_esmpy_grid)
     src_field.data[...] = src_data
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
@@ -46,16 +53,16 @@ def test_esmpy_normalisation():
 
     regridding_kwargs = {
         "ignore_degenerate": True,
-        "regrid_method": ESMF.RegridMethod.CONSERVE,
-        "unmapped_action": ESMF.UnmappedAction.IGNORE,
+        "regrid_method": esmpy.RegridMethod.CONSERVE,
+        "unmapped_action": esmpy.UnmappedAction.IGNORE,
         "factors": True,
         "src_mask_values": [1],
     }
-    esmpy_fracarea_regridder = ESMF.Regrid(
-        src_field, tgt_field, norm_type=ESMF.NormType.FRACAREA, **regridding_kwargs
+    esmpy_fracarea_regridder = esmpy.Regrid(
+        src_field, tgt_field, norm_type=esmpy.NormType.FRACAREA, **regridding_kwargs
     )
-    esmpy_dstarea_regridder = ESMF.Regrid(
-        src_field, tgt_field, norm_type=ESMF.NormType.DSTAREA, **regridding_kwargs
+    esmpy_dstarea_regridder = esmpy.Regrid(
+        src_field, tgt_field, norm_type=esmpy.NormType.DSTAREA, **regridding_kwargs
     )
 
     tgt_field_dstarea = esmpy_dstarea_regridder(src_field, tgt_field)

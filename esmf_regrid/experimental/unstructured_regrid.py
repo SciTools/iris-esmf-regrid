@@ -1,6 +1,13 @@
 """Provides :mod:`ESMF` representations of UGRID meshes."""
 
-import ESMF
+try:
+    import esmpy
+except ImportError as exc:
+    # Prior to v8.4.0, `esmpy`` could be imported as `ESMF`.
+    try:
+        import ESMF as esmpy  # noqa: N811
+    except ImportError:
+        raise exc
 import numpy as np
 
 from .._esmf_sdo import SDO
@@ -12,11 +19,11 @@ class MeshInfo(SDO):
 
     This class holds information about Meshes in a form similar to UGRID.
     It contains methods for translating this information into :mod:`ESMF` objects.
-    In particular, there are methods for representing as an :class:`ESMF.api.mesh.Mesh`
-    and as an :class:`ESMF.api.field.Field` containing that
-    :class:`~ESMF.api.mesh.Mesh`. This ESMF :class:`~ESMF.api.field.Field` is designed to
+    In particular, there are methods for representing as an :class:`esmpy.api.mesh.Mesh`
+    and as an :class:`esmpy.api.field.Field` containing that
+    :class:`~esmpy.api.mesh.Mesh`. This esmpy :class:`~esmpy.api.field.Field` is designed to
     contain enough information for area weighted regridding and may be
-    inappropriate for other :mod:`ESMF` regridding schemes.
+    inappropriate for other :mod:`esmpy` regridding schemes.
     """
 
     def __init__(
@@ -70,10 +77,10 @@ class MeshInfo(SDO):
         self.areas = areas
         self.elem_coords = elem_coords
         if location == "face":
-            field_kwargs = {"meshloc": ESMF.MeshLoc.ELEMENT}
+            field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
         elif location == "node":
-            field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
+            field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
         else:
             raise ValueError(
@@ -129,8 +136,8 @@ class MeshInfo(SDO):
         ) = info
         # ESMF can handle other dimensionalities, but we are unlikely
         # to make such a use of ESMF
-        emesh = ESMF.Mesh(
-            parametric_dim=2, spatial_dim=2, coord_sys=ESMF.CoordSys.SPH_DEG
+        emesh = esmpy.Mesh(
+            parametric_dim=2, spatial_dim=2, coord_sys=esmpy.CoordSys.SPH_DEG
         )
 
         emesh.add_nodes(num_node, nodeId, nodeCoord, nodeOwner)

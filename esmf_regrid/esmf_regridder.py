@@ -1,6 +1,13 @@
 """Provides ESMF representations of grids/UGRID meshes and a modified regridder."""
 
-import ESMF
+try:
+    import esmpy
+except ImportError as exc:
+    # Prior to v8.4.0, `esmpy`` could be imported as `ESMF`.
+    try:
+        import ESMF as esmpy  # noqa: N811
+    except ImportError:
+        raise exc
 import numpy as np
 from numpy import ma
 import scipy.sparse
@@ -15,15 +22,15 @@ __all__ = [
 
 
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
-    regridder = ESMF.Regrid(
+    regridder = esmpy.Regrid(
         src_field,
         tgt_field,
         ignore_degenerate=True,
         regrid_method=regrid_method,
-        unmapped_action=ESMF.UnmappedAction.IGNORE,
+        unmapped_action=esmpy.UnmappedAction.IGNORE,
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
-        norm_type=ESMF.NormType.DSTAREA,
+        norm_type=esmpy.NormType.DSTAREA,
         factors=True,
     )
     # Without specifying deep_copy=true, the information in weights_dict
@@ -50,16 +57,16 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 
 
 class Regridder:
-    """Regridder for directly interfacing with :mod:`ESMF`."""
+    """Regridder for directly interfacing with :mod:`esmpy`."""
 
     def __init__(self, src, tgt, method="conservative", precomputed_weights=None):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
 
-        Weights will be calculated using :mod:`ESMF` and stored as a
+        Weights will be calculated using :mod:`esmpy` and stored as a
         :class:`scipy.sparse.csr_matrix`
         for use in regridding. If precomputed weights are provided,
-        these will be used instead of calculating via :mod:`ESMF`.
+        these will be used instead of calculating via :mod:`esmpy`.
 
         Parameters
         ----------
@@ -72,21 +79,21 @@ class Regridder:
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
         method : str
-            Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
-            :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+            Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
+            :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
+            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
-            If ``None``, :mod:`ESMF` will be used to
-            calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
+            If ``None``, :mod:`esmpy` will be used to
+            calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
         """
         self.src = src
         self.tgt = tgt
 
         if method == "conservative":
-            esmf_regrid_method = ESMF.RegridMethod.CONSERVE
+            esmf_regrid_method = esmpy.RegridMethod.CONSERVE
         elif method == "bilinear":
-            esmf_regrid_method = ESMF.RegridMethod.BILINEAR
+            esmf_regrid_method = esmpy.RegridMethod.BILINEAR
         else:
             raise ValueError(
                 f"method must be either 'bilinear' or 'conservative', got '{method}'."
@@ -95,7 +102,7 @@ class Regridder:
 
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
-            self.esmf_version = ESMF.__version__
+            self.esmf_version = esmpy.__version__
             weights_dict = _get_regrid_weights_dict(
                 src.make_esmf_field(),
                 tgt.make_esmf_field(),
@@ -147,8 +154,8 @@ class Regridder:
         norm_type : str
             Either ``fracarea`` or ``dstarea``, defaults to ``fracarea``. Determines the
             type of normalisation applied to the weights. Normalisations correspond
-            to :mod:`ESMF` constants :attr:`~ESMF.api.constants.NormType.FRACAREA` and
-            :attr:`~ESMF.api.constants.NormType.DSTAREA`.
+            to :mod:`esmpy` constants :attr:`~esmpy.api.constants.NormType.FRACAREA` and
+            :attr:`~esmpy.api.constants.NormType.DSTAREA`.
         mdtol : float, default=1
             A number between 0 and 1 describing the missing data tolerance.
             Depending on the value of ``mdtol``, if a cell in the target grid is not
