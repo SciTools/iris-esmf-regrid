@@ -11,7 +11,7 @@ class MeshInfo(SDO):
     Class for handling unstructured meshes.
 
     This class holds information about Meshes in a form similar to UGRID.
-    It contains methods for translating this information into :mod:`ESMF` objects.
+    It contains methods for translating this information into :mod:`esmpy` objects.
     In particular, there are methods for representing as an :class:`esmpy.api.mesh.Mesh`
     and as an :class:`esmpy.api.field.Field` containing that
     :class:`~esmpy.api.mesh.Mesh`. This esmpy :class:`~esmpy.api.field.Field` is designed to
@@ -49,13 +49,13 @@ class MeshInfo(SDO):
             accounted for here:
             https://ugrid-conventions.github.io/ugrid-conventions/#zero-or-one
         elem_start_index: int, default=0
-            Describes what index should be considered by :mod:`ESMF` to be
+            Describes what index should be considered by :mod:`esmpy` to be
             the start index for describing its elements. This makes no
             difference to the regridding calculation and will only affect the
-            intermediate :mod:`ESMF` objects, should the user need access to them.
+            intermediate :mod:`esmpy` objects, should the user need access to them.
         areas: :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
-            each face. If ``None``, then :mod:`ESMF` will use its own calculated areas.
+            each face. If ``None``, then :mod:`esmpy` will use its own calculated areas.
         elem_coords : :obj:`~numpy.typing.ArrayLike`, optional
             An ``Nx2`` array describing the location of the face centers of the mesh.
             ``elem_coords[:,0]`` describes the longitudes in degrees and
