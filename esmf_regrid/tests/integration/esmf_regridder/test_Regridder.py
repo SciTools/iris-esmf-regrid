@@ -1,17 +1,10 @@
 """Unit tests for :class:`esmf_regrid.esmf_regridder.Regridder`."""
 
-try:
-    import esmpy
-except ImportError as exc:
-    # Prior to v8.4.0, `esmpy`` could be imported as `ESMF`.
-    try:
-        import ESMF as esmpy  # noqa: N811
-    except ImportError:
-        raise exc
 import numpy as np
 from numpy import ma
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
+from esmf_regrid import esmpy
 from esmf_regrid.tests import make_grid_args
 
 
