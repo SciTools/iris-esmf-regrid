@@ -1,4 +1,4 @@
-"""Provides :mod:`ESMF` representations of UGRID meshes."""
+"""Provides :mod:`esmpy` representations of UGRID meshes."""
 
 import numpy as np
 
