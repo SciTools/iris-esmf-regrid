@@ -275,44 +275,6 @@ def update_lockfiles(session: nox.sessions.Session):
         print(f"Conda lock file created: {lockfile_path}")
 
 
-@nox.session
-def flake8(session: nox.sessions.Session):
-    """
-    Perform flake8 linting of the code-base.
-
-    Parameters
-    ----------
-    session: object
-        A `nox.sessions.Session` object.
-
-    """
-    # Pip install the session requirements.
-    session.install("flake8", "flake8-docstrings", "flake8-import-order")
-    # Execute the flake8 linter on the package.
-    session.run("flake8", PACKAGE)
-    # Execute the flake8 linter on this file.
-    session.run("flake8", __file__)
-
-
-@nox.session
-def black(session: nox.sessions.Session):
-    """
-    Perform black format checking of the code-base.
-
-    Parameters
-    ----------
-    session: object
-        A `nox.sessions.Session` object.
-
-    """
-    # Pip install the session requirements.
-    session.install("black==22.3.0")
-    # Execute the black format checker on the package.
-    session.run("black", "--check", PACKAGE)
-    # Execute the black format checker on this file.
-    session.run("black", "--check", __file__)
-
-
 @nox.session(python=PY_VER, venv_backend="conda")
 def tests(session: nox.sessions.Session):
     """
