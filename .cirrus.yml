@@ -16,7 +16,6 @@ container:
 
 env:
   # Skip specific tasks by name. Set to a non-empty string to skip.
-  SKIP_LINT_TASK: ""
   SKIP_TEST_TASK: ""
   SKIP_BENCHMARK_TASK: ""
   # Maximum cache period (in weeks) before forcing a new cache upload.
@@ -79,27 +78,6 @@ LINUX_CONDA_TEMPLATE: &LINUX_CONDA_TEMPLATE
       - conda config --add channels conda-forge
       - conda update --quiet --name base conda
       - conda install --quiet --name base ${CONDA_CACHE_PACKAGES}
-
-
-#
-# Linting
-#
-lint_task:
-  only_if: ${SKIP_LINT_TASK} == ""
-  auto_cancellation: true
-  name: "${CIRRUS_OS}: flake8 and black"
-  pip_cache:
-    folder: ~/.cache/pip
-    fingerprint_script:
-      - echo "${CIRRUS_TASK_NAME} py${PYTHON_VERSION}"
-      - echo "${PIP_CACHE_PACKAGES}"
-      - echo "$(date +%Y).$(expr $(date +%U) / ${CACHE_PERIOD}):${PIP_CACHE_BUILD}"
-  lint_script:
-    - pip list
-    - python -m pip install --retries 3 --upgrade ${PIP_CACHE_PACKAGES}
-    - pip list
-    - nox --session flake8
-    - nox --session black
 
 
 #
