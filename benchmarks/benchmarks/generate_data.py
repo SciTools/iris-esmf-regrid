@@ -12,10 +12,10 @@ benchmark sequence runs over two different Python versions.
 
 """
 from inspect import getsource
-from subprocess import CalledProcessError, check_output, run
 from os import environ
 from pathlib import Path
 import re
+from subprocess import CalledProcessError, check_output, run
 from textwrap import dedent
 from warnings import warn
 
@@ -104,7 +104,7 @@ def _grid_cube(
     circular=False,
     alt_coord_system=False,
 ):
-    """Wrapper for calling _grid_cube via :func:`run_function_elsewhere`."""
+    """Call _grid_cube via :func:`run_function_elsewhere`."""
 
     def external(*args, **kwargs):
         """
@@ -162,7 +162,7 @@ def _grid_cube(
 
 
 def _gridlike_mesh_cube(n_lons, n_lats):
-    """Wrapper for calling _gridlike_mesh via :func:`run_function_elsewhere`."""
+    """Call _gridlike_mesh via :func:`run_function_elsewhere`."""
 
     def external(*args, **kwargs):
         """

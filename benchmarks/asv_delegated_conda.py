@@ -1,8 +1,4 @@
-"""
-ASV plug-in providing an alternative :class:`asv.plugins.conda.Conda`
-subclass that manages the Conda environment via custom user scripts.
-
-"""
+"""ASV plug-in - managing Conda environment via custom user scripts."""
 
 from os import environ
 from os.path import getmtime
@@ -41,6 +37,8 @@ class CondaDelegated(Conda):
         tagged_env_vars: dict,
     ) -> None:
         """
+        Create the instance.
+
         Parameters
         ----------
         conf : Config instance
