@@ -3,11 +3,11 @@
 import os
 from pathlib import Path
 
-import numpy as np
 import dask.array as da
 import iris
 from iris.cube import Cube
 from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
+import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_scheme import (
@@ -15,16 +15,13 @@ from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
 def _make_small_grid_args():
-    """
-    Not importing the one in test_GridInfo - if that changes, these benchmarks
-    would 'invisibly' change too.
+    # Not importing the one in test_GridInfo - if that changes, these benchmarks
+    #  would 'invisibly' change too.
 
-    """
     small_x = 2
     small_y = 3
     small_grid_lon = np.array(range(small_x)) / (small_x + 1)
@@ -41,12 +38,15 @@ def _make_small_grid_args():
 
 
 class TimeGridInfo:
+    """Basic benchmarking for :class:~esmf_regrid.esmf_regridder.GridInfo`."""
+
     def setup(self):
+        """ASV setup method."""
         lon, lat, lon_bounds, lat_bounds = _make_small_grid_args()
         self.grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
 
     def time_make_grid(self):
-        """Basic test for :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
+        """Benchmark :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field` time."""
         esmf_grid = self.grid.make_esmf_field()
         esmf_grid.data[:] = 0
 
@@ -54,10 +54,13 @@ class TimeGridInfo:
 
 
 class MultiGridCompare:
+    """Mixin to prepare common arguments for benchmarking between different grid sizes."""
+
     params = ["similar", "large_source", "large_target", "mixed"]
     param_names = ["source/target difference"]
 
     def get_args(self, tp):
+        """Prepare common arguments."""
         lon_bounds = (-180, 180)
         lat_bounds = (-90, 90)
         n_lons_src = 20
@@ -86,7 +89,10 @@ class MultiGridCompare:
 
 
 class TimeRegridding(MultiGridCompare):
+    """Benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
+
     def setup(self, tp):
+        """ASV setup method."""
         (
             lon_bounds,
             lat_bounds,
@@ -117,14 +123,19 @@ class TimeRegridding(MultiGridCompare):
         self.tgt = tgt
 
     def time_prepare_regridding(self, tp):
+        """Benchmark the prepare time."""
         _ = self.regrid_class(self.src, self.tgt)
 
     def time_perform_regridding(self, tp):
+        """Benchmark the perform time."""
         _ = self.regridder(self.src)
 
 
 class TimeLazyRegridding:
+    """Lazy benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
+
     def setup_cache(self):
+        """ASV setup_cache method."""
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
         file = str(SYNTH_DATA_DIR.joinpath("chunked_cube.nc"))
@@ -159,17 +170,20 @@ class TimeLazyRegridding:
         return regridder, file
 
     def setup(self, cache):
+        """ASV setup method."""
         regridder, file = cache
         self.src = iris.load_cube(file)
         cube = iris.load_cube(file)
         self.result = regridder(cube)
 
     def time_lazy_regridding(self, cache):
+        """Benchmark the construction time of the lazy regridding operation."""
         assert self.src.has_lazy_data()
         regridder, _ = cache
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
+        """Benchmark the final regridding operation time."""
         # Don't touch result.data - permanent realisation plays badly with
         #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
@@ -177,7 +191,10 @@ class TimeLazyRegridding:
 
 
 class TimeMeshToGridRegridding(TimeRegridding):
+    """Benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.MeshToGridESMFRegridder`."""
+
     def setup(self, tp):
+        """ASV setup method."""
         (
             lon_bounds,
             lat_bounds,
@@ -209,7 +226,10 @@ class TimeMeshToGridRegridding(TimeRegridding):
 
 
 class TimeLazyMeshToGridRegridding:
+    """Lazy benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.MeshToGridESMFRegridder`."""
+
     def setup_cache(self):
+        """ASV setup_cache method."""
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
         file = str(SYNTH_DATA_DIR.joinpath("chunked_cube.nc"))
@@ -239,6 +259,7 @@ class TimeLazyMeshToGridRegridding:
         return regridder, file
 
     def setup(self, cache):
+        """ASV setup method."""
         regridder, file = cache
         with PARSE_UGRID_ON_LOAD.context():
             self.src = iris.load_cube(file)
@@ -246,11 +267,13 @@ class TimeLazyMeshToGridRegridding:
         self.result = regridder(cube)
 
     def time_lazy_regridding(self, cache):
+        """Benchmark the construction time of the lazy regridding operation."""
         assert self.src.has_lazy_data()
         regridder, _ = cache
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
+        """Benchmark the final regridding operation time."""
         # Don't touch result.data - permanent realisation plays badly with
         #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
@@ -258,7 +281,10 @@ class TimeLazyMeshToGridRegridding:
 
 
 class TimeGridToMeshRegridding(TimeRegridding):
+    """Benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.GridToMeshESMFRegridder`."""
+
     def setup(self, tp):
+        """ASV setup method."""
         (
             lon_bounds,
             lat_bounds,
@@ -290,7 +316,10 @@ class TimeGridToMeshRegridding(TimeRegridding):
 
 
 class TimeLazyGridToMeshRegridding:
+    """Lazy benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.GridToMeshESMFRegridder`."""
+
     def setup_cache(self):
+        """ASV setup_cache method."""
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
         SYNTH_DATA_DIR.mkdir(exist_ok=True)
         file = str(SYNTH_DATA_DIR.joinpath("chunked_cube.nc"))
@@ -317,17 +346,20 @@ class TimeLazyGridToMeshRegridding:
         return regridder, file
 
     def setup(self, cache):
+        """ASV setup method."""
         regridder, file = cache
         self.src = iris.load_cube(file)
         cube = iris.load_cube(file)
         self.result = regridder(cube)
 
     def time_lazy_regridding(self, cache):
+        """Benchmark the construction time of the lazy regridding operation."""
         assert self.src.has_lazy_data()
         regridder, _ = cache
         _ = regridder(self.src)
 
     def time_regridding_realisation(self, cache):
+        """Benchmark the final regridding operation time."""
         # Don't touch result.data - permanent realisation plays badly with
         #  ASV's re-run strategy.
         assert self.result.has_lazy_data()
@@ -335,10 +367,13 @@ class TimeLazyGridToMeshRegridding:
 
 
 class TimeRegridderIO(MultiGridCompare):
+    """Benchmarks for regridder saving and loading."""
+
     params = [MultiGridCompare.params, ["mesh_to_grid", "grid_to_mesh"]]
     param_names = MultiGridCompare.param_names + ["regridder type"]
 
     def setup_cache(self):
+        """ASV setup_cache method."""
         from esmf_regrid.experimental.io import save_regridder
 
         SYNTH_DATA_DIR = Path().cwd() / "tmp_data"
@@ -395,6 +430,7 @@ class TimeRegridderIO(MultiGridCompare):
         return file_dict
 
     def setup(self, file_dict, tp, rgt):
+        """ASV setup method."""
         from esmf_regrid.experimental.io import load_regridder, save_regridder
 
         self.load_regridder = load_regridder
@@ -405,11 +441,14 @@ class TimeRegridderIO(MultiGridCompare):
         self.regridder = load_regridder(self.source_file)
 
     def teardown(self, _, tp, rgt):
+        """ASV teardown method."""
         if os.path.exists(self.destination_file):
             os.remove(self.destination_file)
 
     def time_save(self, _, tp, rgt):
+        """Benchmark the saving time."""
         self.save_regridder(self.regridder, self.destination_file)
 
     def time_load(self, _, tp, rgt):
+        """Benchmark the loading time."""
         _ = self.load_regridder(self.source_file)
