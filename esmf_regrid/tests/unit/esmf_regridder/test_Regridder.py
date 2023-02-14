@@ -161,6 +161,7 @@ def test_Regridder_init_small():
     With predictable weights it is easier to check that the weights are
     associated with the correct indices.
     """
+
     # The following ASCII visualisation describes the source and target grids
     # and the indices which ESMF assigns to their cells.
     # Analysis of the weights dict returned by ESMF confirms that this is
