@@ -185,12 +185,16 @@ class Regridder:
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix @ src_inverted_mask
         src_dtype = src_array.dtype
+        if np.issubdtype(src_dtype, np.floating):
+            out_dtype = src_dtype
+        else:
+            out_dtype = np.float64
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones([self.tgt.size, extra_size], dtype=src_dtype)
+        normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
         if norm_type == "fracarea":
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == "dstarea":
@@ -200,7 +204,7 @@ class Regridder:
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
-        flat_tgt = self.weight_matrix.astype(src_dtype) @ flat_src
+        flat_tgt = self.weight_matrix.astype(out_dtype) @ flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array
