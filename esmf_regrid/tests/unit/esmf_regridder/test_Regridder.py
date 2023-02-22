@@ -225,3 +225,25 @@ def test_Regridder_init_small():
         (weights_dict["weights"], (weights_dict["row_dst"], weights_dict["col_src"]))
     )
     assert np.allclose(result.toarray(), expected_weights.toarray())
+
+
+def test_Regridder_preserve_dtype():
+    """
+    Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
+
+    Tests that dtype is preserved.
+    """
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
+    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
+    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+
+    # Set up the regridder with precomputed weights.
+    rg = Regridder(src_grid, tgt_grid, precomputed_weights=_expected_weights())
+
+    src_32 = np.ones([3, 2], dtype=np.float32)
+    src_64 = np.ones([3, 2], dtype=np.float64)
+
+    assert rg.regrid(src_64).dtype == np.float64
+    assert rg.regrid(src_32).dtype == np.float32
