@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- [PR#239](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/239)
+  Ensured dtype is preserved by regridding.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.7] - 2023-05-23
 
 ### Added
