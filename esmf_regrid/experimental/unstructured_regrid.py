@@ -1,4 +1,4 @@
-"""Provides :mod:`ESMF` representations of UGRID meshes."""
+"""Provides :mod:`ESMF/esmpy` representations of UGRID meshes."""
 
 try:
     import esmpy
@@ -77,10 +77,10 @@ class MeshInfo(SDO):
         self.areas = areas
         self.elem_coords = elem_coords
         if location == "face":
-            field_kwargs = {"meshloc": ESMF.MeshLoc.ELEMENT}
+            field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
         elif location == "node":
-            field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
+            field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
         else:
             raise ValueError(
@@ -136,8 +136,8 @@ class MeshInfo(SDO):
         ) = info
         # ESMF can handle other dimensionalities, but we are unlikely
         # to make such a use of ESMF
-        emesh = ESMF.Mesh(
-            parametric_dim=2, spatial_dim=2, coord_sys=ESMF.CoordSys.SPH_DEG
+        emesh = esmpy.Mesh(
+            parametric_dim=2, spatial_dim=2, coord_sys=esmpy.CoordSys.SPH_DEG
         )
 
         emesh.add_nodes(num_node, nodeId, nodeCoord, nodeOwner)
