@@ -3,7 +3,14 @@
 from abc import ABC, abstractmethod
 
 import cartopy.crs as ccrs
-import ESMF
+try:
+    import esmpy
+except ImportError as exc:
+    # Prior to v8.4.0, `esmpy`` could be imported as `ESMF`.
+    try:
+        import ESMF as esmpy  # noqa: N811
+    except ImportError:
+        raise exc
 import numpy as np
 import scipy.sparse
 
