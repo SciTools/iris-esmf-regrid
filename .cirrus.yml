@@ -25,7 +25,7 @@ env:
   # Increment the build number to force new nox cache upload.
   NOX_CACHE_BUILD: "3"
   # Increment the build number to force new pip cache upload.
-  PIP_CACHE_BUILD: "1"
+  PIP_CACHE_BUILD: "0"
   # Pip package to be installed.
   PIP_CACHE_PACKAGES: "pip setuptools wheel nox pyyaml"
   # Conda packages to be installed.

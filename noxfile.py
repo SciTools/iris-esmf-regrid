@@ -20,7 +20,7 @@ import yaml
 
 
 #: Default to reusing any pre-existing nox environments.
-nox.options.reuse_existing_virtualenvs = False
+nox.options.reuse_existing_virtualenvs = True
 
 #: Name of the package to test.
 PACKAGE = "esmf_regrid"
@@ -82,7 +82,7 @@ def _venv_populated(session: nox.sessions.Session) -> bool:
 
 def _venv_changed(session: nox.sessions.Session) -> bool:
     """Return True if the installed session is different to that specified in the lockfile."""
-    result = True
+    result = False
     if _venv_populated(session):
         expected = _file_content(_session_lockfile(session))
         actual = _file_content(_session_cachefile(session))
@@ -169,7 +169,7 @@ def _prepare_env(session: nox.sessions.Session) -> None:
         # Destroy the environment and rebuild it.
         logger.debug(f"Lockfile changed. Recreating conda env: {venv_dir}")
         _reuse_original = session.virtualenv.reuse_existing
-        session.virtualenv.reuse_existing = True
+        session.virtualenv.reuse_existing = False
         session.virtualenv.create()
         _install_and_cache_venv(session)
         session.virtualenv.reuse_existing = _reuse_original
