@@ -1,4 +1,4 @@
-"""Provides ESMF representations of grids/UGRID meshes and a modified regridder."""
+"""Provides ESMF/esmpy representations of grids/UGRID meshes and a modified regridder."""
 
 try:
     import esmpy
@@ -22,15 +22,15 @@ __all__ = [
 
 
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
-    regridder = ESMF.Regrid(
+    regridder = esmpy.Regrid(
         src_field,
         tgt_field,
         ignore_degenerate=True,
         regrid_method=regrid_method,
-        unmapped_action=ESMF.UnmappedAction.IGNORE,
+        unmapped_action=esmpy.UnmappedAction.IGNORE,
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
-        norm_type=ESMF.NormType.DSTAREA,
+        norm_type=esmpy.NormType.DSTAREA,
         factors=True,
     )
     # Without specifying deep_copy=true, the information in weights_dict
@@ -91,9 +91,9 @@ class Regridder:
         self.tgt = tgt
 
         if method == "conservative":
-            esmf_regrid_method = ESMF.RegridMethod.CONSERVE
+            esmf_regrid_method = esmpy.RegridMethod.CONSERVE
         elif method == "bilinear":
-            esmf_regrid_method = ESMF.RegridMethod.BILINEAR
+            esmf_regrid_method = esmpy.RegridMethod.BILINEAR
         else:
             raise ValueError(
                 f"method must be either 'bilinear' or 'conservative', got '{method}'."
@@ -102,7 +102,7 @@ class Regridder:
 
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
-            self.esmf_version = ESMF.__version__
+            self.esmf_version = esmpy.__version__
             weights_dict = _get_regrid_weights_dict(
                 src.make_esmf_field(),
                 tgt.make_esmf_field(),
