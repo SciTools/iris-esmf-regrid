@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 
+# fmt: off
 import cartopy.crs as ccrs
-
 try:
     import esmpy
 except ImportError as exc:
@@ -14,6 +14,7 @@ except ImportError as exc:
         raise exc
 import numpy as np
 import scipy.sparse
+# fmt: on
 
 
 class SDO(ABC):
