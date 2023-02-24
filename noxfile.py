@@ -101,6 +101,9 @@ def _install_and_cache_venv(session: nox.sessions.Session) -> None:
     """
     lockfile = _session_lockfile(session)
     session.conda_install(f"--file={lockfile}")
+    session.run("export", "LAST_ENV=$CONDA_DEFAULT_ENV")
+    session.run("conda", "deactivate")
+    session.run("conda", "activate", "$LAST_ENV")
     with _session_cachefile(session).open("w") as cachefile:
         cachefile.write(_file_content(lockfile))
 
