@@ -164,6 +164,7 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
             lat_bound_array,
             crs=crs,
             resolution=resolution,
+            mask=mask,
         )
     return grid_info
 

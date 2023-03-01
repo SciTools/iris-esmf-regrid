@@ -7,7 +7,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo, _get_coord
+from esmf_regrid.schemes import _create_cube, _cube_to_GridInfo, _get_coord, _get_mask
 
 
 def _map_complete_blocks(src, func, dims, out_sizes):
@@ -106,7 +106,7 @@ def _map_complete_blocks(src, func, dims, out_sizes):
     )
 
 
-def _mesh_to_MeshInfo(mesh, location):
+def _mesh_to_MeshInfo(mesh, location, mask=None):
     # Returns a MeshInfo object describing the mesh of the cube.
     assert mesh.topology_dimension == 2
     if None in mesh.face_coords:
@@ -119,6 +119,7 @@ def _mesh_to_MeshInfo(mesh, location):
         mesh.face_node_connectivity.start_index,
         elem_coords=elem_coords,
         location=location,
+        mask=mask,
     )
     return meshinfo
 
@@ -144,6 +145,8 @@ def _regrid_unstructured_to_rectilinear__prepare(
     method,
     precomputed_weights=None,
     resolution=None,
+    src_mask=None,
+    tgt_mask=None,
 ):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
@@ -185,8 +188,10 @@ def _regrid_unstructured_to_rectilinear__prepare(
     # mesh belongs to.
     mesh_dim = src_mesh_cube.mesh_dim()
 
-    meshinfo = _mesh_to_MeshInfo(mesh, location)
-    gridinfo = _cube_to_GridInfo(target_grid_cube, center=center, resolution=resolution)
+    meshinfo = _mesh_to_MeshInfo(mesh, location, mask=src_mask)
+    gridinfo = _cube_to_GridInfo(
+        target_grid_cube, center=center, resolution=resolution, mask=tgt_mask
+    )
 
     regridder = Regridder(
         meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
@@ -248,6 +253,8 @@ def regrid_unstructured_to_rectilinear(
     mdtol=0,
     method="conservative",
     resolution=None,
+    src_mask=None,
+    tgt_mask=None,
 ):
     r"""
     Regrid unstructured :class:`~iris.cube.Cube` onto rectilinear grid.
@@ -304,6 +311,8 @@ def regrid_unstructured_to_rectilinear(
         grid_cube,
         method=method,
         resolution=resolution,
+        src_mask=src_mask,
+        tgt_mask=tgt_mask,
     )
     result = _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
@@ -320,6 +329,8 @@ class MeshToGridESMFRegridder:
         method="conservative",
         precomputed_weights=None,
         resolution=None,
+        src_mask=False,
+        tgt_mask=False,
     ):
         """
         Create regridder for conversions between source mesh and target grid.
@@ -383,12 +394,23 @@ class MeshToGridESMFRegridder:
                 )
         self.resolution = resolution
 
+        if src_mask is True:
+            src_mask = _get_mask(src_mesh_cube)
+        elif src_mask is False:
+            src_mask = None
+        if tgt_mask is True:
+            tgt_mask = _get_mask(target_grid_cube)
+        elif tgt_mask is False:
+            tgt_mask = None
+
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
             src_mesh_cube,
             target_grid_cube,
             method=self.method,
             precomputed_weights=precomputed_weights,
             resolution=resolution,
+            src_mask=src_mask,
+            tgt_mask=tgt_mask,
         )
 
         # Record source mesh.
@@ -473,6 +495,8 @@ def _regrid_rectilinear_to_unstructured__prepare(
     method,
     precomputed_weights=None,
     resolution=None,
+    src_mask=None,
+    tgt_mask=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
@@ -517,8 +541,10 @@ def _regrid_rectilinear_to_unstructured__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
-    meshinfo = _mesh_to_MeshInfo(mesh, location)
-    gridinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=resolution)
+    meshinfo = _mesh_to_MeshInfo(mesh, location, mask=tgt_mask)
+    gridinfo = _cube_to_GridInfo(
+        src_grid_cube, center=center, resolution=resolution, mask=src_mask
+    )
 
     regridder = Regridder(
         gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
@@ -578,6 +604,8 @@ def regrid_rectilinear_to_unstructured(
     mdtol=0,
     method="conservative",
     resolution=None,
+    src_mask=None,
+    tgt_mask=None,
 ):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
@@ -638,6 +666,8 @@ def regrid_rectilinear_to_unstructured(
         mesh_cube,
         method=method,
         resolution=resolution,
+        src_mask=src_mask,
+        tgt_mask=tgt_mask,
     )
     result = _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol)
     return result
@@ -654,6 +684,8 @@ class GridToMeshESMFRegridder:
         method="conservative",
         precomputed_weights=None,
         resolution=None,
+        src_mask=False,
+        tgt_mask=False,
     ):
         """
         Create regridder for conversions between source grid and target mesh.
@@ -712,12 +744,23 @@ class GridToMeshESMFRegridder:
         self.method = method
         self.resolution = resolution
 
+        if src_mask is True:
+            src_mask = _get_mask(src_grid_cube)
+        elif src_mask is False:
+            src_mask = None
+        if tgt_mask is True:
+            tgt_mask = _get_mask(target_mesh_cube)
+        elif tgt_mask is False:
+            tgt_mask = None
+
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
             src_grid_cube,
             target_mesh_cube,
             method=self.method,
             precomputed_weights=precomputed_weights,
             resolution=self.resolution,
+            src_mask=src_mask,
+            tgt_mask=tgt_mask,
         )
 
         # Store regrid info.

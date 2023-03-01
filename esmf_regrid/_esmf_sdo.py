@@ -44,6 +44,11 @@ class SDO(ABC):
         return self._shape
 
     @property
+    def _refined_mask(self):
+        """Return mask passed to ESMF."""
+        return self._mask
+
+    @property
     def dims(self):
         """Return number of dimensions."""
         return len(self._shape)
@@ -65,7 +70,7 @@ class SDO(ABC):
 
     @property
     def mask(self):
-        """Return the index offset."""
+        """Return the mask."""
         return self._mask
 
     def _array_to_matrix(self, array):
@@ -298,7 +303,7 @@ class GridInfo(SDO):
             grid_mask = grid.get_item(
                 esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER
             )
-            grid_mask[:] = self.mask
+            grid_mask[:] = self._refined_mask
 
         if areas is not None:
             grid.add_item(esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER)
@@ -331,6 +336,7 @@ class RefinedGridInfo(GridInfo):
         latbounds,
         resolution=3,
         crs=None,
+        mask=None,
     ):
         """
         Create a :class:`RefinedGridInfo` object describing the grid.
@@ -371,7 +377,7 @@ class RefinedGridInfo(GridInfo):
         # Create dummy lat/lon values
         lons = np.zeros(self.n_lons_orig)
         lats = np.zeros(self.n_lats_orig)
-        super().__init__(lons, lats, lonbounds, latbounds, crs=crs)
+        super().__init__(lons, lats, lonbounds, latbounds, crs=crs, mask=mask)
 
         if self.n_lats_orig == 1 and np.allclose(latbounds, [-90, 90]):
             self._refined_latbounds = np.array([-90, 0, 90])
@@ -402,6 +408,21 @@ class RefinedGridInfo(GridInfo):
             self.n_lats_orig * self.lat_expansion,
             self.n_lons_orig * self.lon_expansion,
         )
+
+    @property
+    def _refined_mask(self):
+        """Return mask passed to ESMF."""
+        new_mask = np.broadcast_to(
+            self.mask[:, np.newaxis, :, np.newaxis],
+            [
+                self.n_lats_orig,
+                self.lat_expansion,
+                self.n_lons_orig,
+                self.lon_expansion,
+            ],
+        )
+        new_mask = new_mask.reshape(self._refined_shape)
+        return new_mask
 
     def _collapse_weights(self, is_tgt):
         """
