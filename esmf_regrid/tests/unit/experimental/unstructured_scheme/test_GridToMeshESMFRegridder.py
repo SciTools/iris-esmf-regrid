@@ -429,12 +429,13 @@ def test_curvilinear():
 def test_masks():
     """
     Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
     Checks that the `src_mask` and `tgt_mask` keywords work properly.
     """
     src = _curvilinear_cube(7, 6, [-180, 180], [-90, 90])
     tgt = _gridlike_mesh_cube(6, 7)
 
-    # Make src and tgt discontiguous at (0, 0)
+    # Make src discontiguous at (0, 0)
     src_mask = np.zeros([6, 7], dtype=bool)
     src_mask[0, 0] = True
     src.data = np.ma.array(src.data, mask=src_mask)
@@ -449,6 +450,42 @@ def test_masks():
     rg_src_masked = GridToMeshESMFRegridder(src_discontiguous, tgt, src_mask=True)
     rg_tgt_masked = GridToMeshESMFRegridder(src, tgt, tgt_mask=True)
     rg_unmasked = GridToMeshESMFRegridder(src, tgt)
+
+    weights_src_masked = rg_src_masked.regridder.weight_matrix
+    weights_tgt_masked = rg_tgt_masked.regridder.weight_matrix
+    weights_unmasked = rg_unmasked.regridder.weight_matrix
+
+    # Check there are no weights associated with the masked point.
+    assert weights_src_masked[:, 0].nnz == 0
+    assert weights_tgt_masked[0].nnz == 0
+
+    # Check all other weights are correct.
+    assert np.allclose(
+        weights_src_masked[:, 1:].todense(), weights_unmasked[:, 1:].todense()
+    )
+    assert np.allclose(weights_tgt_masked[1:].todense(), weights_unmasked[1:].todense())
+
+
+def test_masks_with_resolution():
+    """
+    Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Checks that the `src_mask` and `tgt_mask` keywords work properly.
+    """
+    src = _grid_cube(7, 6, [-180, 180], [-90, 90])
+    tgt = _gridlike_mesh_cube(6, 7)
+
+    src_mask = np.zeros([6, 7], dtype=bool)
+    src_mask[0, 0] = True
+    src.data = np.ma.array(src.data, mask=src_mask)
+
+    tgt_mask = np.zeros([7 * 6], dtype=bool)
+    tgt_mask[0] = True
+    tgt.data = np.ma.array(tgt.data, mask=tgt_mask)
+
+    rg_src_masked = GridToMeshESMFRegridder(src, tgt, src_mask=True, resolution=2)
+    rg_tgt_masked = GridToMeshESMFRegridder(src, tgt, tgt_mask=True, resolution=2)
+    rg_unmasked = GridToMeshESMFRegridder(src, tgt, resolution=2)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix
     weights_tgt_masked = rg_tgt_masked.regridder.weight_matrix

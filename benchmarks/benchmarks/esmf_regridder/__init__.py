@@ -15,7 +15,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
-from ..generate_data import _grid_cube, _gridlike_mesh_cube
+from ..generate_data import _curvilinear_cube, _grid_cube, _gridlike_mesh_cube
 
 
 def _make_small_grid_args():
@@ -452,3 +452,37 @@ class TimeRegridderIO(MultiGridCompare):
     def time_load(self, _, tp, rgt):
         """Benchmark the loading time."""
         _ = self.load_regridder(self.source_file)
+
+
+class TimeMaskedRegridding:
+    """Benchmarks for :class:`~esmf_regrid.esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
+
+    def setup(self):
+        """ASV setup method."""
+        src = _curvilinear_cube(250, 251, [-180, 180], [-90, 90])
+        tgt = _curvilinear_cube(251, 250, [-180, 180], [-90, 90])
+
+        # Make src and tgt discontiguous at (0, 0)
+        src_mask = np.zeros([250, 251], dtype=bool)
+        src_mask[0, :] = True
+        src.data = np.ma.array(src.data, mask=src_mask)
+        src.coord("latitude").bounds[0, :, :2] = 0
+        src.coord("longitude").bounds[0, :, :2] = 0
+
+        tgt_mask = np.zeros([251, 250], dtype=bool)
+        tgt_mask[:, 0] = True
+        tgt.data = np.ma.array(tgt.data, mask=tgt_mask)
+        tgt.coord("latitude").bounds[:, 0, ::3] = 0
+        tgt.coord("longitude").bounds[:, 0, ::3] = 0
+
+        self.regrid_class = ESMFAreaWeightedRegridder
+        self.src = src
+        self.tgt = tgt
+
+    def time_prepare_without_masks(self):
+        """Benchmark the prepare time with discontiguities but no mask."""
+        _ = self.regrid_class(self.src, self.tgt)
+
+    def time_prepare_with_masks(self):
+        """Benchmark the prepare time with discontiguities and masks."""
+        _ = self.regrid_class(self.src, self.tgt, src_mask=True, tgt_mask=True)
