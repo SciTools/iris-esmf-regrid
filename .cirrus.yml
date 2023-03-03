@@ -106,6 +106,7 @@ test_task:
   << : *IRIS_TEST_DATA_TEMPLATE
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
+    - export ESMFMKFILE="${CIRRUS_WORKING_DIR}/.nox/tests-$(echo ${PY_VER} | tr "." "-")/lib/esmf.mk"
     - nox --session tests -- --verbose
 
 
