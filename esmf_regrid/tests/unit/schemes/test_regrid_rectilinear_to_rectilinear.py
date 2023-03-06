@@ -176,6 +176,7 @@ def test_laziness():
     assert result.has_lazy_data()
     assert np.allclose(result.data, src_data)
 
+
 def test_laziness_curvilinear():
     """
     Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
@@ -238,6 +239,7 @@ def test_laziness_curvilinear():
     assert result_lazy.has_lazy_data()
 
     assert result_lazy == result
+
 
 def test_extra_dims_curvilinear():
     """
