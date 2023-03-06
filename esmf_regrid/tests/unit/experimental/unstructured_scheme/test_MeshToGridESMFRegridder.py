@@ -382,6 +382,8 @@ def test_curvilinear():
     src_cube.transpose([1, 0, 2])
     regridder = MeshToGridESMFRegridder(src_cube, tgt)
     result = regridder(mesh_cube)
+    mesh_cube_lazy = mesh_cube.copy(da.array(mesh_cube.data))
+    result_lazy = regridder(mesh_cube_lazy)
 
     # Lenient check for data.
     expected_data = np.empty([t, n_lats, n_lons, h])
@@ -397,3 +399,4 @@ def test_curvilinear():
     # Check metadata and scalar coords.
     result.data = expected_data
     assert expected_cube == result
+    assert result_lazy == result

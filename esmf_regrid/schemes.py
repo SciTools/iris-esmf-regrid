@@ -235,7 +235,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     if len(grid_x.shape) == 1:
         chunk_shape = (len(grid_x.points), len(grid_y.points))
     else:
-        chunk_shape = grid_x.shape
+        chunk_shape = grid_x.shape[::-1]
     new_data = map_complete_blocks(
         src_cube,
         regrid,
