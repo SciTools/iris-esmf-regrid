@@ -37,7 +37,7 @@ def _get_mask(cube):
         slices = cube.slices([src_x, src_y])
     data = next(slices).data
     if np.ma.is_masked(data):
-        mask = data.mask
+        mask = np.ma.getmaskarray(data)
         if cube.coord_dims(src_x) != cube.coord_dims(src_y):
             mask = mask.T
     else:
@@ -426,7 +426,7 @@ class ESMFAreaWeighted:
         """Return a representation of the class."""
         return "ESMFAreaWeighted(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid):
+    def regridder(self, src_grid, tgt_grid, src_mask=None, tgt_mask=None):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -436,6 +436,12 @@ class ESMFAreaWeighted:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
+        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+            Array describing which elements :mod:`ESMF` will ignore on the src_grid.
+            If True, the mask will be derived from src_grid.
+        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+            Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
+            If True, the mask will be derived from tgt_grid.
 
         Returns
         -------
@@ -445,12 +451,16 @@ class ESMFAreaWeighted:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
+        if src_mask is None:
+            src_mask = self.src_mask
+        if tgt_mask is None:
+            tgt_mask = self.tgt_mask
         return ESMFAreaWeightedRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
-            src_mask=self.src_mask,
-            tgt_mask=self.tgt_mask,
+            src_mask=src_mask,
+            tgt_mask=tgt_mask,
         )
 
 
@@ -473,10 +483,10 @@ class ESMFAreaWeightedRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
             Array describing which elements :mod:`ESMF` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
-        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
             Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
 

@@ -20,7 +20,9 @@ SUPPORTED_REGRIDDERS = [
 ]
 REGRIDDER_NAME_MAP = {rg_class.__name__: rg_class for rg_class in SUPPORTED_REGRIDDERS}
 SOURCE_NAME = "regridder_source_field"
+SOURCE_MASK_NAME = "regridder_source_mask"
 TARGET_NAME = "regridder_target_field"
+TARGET_MASK_NAME = "regridder_target_mask"
 WEIGHTS_NAME = "regridder_weights"
 WEIGHTS_SHAPE_NAME = "weights_shape"
 WEIGHTS_ROW_NAME = "weight_matrix_rows"
@@ -69,6 +71,12 @@ def save_regridder(rg, filename):
     if regridder_type == "GridToMeshESMFRegridder":
         src_grid = (rg.grid_y, rg.grid_x)
         src_cube = _standard_grid_cube(src_grid, SOURCE_NAME)
+        if rg.src_mask is not False:
+            src_mask = rg.src_mask.astype(int)
+            src_mask_coord = AuxCoord(
+                src_mask, var_name=SOURCE_MASK_NAME, long_name=SOURCE_MASK_NAME
+            )
+            src_cube.add_aux_coord(src_mask_coord, [0, 1])
 
         tgt_mesh = rg.mesh
         tgt_location = rg.location
@@ -77,6 +85,13 @@ def save_regridder(rg, filename):
         tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
         for coord in tgt_mesh_coords:
             tgt_cube.add_aux_coord(coord, 0)
+        if rg.tgt_mask is not False:
+            tgt_mask = rg.tgt_mask.astype(int)
+            tgt_mask_coord = AuxCoord(
+                tgt_mask, var_name=TARGET_MASK_NAME, long_name=TARGET_MASK_NAME
+            )
+            tgt_cube.add_aux_coord(tgt_mask_coord, 0)
+
     elif regridder_type == "MeshToGridESMFRegridder":
         src_mesh = rg.mesh
         src_location = rg.location
@@ -85,9 +100,21 @@ def save_regridder(rg, filename):
         src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
         for coord in src_mesh_coords:
             src_cube.add_aux_coord(coord, 0)
+        if rg.src_mask is not False:
+            src_mask = rg.src_mask.astype(int)
+            src_mask_coord = AuxCoord(
+                src_mask, var_name=SOURCE_MASK_NAME, long_name=SOURCE_MASK_NAME
+            )
+            src_cube.add_aux_coord(src_mask_coord, 0)
 
         tgt_grid = (rg.grid_y, rg.grid_x)
         tgt_cube = _standard_grid_cube(tgt_grid, TARGET_NAME)
+        if rg.tgt_mask is not False:
+            tgt_mask = rg.tgt_mask.astype(int)
+            tgt_mask_coord = AuxCoord(
+                tgt_mask, var_name=TARGET_MASK_NAME, long_name=TARGET_MASK_NAME
+            )
+            tgt_cube.add_aux_coord(tgt_mask_coord, [0, 1])
     else:
         msg = (
             f"Expected a regridder of type `GridToMeshESMFRegridder` or "
@@ -205,6 +232,15 @@ def load_regridder(filename):
 
     mdtol = weights_cube.attributes[MDTOL]
 
+    if src_cube.coords(SOURCE_MASK_NAME):
+        src_mask = src_cube.coord(SOURCE_MASK_NAME).points
+    else:
+        src_mask = False
+    if tgt_cube.coords(TARGET_MASK_NAME):
+        tgt_mask = tgt_cube.coord(TARGET_MASK_NAME).points
+    else:
+        tgt_mask = False
+
     regridder = scheme(
         src_cube,
         tgt_cube,
@@ -212,6 +248,8 @@ def load_regridder(filename):
         method=method,
         precomputed_weights=weight_matrix,
         resolution=resolution,
+        src_mask=src_mask,
+        tgt_mask=tgt_mask,
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]

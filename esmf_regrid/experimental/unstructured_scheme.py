@@ -361,6 +361,17 @@ class MeshToGridESMFRegridder:
             given to ESMF for calculation. If resolution is set, target_grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
+        src_mask : bool, array, default=False
+            Either an array representing the cells in the source to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``src_mesh_cube``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+        tgt_mask : bool, array, default=False
+            Either an array representing the cells in the target to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``target_grid_cube``. If False, no mask will be taken and all points
+            will be used in weights calculation.
+
 
         """
         # TODO: Record information about the identity of the mesh. This would
@@ -398,10 +409,12 @@ class MeshToGridESMFRegridder:
             src_mask = _get_mask(src_mesh_cube)
         elif src_mask is False:
             src_mask = None
+        self.src_mask = src_mask
         if tgt_mask is True:
             tgt_mask = _get_mask(target_grid_cube)
         elif tgt_mask is False:
             tgt_mask = None
+        self.tgt_mask = tgt_mask
 
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
             src_mesh_cube,
@@ -716,6 +729,16 @@ class GridToMeshESMFRegridder:
             given to ESMF for calculation. If resolution is set, src_grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
+        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+            Either an array representing the cells in the source to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``src_grid_cube``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+            Either an array representing the cells in the target to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``target_mesh_cube``. If False, no mask will be taken and all points
+            will be used in weights calculation.
 
         """
         if method not in ["conservative", "bilinear"]:
@@ -748,10 +771,12 @@ class GridToMeshESMFRegridder:
             src_mask = _get_mask(src_grid_cube)
         elif src_mask is False:
             src_mask = None
+        self.src_mask = src_mask
         if tgt_mask is True:
             tgt_mask = _get_mask(target_mesh_cube)
         elif tgt_mask is False:
             tgt_mask = None
+        self.tgt_mask = tgt_mask
 
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
             src_grid_cube,
