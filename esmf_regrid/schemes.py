@@ -31,12 +31,24 @@ def _get_coord(cube, axis):
 def _get_mask(cube):
     src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
+    horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
+    other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
+
     if cube.coord_dims(src_x) == cube.coord_dims(src_y):
         slices = cube.slices([src_x])
     else:
         slices = cube.slices([src_x, src_y])
     data = next(slices).data
     if np.ma.is_masked(data):
+        # Check that the mask is constant along all other dimensions.
+        full_mask = np.ma.getmaskarray(cube.data)
+        if not np.array_equal(
+            np.all(full_mask, axis=other_dims), np.any(full_mask, axis=other_dims)
+        ):
+            raise ValueError(
+                "The mask derived from the cube is not constant over non-horizontal dimensions."
+                "Consider passing in an explicit mask instead."
+            )
         mask = np.ma.getmaskarray(data)
         if cube.coord_dims(src_x) != cube.coord_dims(src_y):
             mask = mask.T
