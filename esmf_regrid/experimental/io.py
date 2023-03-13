@@ -35,6 +35,13 @@ METHOD = "method"
 RESOLUTION = "resolution"
 
 
+def _add_mask_to_cube(mask, cube, name):
+    if isinstance(mask, np.ndarray):
+        mask = mask.astype(int)
+        mask_coord = AuxCoord(mask, var_name=name, long_name=name)
+        cube.add_aux_coord(mask_coord, list(range(cube.ndim)))
+
+
 def save_regridder(rg, filename):
     """
     Save a regridder scheme instance.
@@ -71,12 +78,7 @@ def save_regridder(rg, filename):
     if regridder_type == "GridToMeshESMFRegridder":
         src_grid = (rg.grid_y, rg.grid_x)
         src_cube = _standard_grid_cube(src_grid, SOURCE_NAME)
-        if isinstance(rg.src_mask, np.ndarray):
-            src_mask = rg.src_mask.astype(int)
-            src_mask_coord = AuxCoord(
-                src_mask, var_name=SOURCE_MASK_NAME, long_name=SOURCE_MASK_NAME
-            )
-            src_cube.add_aux_coord(src_mask_coord, [0, 1])
+        _add_mask_to_cube(rg.src_mask, src_cube, SOURCE_MASK_NAME)
 
         tgt_mesh = rg.mesh
         tgt_location = rg.location
@@ -85,12 +87,7 @@ def save_regridder(rg, filename):
         tgt_cube = Cube(tgt_data, var_name=TARGET_NAME, long_name=TARGET_NAME)
         for coord in tgt_mesh_coords:
             tgt_cube.add_aux_coord(coord, 0)
-        if isinstance(rg.tgt_mask, np.ndarray):
-            tgt_mask = rg.tgt_mask.astype(int)
-            tgt_mask_coord = AuxCoord(
-                tgt_mask, var_name=TARGET_MASK_NAME, long_name=TARGET_MASK_NAME
-            )
-            tgt_cube.add_aux_coord(tgt_mask_coord, 0)
+        _add_mask_to_cube(rg.tgt_mask, tgt_cube, TARGET_MASK_NAME)
 
     elif regridder_type == "MeshToGridESMFRegridder":
         src_mesh = rg.mesh
@@ -100,21 +97,11 @@ def save_regridder(rg, filename):
         src_cube = Cube(src_data, var_name=SOURCE_NAME, long_name=SOURCE_NAME)
         for coord in src_mesh_coords:
             src_cube.add_aux_coord(coord, 0)
-        if isinstance(rg.src_mask, np.ndarray):
-            src_mask = rg.src_mask.astype(int)
-            src_mask_coord = AuxCoord(
-                src_mask, var_name=SOURCE_MASK_NAME, long_name=SOURCE_MASK_NAME
-            )
-            src_cube.add_aux_coord(src_mask_coord, 0)
+        _add_mask_to_cube(rg.src_mask, src_cube, SOURCE_MASK_NAME)
 
         tgt_grid = (rg.grid_y, rg.grid_x)
         tgt_cube = _standard_grid_cube(tgt_grid, TARGET_NAME)
-        if isinstance(rg.tgt_mask, np.ndarray):
-            tgt_mask = rg.tgt_mask.astype(int)
-            tgt_mask_coord = AuxCoord(
-                tgt_mask, var_name=TARGET_MASK_NAME, long_name=TARGET_MASK_NAME
-            )
-            tgt_cube.add_aux_coord(tgt_mask_coord, [0, 1])
+        _add_mask_to_cube(rg.tgt_mask, tgt_cube, TARGET_MASK_NAME)
     else:
         msg = (
             f"Expected a regridder of type `GridToMeshESMFRegridder` or "

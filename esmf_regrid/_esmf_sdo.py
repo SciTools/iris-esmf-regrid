@@ -298,17 +298,19 @@ class GridInfo(SDO):
             grid_center_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CENTER)
             grid_center_y[:] = truecenterlats
 
+        def add_get_item(grid, **kwargs):
+            grid.add_item(**kwargs)
+            return grid.get_item(**kwargs)
+
         if self.mask is not None:
-            grid.add_item(esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER)
-            grid_mask = grid.get_item(
-                esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER
+            grid_mask = add_get_item(
+                grid, item=esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER
             )
             grid_mask[:] = self._refined_mask
 
         if areas is not None:
-            grid.add_item(esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER)
-            grid_areas = grid.get_item(
-                esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER
+            grid_areas = add_get_item(
+                grid, item=esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER
             )
             grid_areas[:] = areas.T
 
