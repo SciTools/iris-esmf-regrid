@@ -217,11 +217,6 @@ def test_laziness_curvilinear():
     src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
         :, np.newaxis, :, np.newaxis, :
     ]
-
-    src_data = np.empty([h, src_lats, t, src_lons, e])
-    src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
     src_data_lazy = da.array(src_data)
 
     src_cube = Cube(src_data)
