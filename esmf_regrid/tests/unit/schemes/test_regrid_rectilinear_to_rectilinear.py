@@ -177,6 +177,65 @@ def test_laziness():
     assert np.allclose(result.data, src_data)
 
 
+def test_laziness_curvilinear():
+    """
+    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+
+    Tests the handling of lazy data. Ensures that handling is the same
+    for non-lazy data.
+    """
+    h = 2
+    t = 4
+    e = 6
+    src_lats = 3
+    src_lons = 5
+
+    tgt_lats = 5
+    tgt_lons = 3
+
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+
+    src_grid = _curvilinear_cube(
+        src_lons,
+        src_lats,
+        lon_bounds,
+        lat_bounds,
+    )
+    tgt_grid = _curvilinear_cube(
+        tgt_lons,
+        tgt_lats,
+        lon_bounds,
+        lat_bounds,
+    )
+
+    height = DimCoord(np.arange(h), standard_name="height")
+    time = DimCoord(np.arange(t), standard_name="time")
+    extra = AuxCoord(np.arange(e), long_name="extra dim")
+
+    src_data = np.empty([h, src_lats, t, src_lons, e])
+    src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
+        :, np.newaxis, :, np.newaxis, :
+    ]
+    src_data_lazy = da.array(src_data)
+
+    src_cube = Cube(src_data)
+    src_cube.add_dim_coord(height, 0)
+    src_cube.add_aux_coord(src_grid.coord("latitude"), (1, 3))
+    src_cube.add_dim_coord(time, 2)
+    src_cube.add_aux_coord(src_grid.coord("longitude"), (1, 3))
+    src_cube.add_aux_coord(extra, 4)
+
+    src_cube_lazy = src_cube.copy(src_data_lazy)
+
+    result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
+    result_lazy = regrid_rectilinear_to_rectilinear(src_cube_lazy, tgt_grid)
+
+    assert result_lazy.has_lazy_data()
+
+    assert result_lazy == result
+
+
 def test_extra_dims_curvilinear():
     """
     Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
