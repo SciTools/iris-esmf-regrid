@@ -49,14 +49,14 @@ def _make_grid_to_mesh_regridder(
         src_data = ma.array(src.data)
         src_data[0, 0] = ma.masked
         src.data = src_data
-        src_mask = True
+        use_src_mask = True
         tgt_data = ma.array(tgt.data)
         tgt_data[0] = ma.masked
         tgt.data = tgt_data
-        tgt_mask = True
+        use_tgt_mask = True
     else:
-        src_mask = False
-        tgt_mask = False
+        use_src_mask = False
+        use_tgt_mask = False
 
     rg = GridToMeshESMFRegridder(
         src,
@@ -64,8 +64,8 @@ def _make_grid_to_mesh_regridder(
         method=method,
         mdtol=0.5,
         resolution=resolution,
-        src_mask=src_mask,
-        tgt_mask=tgt_mask,
+        use_src_mask=use_src_mask,
+        use_tgt_mask=use_tgt_mask,
     )
     return rg, src
 
@@ -95,14 +95,14 @@ def _make_mesh_to_grid_regridder(
         src_data = ma.array(src.data)
         src_data[0] = ma.masked
         src.data = src_data
-        src_mask = True
+        use_src_mask = True
         tgt_data = ma.array(tgt.data)
         tgt_data[0, 0] = ma.masked
         tgt.data = tgt_data
-        tgt_mask = True
+        use_tgt_mask = True
     else:
-        src_mask = False
-        tgt_mask = False
+        use_src_mask = False
+        use_tgt_mask = False
 
     rg = MeshToGridESMFRegridder(
         src,
@@ -110,8 +110,8 @@ def _make_mesh_to_grid_regridder(
         method=method,
         mdtol=0.5,
         resolution=resolution,
-        src_mask=src_mask,
-        tgt_mask=tgt_mask,
+        use_src_mask=use_src_mask,
+        use_tgt_mask=use_tgt_mask,
     )
     return rg, src
 
