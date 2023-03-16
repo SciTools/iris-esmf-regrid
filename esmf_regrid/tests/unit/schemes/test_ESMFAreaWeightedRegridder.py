@@ -235,7 +235,7 @@ def test_masks():
     """
     Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
-    Checks that the `src_mask` and `tgt_mask` keywords work properly.
+    Checks that the `use_src_mask` and `use_tgt_mask` keywords work properly.
     """
     src = _curvilinear_cube(7, 6, [-180, 180], [-90, 90])
     tgt = _curvilinear_cube(6, 7, [-180, 180], [-90, 90])
@@ -255,8 +255,8 @@ def test_masks():
     tgt_discontiguous.coord("latitude").bounds[0, 0] = 0
     tgt_discontiguous.coord("longitude").bounds[0, 0] = 0
 
-    rg_src_masked = ESMFAreaWeightedRegridder(src_discontiguous, tgt, src_mask=True)
-    rg_tgt_masked = ESMFAreaWeightedRegridder(src, tgt_discontiguous, tgt_mask=True)
+    rg_src_masked = ESMFAreaWeightedRegridder(src_discontiguous, tgt, use_src_mask=True)
+    rg_tgt_masked = ESMFAreaWeightedRegridder(src, tgt_discontiguous, use_tgt_mask=True)
     rg_unmasked = ESMFAreaWeightedRegridder(src, tgt)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix

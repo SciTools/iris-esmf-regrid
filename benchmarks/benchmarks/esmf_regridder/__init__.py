@@ -479,10 +479,11 @@ class TimeMaskedRegridding:
         self.src = src
         self.tgt = tgt
 
-    def time_prepare_without_masks(self):
-        """Benchmark the prepare time with discontiguities but no mask."""
-        _ = self.regrid_class(self.src, self.tgt)
-
     def time_prepare_with_masks(self):
-        """Benchmark the prepare time with discontiguities and masks."""
-        _ = self.regrid_class(self.src, self.tgt, src_mask=True, tgt_mask=True)
+        """Benchmark prepare time with discontiguities and masks."""
+        try:
+            _ = self.regrid_class(
+                self.src, self.tgt, use_src_mask=True, use_tgt_mask=True
+            )
+        except TypeError:
+            _ = self.regrid_class(self.src, self.tgt)

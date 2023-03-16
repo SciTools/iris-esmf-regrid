@@ -29,9 +29,9 @@ def _get_coord(cube, axis):
 
 
 def _get_mask(cube, use_mask=True):
-    if use_mask == False:
+    if use_mask is False:
         return None
-    elif use_mask == True:
+    elif use_mask is True:
         src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
         horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))

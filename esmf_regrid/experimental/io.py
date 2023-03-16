@@ -220,13 +220,13 @@ def load_regridder(filename):
     mdtol = weights_cube.attributes[MDTOL]
 
     if src_cube.coords(SOURCE_MASK_NAME):
-        src_mask = src_cube.coord(SOURCE_MASK_NAME).points
+        use_src_mask = src_cube.coord(SOURCE_MASK_NAME).points
     else:
-        src_mask = False
+        use_src_mask = False
     if tgt_cube.coords(TARGET_MASK_NAME):
-        tgt_mask = tgt_cube.coord(TARGET_MASK_NAME).points
+        use_tgt_mask = tgt_cube.coord(TARGET_MASK_NAME).points
     else:
-        tgt_mask = False
+        use_tgt_mask = False
 
     regridder = scheme(
         src_cube,
@@ -235,8 +235,8 @@ def load_regridder(filename):
         method=method,
         precomputed_weights=weight_matrix,
         resolution=resolution,
-        src_mask=src_mask,
-        tgt_mask=tgt_mask,
+        use_src_mask=use_src_mask,
+        use_tgt_mask=use_tgt_mask,
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]

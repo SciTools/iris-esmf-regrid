@@ -430,7 +430,7 @@ def test_masks():
     """
     Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
-    Checks that the `src_mask` and `tgt_mask` keywords work properly.
+    Checks that the `use_src_mask` and `use_tgt_mask` keywords work properly.
     """
     src = _curvilinear_cube(7, 6, [-180, 180], [-90, 90])
     tgt = _gridlike_mesh_cube(6, 7)
@@ -447,8 +447,8 @@ def test_masks():
     tgt_mask[0] = True
     tgt.data = np.ma.array(tgt.data, mask=tgt_mask)
 
-    rg_src_masked = GridToMeshESMFRegridder(src_discontiguous, tgt, src_mask=True)
-    rg_tgt_masked = GridToMeshESMFRegridder(src, tgt, tgt_mask=True)
+    rg_src_masked = GridToMeshESMFRegridder(src_discontiguous, tgt, use_src_mask=True)
+    rg_tgt_masked = GridToMeshESMFRegridder(src, tgt, use_tgt_mask=True)
     rg_unmasked = GridToMeshESMFRegridder(src, tgt)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix
@@ -470,7 +470,7 @@ def test_masks_with_resolution():
     """
     Test initialisation of :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
-    Checks that the `src_mask` and `tgt_mask` keywords work properly.
+    Checks that the `use_src_mask` and `use_tgt_mask` keywords work properly.
     """
     src = _grid_cube(7, 6, [-180, 180], [-90, 90])
     tgt = _gridlike_mesh_cube(6, 7)
@@ -483,8 +483,8 @@ def test_masks_with_resolution():
     tgt_mask[0] = True
     tgt.data = np.ma.array(tgt.data, mask=tgt_mask)
 
-    rg_src_masked = GridToMeshESMFRegridder(src, tgt, src_mask=True, resolution=2)
-    rg_tgt_masked = GridToMeshESMFRegridder(src, tgt, tgt_mask=True, resolution=2)
+    rg_src_masked = GridToMeshESMFRegridder(src, tgt, use_src_mask=True, resolution=2)
+    rg_tgt_masked = GridToMeshESMFRegridder(src, tgt, use_tgt_mask=True, resolution=2)
     rg_unmasked = GridToMeshESMFRegridder(src, tgt, resolution=2)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix
