@@ -253,8 +253,8 @@ def regrid_unstructured_to_rectilinear(
     mdtol=0,
     method="conservative",
     resolution=None,
-    src_mask=None,
-    tgt_mask=None,
+    use_src_mask=False,
+    use_tgt_mask=False,
 ):
     r"""
     Regrid unstructured :class:`~iris.cube.Cube` onto rectilinear grid.
@@ -299,6 +299,16 @@ def regrid_unstructured_to_rectilinear(
     resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
+    use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        Either an array representing the cells in the source to ignore, or else
+        a boolean value. If True, this array is taken from the mask on the data
+        in ``src_mesh_cube``. If False, no mask will be taken and all points will
+        be used in weights calculation.
+    use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        Either an array representing the cells in the target to ignore, or else
+        a boolean value. If True, this array is taken from the mask on the data
+        in ``target_grid_cube``. If False, no mask will be taken and all points
+        will be used in weights calculation.
 
     Returns
     -------
@@ -306,6 +316,9 @@ def regrid_unstructured_to_rectilinear(
         A new :class:`~iris.cube.Cube` instance.
 
     """
+    src_mask = _get_mask(src_cube, use_src_mask)
+    tgt_mask = _get_mask(grid_cube, use_tgt_mask)
+
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
         src_cube,
         grid_cube,
@@ -329,8 +342,8 @@ class MeshToGridESMFRegridder:
         method="conservative",
         precomputed_weights=None,
         resolution=None,
-        src_mask=False,
-        tgt_mask=False,
+        use_src_mask=False,
+        use_tgt_mask=False,
     ):
         """
         Create regridder for conversions between source mesh and target grid.
@@ -361,12 +374,12 @@ class MeshToGridESMFRegridder:
             given to ESMF for calculation. If resolution is set, target_grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        src_mask : bool, array, default=False
+        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``src_mesh_cube``. If False, no mask will be taken and all points will
             be used in weights calculation.
-        tgt_mask : bool, array, default=False
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
             Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``target_grid_cube``. If False, no mask will be taken and all points
@@ -405,16 +418,8 @@ class MeshToGridESMFRegridder:
                 )
         self.resolution = resolution
 
-        if src_mask is True:
-            src_mask = _get_mask(src_mesh_cube)
-        elif src_mask is False:
-            src_mask = None
-        self.src_mask = src_mask
-        if tgt_mask is True:
-            tgt_mask = _get_mask(target_grid_cube)
-        elif tgt_mask is False:
-            tgt_mask = None
-        self.tgt_mask = tgt_mask
+        self.src_mask = _get_mask(src_mesh_cube, use_src_mask)
+        self.tgt_mask = _get_mask(target_grid_cube, use_tgt_mask)
 
         partial_regrid_info = _regrid_unstructured_to_rectilinear__prepare(
             src_mesh_cube,
@@ -422,8 +427,8 @@ class MeshToGridESMFRegridder:
             method=self.method,
             precomputed_weights=precomputed_weights,
             resolution=resolution,
-            src_mask=src_mask,
-            tgt_mask=tgt_mask,
+            src_mask=self.src_mask,
+            tgt_mask=self.tgt_mask,
         )
 
         # Record source mesh.
@@ -617,8 +622,8 @@ def regrid_rectilinear_to_unstructured(
     mdtol=0,
     method="conservative",
     resolution=None,
-    src_mask=None,
-    tgt_mask=None,
+    use_src_mask=False,
+    use_tgt_mask=False,
 ):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
@@ -667,6 +672,16 @@ def regrid_rectilinear_to_unstructured(
     resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
+    use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        Either an array representing the cells in the source to ignore, or else
+        a boolean value. If True, this array is taken from the mask on the data
+        in ``src_mesh_cube``. If False, no mask will be taken and all points will
+        be used in weights calculation.
+    use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        Either an array representing the cells in the target to ignore, or else
+        a boolean value. If True, this array is taken from the mask on the data
+        in ``target_grid_cube``. If False, no mask will be taken and all points
+        will be used in weights calculation.
 
     Returns
     -------
@@ -674,6 +689,9 @@ def regrid_rectilinear_to_unstructured(
         A new :class:`~iris.cube.Cube` instance.
 
     """
+    src_mask = _get_mask(src_cube, use_src_mask)
+    tgt_mask = _get_mask(mesh_cube, use_tgt_mask)
+
     regrid_info = _regrid_rectilinear_to_unstructured__prepare(
         src_cube,
         mesh_cube,
@@ -697,8 +715,8 @@ class GridToMeshESMFRegridder:
         method="conservative",
         precomputed_weights=None,
         resolution=None,
-        src_mask=False,
-        tgt_mask=False,
+        use_src_mask=False,
+        use_tgt_mask=False,
     ):
         """
         Create regridder for conversions between source grid and target mesh.
@@ -729,12 +747,12 @@ class GridToMeshESMFRegridder:
             given to ESMF for calculation. If resolution is set, src_grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``src_grid_cube``. If False, no mask will be taken and all points will
             be used in weights calculation.
-        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
             Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``target_mesh_cube``. If False, no mask will be taken and all points
@@ -767,16 +785,8 @@ class GridToMeshESMFRegridder:
         self.method = method
         self.resolution = resolution
 
-        if src_mask is True:
-            src_mask = _get_mask(src_grid_cube)
-        elif src_mask is False:
-            src_mask = None
-        self.src_mask = src_mask
-        if tgt_mask is True:
-            tgt_mask = _get_mask(target_mesh_cube)
-        elif tgt_mask is False:
-            tgt_mask = None
-        self.tgt_mask = tgt_mask
+        self.src_mask = _get_mask(src_grid_cube, use_src_mask)
+        self.tgt_mask = _get_mask(target_mesh_cube, use_tgt_mask)
 
         partial_regrid_info = _regrid_rectilinear_to_unstructured__prepare(
             src_grid_cube,
@@ -784,8 +794,8 @@ class GridToMeshESMFRegridder:
             method=self.method,
             precomputed_weights=precomputed_weights,
             resolution=self.resolution,
-            src_mask=src_mask,
-            tgt_mask=tgt_mask,
+            src_mask=self.src_mask,
+            tgt_mask=self.tgt_mask,
         )
 
         # Store regrid info.

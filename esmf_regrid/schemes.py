@@ -28,33 +28,41 @@ def _get_coord(cube, axis):
     return coord
 
 
-def _get_mask(cube):
-    src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+def _get_mask(cube, use_mask=True):
+    if use_mask == False:
+        return None
+    elif use_mask == True:
 
-    horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
-    other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
+        src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
-    if cube.coord_dims(src_x) == cube.coord_dims(src_y):
-        slices = cube.slices([src_x])
+        horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
+        other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
+
+        # Find a representative slice of data that spans both horizontal coords.
+        if cube.coord_dims(src_x) == cube.coord_dims(src_y):
+            slices = cube.slices([src_x])
+        else:
+            slices = cube.slices([src_x, src_y])
+        data = next(slices).data
+        if np.ma.is_masked(data):
+            # Check that the mask is constant along all other dimensions.
+            full_mask = np.ma.getmaskarray(cube.data)
+            if not np.array_equal(
+                np.all(full_mask, axis=other_dims), np.any(full_mask, axis=other_dims)
+            ):
+                raise ValueError(
+                    "The mask derived from the cube is not constant over non-horizontal dimensions."
+                    "Consider passing in an explicit mask instead."
+                )
+            mask = np.ma.getmaskarray(data)
+            # Due to structural reasons, the mask should be transposed for curvilinear grids.
+            if cube.coord_dims(src_x) != cube.coord_dims(src_y):
+                mask = mask.T
+        else:
+            mask = None
+        return mask
     else:
-        slices = cube.slices([src_x, src_y])
-    data = next(slices).data
-    if np.ma.is_masked(data):
-        # Check that the mask is constant along all other dimensions.
-        full_mask = np.ma.getmaskarray(cube.data)
-        if not np.array_equal(
-            np.all(full_mask, axis=other_dims), np.any(full_mask, axis=other_dims)
-        ):
-            raise ValueError(
-                "The mask derived from the cube is not constant over non-horizontal dimensions."
-                "Consider passing in an explicit mask instead."
-            )
-        mask = np.ma.getmaskarray(data)
-        if cube.coord_dims(src_x) != cube.coord_dims(src_y):
-            mask = mask.T
-    else:
-        mask = None
-    return mask
+        return use_mask
 
 
 def _contiguous_masked(bounds, mask):
@@ -405,7 +413,7 @@ class ESMFAreaWeighted:
     :mod:`esmpy` to be able to handle grids in different coordinate systems.
     """
 
-    def __init__(self, mdtol=0, src_mask=False, tgt_mask=False):
+    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -419,10 +427,10 @@ class ESMFAreaWeighted:
             data is tolerated while ``mdtol=1`` will mean the resulting element
             will be masked if and only if all the overlapping elements of the
             source grid are masked.
-        src_mask : bool, default=False
+        use_src_mask : bool, default=False
             If True, derive a mask from source cube which will tell :mod:`ESMF`
             which points to ignore.
-        tgt_mask : bool, default=False
+        use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`ESMF`
             which points to ignore.
 
@@ -431,14 +439,14 @@ class ESMFAreaWeighted:
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
-        self.src_mask = src_mask
-        self.tgt_mask = tgt_mask
+        self.use_src_mask = use_src_mask
+        self.use_tgt_mask = use_tgt_mask
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFAreaWeighted(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid, src_mask=None, tgt_mask=None):
+    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -448,10 +456,10 @@ class ESMFAreaWeighted:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
-        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
             Array describing which elements :mod:`ESMF` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
-        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
             Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
 
@@ -463,23 +471,25 @@ class ESMFAreaWeighted:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
-        if src_mask is None:
-            src_mask = self.src_mask
-        if tgt_mask is None:
-            tgt_mask = self.tgt_mask
+        if use_src_mask is None:
+            use_src_mask = self.use_src_mask
+        if use_tgt_mask is None:
+            use_tgt_mask = self.use_tgt_mask
         return ESMFAreaWeightedRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
-            src_mask=src_mask,
-            tgt_mask=tgt_mask,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
         )
 
 
 class ESMFAreaWeightedRegridder:
     r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
 
-    def __init__(self, src_grid, tgt_grid, mdtol=0, src_mask=False, tgt_mask=False):
+    def __init__(
+        self, src_grid, tgt_grid, mdtol=0, use_src_mask=False, use_tgt_mask=False
+    ):
         """
         Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
 
@@ -495,12 +505,16 @@ class ESMFAreaWeightedRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-        src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
-            Array describing which elements :mod:`ESMF` will ignore on the src_grid.
-            If True, the mask will be derived from src_grid.
-        tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
-            Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
-            If True, the mask will be derived from tgt_grid.
+        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+            Either an array representing the cells in the source to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``src_grid``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+            Either an array representing the cells in the source to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``tgt_grid``. If False, no mask will be taken and all points will
+            be used in weights calculation.
 
         """
         if not (0 <= mdtol <= 1):
@@ -508,25 +522,17 @@ class ESMFAreaWeightedRegridder:
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
 
-        if src_mask is True:
-            src_mask = _get_mask(src_grid)
-        elif src_mask is False:
-            src_mask = None
-        if tgt_mask is True:
-            tgt_mask = _get_mask(tgt_grid)
-        elif tgt_mask is False:
-            tgt_mask = None
+        self.src_mask = _get_mask(src_grid, use_src_mask)
+        self.tgt_mask = _get_mask(tgt_grid, use_tgt_mask)
 
         regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
-            src_grid, tgt_grid, src_mask=src_mask, tgt_mask=tgt_mask
+            src_grid, tgt_grid, src_mask=self.src_mask, tgt_mask=self.tgt_mask
         )
 
         # Store regrid info.
         self.grid_x = regrid_info.x_coord
         self.grid_y = regrid_info.y_coord
         self.regridder = regrid_info.regridder
-        self.src_mask = src_mask
-        self.tgt_mask = tgt_mask
 
         # Record the source grid.
         self.src_grid = (_get_coord(src_grid, "x"), _get_coord(src_grid, "y"))
