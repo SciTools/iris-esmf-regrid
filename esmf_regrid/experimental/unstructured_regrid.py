@@ -1,8 +1,8 @@
-"""Provides :mod:`ESMF` representations of UGRID meshes."""
+"""Provides :mod:`esmpy` representations of UGRID meshes."""
 
-import ESMF
 import numpy as np
 
+from .. import esmpy
 from .._esmf_sdo import SDO
 
 
@@ -11,12 +11,12 @@ class MeshInfo(SDO):
     Class for handling unstructured meshes.
 
     This class holds information about Meshes in a form similar to UGRID.
-    It contains methods for translating this information into :mod:`ESMF` objects.
-    In particular, there are methods for representing as an :class:`ESMF.api.mesh.Mesh`
-    and as an :class:`ESMF.api.field.Field` containing that
-    :class:`~ESMF.api.mesh.Mesh`. This ESMF :class:`~ESMF.api.field.Field` is designed to
+    It contains methods for translating this information into :mod:`esmpy` objects.
+    In particular, there are methods for representing as an :class:`esmpy.api.mesh.Mesh`
+    and as an :class:`esmpy.api.field.Field` containing that
+    :class:`~esmpy.api.mesh.Mesh`. This esmpy :class:`~esmpy.api.field.Field` is designed to
     contain enough information for area weighted regridding and may be
-    inappropriate for other :mod:`ESMF` regridding schemes.
+    inappropriate for other :mod:`esmpy` regridding schemes.
     """
 
     def __init__(
@@ -49,13 +49,13 @@ class MeshInfo(SDO):
             accounted for here:
             https://ugrid-conventions.github.io/ugrid-conventions/#zero-or-one
         elem_start_index: int, default=0
-            Describes what index should be considered by :mod:`ESMF` to be
+            Describes what index should be considered by :mod:`esmpy` to be
             the start index for describing its elements. This makes no
             difference to the regridding calculation and will only affect the
-            intermediate :mod:`ESMF` objects, should the user need access to them.
+            intermediate :mod:`esmpy` objects, should the user need access to them.
         areas: :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
-            each face. If ``None``, then :mod:`ESMF` will use its own calculated areas.
+            each face. If ``None``, then :mod:`esmpy` will use its own calculated areas.
         elem_coords : :obj:`~numpy.typing.ArrayLike`, optional
             An ``Nx2`` array describing the location of the face centers of the mesh.
             ``elem_coords[:,0]`` describes the longitudes in degrees and
@@ -70,10 +70,10 @@ class MeshInfo(SDO):
         self.areas = areas
         self.elem_coords = elem_coords
         if location == "face":
-            field_kwargs = {"meshloc": ESMF.MeshLoc.ELEMENT}
+            field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
         elif location == "node":
-            field_kwargs = {"meshloc": ESMF.MeshLoc.NODE}
+            field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
         else:
             raise ValueError(
@@ -129,8 +129,8 @@ class MeshInfo(SDO):
         ) = info
         # ESMF can handle other dimensionalities, but we are unlikely
         # to make such a use of ESMF
-        emesh = ESMF.Mesh(
-            parametric_dim=2, spatial_dim=2, coord_sys=ESMF.CoordSys.SPH_DEG
+        emesh = esmpy.Mesh(
+            parametric_dim=2, spatial_dim=2, coord_sys=esmpy.CoordSys.SPH_DEG
         )
 
         emesh.add_nodes(num_node, nodeId, nodeCoord, nodeOwner)
