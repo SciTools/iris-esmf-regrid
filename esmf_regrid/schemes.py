@@ -298,7 +298,7 @@ class ESMFAreaWeighted:
 
     This class describes an area-weighted regridding scheme for regridding
     between horizontal grids with separated ``X`` and ``Y`` coordinates. It uses
-    :mod:`ESMF` to be able to handle grids in different coordinate systems.
+    :mod:`esmpy` to be able to handle grids in different coordinate systems.
     """
 
     def __init__(self, mdtol=0):
@@ -402,7 +402,7 @@ class ESMFAreaWeightedRegridder:
             A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
             and the other dimensions from this :class:`~iris.cube.Cube`. The data values of
             this :class:`~iris.cube.Cube` will be converted to values on the new grid using
-            area-weighted regridding via :mod:`ESMF` generated weights.
+            area-weighted regridding via :mod:`esmpy` generated weights.
 
         """
         src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))

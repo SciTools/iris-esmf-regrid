@@ -106,6 +106,7 @@ test_task:
   << : *IRIS_TEST_DATA_TEMPLATE
   test_script:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
+    - export ESMFMKFILE="${CIRRUS_WORKING_DIR}/.nox/tests/lib/esmf.mk"
     - nox --session tests -- --verbose
 
 
@@ -148,4 +149,5 @@ benchmark_task:
     - export CONDA_OVERRIDE_LINUX="$(uname -r | cut -d'+' -f1)"
     - nox --session=tests --install-only
     - export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests*bin/python"))
+    - export ESMFMKFILE="${CIRRUS_WORKING_DIR}/.nox/tests/lib/esmf.mk"
     - nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${COMPARE}"
