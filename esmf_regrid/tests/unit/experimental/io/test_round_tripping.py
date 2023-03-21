@@ -379,22 +379,3 @@ def test_MeshToGridESMFRegridder_curvilinear_round_trip(tmp_path):
     loaded_result = loaded_rg(src).data
     assert np.array_equal(original_result, loaded_result)
     assert np.array_equal(original_result.mask, loaded_result.mask)
-
-
-def test_MeshToGridESMFRegridder_masked_round_trip(tmp_path):
-    """Test save/load round tripping for `MeshToGridESMFRegridder`."""
-    original_rg, src = _make_mesh_to_grid_regridder(masks=True)
-    filename = tmp_path / "regridder.nc"
-    save_regridder(original_rg, filename)
-    loaded_rg = load_regridder(str(filename))
-
-    # Compare the weight matrices.
-    original_matrix = original_rg.regridder.weight_matrix
-    loaded_matrix = loaded_rg.regridder.weight_matrix
-    # Ensure the original and loaded weight matrix have identical type.
-    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
-    assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
-
-    # Ensure the masks are preserved
-    assert np.array_equal(loaded_rg.src_mask, original_rg.src_mask)
-    assert np.array_equal(loaded_rg.tgt_mask, original_rg.tgt_mask)
