@@ -175,8 +175,7 @@ def _curvilinear_cube(
 
         Saving to a file allows the original python executable to pick back up.
 
-        Remember that all arguments must work as strings, hence the fresh
-        construction of a ``coord_system`` within the function.
+        Remember that all arguments must work as strings.
 
         """
         from iris import save

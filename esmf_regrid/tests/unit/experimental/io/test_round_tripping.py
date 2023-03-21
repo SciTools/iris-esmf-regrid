@@ -237,9 +237,15 @@ def test_GridToMeshESMFRegridder_curvilinear_round_trip(tmp_path):
     assert np.array_equal(original_result.mask, loaded_result.mask)
 
 
-def test_GridToMeshESMFRegridder_masked_round_trip(tmp_path):
-    """Test save/load round tripping for `GridToMeshESMFRegridder`."""
-    original_rg, src = _make_grid_to_mesh_regridder(masks=True)
+# TODO: parametrize the rest of the tests in this module.
+@pytest.mark.parametrize(
+    "rg_maker",
+    [_make_grid_to_mesh_regridder, _make_mesh_to_grid_regridder],
+    ids=["grid_to_mesh", "mesh_to_grid"],
+)
+def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker):
+    """Test save/load round tripping for the Mesh regridder classes."""
+    original_rg, src = rg_maker(masks=True)
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
