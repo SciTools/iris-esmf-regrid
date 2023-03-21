@@ -66,12 +66,15 @@ def _get_mask(cube, use_mask=True):
 
 def _contiguous_masked(bounds, mask):
     """
-    Return the (N+1, M+1) bound values for bounds of 2D coordinate of shape (N,M).
+    Return the (N+1, M+1) vertices for 2D coordinate bounds of shape (N, M, 4).
 
-    Assumes the bounds are contiguous outside of the mask. The returned bounds
-    fully describe the unmasked bounds when this is the case. This function is
-    designed to replicate the behaviour of coord.contiguous_bounds() for unmasked
-    bounds.
+    Assumes the bounds are contiguous outside of the mask. As long as the only
+    discontiguities are associated with masked points, the returned vertices will
+    represent every bound associated with an unmasked point. This function is
+    designed to replicate the behaviour of iris.Coord.contiguous_bounds() for such
+    bounds. For each vertex in the returned array there are up to four choices of
+    bounds to derive from. Bounds associated with umasked points will be prioritised
+    in this choice.
 
     For example, suppose we have a masked array:
 
@@ -80,6 +83,10 @@ def _contiguous_masked(bounds, mask):
     # 0 - - 0
     # 0 0 0 0
 
+    Now the indices of the final bounds dimension correspond to positions on the
+    vertex array. For a bound whose first indixes are (i, j) the corresponding
+    position in the vertex array of the four final indices are as follows:
+    0=(j, i), 1=(j, i+1), 2=(j+1, i+1), 3=(j+1, i)
     The indices of the bounds which the final array will derive from are as follows:
 
     # (0, 0, 0) (0, 1, 0) (0, 2, 0) (0, 3, 0) (0, 3, 1)
@@ -88,22 +95,30 @@ def _contiguous_masked(bounds, mask):
     # (3, 0, 0) (3, 1, 0) (3, 2, 0) (3, 3, 0) (3, 3, 1)
     # (3, 0, 3) (3, 1, 3) (3, 3, 3) (3, 3, 3) (3, 3, 2)
 
-    Note that only the center bound derives from a masked cell.
+    Note that only the center bound derives from a masked cell as there are no
+    unmasked points to derive from.
     """
     mask = np.array(mask, dtype=int)
 
     # Construct a blank template array in the shape of the output.
     blank_template = np.zeros([size + 1 for size in mask.shape], dtype=int)
 
+    # Define the slices of the resulting vertex array which derive from the
+    # bounds in index 0 to 3.
+    slice_0 = np.s_[:-1, :-1]
+    slice_1 = np.s_[:-1, 1:]
+    slice_2 = np.s_[1:, 1:]
+    slice_3 = np.s_[1:, :-1]
+
     # Define the bounds which will derive from the bounds in index 0.
     filter_0 = blank_template.copy()
-    filter_0[:-1, :-1] = 1 - mask
+    filter_0[slice_0] = 1 - mask
     # Ensure the corner points are covered appropriately.
     filter_0[0, 0] = 1
 
     # Define the bounds which will derive from the bounds in index 1.
     filter_1 = blank_template.copy()
-    filter_1[:-1, 1:] = 1 - mask
+    filter_1[slice_1] = 1 - mask
     # Ensure the corner and edge bounds are covered appropriately.
     filter_1[0, 1:] = 1
     # Do not cover any points already covered.
@@ -111,7 +126,7 @@ def _contiguous_masked(bounds, mask):
 
     # Define the bounds which will derive from the bounds in index 3.
     filter_3 = blank_template.copy()
-    filter_3[1:, :-1] = 1 - mask
+    filter_3[slice_3] = 1 - mask
     # Ensure the corner and edge bounds are covered appropriately.
     filter_3[1:, 0] = 1
     # Do not cover any points already covered.
@@ -122,10 +137,10 @@ def _contiguous_masked(bounds, mask):
 
     # Copy the bounds information over into the appropriate places.
     contiguous_bounds = blank_template.astype(bounds.dtype)
-    contiguous_bounds[:-1, :-1] += bounds[:, :, 0] * filter_0[:-1, :-1]
-    contiguous_bounds[:-1, 1:] += bounds[:, :, 1] * filter_1[:-1, 1:]
-    contiguous_bounds[1:, 1:] += bounds[:, :, 2] * filter_2[1:, 1:]
-    contiguous_bounds[1:, :-1] += bounds[:, :, 3] * filter_3[1:, :-1]
+    contiguous_bounds[slice_0] += bounds[:, :, 0] * filter_0[slice_0]
+    contiguous_bounds[slice_1] += bounds[:, :, 1] * filter_1[slice_1]
+    contiguous_bounds[slice_2] += bounds[:, :, 2] * filter_2[slice_2]
+    contiguous_bounds[slice_3] += bounds[:, :, 3] * filter_3[slice_3]
     return contiguous_bounds
 
 
@@ -154,7 +169,7 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
         # TODO: perform checks on lat/lon.
     elif londim == 2:
         assert cube.coord_dims(lon) == cube.coord_dims(lat)
-        if mask is None:
+        if np.any(mask):
             assert lon.is_contiguous()
             assert lat.is_contiguous()
             lon_bound_array = lon.contiguous_bounds()
