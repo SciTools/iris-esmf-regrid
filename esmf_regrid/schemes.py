@@ -169,7 +169,7 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
         # TODO: perform checks on lat/lon.
     elif londim == 2:
         assert cube.coord_dims(lon) == cube.coord_dims(lat)
-        if np.any(mask):
+        if not np.any(mask):
             assert lon.is_contiguous()
             assert lat.is_contiguous()
             lon_bound_array = lon.contiguous_bounds()
