@@ -5,6 +5,7 @@ import copy
 import functools
 
 from cf_units import Unit
+import dask.array as da
 from iris._lazy_data import map_complete_blocks
 import iris.coords
 import iris.cube
@@ -45,9 +46,10 @@ def _get_mask(cube, use_mask=True):
         data = next(slices).data
         if np.ma.is_masked(data):
             # Check that the mask is constant along all other dimensions.
-            full_mask = np.ma.getmaskarray(cube.data)
+            full_mask = da.ma.getmaskarray(cube.core_data())
             if not np.array_equal(
-                np.all(full_mask, axis=other_dims), np.any(full_mask, axis=other_dims)
+                da.all(full_mask, axis=other_dims).compute(),
+                da.any(full_mask, axis=other_dims).compute(),
             ):
                 raise ValueError(
                     "The mask derived from the cube is not constant over non-horizontal dimensions."
