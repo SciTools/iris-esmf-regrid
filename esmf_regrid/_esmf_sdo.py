@@ -17,10 +17,11 @@ class SDO(ABC):
     objects supported by ESMPy, Grids, Meshes, and LocStreams.
     """
 
-    def __init__(self, shape, index_offset, field_kwargs):
+    def __init__(self, shape, index_offset, field_kwargs, mask=None):
         self._shape = shape
         self._index_offset = index_offset
         self._field_kwargs = field_kwargs
+        self._mask = mask
 
     @abstractmethod
     def _make_esmf_sdo(self):
@@ -43,6 +44,11 @@ class SDO(ABC):
         return self._shape
 
     @property
+    def _refined_mask(self):
+        """Return mask passed to ESMF."""
+        return self._mask
+
+    @property
     def dims(self):
         """Return number of dimensions."""
         return len(self._shape)
@@ -61,6 +67,11 @@ class SDO(ABC):
     def index_offset(self):
         """Return the index offset."""
         return self._index_offset
+
+    @property
+    def mask(self):
+        """Return the mask."""
+        return self._mask
 
     def _array_to_matrix(self, array):
         """
@@ -111,6 +122,7 @@ class GridInfo(SDO):
         crs=None,
         circular=False,
         areas=None,
+        mask=None,
         center=False,
     ):
         """
@@ -140,6 +152,8 @@ class GridInfo(SDO):
             Array describing the areas associated with
             each face. If ``None``, then :mod:`esmpy` will use its own
             calculated areas.
+        mask: :obj:`~numpy.typing.ArrayLike`, optional
+            Array describing which elements :mod:`esmpy` will ignore.
         center : bool, default=False
             Describes if the center points of the grid cells are used in regridding
             calculations.
@@ -196,6 +210,7 @@ class GridInfo(SDO):
             shape=shape,
             index_offset=1,
             field_kwargs={"staggerloc": esmpy.StaggerLoc.CENTER},
+            mask=mask,
         )
 
     def _as_esmf_info(self):
@@ -283,10 +298,19 @@ class GridInfo(SDO):
             grid_center_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CENTER)
             grid_center_y[:] = truecenterlats
 
+        def add_get_item(grid, **kwargs):
+            grid.add_item(**kwargs)
+            return grid.get_item(**kwargs)
+
+        if self.mask is not None:
+            grid_mask = add_get_item(
+                grid, item=esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER
+            )
+            grid_mask[:] = self._refined_mask
+
         if areas is not None:
-            grid.add_item(esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER)
-            grid_areas = grid.get_item(
-                esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER
+            grid_areas = add_get_item(
+                grid, item=esmpy.GridItem.AREA, staggerloc=esmpy.StaggerLoc.CENTER
             )
             grid_areas[:] = areas.T
 
@@ -314,6 +338,7 @@ class RefinedGridInfo(GridInfo):
         latbounds,
         resolution=3,
         crs=None,
+        mask=None,
     ):
         """
         Create a :class:`RefinedGridInfo` object describing the grid.
@@ -354,7 +379,7 @@ class RefinedGridInfo(GridInfo):
         # Create dummy lat/lon values
         lons = np.zeros(self.n_lons_orig)
         lats = np.zeros(self.n_lats_orig)
-        super().__init__(lons, lats, lonbounds, latbounds, crs=crs)
+        super().__init__(lons, lats, lonbounds, latbounds, crs=crs, mask=mask)
 
         if self.n_lats_orig == 1 and np.allclose(latbounds, [-90, 90]):
             self._refined_latbounds = np.array([-90, 0, 90])
@@ -385,6 +410,21 @@ class RefinedGridInfo(GridInfo):
             self.n_lats_orig * self.lat_expansion,
             self.n_lons_orig * self.lon_expansion,
         )
+
+    @property
+    def _refined_mask(self):
+        """Return mask passed to ESMF."""
+        new_mask = np.broadcast_to(
+            self.mask[:, np.newaxis, :, np.newaxis],
+            [
+                self.n_lats_orig,
+                self.lat_expansion,
+                self.n_lons_orig,
+                self.lon_expansion,
+            ],
+        )
+        new_mask = new_mask.reshape(self._refined_shape)
+        return new_mask
 
     def _collapse_weights(self, is_tgt):
         """

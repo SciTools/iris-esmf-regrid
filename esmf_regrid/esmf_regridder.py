@@ -15,6 +15,8 @@ __all__ = [
 
 
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
+    # The value, in array form, that ESMF should treat as an affirmative mask.
+    expected_mask = np.array([True])
     regridder = esmpy.Regrid(
         src_field,
         tgt_field,
@@ -24,6 +26,8 @@ def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
         norm_type=esmpy.NormType.DSTAREA,
+        src_mask_values=expected_mask,
+        dst_mask_values=expected_mask,
         factors=True,
     )
     # Without specifying deep_copy=true, the information in weights_dict

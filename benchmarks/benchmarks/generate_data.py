@@ -161,6 +161,60 @@ def _grid_cube(
     return return_cube
 
 
+def _curvilinear_cube(
+    n_lons,
+    n_lats,
+    lon_outer_bounds,
+    lat_outer_bounds,
+):
+    """Call _curvilinear_cube via :func:`run_function_elsewhere`."""
+
+    def external(*args, **kwargs):
+        """
+        Prep and call _curvilinear_cube, saving to a NetCDF file.
+
+        Saving to a file allows the original python executable to pick back up.
+
+        Remember that all arguments must work as strings.
+
+        """
+        from iris import save
+
+        from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
+            _curvilinear_cube as original,
+        )
+
+        save_path = kwargs.pop("save_path")
+
+        cube = original(*args, **kwargs)
+        save(cube, save_path)
+
+    file_name_sections = [
+        "_curvilinear_cube",
+        n_lons,
+        n_lats,
+        lon_outer_bounds,
+        lat_outer_bounds,
+    ]
+    file_name = "_".join(str(section) for section in file_name_sections)
+    # Remove 'unsafe' characters.
+    file_name = re.sub(r"\W+", "", file_name)
+    save_path = (BENCHMARK_DATA / file_name).with_suffix(".nc")
+
+    if not REUSE_DATA or not save_path.is_file():
+        _ = run_function_elsewhere(
+            external,
+            n_lons,
+            n_lats,
+            lon_outer_bounds,
+            lat_outer_bounds,
+            save_path=str(save_path),
+        )
+
+    return_cube = load_cube(str(save_path))
+    return return_cube
+
+
 def _gridlike_mesh_cube(n_lons, n_lats):
     """Call _gridlike_mesh via :func:`run_function_elsewhere`."""
 

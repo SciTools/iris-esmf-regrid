@@ -2,6 +2,7 @@
 
 import numpy as np
 from numpy import ma
+import pytest
 
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
@@ -18,7 +19,11 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 
 
 def _make_grid_to_mesh_regridder(
-    method="conservative", resolution=None, grid_dims=1, circular=True
+    method="conservative",
+    resolution=None,
+    grid_dims=1,
+    circular=True,
+    masks=False,
 ):
     src_lons = 3
     src_lats = 4
@@ -41,14 +46,33 @@ def _make_grid_to_mesh_regridder(
         location = "face"
     tgt = _gridlike_mesh_cube(tgt_lons, tgt_lats, location=location)
 
+    if masks:
+        src_data = ma.array(src.data)
+        src_data[0, 0] = ma.masked
+        src.data = src_data
+        use_src_mask = True
+        tgt_data = ma.array(tgt.data)
+        tgt_data[0] = ma.masked
+        tgt.data = tgt_data
+        use_tgt_mask = True
+    else:
+        use_src_mask = False
+        use_tgt_mask = False
+
     rg = GridToMeshESMFRegridder(
-        src, tgt, method=method, mdtol=0.5, resolution=resolution
+        src,
+        tgt,
+        method=method,
+        mdtol=0.5,
+        resolution=resolution,
+        use_src_mask=use_src_mask,
+        use_tgt_mask=use_tgt_mask,
     )
     return rg, src
 
 
 def _make_mesh_to_grid_regridder(
-    method="conservative", resolution=None, grid_dims=1, circular=True
+    method="conservative", resolution=None, grid_dims=1, circular=True, masks=False
 ):
     src_lons = 3
     src_lats = 4
@@ -68,8 +92,27 @@ def _make_mesh_to_grid_regridder(
         location = "face"
     src = _gridlike_mesh_cube(src_lons, src_lats, location=location)
 
+    if masks:
+        src_data = ma.array(src.data)
+        src_data[0] = ma.masked
+        src.data = src_data
+        use_src_mask = True
+        tgt_data = ma.array(tgt.data)
+        tgt_data[0, 0] = ma.masked
+        tgt.data = tgt_data
+        use_tgt_mask = True
+    else:
+        use_src_mask = False
+        use_tgt_mask = False
+
     rg = MeshToGridESMFRegridder(
-        src, tgt, method=method, mdtol=0.5, resolution=resolution
+        src,
+        tgt,
+        method=method,
+        mdtol=0.5,
+        resolution=resolution,
+        use_src_mask=use_src_mask,
+        use_tgt_mask=use_tgt_mask,
     )
     return rg, src
 
@@ -193,6 +236,31 @@ def test_GridToMeshESMFRegridder_curvilinear_round_trip(tmp_path):
     loaded_result = loaded_rg(src).data
     assert np.array_equal(original_result, loaded_result)
     assert np.array_equal(original_result.mask, loaded_result.mask)
+
+
+# TODO: parametrize the rest of the tests in this module.
+@pytest.mark.parametrize(
+    "rg_maker",
+    [_make_grid_to_mesh_regridder, _make_mesh_to_grid_regridder],
+    ids=["grid_to_mesh", "mesh_to_grid"],
+)
+def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker):
+    """Test save/load round tripping for the Mesh regridder classes."""
+    original_rg, src = rg_maker(masks=True)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(str(filename))
+
+    # Compare the weight matrices.
+    original_matrix = original_rg.regridder.weight_matrix
+    loaded_matrix = loaded_rg.regridder.weight_matrix
+    # Ensure the original and loaded weight matrix have identical type.
+    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
+
+    # Ensure the masks are preserved
+    assert np.array_equal(loaded_rg.src_mask, original_rg.src_mask)
+    assert np.array_equal(loaded_rg.tgt_mask, original_rg.tgt_mask)
 
 
 def test_MeshToGridESMFRegridder_round_trip(tmp_path):
