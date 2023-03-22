@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [PR#220](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/220)
   Matured the benchmarking architecture in line with the latest setup in
   SciTools/iris.
+- [PR#241](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/241)
+  Fixed compatibility with esmpy 8.4.
+- [PR#219](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/219)
+  Added support for 2D AuxCoords with discontiguities under masked values
+  with the use_src_mask and use_tgt_mask keywords.
 
 ## [0.5] - 2022-10-14
 
