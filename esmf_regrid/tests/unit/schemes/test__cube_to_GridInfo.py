@@ -5,6 +5,7 @@ from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 from iris.fileformats.pp import EARTH_RADIUS
 import numpy as np
+import pytest
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
@@ -197,7 +198,8 @@ def test_curvilinear_grid():
     assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
 
 
-def test__contiguous_bounds():
+@pytest.mark.parametrize("masked", (True, False), ids=("masked", "unmasked"))
+def test__contiguous_bounds(masked):
     """Test generation of contiguous bounds."""
     # Generate a CF style bounds array with unique values for each bound.
     # The values will represent the index in the bounds array.
@@ -206,35 +208,52 @@ def test__contiguous_bounds():
     cf_bds += np.arange(6)[np.newaxis, :, np.newaxis] * 10
     cf_bds += np.arange(4)[np.newaxis, np.newaxis, :]
 
-    # Define a mask such that each possible 2x2 sub array is represented.
-    # e.g.
-    # [[1, 1],
-    #  [0, 1]]
-    mask = np.array(
-        [
-            [0, 1, 1, 0, 0, 0],
-            [0, 1, 1, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1],
-            [1, 0, 0, 0, 1, 0],
-            [0, 1, 1, 0, 0, 0],
-        ]
-    )
+    if masked:
+        # Define a mask such that each possible 2x2 sub array is represented.
+        # e.g.
+        # [[1, 1],
+        #  [0, 1]]
+        mask = np.array(
+            [
+                [0, 1, 1, 0, 0, 0],
+                [0, 1, 1, 0, 0, 1],
+                [1, 0, 1, 1, 1, 1],
+                [1, 0, 0, 0, 1, 0],
+                [0, 1, 1, 0, 0, 0],
+            ]
+        )
+    else:
+        mask = np.zeros([5, 6])
 
     # Calculate the values on the vertices.
     vertices = _contiguous_masked(cf_bds, mask)
-    # Note, the only values deriving from masked points are:
-    # 11, 12, 152, 203, 412
-    # These are the only vertices not connected to any unmasked points.
-    # fmt: off
-    expected_vertices = np.array(
-        [
-            [0,     1,  11,  30,  40,  50,  51],  # noqa: E241
-            [100, 101,  12, 130, 140, 141,  52],  # noqa: E241
-            [103, 210, 211, 133, 143, 142, 152],
-            [203, 310, 320, 330, 331, 350, 351],
-            [400, 401, 323, 430, 440, 450, 451],
-            [403, 402, 412, 433, 443, 453, 452],
-        ]
-    )
-    # fmt: on
+    if masked:
+        # Note, the only values deriving from masked points are:
+        # 11, 12, 152, 203, 412
+        # These are the only vertices not connected to any unmasked points.
+        # fmt: off
+        expected_vertices = np.array(
+            [
+                [0,     1,  11,  30,  40,  50,  51],  # noqa: E241
+                [100, 101,  12, 130, 140, 141,  52],  # noqa: E241
+                [103, 210, 211, 133, 143, 142, 152],
+                [203, 310, 320, 330, 331, 350, 351],
+                [400, 401, 323, 430, 440, 450, 451],
+                [403, 402, 412, 433, 443, 453, 452],
+            ]
+        )
+        # fmt: on
+    else:
+        # fmt: off
+        expected_vertices = np.array(
+            [
+                [0,    10,  20,  30,  40,  50,  51],  # noqa: E241
+                [100, 110, 120, 130, 140, 150, 151],
+                [200, 210, 220, 230, 240, 250, 251],
+                [300, 310, 320, 330, 340, 350, 351],
+                [400, 410, 420, 430, 440, 450, 451],
+                [403, 413, 423, 433, 443, 453, 452],
+            ]
+        )
+        # fmt: on
     assert np.array_equal(expected_vertices, vertices)

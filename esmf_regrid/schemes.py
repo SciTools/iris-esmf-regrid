@@ -31,7 +31,7 @@ def _get_coord(cube, axis):
 
 def _get_mask(cube, use_mask=True):
     if use_mask is False:
-        return None
+        result = None
     elif use_mask is True:
         src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
@@ -61,9 +61,10 @@ def _get_mask(cube, use_mask=True):
                 mask = mask.T
         else:
             mask = None
-        return mask
+        result = mask
     else:
-        return use_mask
+        result = use_mask
+    return result
 
 
 def _contiguous_masked(bounds, mask):
