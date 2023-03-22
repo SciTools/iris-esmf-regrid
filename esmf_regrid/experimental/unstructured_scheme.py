@@ -299,12 +299,12 @@ def regrid_unstructured_to_rectilinear(
     resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
-    use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+    use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the source to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
         in ``src_mesh_cube``. If False, no mask will be taken and all points will
         be used in weights calculation.
-    use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+    use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the target to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
         in ``target_grid_cube``. If False, no mask will be taken and all points
@@ -374,12 +374,12 @@ class MeshToGridESMFRegridder:
             given to ESMF for calculation. If resolution is set, target_grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``src_mesh_cube``. If False, no mask will be taken and all points will
             be used in weights calculation.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``target_grid_cube``. If False, no mask will be taken and all points
@@ -672,12 +672,12 @@ def regrid_rectilinear_to_unstructured(
     resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
-    use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+    use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the source to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
         in ``src_mesh_cube``. If False, no mask will be taken and all points will
         be used in weights calculation.
-    use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+    use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the target to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
         in ``target_grid_cube``. If False, no mask will be taken and all points
@@ -747,12 +747,12 @@ class GridToMeshESMFRegridder:
             given to ESMF for calculation. If resolution is set, src_grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``src_grid_cube``. If False, no mask will be taken and all points will
             be used in weights calculation.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``target_mesh_cube``. If False, no mask will be taken and all points

@@ -472,10 +472,10 @@ class ESMFAreaWeighted:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
-        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`ESMF` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, optional
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
 
@@ -521,12 +521,12 @@ class ESMFAreaWeightedRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-        use_src_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``src_grid``. If False, no mask will be taken and all points will
             be used in weights calculation.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike`, bool, default=False
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``tgt_grid``. If False, no mask will be taken and all points will
