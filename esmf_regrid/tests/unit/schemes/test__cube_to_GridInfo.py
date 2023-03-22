@@ -8,7 +8,7 @@ import numpy as np
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
-from esmf_regrid.schemes import _cube_to_GridInfo, _contiguous_masked
+from esmf_regrid.schemes import _contiguous_masked, _cube_to_GridInfo
 
 
 def _generate_points_and_bounds(n, outer_bounds):
@@ -228,8 +228,8 @@ def test__contiguous_bounds():
     # fmt: off
     expected_vertices = np.array(
         [
-            [0,     1,  11,  30,  40,  50,  51],
-            [100, 101,  12, 130, 140, 141,  52],
+            [0,     1,  11,  30,  40,  50,  51],  # flake8: E241
+            [100, 101,  12, 130, 140, 141,  52],  # flake8: E241
             [103, 210, 211, 133, 143, 142, 152],
             [203, 310, 320, 330, 331, 350, 351],
             [400, 401, 323, 430, 440, 450, 451],
