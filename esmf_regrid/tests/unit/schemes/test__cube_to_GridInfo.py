@@ -8,7 +8,7 @@ import numpy as np
 import scipy.sparse
 
 from esmf_regrid.esmf_regridder import Regridder
-from esmf_regrid.schemes import _cube_to_GridInfo
+from esmf_regrid.schemes import _cube_to_GridInfo, _contiguous_masked
 
 
 def _generate_points_and_bounds(n, outer_bounds):
@@ -195,3 +195,46 @@ def test_curvilinear_grid():
     circular_gridinfo.circular = True
     rg_circular = Regridder(circular_gridinfo, gridinfo)
     assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
+
+
+def test__contiguous_bounds():
+    """Test generation of contiguous bounds."""
+    # Generate a CF style bounds array with unique values for each bound.
+    # The values will represent the index in the bounds array.
+    cf_bds = np.zeros([5, 6, 4])
+    cf_bds += np.arange(5)[:, np.newaxis, np.newaxis] * 100
+    cf_bds += np.arange(6)[np.newaxis, :, np.newaxis] * 10
+    cf_bds += np.arange(4)[np.newaxis, np.newaxis, :]
+
+    # Define a mask such that each possible 2x2 sub array is represented.
+    # e.g.
+    # [[1, 1],
+    #  [0, 1]]
+    mask = np.array(
+        [
+            [0, 1, 1, 0, 0, 0],
+            [0, 1, 1, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0],
+            [0, 1, 1, 0, 0, 0],
+        ]
+    )
+
+    # Calculate the values on the vertices.
+    vertices = _contiguous_masked(cf_bds, mask)
+    # Note, the only values deriving from masked points are:
+    # 11, 12, 152, 203, 412
+    # These are the only vertices not connected to any unmasked points.
+    # fmt: off
+    expected_vertices = np.array(
+        [
+            [0,     1,  11,  30,  40,  50,  51],
+            [100, 101,  12, 130, 140, 141,  52],
+            [103, 210, 211, 133, 143, 142, 152],
+            [203, 310, 320, 330, 331, 350, 351],
+            [400, 401, 323, 430, 440, 450, 451],
+            [403, 402, 412, 433, 443, 453, 452],
+        ]
+    )
+    # fmt: on
+    assert np.array_equal(expected_vertices, vertices)
