@@ -10,6 +10,8 @@ import os
 from pathlib import Path
 import shutil
 from typing import Literal
+from urllib.error import HTTPError
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 import nox
@@ -44,7 +46,7 @@ def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
     ``--filename-template``.
 
     """
-    lockfile_dir = Path() / "requirements" / "nox.lock"
+    lockfile_dir = Path() / "requirements" / "locks"
     name_template = "{py_string}-{platform}.lock"
     if platform_placeholder:
         platform = "{platform}"
@@ -206,7 +208,7 @@ def _prepare_env(session: nox.sessions.Session) -> None:
 @nox.session
 def update_lockfiles(session: nox.sessions.Session):
     """
-    Re-resolve env specs and store as lockfiles (``requirements/nox.lock/``).
+    Re-resolve env specs and store as lockfiles (``requirements/locks/``).
 
     Original Conda environment specifications are at:
     ``requirements/py**.yml``. The output lock files denote the dependencies
@@ -265,9 +267,22 @@ def update_lockfiles(session: nox.sessions.Session):
                 f"{iris_artifact}/requirements/ci/{iris_req_name}"
             )
             iris_req_file = (tmp_dir / iris_req_name).with_stem(f"{python_string}-iris")
-            iris_req = urlopen(iris_req_url).read()
-            with iris_req_file.open("wb") as file:
-                file.write(iris_req)
+
+            try:
+                # first attempt with legacy requirements structure
+                connection = urlopen(iris_req_url)
+            except HTTPError as error:
+                if error.code == "404":
+                    # retry with new requirements structure i.e., no "ci" directory
+                    url = urlparse(iris_req_url)
+                    parts = url.path.split("/")
+                    parts.remove("ci")
+                    url = url._replace(path="/".join(parts))
+                    connection = urlopen(url.geturl())
+
+            iris_req = connection.read()
+            with iris_req_file.open("wb") as fout:
+                fout.write(iris_req)
             # Conda-lock can resolve multiple requirements files together.
             conda_lock_cmd.append(f"--file={iris_req_file}")
 
