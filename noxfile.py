@@ -37,6 +37,8 @@ IRIS_SOURCE = os.environ.get("IRIS_SOURCE", None)
 IRIS_GITHUB = "https://github.com/scitools/iris.git"
 LOCKFILE_PLATFORM = "linux-64"
 
+ESMFMKFILE = "ESMFMKFILE"
+
 
 def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
     """
@@ -272,7 +274,7 @@ def update_lockfiles(session: nox.sessions.Session):
                 # first attempt with legacy requirements structure
                 connection = urlopen(iris_req_url)
             except HTTPError as error:
-                if error.code == "404":
+                if error.code == 404:
                     # retry with new requirements structure i.e., no "ci" directory
                     url = urlparse(iris_req_url)
                     parts = url.path.split("/")
@@ -301,6 +303,8 @@ def tests(session: nox.sessions.Session):
         A `nox.sessions.Session` object.
 
     """
+    esmf_mk_file = Path(session.virtualenv.location_name) / "lib" / "esmf.mk"
+    session.env[ESMFMKFILE] = esmf_mk_file
     _prepare_env(session)
     # Install the esmf-regrid source in develop mode.
     session.install("--no-deps", "--editable", ".")
@@ -375,6 +379,7 @@ def benchmarks(
     data_gen_var = "DATA_GEN_PYTHON"
     if data_gen_var in os.environ:
         print("Using existing data generation environment.")
+        data_gen_python = Path(os.environ[data_gen_var])
     else:
         print("Setting up the data generation environment...")
         # Get Nox to build an environment for the `tests` session, but don't
@@ -391,6 +396,8 @@ def benchmarks(
             Path(".nox").rglob(f"tests*/bin/python{PY_VER}")
         ).resolve()
         session.env[data_gen_var] = data_gen_python
+    esmf_mk_file = data_gen_python.parents[1] / "lib" / "esmf.mk"
+    session.env[ESMFMKFILE] = esmf_mk_file
 
     print("Running ASV...")
     session.cd("benchmarks")
