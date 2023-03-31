@@ -5,21 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.6] - 2023-03-31
 
 ### Added
 
 - [PR#217](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/217)
   Changed the behaviour of coordinate fetching to allow Cubes with both
   1D DimCoords and 2D AuxCoords. In this case the DimCoords are prioritised.
+  [@stephenworsley](https://github.com/stephenworsley)
 - [PR#220](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/220)
   Matured the benchmarking architecture in line with the latest setup in
   SciTools/iris.
+  [@trexfeathers](https://github.com/trexfeathers)
 - [PR#241](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/241)
   Fixed compatibility with esmpy 8.4.
+  [@stephenworsley](https://github.com/stephenworsley) with help from 
+  [@bjlittle](https://github.com/bjlittle) and
+  [@valeriupredoi](https://github.com/valeriupredoi)
 - [PR#219](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/219)
   Added support for 2D AuxCoords with discontiguities under masked values
   with the use_src_mask and use_tgt_mask keywords.
+  [@stephenworsley](https://github.com/stephenworsley)with extensive review
+  work from [@trexfeathers](https://github.com/trexfeathers)
+
+### Fixed
+- [PR#242](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/242)
+  Fixed an issue which caused regridding to curvilinear grids with lazy
+  data to fail.
+  [@stephenworsley](https://github.com/stephenworsley)
 
 ## [0.5] - 2022-10-14
 
