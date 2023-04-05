@@ -1,0 +1,14 @@
+exclude .cirrus.yml
+exclude .coveragerc
+exclude .flake8
+prune .github
+exclude .gitignore
+exclude .pre-commit-config.yaml
+exclude .readthedocs.yml
+include CHANGELOG.md
+prune benchmarks
+exclude codecov.yml
+prune docs
+recursive-include esmf_regrid *.py *.txt
+exclude noxfile.py
+prune requirements
