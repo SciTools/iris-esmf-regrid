@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/stale@v3.0.13
+    - uses: actions/stale@v8.0.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: '@SciTools-incubator/esmf-regrid-devs This issue is stale due to a lack of activity in the last 90 days. Remove stale label or comment, otherwise this issue will close automatically in 7 days time.'
