@@ -1,0 +1,6 @@
+cartopy
+cf-units
+# esmpy>=7.0
+numpy>=1.19
+scipy
+scitools-iris
