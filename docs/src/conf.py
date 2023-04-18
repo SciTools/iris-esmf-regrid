@@ -5,6 +5,7 @@ Created originally using sphinx-quickstart on 2022-02-21.
 """
 
 from datetime import datetime
+import os
 from pathlib import Path
 import sys
 
@@ -15,6 +16,15 @@ import sys
 
 source_code_root = (Path(__file__).parents[2]).absolute()
 sys.path.append(str(source_code_root))
+
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+if on_rtd:
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
+    rtd_project = os.environ.get("READTHEDOCS_PROJECT")
+    rtd_conda_prefix = f"/home/docs/checkouts/readthedocs.org/user_builds/{rtd_project}/conda/{rtd_version}"
+    os.environ["ESMFMKFILE"] = f"{rtd_conda_prefix}/lib/esmf.mk"
+    os.environ["PROJ_DATA"] = f"{rtd_conda_prefix}/share/proj"
+    os.environ["PROJ_NETWORK"] = "OFF"
 
 
 # -- Project information -----------------------------------------------------
