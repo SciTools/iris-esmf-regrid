@@ -18,8 +18,8 @@ source_code_root = (Path(__file__).parents[2]).absolute()
 sys.path.append(str(source_code_root))
 
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
-rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
 if on_rtd:
+    rtd_version = os.environ.get("READTHEDOCS_VERSION", "latest")
     rtd_project = os.environ.get("READTHEDOCS_PROJECT")
     rtd_conda_prefix = f"/home/docs/checkouts/readthedocs.org/user_builds/{rtd_project}/conda/{rtd_version}"
     os.environ["ESMFMKFILE"] = f"{rtd_conda_prefix}/lib/esmf.mk"
