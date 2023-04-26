@@ -157,8 +157,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             resolution=resolution,
-            src_mask=self.src_mask,
-            tgt_mask=self.tgt_mask,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
         )
         self.resolution = resolution
         self.mesh, self.location = self.src
@@ -315,8 +315,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             resolution=resolution,
-            src_mask=use_src_mask,
-            tgt_mask=use_tgt_mask,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
         )
         self.resolution = resolution
         self.mesh, self.location = self.target
