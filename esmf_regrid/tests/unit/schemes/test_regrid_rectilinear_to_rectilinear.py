@@ -183,34 +183,6 @@ def test_laziness():
     assert np.allclose(result.data, src_data.T)
 
 
-def test_curvilinear_laziness():
-    """Test that regridding is lazy when source data is lazy."""
-    n_lons = 12
-    n_lats = 10
-    h = 4
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-
-    grid = _curvilinear_cube(n_lons, n_lats, lon_bounds, lat_bounds)
-    src_data = np.arange(n_lats * n_lons * h).reshape([n_lats, n_lons, h])
-    src_data = da.from_array(src_data, chunks=[3, 5, 1])
-    src = Cube(src_data)
-    src.add_aux_coord(grid.coord("latitude"), (0, 1))
-    src.add_aux_coord(grid.coord("longitude"), (0, 1))
-    tgt = _curvilinear_cube(n_lons, n_lats, lon_bounds, lat_bounds)
-
-    assert src.has_lazy_data()
-    result = regrid_rectilinear_to_rectilinear(src, tgt)
-    assert result.has_lazy_data()
-    assert np.allclose(result.data, src_data)
-
-    src.transpose()
-    assert src.has_lazy_data()
-    result = regrid_rectilinear_to_rectilinear(src, tgt)
-    assert result.has_lazy_data()
-    assert np.allclose(result.data, src_data.T)
-
-
 def test_laziness_curvilinear():
     """
     Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.

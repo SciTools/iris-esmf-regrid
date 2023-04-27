@@ -184,10 +184,12 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
         circular = False
     lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
     lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
+    lon_points = lon.units.convert(lon.points, Unit("degrees"))
+    lat_points = lon.units.convert(lat.points, Unit("degrees"))
     if resolution is None:
         grid_info = GridInfo(
-            lon.points,
-            lat.points,
+            lon_points,
+            lat_points,
             lon_bound_array,
             lat_bound_array,
             crs=crs,
@@ -441,6 +443,53 @@ RegridInfo = namedtuple(
 _RegridInfo = namedtuple("RegridInfo", ["dims", "target", "regridder"])
 
 
+def _make_gridinfo(cube, method, resolution, mask):
+    if resolution is not None:
+        if not (isinstance(resolution, int) and resolution > 0):
+            raise ValueError("resolution must be a positive integer.")
+        if method != "conservative":
+            raise ValueError("resolution can only be set for conservative regridding.")
+    if method == "conservative":
+        center = False
+    elif method == "bilinear":
+        center = True
+    else:
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
+    return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
+
+
+def _make_meshinfo(cube, method, mask, src_or_tgt):
+    mesh = cube.mesh
+    location = cube.location
+    if mesh is None:
+        raise ValueError(f"The {src_or_tgt} cube is not defined on a mesh.")
+    if method == "conservative":
+        if location != "face":
+            raise ValueError(
+                f"Conservative regridding requires a {src_or_tgt} cube located on "
+                f"the face of a cube, target cube had the {location} location."
+            )
+    elif method == "bilinear":
+        if location not in ["face", "node"]:
+            raise ValueError(
+                f"Bilinear regridding requires a {src_or_tgt} cube with a node "
+                f"or face location, target cube had the {location} location."
+            )
+        if location == "face" and None in mesh.face_coords:
+            raise ValueError(
+                f"Bilinear regridding requires a {src_or_tgt} cube on a face"
+                f"location to have a face center."
+            )
+    else:
+        raise ValueError(
+            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+        )
+
+    return _mesh_to_MeshInfo(mesh, location, mask=mask)
+
+
 def _regrid_rectilinear_to_rectilinear__prepare(
     src_grid_cube,
     tgt_grid_cube,
@@ -462,16 +511,8 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(src_x)
 
-    if method == "conservative":
-        center = False
-    elif method == "bilinear":
-        center = True
-    else:
-        raise ValueError(
-            f"method must be either 'bilinear' or 'conservative', got '{method}'."
-        )
-    srcinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=srcres, mask=src_mask)
-    tgtinfo = _cube_to_GridInfo(tgt_grid_cube, center=center, resolution=tgtres, mask=tgt_mask)
+    srcinfo = _make_gridinfo(src_grid_cube, method, srcres, src_mask)
+    tgtinfo = _make_gridinfo(tgt_grid_cube, method, tgtres, tgt_mask)
 
     regridder = Regridder(
         srcinfo, tgtinfo, method=method, precomputed_weights=precomputed_weights
@@ -506,8 +547,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     if len(grid_x.shape) == 1:
         chunk_shape = (len(grid_y.points), len(grid_x.points))
     else:
-        # Due to structural reasons, the order here must be reversed.
-        chunk_shape = grid_x.shape[::-1]
+        chunk_shape = grid_x.shape
     new_data = _map_complete_blocks(
         src_cube,
         regrid,
@@ -541,46 +581,15 @@ def _regrid_unstructured_to_rectilinear__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
-    if resolution is not None:
-        if not (isinstance(resolution, int) and resolution > 0):
-            raise ValueError("resolution must be a positive integer.")
-        if method != "conservative":
-            raise ValueError("resolution can only be set for conservative regridding.")
     grid_x = _get_coord(target_grid_cube, "x")
     grid_y = _get_coord(target_grid_cube, "y")
-    mesh = src_mesh_cube.mesh
-    location = src_mesh_cube.location
-    if mesh is None:
-        raise ValueError("The given cube is not defined on a mesh.")
-    if method == "conservative":
-        if location != "face":
-            raise ValueError(
-                f"Conservative regridding requires a source cube located on "
-                f"the face of a cube, target cube had the {location} location."
-            )
-        center = False
-    elif method == "bilinear":
-        if location not in ["face", "node"]:
-            raise ValueError(
-                f"Bilinear regridding requires a source cube with a node "
-                f"or face location, target cube had the {location} location."
-            )
-        if location == "face" and None in mesh.face_coords:
-            raise ValueError(
-                "Bilinear regridding requires a source cube on a face location to have "
-                "a face center."
-            )
-        center = True
-    else:
-        raise ValueError(
-            f"method must be either 'bilinear' or 'conservative', got '{method}'."
-        )
+
     # From src_mesh_cube, fetch the mesh, and the dimension on the cube which that
     # mesh belongs to.
     mesh_dim = src_mesh_cube.mesh_dim()
 
-    meshinfo = _mesh_to_MeshInfo(mesh, location, mask=src_mask)
-    gridinfo = _cube_to_GridInfo(target_grid_cube, center=center, resolution=resolution, mask=tgt_mask)
+    meshinfo = _make_meshinfo(src_mesh_cube, method, src_mask, "source")
+    gridinfo = _make_gridinfo(target_grid_cube, method, resolution, tgt_mask)
 
     regridder = Regridder(
         meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
@@ -621,7 +630,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     if len(grid_x.shape) == 1:
         chunk_shape = (len(grid_x.points), len(grid_y.points))
     else:
-        # Due to structural reasons, the order here must be reversed.
+        # TODO: investigate why this still needs to be reversed.
         chunk_shape = grid_x.shape[::-1]
     new_data = _map_complete_blocks(
         src_cube,
@@ -659,49 +668,19 @@ def _regrid_rectilinear_to_unstructured__prepare(
     The 'regrid info' returned can be re-used over many 2d slices.
 
     """
-    if resolution is not None:
-        if not (isinstance(resolution, int) and resolution > 0):
-            raise ValueError("resolution must be a positive integer.")
-        if method != "conservative":
-            raise ValueError("resolution can only be set for conservative regridding.")
     grid_x = _get_coord(src_grid_cube, "x")
     grid_y = _get_coord(src_grid_cube, "y")
     mesh = target_mesh_cube.mesh
     location = target_mesh_cube.location
-    if mesh is None:
-        raise ValueError("The given cube is not defined on a mesh.")
-    if method == "conservative":
-        if location != "face":
-            raise ValueError(
-                f"Conservative regridding requires a target cube located on "
-                f"the face of a cube, target cube had the {location} location."
-            )
-        center = False
-    elif method == "bilinear":
-        if location not in ["face", "node"]:
-            raise ValueError(
-                f"Bilinear regridding requires a target cube with a node "
-                f"or face location, target cube had the {location} location."
-            )
-        if location == "face" and None in mesh.face_coords:
-            raise ValueError(
-                "Bilinear regridding requires a target cube on a face location to have "
-                "a face center."
-            )
-        center = True
-    else:
-        raise ValueError(
-            f"method must be either 'bilinear' or 'conservative', got '{method}'."
-        )
-    assert mesh is not None
+
     if grid_x.ndim == 1:
         (grid_x_dim,) = src_grid_cube.coord_dims(grid_x)
         (grid_y_dim,) = src_grid_cube.coord_dims(grid_y)
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
-    meshinfo = _mesh_to_MeshInfo(mesh, location, mask=tgt_mask)
-    gridinfo = _cube_to_GridInfo(src_grid_cube, center=center, resolution=resolution, mask=src_mask)
+    meshinfo = _make_meshinfo(target_mesh_cube, method, tgt_mask, "target")
+    gridinfo = _make_gridinfo(src_grid_cube, method, resolution, src_mask)
 
     regridder = Regridder(
         gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
@@ -806,9 +785,9 @@ def regrid_rectilinear_to_rectilinear(
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
     method : str, default="conservative"
-        Either "conservative" or "bilinear". Corresponds to the :mod:`ESMF` methods
-        :attr:`~ESMF.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~ESMF.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+        Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
+        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
+        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
     srcres : int, optional
         If present, represents the amount of latitude slices per source cell
         given to ESMF for calculation.
@@ -854,10 +833,10 @@ class ESMFAreaWeighted:
             will be masked if and only if all the overlapping elements of the
             source grid are masked.
         use_src_mask : bool, default=False
-            If True, derive a mask from source cube which will tell :mod:`ESMF`
+            If True, derive a mask from source cube which will tell :mod:`esmpy`
             which points to ignore.
         use_tgt_mask : bool, default=False
-            If True, derive a mask from target cube which will tell :mod:`ESMF`
+            If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
 
         """
@@ -883,10 +862,10 @@ class ESMFAreaWeighted:
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
-            Array describing which elements :mod:`ESMF` will ignore on the src_grid.
+            Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
-            Array describing which elements :mod:`ESMF` will ignore on the tgt_grid.
+            Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
 
         Returns
@@ -915,7 +894,7 @@ class ESMFBilinear:
     A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
 
     This class describes a bilinear regridding scheme for regridding
-    between horizontal grids/meshes. It uses :mod:`ESMF` to handle
+    between horizontal grids/meshes. It uses :mod:`esmpy` to handle
     calculations and allows for different coordinate systems.
     """
 
@@ -976,7 +955,7 @@ class _ESMFRegridder:
         **kwargs,
     ):
         """
-        Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
+        Create regridder for conversions between ``src`` and ``tgt``.
 
         Parameters
         ----------
@@ -993,12 +972,12 @@ class _ESMFRegridder:
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``src_grid``. If False, no mask will be taken and all points will
+            in ``src``. If False, no mask will be taken and all points will
             be used in weights calculation.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the source to ignore, or else
+            Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``tgt_grid``. If False, no mask will be taken and all points will
+            in ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
 
         """
@@ -1069,7 +1048,7 @@ class _ESMFRegridder:
             A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
             and the other dimensions from this :class:`~iris.cube.Cube`. The data values of
             this :class:`~iris.cube.Cube` will be converted to values on the new grid using
-            area-weighted regridding via :mod:`ESMF` generated weights.
+            area-weighted regridding via :mod:`esmpy` generated weights.
 
         """
         if cube.mesh is not None:
@@ -1141,13 +1120,13 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         use_tgt_mask=False,
     ):
         """
-        Create regridder for conversions between ``src_grid`` and ``tgt_grid``.
+        Create regridder for conversions between ``src`` and ``tgt``.
 
         Parameters
         ----------
-        src_grid : :class:`iris.cube.Cube`
+        src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
+        tgt : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
@@ -1156,10 +1135,9 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
-            If ``None``, :mod:`ESMF` will be used to
-            calculate regridding weights. Otherwise, :mod:`ESMF` will be bypassed
+            If ``None``, :mod:`esmpy` will be used to
+            calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
-
         resolution : int, optional
             If present, represents the amount of latitude slices per cell
             given to ESMF for calculation. If resolution is set, grid_cube
@@ -1175,6 +1153,16 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             given to ESMF for calculation. If resolution is set, grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the source to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``src``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the target to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``tgt``. If False, no mask will be taken and all points will
+            be used in weights calculation.
         """
         kwargs = dict()
         if srcres is not None:
@@ -1204,11 +1192,45 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         tgt,
         mdtol=0,
         precomputed_weights=None,
+        use_src_mask=False,
+        use_tgt_mask=False,
     ):
+        """
+        Create regridder for conversions between ``src`` and ``tgt``.
+
+        Parameters
+        ----------
+        src : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
+        tgt : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+        mdtol : float, default=0
+            Tolerance of missing data. The value returned in each element of
+            the returned array will be masked if the fraction of masked data
+            exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
+            ``mdtol=1`` will mean the resulting element will be masked if and only
+            if all the contributing elements of data are masked.
+        precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
+            If ``None``, :mod:`esmpy` will be used to
+            calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
+            and ``precomputed_weights`` will be used as the regridding weights.
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the source to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``src``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the target to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``tgt``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+        """
         super().__init__(
             src,
             tgt,
             "bilinear",
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
         )
