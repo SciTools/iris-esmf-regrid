@@ -204,7 +204,7 @@ def _gridlike_mesh_cube(n_lons, n_lats, location="face"):
 def test__mesh_to_MeshInfo():
     """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
     mesh = _example_mesh()
-    meshinfo = _mesh_to_MeshInfo(mesh, location="face", mask=None)
+    meshinfo = _mesh_to_MeshInfo(mesh, location="face")
 
     expected_nodes = np.array(
         [
@@ -228,7 +228,7 @@ def test__mesh_to_MeshInfo():
 def test_anticlockwise_validity():
     """Test validity of objects derived from Mesh objects with anticlockwise orientation."""
     mesh = _example_mesh()
-    meshinfo = _mesh_to_MeshInfo(mesh, location="face", mask=None)
+    meshinfo = _mesh_to_MeshInfo(mesh, location="face")
 
     # Ensure conversion to ESMF works without error.
     _ = meshinfo.make_esmf_field()
@@ -244,7 +244,7 @@ def test_anticlockwise_validity():
 def test_large_mesh_validity():
     """Test validity of objects derived from a large gridlike Mesh."""
     mesh = _gridlike_mesh(40, 20)
-    meshinfo = _mesh_to_MeshInfo(mesh, location="face", mask=None)
+    meshinfo = _mesh_to_MeshInfo(mesh, location="face")
 
     # Ensure conversion to ESMF works without error.
     _ = meshinfo.make_esmf_field()

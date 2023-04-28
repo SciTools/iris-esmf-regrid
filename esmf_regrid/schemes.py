@@ -208,7 +208,7 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     return grid_info
 
 
-def _mesh_to_MeshInfo(mesh, location, mask):
+def _mesh_to_MeshInfo(mesh, location, mask=None):
     # Returns a MeshInfo object describing the mesh of the cube.
     assert mesh.topology_dimension == 2
     if None in mesh.face_coords:
