@@ -241,6 +241,22 @@ def test_laziness_curvilinear():
 
     assert result_lazy == result
 
+    # Repeat tests with transposed data.
+    src_cube_lazy_T = src_cube_lazy.copy()
+    src_cube_lazy_T.transpose()
+    src_cube_T = src_cube.copy()
+    src_cube_T.transpose()
+
+    tgt_grid_T = tgt_grid.copy()
+    tgt_grid_T.transpose()
+
+    result_T = regrid_rectilinear_to_rectilinear(src_cube_T, tgt_grid_T)
+    result_lazy_T = regrid_rectilinear_to_rectilinear(src_cube_lazy_T, tgt_grid_T)
+
+    assert result_lazy_T.has_lazy_data()
+
+    assert result_lazy_T == result_T
+
 
 def test_extra_dims_curvilinear():
     """
