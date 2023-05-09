@@ -249,10 +249,10 @@ def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
         The result of regridding the data.
 
     """
-    standard_in_dims = [-1, -2][: len(dims)]
+    num_dims = len(dims)
+    standard_in_dims = [-1, -2][:num_dims]
     data = np.moveaxis(data, dims, standard_in_dims)
     result = regridder.regrid(data, mdtol=mdtol)
-    num_dims = len(dims)
 
     standard_out_dims = [-1, -2][:num_out_dims]
     if num_dims == 2 and num_out_dims == 1:
@@ -315,6 +315,8 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         out_chunks[sorted_dims[0]] = out_sizes[0]
     else:
         for dim, size in zip(dims, out_sizes):
+            # Note: when mapping 2D to 2D, this will be the only alteration to
+            # out_chunks, the same as iris._lazy_data.map_complete_blocks
             out_chunks[dim] = size
 
     dropped_dims = []
@@ -454,7 +456,7 @@ def _make_gridinfo(cube, method, resolution, mask):
     elif method == "bilinear":
         center = True
     else:
-        raise ValueError(
+        raise NotImplementedError(
             f"method must be either 'bilinear' or 'conservative', got '{method}'."
         )
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
@@ -483,7 +485,7 @@ def _make_meshinfo(cube, method, mask, src_or_tgt):
                 f"location to have a face center."
             )
     else:
-        raise ValueError(
+        raise NotImplementedError(
             f"method must be either 'bilinear' or 'conservative', got '{method}'."
         )
 
@@ -983,7 +985,7 @@ class _ESMFRegridder:
 
         """
         if method not in ["conservative", "bilinear"]:
-            raise ValueError(
+            raise NotImplementedError(
                 f"method must be either 'bilinear' or 'conservative', got '{method}'."
             )
         if mdtol is None:
@@ -1002,41 +1004,36 @@ class _ESMFRegridder:
         self.tgt_mask = _get_mask(tgt, use_tgt_mask)
         kwargs["tgt_mask"] = self.tgt_mask
 
-        if src.mesh is None:
-            if tgt.mesh is None:
-                regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
-                    src, tgt, method, **kwargs
-                )
+        src_is_mesh = src.mesh is not None
+        tgt_is_mesh = tgt.mesh is not None
+        if src_is_mesh:
+            if tgt_is_mesh:
+                prepare_func = _regrid_unstructured_to_unstructured__prepare
             else:
-                regrid_info = _regrid_rectilinear_to_unstructured__prepare(
-                    src, tgt, method, **kwargs
-                )
+                prepare_func = _regrid_unstructured_to_rectilinear__prepare
         else:
-            if tgt.mesh is None:
-                regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-                    src, tgt, method, **kwargs
-                )
+            if tgt_is_mesh:
+                prepare_func = _regrid_rectilinear_to_unstructured__prepare
             else:
-                regrid_info = _regrid_unstructured_to_unstructured__prepare(
-                    src, tgt, method, **kwargs
-                )
+                prepare_func = _regrid_rectilinear_to_rectilinear__prepare
+        regrid_info = prepare_func(src, tgt, method, **kwargs)
 
         # Store regrid info.
-        self.target = regrid_info.target
+        self._tgt = regrid_info.target
         self.regridder = regrid_info.regridder
 
         # Record the source grid.
-        if src.mesh is not None:
-            self.src = (src.mesh, src.location)
+        if src_is_mesh:
+            self._src = (src.mesh, src.location)
         else:
-            self.src = (_get_coord(src, "x"), _get_coord(src, "y"))
+            self._src = (_get_coord(src, "x"), _get_coord(src, "y"))
 
     def __call__(self, cube):
         """
         Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
 
         The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
-        :class:`~iris.cube.Cube` used to create this :class:`ESMFAreaWeightedRegridder` instance.
+        :class:`~iris.cube.Cube` used to create this :class:`_ESMFRegridder` instance.
 
         Parameters
         ----------
@@ -1049,13 +1046,13 @@ class _ESMFRegridder:
             A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
             and the other dimensions from this :class:`~iris.cube.Cube`. The data values of
             this :class:`~iris.cube.Cube` will be converted to values on the new grid using
-            area-weighted regridding via :mod:`esmpy` generated weights.
+            regridding via :mod:`esmpy` generated weights.
 
         """
         if cube.mesh is not None:
             # src_mesh = cube.mesh
             # location = cube.location
-            # if self.src != (src_mesh, location):
+            # if self._src != (src_mesh, location):
             #     raise ValueError(
             #         "The given cube is not defined on the same "
             #         "source mesh as this regridder."
@@ -1066,7 +1063,7 @@ class _ESMFRegridder:
             src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
             # Check the source grid matches that used in initialisation
-            if self.src != (src_x, src_y):
+            if self._src != (src_x, src_y):
                 raise ValueError(
                     "The given cube is not defined on the same "
                     "source grid as this regridder."
@@ -1079,12 +1076,12 @@ class _ESMFRegridder:
 
         regrid_info = _RegridInfo(
             dims=dims,
-            target=self.target,
+            target=self._tgt,
             regridder=self.regridder,
         )
 
         if cube.mesh is None:
-            if type(self.target[1]) is not str:
+            if type(self._tgt[1]) is not str:
                 result = _regrid_rectilinear_to_rectilinear__perform(
                     cube, regrid_info, self.mdtol
                 )
@@ -1093,7 +1090,7 @@ class _ESMFRegridder:
                     cube, regrid_info, self.mdtol
                 )
         else:
-            if type(self.target[1]) is not str:
+            if type(self._tgt[1]) is not str:
                 result = _regrid_unstructured_to_rectilinear__perform(
                     cube, regrid_info, self.mdtol
                 )

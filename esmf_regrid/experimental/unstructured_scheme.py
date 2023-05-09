@@ -161,8 +161,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             use_tgt_mask=use_tgt_mask,
         )
         self.resolution = resolution
-        self.mesh, self.location = self.src
-        self.grid_x, self.grid_y = self.target
+        self.mesh, self.location = self._src
+        self.grid_x, self.grid_y = self._tgt
 
 
 def regrid_rectilinear_to_unstructured(
@@ -319,5 +319,5 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             use_tgt_mask=use_tgt_mask,
         )
         self.resolution = resolution
-        self.mesh, self.location = self.target
-        self.grid_x, self.grid_y = self.src
+        self.mesh, self.location = self._tgt
+        self.grid_x, self.grid_y = self._src
