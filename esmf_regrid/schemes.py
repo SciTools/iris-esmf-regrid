@@ -439,9 +439,6 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
     return new_cube
 
 
-RegridInfo = namedtuple(
-    "RegridInfo", ["x_dim", "y_dim", "x_coord", "y_coord", "regridder"]
-)
 _RegridInfo = namedtuple("RegridInfo", ["dims", "target", "regridder"])
 
 
@@ -1139,17 +1136,17 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             and ``precomputed_weights`` will be used as the regridding weights.
         resolution : int, optional
             If present, represents the amount of latitude slices per cell
-            given to ESMF for calculation. If resolution is set, grid_cube
+            given to ESMF for calculation. If resolution is set, any non-mesh cubes
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
         src_res : int, optional
             If present, represents the amount of latitude slices per source cell
-            given to ESMF for calculation. If resolution is set, grid_cube
+            given to ESMF for calculation. If resolution is set, src
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
         tgt_res : int, optional
             If present, represents the amount of latitude slices per target cell
-            given to ESMF for calculation. If resolution is set, grid_cube
+            given to ESMF for calculation. If resolution is set, tgt
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
