@@ -150,6 +150,7 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
 
 
         """
+        assert src.mesh is not None
         super().__init__(
             src,
             tgt,
@@ -308,6 +309,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             will be used in weights calculation.
 
         """
+        assert tgt.mesh is not None
         super().__init__(
             src,
             tgt,

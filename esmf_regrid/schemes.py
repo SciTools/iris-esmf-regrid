@@ -497,8 +497,8 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     tgt_grid_cube,
     method,
     precomputed_weights=None,
-    srcres=None,
-    tgtres=None,
+    src_res=None,
+    tgt_res=None,
     src_mask=None,
     tgt_mask=None,
 ):
@@ -513,8 +513,8 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(src_x)
 
-    srcinfo = _make_gridinfo(src_grid_cube, method, srcres, src_mask)
-    tgtinfo = _make_gridinfo(tgt_grid_cube, method, tgtres, tgt_mask)
+    srcinfo = _make_gridinfo(src_grid_cube, method, src_res, src_mask)
+    tgtinfo = _make_gridinfo(tgt_grid_cube, method, tgt_res, tgt_mask)
 
     regridder = Regridder(
         srcinfo, tgtinfo, method=method, precomputed_weights=precomputed_weights
@@ -724,6 +724,8 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         chunk_shape = (face_node.shape[face_node.location_axis],)
     elif location == "node":
         chunk_shape = mesh.node_coords[0].shape
+    else:
+        raise NotImplementedError(f"Unrecognised location {location}.")
 
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
@@ -731,7 +733,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     new_data = _map_complete_blocks(
         src_cube,
         regrid,
-        (grid_y_dim, grid_x_dim),
+        (grid_x_dim, grid_y_dim),
         chunk_shape,
     )
 
@@ -760,7 +762,7 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_rectilinear_to_rectilinear(
-    src_cube, grid_cube, mdtol=0, method="conservative", srcres=None, tgtres=None
+    src_cube, grid_cube, mdtol=0, method="conservative", src_res=None, tgt_res=None
 ):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto another rectilinear grid.
@@ -791,10 +793,10 @@ def regrid_rectilinear_to_rectilinear(
         Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
-    srcres : int, optional
+    src_res : int, optional
         If present, represents the amount of latitude slices per source cell
         given to ESMF for calculation.
-    tgtres : int, optional
+    tgt_res : int, optional
         If present, represents the amount of latitude slices per target cell
         given to ESMF for calculation.
 
@@ -805,7 +807,7 @@ def regrid_rectilinear_to_rectilinear(
 
     """
     regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
-        src_cube, grid_cube, method=method, srcres=srcres, tgtres=tgtres
+        src_cube, grid_cube, method=method, src_res=src_res, tgt_res=tgt_res
     )
     result = _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
@@ -1111,8 +1113,8 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         mdtol=0,
         precomputed_weights=None,
         resolution=None,
-        srcres=None,
-        tgtres=None,
+        src_res=None,
+        tgt_res=None,
         use_src_mask=False,
         use_tgt_mask=False,
     ):
@@ -1140,12 +1142,12 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             given to ESMF for calculation. If resolution is set, grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        srcres : int, optional
+        src_res : int, optional
             If present, represents the amount of latitude slices per source cell
             given to ESMF for calculation. If resolution is set, grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        tgtres : int, optional
+        tgt_res : int, optional
             If present, represents the amount of latitude slices per target cell
             given to ESMF for calculation. If resolution is set, grid_cube
             must have strictly increasing bounds (bounds may be transposed plus or
@@ -1162,10 +1164,10 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             be used in weights calculation.
         """
         kwargs = dict()
-        if srcres is not None:
-            kwargs["srcres"] = srcres
-        if tgtres is not None:
-            kwargs["tgtres"] = tgtres
+        if src_res is not None:
+            kwargs["src_res"] = src_res
+        if tgt_res is not None:
+            kwargs["tgt_res"] = tgt_res
         if resolution is not None:
             kwargs["resolution"] = resolution
         kwargs["use_src_mask"] = use_src_mask
