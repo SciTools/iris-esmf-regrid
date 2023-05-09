@@ -1060,44 +1060,43 @@ class _ESMFRegridder:
             dims = [cube.mesh_dim()]
 
         else:
-            src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+            new_src_x, new_src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
             # Check the source grid matches that used in initialisation
-            if self._src != (src_x, src_y):
-                raise ValueError(
-                    "The given cube is not defined on the same "
-                    "source grid as this regridder."
-                )
+            for saved_coord, new_coord in zip(self._src, (new_src_x, new_src_y)):
+                # Ignore differences in var_name that might be caused by saving.
+                saved_coord = copy.deepcopy(saved_coord)
+                saved_coord.var_name = new_coord.var_name
+                if saved_coord != new_coord:
+                    raise ValueError(
+                        "The given cube is not defined on the same "
+                        "source grid as this regridder."
+                    )
 
-            if len(src_x.shape) == 1:
-                dims = [cube.coord_dims(src_x)[0], cube.coord_dims(src_y)[0]]
+            if len(new_src_x.shape) == 1:
+                dims = [cube.coord_dims(new_src_x)[0], cube.coord_dims(new_src_y)[0]]
             else:
-                dims = cube.coord_dims(src_x)[::-1]
+                dims = cube.coord_dims(new_src_x)[::-1]
 
         regrid_info = _RegridInfo(
             dims=dims,
             target=self._tgt,
             regridder=self.regridder,
         )
+        src_is_mesh = cube.mesh is not None
+        tgt_is_mesh = type(self._tgt[1]) is str
 
-        if cube.mesh is None:
-            if type(self._tgt[1]) is not str:
-                result = _regrid_rectilinear_to_rectilinear__perform(
-                    cube, regrid_info, self.mdtol
-                )
+        if src_is_mesh:
+            if tgt_is_mesh:
+                perform_func = _regrid_unstructured_to_unstructured__perform
             else:
-                result = _regrid_rectilinear_to_unstructured__perform(
-                    cube, regrid_info, self.mdtol
-                )
+                perform_func = _regrid_unstructured_to_rectilinear__perform
         else:
-            if type(self._tgt[1]) is not str:
-                result = _regrid_unstructured_to_rectilinear__perform(
-                    cube, regrid_info, self.mdtol
-                )
+            if tgt_is_mesh:
+                perform_func = _regrid_rectilinear_to_unstructured__perform
             else:
-                result = _regrid_unstructured_to_unstructured__perform(
-                    cube, regrid_info, self.mdtol
-                )
+                perform_func = _regrid_rectilinear_to_rectilinear__perform
+        result = perform_func(cube, regrid_info, self.mdtol)
 
         return result
 
