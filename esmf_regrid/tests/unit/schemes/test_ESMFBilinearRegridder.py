@@ -270,3 +270,56 @@ def test_masks():
     # Check all other weights are correct.
     assert np.allclose(weights_src_masked[2:].todense(), weights_unmasked[2:].todense())
     assert np.allclose(weights_tgt_masked[2:].todense(), weights_unmasked[2:].todense())
+
+
+def test_regrid_data():
+    """
+    Test initialisation of :func:`esmf_regrid.schemes.ESMFBilinearRegridder`.
+
+    Checks that regridding mathematics behaves in an expected way.
+    """
+    # Create two similar grids so that source data and expected result
+    # data ought to look similar by visual inspection.
+    src = _grid_cube(5, 4, [-180, 180], [-90, 90], circular=True)
+    tgt = _grid_cube(4, 5, [-180, 180], [-90, 90], circular=True)
+
+    src_data = np.arange(20).reshape([4, 5])
+    src.data = src_data
+    rg = ESMFBilinearRegridder(src, tgt)
+
+    expected_data = np.array(
+        [
+            [
+                0.3844461499074716,
+                1.4148972061736933,
+                2.585102793826307,
+                3.615553850092528,
+            ],
+            [
+                3.886915086072201,
+                5.423003230276512,
+                6.641000710423149,
+                7.588216702776281,
+            ],
+            [
+                7.649349191647961,
+                8.891001259926682,
+                10.108998740073318,
+                11.35065080835204,
+            ],
+            [
+                11.411783297223723,
+                12.358999289576854,
+                13.576996769723491,
+                15.1130849139278,
+            ],
+            [
+                15.384446149907474,
+                16.414897206173688,
+                17.58510279382631,
+                18.615553850092528,
+            ],
+        ]
+    )
+    result = rg(src)
+    assert np.array_equal(expected_data, result.data)

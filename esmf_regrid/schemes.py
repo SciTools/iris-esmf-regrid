@@ -965,6 +965,10 @@ class _ESMFRegridder:
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
         tgt : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+        method : str
+            Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
+            :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
+            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
