@@ -12,7 +12,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
@@ -116,18 +116,18 @@ def test_invalid_args():
     face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):
         _ = regrid_rectilinear_to_unstructured(src, src, method="bilinear")
     with pytest.raises(NotImplementedError):
         _ = regrid_rectilinear_to_unstructured(src, face_tgt, method="other")
-    with pytest.raises(NotImplementedError) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         _ = regrid_rectilinear_to_unstructured(src, node_tgt, method="conservative")
     expected_message = (
         "Conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
-    with pytest.raises(NotImplementedError) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method="bilinear")
     expected_message = (
         "Bilinear regridding requires a target cube with a node "

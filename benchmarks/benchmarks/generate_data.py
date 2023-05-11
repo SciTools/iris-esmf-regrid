@@ -227,7 +227,7 @@ def _gridlike_mesh_cube(n_lons, n_lats):
         """
         from iris import save
 
-        from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+        from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
             _gridlike_mesh_cube as original,
         )
 

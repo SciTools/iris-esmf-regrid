@@ -9,7 +9,7 @@ import pytest
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
     _gridlike_mesh_cube,
 )
@@ -172,9 +172,9 @@ def test_invalid_mdtol():
     lat_bounds = (-90, 90)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=2)
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):
         _ = MeshToGridESMFRegridder(src, tgt, mdtol=-1)
 
 
@@ -193,7 +193,7 @@ def test_invalid_method():
     node_src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = MeshToGridESMFRegridder(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(node_src, tgt, method="conservative")
