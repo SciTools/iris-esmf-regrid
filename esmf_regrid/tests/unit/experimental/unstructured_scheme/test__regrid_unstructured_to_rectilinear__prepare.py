@@ -9,7 +9,7 @@ from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.schemes import (
     _regrid_unstructured_to_rectilinear__prepare,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
 )
 from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
