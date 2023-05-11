@@ -64,7 +64,7 @@ def _make_grid_to_mesh_regridder(
         tgt,
         method=method,
         mdtol=0.5,
-        resolution=resolution,
+        src_resolution=resolution,
         use_src_mask=use_src_mask,
         use_tgt_mask=use_tgt_mask,
     )
@@ -110,7 +110,7 @@ def _make_mesh_to_grid_regridder(
         tgt,
         method=method,
         mdtol=0.5,
-        resolution=resolution,
+        tgt_resolution=resolution,
         use_src_mask=use_src_mask,
         use_tgt_mask=use_tgt_mask,
     )
