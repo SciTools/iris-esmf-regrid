@@ -79,6 +79,7 @@ def regrid_unstructured_to_rectilinear(
         A new :class:`~iris.cube.Cube` instance.
 
     """
+    assert src_cube.mesh is not None
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(grid_cube, use_tgt_mask)
 
@@ -239,6 +240,7 @@ def regrid_rectilinear_to_unstructured(
         A new :class:`~iris.cube.Cube` instance.
 
     """
+    assert mesh_cube.mesh is not None
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(mesh_cube, use_tgt_mask)
 
