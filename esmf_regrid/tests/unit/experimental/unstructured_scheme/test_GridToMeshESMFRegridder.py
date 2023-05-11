@@ -230,12 +230,12 @@ def test_invalid_resolution():
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(src, tgt, method="conservative", resolution=-1)
+        _ = GridToMeshESMFRegridder(src, tgt, method="conservative", src_resolution=-1)
     expected_message = "resolution must be a positive integer."
     assert expected_message in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(src, tgt, method="bilinear", resolution=4)
+        _ = GridToMeshESMFRegridder(src, tgt, method="bilinear", src_resolution=4)
     expected_message = "resolution can only be set for conservative regridding."
     assert expected_message in str(excinfo.value)
 
@@ -359,7 +359,7 @@ def test_resolution():
     """
     Test for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
-    Tests for the resolution keyword.
+    Tests for the src_resolution keyword.
     """
     tgt = _flat_mesh_cube()
     n_lons = 6
@@ -370,7 +370,7 @@ def test_resolution():
 
     resolution = 8
 
-    result = GridToMeshESMFRegridder(grid, tgt, resolution=resolution)
+    result = GridToMeshESMFRegridder(grid, tgt, src_resolution=resolution)
     assert result.resolution == resolution
     assert result.regridder.src.resolution == resolution
 
@@ -456,12 +456,12 @@ def test_masks(resolution):
     tgt.data = np.ma.array(tgt.data, mask=tgt_mask)
 
     rg_src_masked = GridToMeshESMFRegridder(
-        src_discontiguous, tgt, use_src_mask=True, resolution=resolution
+        src_discontiguous, tgt, use_src_mask=True, src_resolution=resolution
     )
     rg_tgt_masked = GridToMeshESMFRegridder(
-        src, tgt, use_tgt_mask=True, resolution=resolution
+        src, tgt, use_tgt_mask=True, src_resolution=resolution
     )
-    rg_unmasked = GridToMeshESMFRegridder(src, tgt, resolution=resolution)
+    rg_unmasked = GridToMeshESMFRegridder(src, tgt, src_resolution=resolution)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix
     weights_tgt_masked = rg_tgt_masked.regridder.weight_matrix

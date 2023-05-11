@@ -15,7 +15,7 @@ def regrid_unstructured_to_rectilinear(
     grid_cube,
     mdtol=0,
     method="conservative",
-    resolution=None,
+    tgt_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
 ):
@@ -27,7 +27,7 @@ def regrid_unstructured_to_rectilinear(
     mean of :attr:`~iris.cube.Cube.data` values from ``src_cube`` regridded onto the
     horizontal grid of ``grid_cube``. The dimension on the :class:`~iris.cube.Cube`
     belonging to the :attr:`~iris.cube.Cube.mesh`
-    will replaced by the two dimensions associated with the grid.
+    will be replaced by the two dimensions associated with the grid.
     This function requires that the horizontal dimension of ``src_cube`` is
     described by a 2D mesh with data located on the faces of that mesh
     for conservative regridding and located on either faces or nodes for
@@ -59,18 +59,18 @@ def regrid_unstructured_to_rectilinear(
         Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
-    resolution : int, optional
+    tgt_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
     use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the source to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
-        in ``src_mesh_cube``. If False, no mask will be taken and all points will
+        in ``src_cube``. If False, no mask will be taken and all points will
         be used in weights calculation.
     use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the target to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
-        in ``target_grid_cube``. If False, no mask will be taken and all points
+        in ``grid_cube``. If False, no mask will be taken and all points
         will be used in weights calculation.
 
     Returns
@@ -86,7 +86,7 @@ def regrid_unstructured_to_rectilinear(
         src_cube,
         grid_cube,
         method=method,
-        resolution=resolution,
+        tgt_resolution=tgt_resolution,
         src_mask=src_mask,
         tgt_mask=tgt_mask,
     )
@@ -104,7 +104,7 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
         mdtol=None,
         method="conservative",
         precomputed_weights=None,
-        resolution=None,
+        tgt_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
     ):
@@ -132,20 +132,20 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
-        resolution : int, optional
+        tgt_resolution : int, optional
             If present, represents the amount of latitude slices per cell
-            given to ESMF for calculation. If resolution is set, target_grid_cube
+            given to ESMF for calculation. If ``tgt_resolution`` is set, ``tgt``
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``src_mesh_cube``. If False, no mask will be taken and all points will
+            in ``src``. If False, no mask will be taken and all points will
             be used in weights calculation.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``target_grid_cube``. If False, no mask will be taken and all points
+            in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
 
 
@@ -157,11 +157,11 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             method,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
-            resolution=resolution,
+            tgt_resolution=tgt_resolution,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
         )
-        self.resolution = resolution
+        self.resolution = tgt_resolution
         self.mesh, self.location = self._src
         self.grid_x, self.grid_y = self._tgt
 
@@ -171,7 +171,7 @@ def regrid_rectilinear_to_unstructured(
     mesh_cube,
     mdtol=0,
     method="conservative",
-    resolution=None,
+    src_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
 ):
@@ -182,9 +182,9 @@ def regrid_rectilinear_to_unstructured(
     values calculated using weights generated by :mod:`esmpy` to give the weighted
     mean of :attr:`~iris.cube.Cube.data` values from ``src_cube`` regridded onto the
     horizontal mesh of ``mesh_cube``. The dimensions on the :class:`~iris.cube.Cube` associated
-    with the grid will replaced by a dimension associated with the
+    with the grid will be replaced by a dimension associated with the
     :attr:`~iris.cube.Cube.mesh`.
-    That dimension will be the the first of the grid dimensions, whether
+    That dimension will be the first of the grid dimensions, whether
     it is associated with the ``x`` or ``y`` coordinate. Since two dimensions are
     being replaced by one, coordinates associated with dimensions after
     the grid will become associated with dimensions one lower.
@@ -219,18 +219,18 @@ def regrid_rectilinear_to_unstructured(
         Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
-    resolution : int, optional
+    src_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
     use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the source to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
-        in ``src_mesh_cube``. If False, no mask will be taken and all points will
+        in ``src_cube``. If False, no mask will be taken and all points will
         be used in weights calculation.
     use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the target to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
-        in ``target_grid_cube``. If False, no mask will be taken and all points
+        in ``grid_cube``. If False, no mask will be taken and all points
         will be used in weights calculation.
 
     Returns
@@ -246,7 +246,7 @@ def regrid_rectilinear_to_unstructured(
         src_cube,
         mesh_cube,
         method=method,
-        resolution=resolution,
+        src_resolution=src_resolution,
         src_mask=src_mask,
         tgt_mask=tgt_mask,
     )
@@ -264,7 +264,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         mdtol=None,
         method="conservative",
         precomputed_weights=None,
-        resolution=None,
+        src_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
     ):
@@ -292,20 +292,20 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
-        resolution : int, optional
+        src_resolution : int, optional
             If present, represents the amount of latitude slices per cell
-            given to ESMF for calculation. If resolution is set, src_grid_cube
+            given to ESMF for calculation. If ``src_resolution`` is set, ``src``
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``src_grid_cube``. If False, no mask will be taken and all points will
+            in ``src``. If False, no mask will be taken and all points will
             be used in weights calculation.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``target_mesh_cube``. If False, no mask will be taken and all points
+            in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
 
         """
@@ -316,10 +316,10 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             method,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
-            resolution=resolution,
+            src_resolution=src_resolution,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
         )
-        self.resolution = resolution
+        self.resolution = src_resolution
         self.mesh, self.location = self._tgt
         self.grid_x, self.grid_y = self._src

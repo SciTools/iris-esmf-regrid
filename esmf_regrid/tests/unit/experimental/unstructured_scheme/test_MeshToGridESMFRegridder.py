@@ -225,12 +225,12 @@ def test_invalid_resolution():
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(src, tgt, method="conservative", resolution=-1)
+        _ = MeshToGridESMFRegridder(src, tgt, method="conservative", tgt_resolution=-1)
     expected_message = "resolution must be a positive integer."
     assert expected_message in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(src, tgt, method="bilinear", resolution=4)
+        _ = MeshToGridESMFRegridder(src, tgt, method="bilinear", tgt_resolution=4)
     expected_message = "resolution can only be set for conservative regridding."
     assert expected_message in str(excinfo.value)
 
@@ -329,7 +329,7 @@ def test_resolution():
     """
     Test for :func:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
-    Tests for the resolution keyword.
+    Tests for the tgt_resolution keyword.
     """
     mesh_cube = _flat_mesh_cube()
 
@@ -340,11 +340,11 @@ def test_resolution():
 
     resolution = 8
 
-    lon_band_rg = MeshToGridESMFRegridder(mesh_cube, lon_bands, resolution=resolution)
+    lon_band_rg = MeshToGridESMFRegridder(mesh_cube, lon_bands, tgt_resolution=resolution)
     assert lon_band_rg.resolution == resolution
     assert lon_band_rg.regridder.tgt.resolution == resolution
 
-    lat_band_rg = MeshToGridESMFRegridder(mesh_cube, lat_bands, resolution=resolution)
+    lat_band_rg = MeshToGridESMFRegridder(mesh_cube, lat_bands, tgt_resolution=resolution)
     assert lat_band_rg.resolution == resolution
     assert lat_band_rg.regridder.tgt.resolution == resolution
 
@@ -432,12 +432,12 @@ def test_masks(resolution):
         tgt_discontiguous.coord("longitude").bounds[0, 0] = 0
 
     rg_src_masked = MeshToGridESMFRegridder(
-        src, tgt, use_src_mask=True, resolution=resolution
+        src, tgt, use_src_mask=True, tgt_resolution=resolution
     )
     rg_tgt_masked = MeshToGridESMFRegridder(
-        src, tgt_discontiguous, use_tgt_mask=True, resolution=resolution
+        src, tgt_discontiguous, use_tgt_mask=True, tgt_resolution=resolution
     )
-    rg_unmasked = MeshToGridESMFRegridder(src, tgt, resolution=resolution)
+    rg_unmasked = MeshToGridESMFRegridder(src, tgt, tgt_resolution=resolution)
 
     weights_src_masked = rg_src_masked.regridder.weight_matrix
     weights_tgt_masked = rg_tgt_masked.regridder.weight_matrix

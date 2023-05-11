@@ -182,7 +182,7 @@ def test_resolution():
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
-    Tests the resolution keyword with grids that would otherwise not work.
+    Tests the tgt_resolution keyword with grids that would otherwise not work.
     """
     src = _flat_mesh_cube()
 
@@ -198,13 +198,13 @@ def test_resolution():
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_unstructured_to_rectilinear(src, tgt, resolution=8)
+    result = regrid_unstructured_to_rectilinear(src, tgt, tgt_resolution=8)
 
     expected_data = np.ones([n_lats, n_lons])
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
-    # Note that when resolution=None, this would be a fully masked array.
+    # Note that when tgt_resolution=None, this would be a fully masked array.
     assert np.allclose(expected_data, result.data)
 
     # Check metadata and scalar coords.

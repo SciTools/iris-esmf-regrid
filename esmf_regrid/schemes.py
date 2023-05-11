@@ -496,8 +496,8 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     tgt_grid_cube,
     method,
     precomputed_weights=None,
-    src_res=None,
-    tgt_res=None,
+    src_resolution=None,
+    tgt_resolution=None,
     src_mask=None,
     tgt_mask=None,
 ):
@@ -512,8 +512,8 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(src_x)
 
-    srcinfo = _make_gridinfo(src_grid_cube, method, src_res, src_mask)
-    tgtinfo = _make_gridinfo(tgt_grid_cube, method, tgt_res, tgt_mask)
+    srcinfo = _make_gridinfo(src_grid_cube, method, src_resolution, src_mask)
+    tgtinfo = _make_gridinfo(tgt_grid_cube, method, tgt_resolution, tgt_mask)
 
     regridder = Regridder(
         srcinfo, tgtinfo, method=method, precomputed_weights=precomputed_weights
@@ -572,7 +572,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     target_grid_cube,
     method,
     precomputed_weights=None,
-    resolution=None,
+    tgt_resolution=None,
     src_mask=None,
     tgt_mask=None,
 ):
@@ -591,7 +591,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     mesh_dim = src_mesh_cube.mesh_dim()
 
     meshinfo = _make_meshinfo(src_mesh_cube, method, src_mask, "source")
-    gridinfo = _make_gridinfo(target_grid_cube, method, resolution, tgt_mask)
+    gridinfo = _make_gridinfo(target_grid_cube, method, tgt_resolution, tgt_mask)
 
     regridder = Regridder(
         meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
@@ -659,7 +659,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     target_mesh_cube,
     method,
     precomputed_weights=None,
-    resolution=None,
+    src_resolution=None,
     src_mask=None,
     tgt_mask=None,
 ):
@@ -682,7 +682,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
     meshinfo = _make_meshinfo(target_mesh_cube, method, tgt_mask, "target")
-    gridinfo = _make_gridinfo(src_grid_cube, method, resolution, src_mask)
+    gridinfo = _make_gridinfo(src_grid_cube, method, src_resolution, src_mask)
 
     regridder = Regridder(
         gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
@@ -751,7 +751,6 @@ def _regrid_unstructured_to_unstructured__prepare(
     target_mesh_cube,
     method,
     precomputed_weights=None,
-    resolution=None,
 ):
     raise NotImplementedError
 
@@ -761,7 +760,12 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 
 def regrid_rectilinear_to_rectilinear(
-    src_cube, grid_cube, mdtol=0, method="conservative", src_res=None, tgt_res=None
+    src_cube,
+    grid_cube,
+    mdtol=0,
+    method="conservative",
+    src_resolution=None,
+    tgt_resolution=None,
 ):
     r"""
     Regrid rectilinear :class:`~iris.cube.Cube` onto another rectilinear grid.
@@ -792,10 +796,10 @@ def regrid_rectilinear_to_rectilinear(
         Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
-    src_res : int, optional
+    src_resolution : int, optional
         If present, represents the amount of latitude slices per source cell
         given to ESMF for calculation.
-    tgt_res : int, optional
+    tgt_resolution : int, optional
         If present, represents the amount of latitude slices per target cell
         given to ESMF for calculation.
 
@@ -806,7 +810,11 @@ def regrid_rectilinear_to_rectilinear(
 
     """
     regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
-        src_cube, grid_cube, method=method, src_res=src_res, tgt_res=tgt_res
+        src_cube,
+        grid_cube,
+        method=method,
+        src_resolution=src_resolution,
+        tgt_resolution=tgt_resolution,
     )
     result = _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol)
     return result
@@ -1115,9 +1123,8 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgt,
         mdtol=0,
         precomputed_weights=None,
-        resolution=None,
-        src_res=None,
-        tgt_res=None,
+        src_resolution=None,
+        tgt_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
     ):
@@ -1140,17 +1147,12 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
-        resolution : int, optional
-            If present, represents the amount of latitude slices per cell
-            given to ESMF for calculation. If resolution is set, any non-mesh cubes
-            must have strictly increasing bounds (bounds may be transposed plus or
-            minus 360 degrees to make the bounds strictly increasing).
-        src_res : int, optional
+        src_resolution : int, optional
             If present, represents the amount of latitude slices per source cell
             given to ESMF for calculation. If resolution is set, src
             must have strictly increasing bounds (bounds may be transposed plus or
             minus 360 degrees to make the bounds strictly increasing).
-        tgt_res : int, optional
+        tgt_resolution : int, optional
             If present, represents the amount of latitude slices per target cell
             given to ESMF for calculation. If resolution is set, tgt
             must have strictly increasing bounds (bounds may be transposed plus or
@@ -1167,12 +1169,10 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             be used in weights calculation.
         """
         kwargs = dict()
-        if src_res is not None:
-            kwargs["src_res"] = src_res
-        if tgt_res is not None:
-            kwargs["tgt_res"] = tgt_res
-        if resolution is not None:
-            kwargs["resolution"] = resolution
+        if src_resolution is not None:
+            kwargs["src_resolution"] = src_resolution
+        if tgt_resolution is not None:
+            kwargs["tgt_resolution"] = tgt_resolution
         kwargs["use_src_mask"] = use_src_mask
         kwargs["use_tgt_mask"] = use_tgt_mask
         super().__init__(
