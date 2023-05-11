@@ -340,11 +340,15 @@ def test_resolution():
 
     resolution = 8
 
-    lon_band_rg = MeshToGridESMFRegridder(mesh_cube, lon_bands, tgt_resolution=resolution)
+    lon_band_rg = MeshToGridESMFRegridder(
+        mesh_cube, lon_bands, tgt_resolution=resolution
+    )
     assert lon_band_rg.resolution == resolution
     assert lon_band_rg.regridder.tgt.resolution == resolution
 
-    lat_band_rg = MeshToGridESMFRegridder(mesh_cube, lat_bands, tgt_resolution=resolution)
+    lat_band_rg = MeshToGridESMFRegridder(
+        mesh_cube, lat_bands, tgt_resolution=resolution
+    )
     assert lat_band_rg.resolution == resolution
     assert lat_band_rg.regridder.tgt.resolution == resolution
 
