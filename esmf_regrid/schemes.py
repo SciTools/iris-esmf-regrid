@@ -1055,9 +1055,20 @@ class _ESMFRegridder:
 
         """
         if cube.mesh is not None:
-            # src_mesh = cube.mesh
-            # location = cube.location
-            # if self._src != (src_mesh, location):
+            # TODO: replace temporary hack when iris issues are sorted.
+            # Ignore differences in var_name that might be caused by saving.
+            # TODO: uncomment this when iris issue with masked array comparison is sorted.
+            # self_mesh = copy.deepcopy(self._src.mesh)
+            # self_mesh.var_name = mesh.var_name
+            # for self_coord, other_coord in zip(self_mesh.all_coords, mesh.all_coords):
+            #     if self_coord is not None:
+            #         self_coord.var_name = other_coord.var_name
+            # for self_con, other_con in zip(
+            #     self_mesh.all_connectivities, mesh.all_connectivities
+            # ):
+            #     if self_con is not None:
+            #         self_con.var_name = other_con.var_name
+            # if self_mesh != mesh:
             #     raise ValueError(
             #         "The given cube is not defined on the same "
             #         "source mesh as this regridder."
