@@ -79,7 +79,8 @@ def regrid_unstructured_to_rectilinear(
         A new :class:`~iris.cube.Cube` instance.
 
     """
-    assert src_cube.mesh is not None
+    if src_cube.mesh is None:
+        raise ValueError
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(grid_cube, use_tgt_mask)
 
@@ -151,7 +152,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
 
 
         """
-        assert src.mesh is not None
+        if src.mesh is None:
+            raise ValueError
         super().__init__(
             src,
             tgt,
@@ -240,7 +242,8 @@ def regrid_rectilinear_to_unstructured(
         A new :class:`~iris.cube.Cube` instance.
 
     """
-    assert mesh_cube.mesh is not None
+    if mesh_cube.mesh is None:
+        raise ValueError
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(mesh_cube, use_tgt_mask)
 
@@ -311,7 +314,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             will be used in weights calculation.
 
         """
-        assert tgt.mesh is not None
+        if tgt.mesh is None:
+            raise ValueError
         super().__init__(
             src,
             tgt,
