@@ -796,11 +796,8 @@ def regrid_rectilinear_to_rectilinear(
         Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
-    src_resolution : int, optional
-        If present, represents the amount of latitude slices per source cell
-        given to ESMF for calculation.
-    tgt_resolution : int, optional
-        If present, represents the amount of latitude slices per target cell
+    src_resolution, tgt_resolution : int, optional
+        If present, represents the amount of latitude slices per source/target cell
         given to ESMF for calculation.
 
     Returns
@@ -985,15 +982,10 @@ class _ESMFRegridder:
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked.
-        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the source to ignore, or else
+        use_src_mask, use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the source/target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``src``. If False, no mask will be taken and all points will
-            be used in weights calculation.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the target to ignore, or else
-            a boolean value. If True, this array is taken from the mask on the data
-            in ``tgt``. If False, no mask will be taken and all points will
+            in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
 
         """
@@ -1147,25 +1139,15 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
-        src_resolution : int, optional
+        src_resolution, tgt_resolution : int, optional
             If present, represents the amount of latitude slices per source cell
-            given to ESMF for calculation. If resolution is set, src
-            must have strictly increasing bounds (bounds may be transposed plus or
-            minus 360 degrees to make the bounds strictly increasing).
-        tgt_resolution : int, optional
-            If present, represents the amount of latitude slices per target cell
-            given to ESMF for calculation. If resolution is set, tgt
-            must have strictly increasing bounds (bounds may be transposed plus or
-            minus 360 degrees to make the bounds strictly increasing).
-        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the source to ignore, or else
+            given to ESMF for calculation. If resolution is set, ``src`` and ``tgt``
+            respectively must have strictly increasing bounds (bounds may be transposed
+            plus or minus 360 degrees to make the bounds strictly increasing).
+        use_src_mask, use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the source/target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``src``. If False, no mask will be taken and all points will
-            be used in weights calculation.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the target to ignore, or else
-            a boolean value. If True, this array is taken from the mask on the data
-            in ``tgt``. If False, no mask will be taken and all points will
+            in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
         """
         kwargs = dict()
@@ -1216,15 +1198,10 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
-        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the source to ignore, or else
+        use_src_mask, use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the source/target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
-            in ``src``. If False, no mask will be taken and all points will
-            be used in weights calculation.
-        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
-            Either an array representing the cells in the target to ignore, or else
-            a boolean value. If True, this array is taken from the mask on the data
-            in ``tgt``. If False, no mask will be taken and all points will
+            in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
         """
         super().__init__(
