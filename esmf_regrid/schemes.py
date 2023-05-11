@@ -632,7 +632,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     if len(grid_x.shape) == 1:
         chunk_shape = (len(grid_x.points), len(grid_y.points))
     else:
-        # TODO: investigate why this still needs to be reversed.
+        # Due to structural reasons, the order here must be reversed.
         chunk_shape = grid_x.shape[::-1]
     new_data = _map_complete_blocks(
         src_cube,
