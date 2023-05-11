@@ -440,6 +440,8 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
 
 
 _RegridInfo = namedtuple("RegridInfo", ["dims", "target", "regridder"])
+_GridTarget = namedtuple("GridTarget", ["grid_x", "grid_y"])
+_MeshTarget = namedtuple("MeshTarget", ["mesh", "location"])
 
 
 def _make_gridinfo(cube, method, resolution, mask):
@@ -519,7 +521,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(
 
     regrid_info = _RegridInfo(
         dims=[grid_x_dim, grid_y_dim],
-        target=[tgt_x, tgt_y],
+        target=_GridTarget(tgt_x, tgt_y),
         regridder=regridder,
     )
 
@@ -597,7 +599,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
 
     regrid_info = _RegridInfo(
         dims=[mesh_dim],
-        target=[grid_x, grid_y],
+        target=_GridTarget(grid_x, grid_y),
         regridder=regridder,
     )
 
@@ -688,7 +690,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
 
     regrid_info = _RegridInfo(
         dims=[grid_x_dim, grid_y_dim],
-        target=[mesh, location],
+        target=_MeshTarget(mesh, location),
         regridder=regridder,
     )
 
@@ -1087,7 +1089,7 @@ class _ESMFRegridder:
             regridder=self.regridder,
         )
         src_is_mesh = cube.mesh is not None
-        tgt_is_mesh = type(self._tgt[1]) is str
+        tgt_is_mesh = isinstance(self._tgt, _MeshTarget)
 
         if src_is_mesh:
             if tgt_is_mesh:
