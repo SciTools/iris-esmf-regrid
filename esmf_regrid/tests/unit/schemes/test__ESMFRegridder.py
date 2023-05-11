@@ -20,5 +20,5 @@ def test_invalid_method():
     lat_bounds = (-90, 90)
     src = tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = _ESMFRegridder(src, tgt, method="other")

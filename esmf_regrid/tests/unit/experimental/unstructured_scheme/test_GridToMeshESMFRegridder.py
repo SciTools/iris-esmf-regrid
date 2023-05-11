@@ -177,9 +177,9 @@ def test_invalid_mdtol():
     lat_bounds = (-90, 90)
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = GridToMeshESMFRegridder(src, tgt, mdtol=2)
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = GridToMeshESMFRegridder(src, tgt, mdtol=-1)
 
 

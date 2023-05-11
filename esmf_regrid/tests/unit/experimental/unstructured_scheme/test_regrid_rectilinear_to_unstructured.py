@@ -116,18 +116,18 @@ def test_invalid_args():
     face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = regrid_rectilinear_to_unstructured(src, src, method="bilinear")
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = regrid_rectilinear_to_unstructured(src, face_tgt, method="other")
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(NotImplementedError) as excinfo:
         _ = regrid_rectilinear_to_unstructured(src, node_tgt, method="conservative")
     expected_message = (
         "Conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(NotImplementedError) as excinfo:
         _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method="bilinear")
     expected_message = (
         "Bilinear regridding requires a target cube with a node "
