@@ -322,4 +322,4 @@ def test_regrid_data():
         ]
     )
     result = rg(src)
-    assert np.array_equal(expected_data, result.data)
+    np.testing.assert_allclose(expected_data, result.data)

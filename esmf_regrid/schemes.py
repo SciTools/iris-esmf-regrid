@@ -1151,7 +1151,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
         src_resolution, tgt_resolution : int, optional
-            If present, represents the amount of latitude slices per source cell
+            If present, represents the amount of latitude slices per source/target cell
             given to ESMF for calculation. If resolution is set, ``src`` and ``tgt``
             respectively must have strictly increasing bounds (bounds may be transposed
             plus or minus 360 degrees to make the bounds strictly increasing).
