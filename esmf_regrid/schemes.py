@@ -440,8 +440,8 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
 
 
 RegridInfo = namedtuple("RegridInfo", ["dims", "target", "regridder"])
-GridTarget = namedtuple("GridTarget", ["grid_x", "grid_y"])
-MeshTarget = namedtuple("MeshTarget", ["mesh", "location"])
+GridRecord = namedtuple("GridRecord", ["grid_x", "grid_y"])
+MeshRecord = namedtuple("MeshRecord", ["mesh", "location"])
 
 
 def _make_gridinfo(cube, method, resolution, mask):
@@ -521,7 +521,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(
 
     regrid_info = RegridInfo(
         dims=[grid_x_dim, grid_y_dim],
-        target=GridTarget(tgt_x, tgt_y),
+        target=GridRecord(tgt_x, tgt_y),
         regridder=regridder,
     )
 
@@ -599,7 +599,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
 
     regrid_info = RegridInfo(
         dims=[mesh_dim],
-        target=GridTarget(grid_x, grid_y),
+        target=GridRecord(grid_x, grid_y),
         regridder=regridder,
     )
 
@@ -690,7 +690,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
 
     regrid_info = RegridInfo(
         dims=[grid_x_dim, grid_y_dim],
-        target=MeshTarget(mesh, location),
+        target=MeshRecord(mesh, location),
         regridder=regridder,
     )
 
@@ -1029,9 +1029,9 @@ class _ESMFRegridder:
 
         # Record the source grid.
         if src_is_mesh:
-            self._src = (src.mesh, src.location)
+            self._src = MeshRecord(src.mesh, src.location)
         else:
-            self._src = (_get_coord(src, "x"), _get_coord(src, "y"))
+            self._src = GridRecord(_get_coord(src, "x"), _get_coord(src, "y"))
 
     def __call__(self, cube):
         """
@@ -1092,6 +1092,7 @@ class _ESMFRegridder:
             if len(new_src_x.shape) == 1:
                 dims = [cube.coord_dims(new_src_x)[0], cube.coord_dims(new_src_y)[0]]
             else:
+                # Due to structural reasons, the order here must be reversed.
                 dims = cube.coord_dims(new_src_x)[::-1]
 
         regrid_info = RegridInfo(
@@ -1100,7 +1101,7 @@ class _ESMFRegridder:
             regridder=self.regridder,
         )
         src_is_mesh = cube.mesh is not None
-        tgt_is_mesh = isinstance(self._tgt, MeshTarget)
+        tgt_is_mesh = isinstance(self._tgt, MeshRecord)
 
         if src_is_mesh:
             if tgt_is_mesh:
