@@ -6,6 +6,7 @@ from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
 from numpy import ma
+import pytest
 
 from esmf_regrid.schemes import regrid_rectilinear_to_rectilinear
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
@@ -155,7 +156,9 @@ def test_extra_dims():
     assert expected_cube == result
 
 
-def test_laziness():
+@pytest.mark.parametrize("src_transposed", (False, True))
+@pytest.mark.parametrize("tgt_transposed", (False, True))
+def test_laziness(src_transposed, tgt_transposed):
     """Test that regridding is lazy when source data is lazy."""
     n_lons = 12
     n_lats = 10
@@ -171,13 +174,23 @@ def test_laziness():
     src.add_dim_coord(grid.coord("longitude"), 1)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
+    # Transpose the data to ensure all possible combinations of dimension
+    # ordering are covered.
+    if src_transposed:
+        src.transpose()
+        src_data = src_data.T
+    if tgt_transposed:
+        tgt.transpose()
+
     assert src.has_lazy_data()
     result = regrid_rectilinear_to_rectilinear(src, tgt)
     assert result.has_lazy_data()
     assert np.allclose(result.data, src_data)
 
 
-def test_laziness_curvilinear():
+@pytest.mark.parametrize("src_transposed", (False, True))
+@pytest.mark.parametrize("tgt_transposed", (False, True))
+def test_laziness_curvilinear(src_transposed, tgt_transposed):
     """
     Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
@@ -227,6 +240,14 @@ def test_laziness_curvilinear():
     src_cube.add_aux_coord(extra, 4)
 
     src_cube_lazy = src_cube.copy(src_data_lazy)
+
+    # Transpose the data to ensure all possible combinations of dimension
+    # ordering are covered.
+    if src_transposed:
+        src_cube_lazy.transpose()
+        src_cube.transpose()
+    if tgt_transposed:
+        tgt_grid.transpose()
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
     result_lazy = regrid_rectilinear_to_rectilinear(src_cube_lazy, tgt_grid)

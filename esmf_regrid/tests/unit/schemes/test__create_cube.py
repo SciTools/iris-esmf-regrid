@@ -5,7 +5,7 @@ from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
 
-from esmf_regrid.experimental.unstructured_scheme import _create_cube
+from esmf_regrid.schemes import _create_cube
 
 
 def test_create_cube_2D():

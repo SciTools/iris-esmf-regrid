@@ -9,13 +9,13 @@ import pytest
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_rectilinear_to_unstructured,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__regrid_unstructured_to_rectilinear__prepare import (
+from esmf_regrid.tests.unit.schemes.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
 )
 
@@ -118,7 +118,7 @@ def test_invalid_args():
 
     with pytest.raises(ValueError):
         _ = regrid_rectilinear_to_unstructured(src, src, method="bilinear")
-    with pytest.raises(ValueError):
+    with pytest.raises(NotImplementedError):
         _ = regrid_rectilinear_to_unstructured(src, face_tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
         _ = regrid_rectilinear_to_unstructured(src, node_tgt, method="conservative")
@@ -239,7 +239,7 @@ def test_resolution():
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
-    Tests the resolution keyword with grids that would otherwise not work.
+    Tests the src_resolution keyword with grids that would otherwise not work.
     """
     tgt = _flat_mesh_cube()
 
@@ -255,13 +255,13 @@ def test_resolution():
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_rectilinear_to_unstructured(src, tgt, resolution=8)
+    result = regrid_rectilinear_to_unstructured(src, tgt, src_resolution=8)
 
     expected_data = np.ones_like(tgt.data)
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
-    # Note that when resolution=None, this would be a fully masked array.
+    # Note that when src_resolution=None, this would be a fully masked array.
     assert np.allclose(expected_data, result.data)
 
     # Check metadata and scalar coords.

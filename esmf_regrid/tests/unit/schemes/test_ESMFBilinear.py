@@ -1,10 +1,10 @@
-"""Unit tests for :func:`esmf_regrid.schemes.ESMFAreaWeighted`."""
+"""Unit tests for :func:`esmf_regrid.schemes.ESMFBilinear`."""
 
 import numpy as np
 from numpy import ma
 import pytest
 
-from esmf_regrid.schemes import ESMFAreaWeighted
+from esmf_regrid.schemes import ESMFBilinear
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
@@ -16,12 +16,12 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 )
 def test_cube_regrid(src_type, tgt_type):
     """
-    Test that ESMFAreaWeighted can be passed to a cubes regrid method.
+    Test that ESMFBilinear can be passed to a cubes regrid method.
 
     Checks that regridding occurs and that mdtol is used correctly.
     """
-    scheme_default = ESMFAreaWeighted()
-    scheme_full_mdtol = ESMFAreaWeighted(mdtol=1)
+    scheme_default = ESMFBilinear()
+    scheme_full_mdtol = ESMFBilinear(mdtol=1)
 
     n_lons_src = 6
     n_lons_tgt = 3
@@ -69,12 +69,12 @@ def test_cube_regrid(src_type, tgt_type):
 
 def test_invalid_mdtol():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeighted`.
+    Test initialisation of :func:`esmf_regrid.schemes.ESMFBilinear`.
 
     Checks that an error is raised when mdtol is out of range.
     """
     match = "Value for mdtol must be in range 0 - 1, got "
     with pytest.raises(ValueError, match=match):
-        _ = ESMFAreaWeighted(mdtol=2)
+        _ = ESMFBilinear(mdtol=2)
     with pytest.raises(ValueError, match=match):
-        _ = ESMFAreaWeighted(mdtol=-1)
+        _ = ESMFBilinear(mdtol=-1)

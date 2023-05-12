@@ -275,7 +275,7 @@ class PerformScalabilityMeshToGrid(PerformScalabilityMixin):
 
     def add_src_metadata(self, cube):
         """Add appropriate MeshCoords from _gridlike_mesh to the given `cube`."""
-        from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+        from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
             _gridlike_mesh,
         )
 
@@ -306,7 +306,7 @@ class PerformScalabilityGridToMesh(PerformScalabilityMixin):
 
     def tgt_cube(self):
         """Cube containing the regridding target grid."""
-        from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+        from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
             _gridlike_mesh,
         )
 

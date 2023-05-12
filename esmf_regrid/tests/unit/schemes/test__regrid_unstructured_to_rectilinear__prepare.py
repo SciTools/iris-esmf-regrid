@@ -6,13 +6,13 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-from esmf_regrid.experimental.unstructured_scheme import (
+from esmf_regrid.schemes import (
     _regrid_unstructured_to_rectilinear__prepare,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__cube_to_GridInfo import (
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
+from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _example_mesh,
 )
 
@@ -63,7 +63,7 @@ def test_flat_cubes():
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
         src, tgt, method="conservative"
     )
-    mesh_dim, grid_x, grid_y, regridder = regrid_info
+    (mesh_dim,), (grid_x, grid_y), regridder = regrid_info
 
     assert mesh_dim == 0
     assert grid_x == tgt.coord("longitude")

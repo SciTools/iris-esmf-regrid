@@ -228,15 +228,23 @@ def load_regridder(filename):
     else:
         use_tgt_mask = False
 
+    if scheme is GridToMeshESMFRegridder:
+        resolution_keyword = "src_resolution"
+    elif scheme is MeshToGridESMFRegridder:
+        resolution_keyword = "tgt_resolution"
+    else:
+        raise NotImplementedError
+    kwargs = {resolution_keyword: resolution}
+
     regridder = scheme(
         src_cube,
         tgt_cube,
         mdtol=mdtol,
         method=method,
         precomputed_weights=weight_matrix,
-        resolution=resolution,
         use_src_mask=use_src_mask,
         use_tgt_mask=use_tgt_mask,
+        **kwargs,
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]

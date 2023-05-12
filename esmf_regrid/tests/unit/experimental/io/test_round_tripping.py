@@ -9,12 +9,12 @@ from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
-from esmf_regrid.tests.unit.experimental.unstructured_scheme.test__mesh_to_MeshInfo import (
-    _gridlike_mesh_cube,
-)
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _curvilinear_cube,
     _grid_cube,
+)
+from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
+    _gridlike_mesh_cube,
 )
 
 
@@ -64,7 +64,7 @@ def _make_grid_to_mesh_regridder(
         tgt,
         method=method,
         mdtol=0.5,
-        resolution=resolution,
+        src_resolution=resolution,
         use_src_mask=use_src_mask,
         use_tgt_mask=use_tgt_mask,
     )
@@ -110,7 +110,7 @@ def _make_mesh_to_grid_regridder(
         tgt,
         method=method,
         mdtol=0.5,
-        resolution=resolution,
+        tgt_resolution=resolution,
         use_src_mask=use_src_mask,
         use_tgt_mask=use_tgt_mask,
     )
