@@ -961,9 +961,7 @@ class ESMFNearest:
     """
 
     def __init__(self):
-        """
-        Area-weighted scheme for regridding between rectilinear grids.
-        """
+        """Area-weighted scheme for regridding between rectilinear grids."""
         pass
 
     def __repr__(self):

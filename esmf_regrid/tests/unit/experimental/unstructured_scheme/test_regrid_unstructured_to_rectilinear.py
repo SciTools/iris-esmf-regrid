@@ -64,11 +64,12 @@ def test_flat_cubes():
     assert expected_cube == result
 
 
-def test_bilinear():
+@pytest.mark.parametrize("method", ("bilinear", "nearest"))
+def test_other_methods(method):
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
-    Tests with the bilinear method.
+    Tests with the bilinear and nearest method.
     """
     n_lons = 6
     n_lats = 5
@@ -82,7 +83,7 @@ def test_bilinear():
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_unstructured_to_rectilinear(src, tgt, method="bilinear")
+    result = regrid_unstructured_to_rectilinear(src, tgt, method=method)
 
     expected_data = np.ones([n_lats, n_lons])
     expected_cube = _add_metadata(tgt)
@@ -124,7 +125,14 @@ def test_invalid_args():
     with pytest.raises(ValueError) as excinfo:
         _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method="bilinear")
     expected_message = (
-        "Bilinear regridding requires a source cube with a node "
+        "bilinear regridding requires a source cube with a node "
+        "or face location, target cube had the edge location."
+    )
+    assert expected_message in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method="nearest")
+    expected_message = (
+        "nearest regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
