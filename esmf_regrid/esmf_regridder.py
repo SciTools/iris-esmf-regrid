@@ -76,9 +76,10 @@ class Regridder:
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
         method : str
-            Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
-            :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+            Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
+            :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
+            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
+            :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
@@ -91,9 +92,11 @@ class Regridder:
             esmf_regrid_method = esmpy.RegridMethod.CONSERVE
         elif method == "bilinear":
             esmf_regrid_method = esmpy.RegridMethod.BILINEAR
+        elif method == "nearest":
+            esmf_regrid_method = esmpy.RegridMethod.NEAREST_STOD
         else:
             raise ValueError(
-                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+                f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
             )
         self.method = method
 

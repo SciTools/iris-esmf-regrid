@@ -114,6 +114,47 @@ def test_bilinear():
     assert node_expected_cube == node_result
 
 
+def test_nearest():
+    """
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Tests with method="nearest".
+    """
+    # TODO: refactor this and test_bilinear into a single parameterised test.
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+
+    src = _add_metadata(src)
+    src.data[:] = 1  # Ensure all data in the source is one.
+    face_regridder = GridToMeshESMFRegridder(src, face_tgt, method="nearest")
+    node_regridder = GridToMeshESMFRegridder(src, node_tgt, method="nearest")
+
+    assert face_regridder.regridder.method == "nearest"
+    assert node_regridder.regridder.method == "nearest"
+
+    face_expected_data = np.ones_like(face_tgt.data)
+    node_expected_data = np.ones_like(node_tgt.data)
+    face_result = face_regridder(src)
+    node_result = node_regridder(src)
+
+    # Lenient check for data.
+    assert np.allclose(face_expected_data, face_result.data)
+    assert np.allclose(node_expected_data, node_result.data)
+
+    # Check metadata and scalar coords.
+    face_expected_cube = _add_metadata(face_tgt)
+    node_expected_cube = _add_metadata(node_tgt)
+    face_expected_cube.data = face_result.data
+    node_expected_cube.data = node_result.data
+    assert face_expected_cube == face_result
+    assert node_expected_cube == node_result
+
+
 def test_multidim_cubes():
     """
     Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
@@ -210,7 +251,14 @@ def test_invalid_method():
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, edge_tgt, method="bilinear")
     expected_message = (
-        "Bilinear regridding requires a target cube with a node "
+        "bilinear regridding requires a target cube with a node "
+        "or face location, target cube had the edge location."
+    )
+    assert expected_message in str(excinfo.value)
+    with pytest.raises(ValueError) as excinfo:
+        _ = GridToMeshESMFRegridder(src, edge_tgt, method="nearest")
+    expected_message = (
+        "nearest regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
