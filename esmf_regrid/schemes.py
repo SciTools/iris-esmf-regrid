@@ -908,7 +908,7 @@ class ESMFBilinear:
     calculations and allows for different coordinate systems.
     """
 
-    def __init__(self, mdtol=0):
+    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -918,12 +918,20 @@ class ESMFBilinear:
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of missing data
             exceeds ``mdtol``.
+        use_src_mask : bool, default=False
+            If True, derive a mask from source cube which will tell :mod:`esmpy`
+            which points to ignore.
+        use_tgt_mask : bool, default=False
+            If True, derive a mask from target cube which will tell :mod:`esmpy`
+            which points to ignore.
 
         """
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+        self.use_src_mask = use_src_mask
+        self.use_tgt_mask = use_tgt_mask
 
     def __repr__(self):
         """Return a representation of the class."""
@@ -948,7 +956,13 @@ class ESMFBilinear:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
-        return ESMFBilinearRegridder(src_grid, tgt_grid, mdtol=self.mdtol)
+        return ESMFBilinearRegridder(
+            src_grid,
+            tgt_grid,
+            mdtol=self.mdtol,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
 
 
 class ESMFNearest:
@@ -958,11 +972,25 @@ class ESMFNearest:
     This class describes a nearest neighbour regridding scheme for regridding
     between horizontal grids/meshes. It uses :mod:`esmpy` to handle
     calculations and allows for different coordinate systems.
+
+    Note that by default, masked data is handled by masking the result when the
+    nearest source point is masked, however, if `use_src_mask` is True, then
+    the nearest unmasked point is used instead. This only works when the mask is
+    constant over all non-horizontal dimensions otherwise an error is thrown.
+
+    Note that when two source points are a constant distance from a target point,
+    the decision for which point is used is based on the indexing which ESMF gives
+    the points. ESMF describes this decision as somewhat arbitrary:
+    https://earthsystemmodeling.org/docs/release/latest/ESMF_refdoc/node3.html#SECTION03023000000000000000
+    As a result of this, while the same object ought to behave consistently for
+    this scheme, there is no guarantee that different objects representing
+    the same equivalent space will behave the same.
     """
 
-    def __init__(self):
+    def __init__(self, use_src_mask=False, use_tgt_mask=False):
         """Area-weighted scheme for regridding between rectilinear grids."""
-        pass
+        self.use_src_mask = use_src_mask
+        self.use_tgt_mask = use_tgt_mask
 
     def __repr__(self):
         """Return a representation of the class."""
@@ -978,6 +1006,12 @@ class ESMFNearest:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
+        use_src_mask : bool, default=False
+            If True, derive a mask from source cube which will tell :mod:`esmpy`
+            which points to ignore.
+        use_tgt_mask : bool, default=False
+            If True, derive a mask from target cube which will tell :mod:`esmpy`
+            which points to ignore.
 
         Returns
         -------
@@ -987,7 +1021,12 @@ class ESMFNearest:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
-        return ESMFNearestRegridder(src_grid, tgt_grid)
+        return ESMFNearestRegridder(
+            src_grid,
+            tgt_grid,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
 
 
 class _ESMFRegridder:

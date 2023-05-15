@@ -160,22 +160,6 @@ def test_unit_equivalence():
 
     Checks that equivalent coordinates in degrees and radians give the same results.
     """
-    # TODO: After I wrote this comment i found out it was kind of wrong, but theres
-    #  still good stuff here. Salvage this into some kind of docstring.
-    # While this test has been copied from test_ESMFBilinerRegridder.py, a slight
-    # change has been made to the parameter n_lons_src.
-    # It should be noted that before this change this test was failing.
-    # This is due to the fact that when two source points are equidistant from a
-    # target point, the chosen source point is dependent on the index which ESMF
-    # gives that point. ESMF describes this decision as arbitrary:
-    # https://earthsystemmodeling.org/docs/release/latest/ESMF_refdoc/node3.html#SECTION03023000000000000000
-    # The indexing iris-esmf-regrid gives can also be seen as somewhat arbitrary
-    # and depends on how the grid is described.
-    # We should expect consistency for the same grid description but not necessarily
-    # for equivalent grids with different descriptions here.
-    # These parameters have been tweaked so that no target point is equidistant from
-    # two nearest source points.
-
     # While this test has been copied from test_ESMFBilinerRegridder.py, a slight
     # change has been made to the parameter n_lons_src.
     # It should be noted that before this change this test was failing.
