@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   For the sake of consistency, the resolution keyword in
   `GridToMeshESMFRegridder` and `MeshToGridESMFRegridder` have been
   replaced by `src_resolution` and `tgt_resolution` respectively.
-  [@stephenworsley](https://github.com/stephenworsley)with extensive review
+  [@stephenworsley](https://github.com/stephenworsley) with extensive review
   work from [@trexfeathers](https://github.com/trexfeathers)
 
 ## [0.6] - 2023-03-31
