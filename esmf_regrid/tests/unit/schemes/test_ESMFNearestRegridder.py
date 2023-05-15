@@ -266,7 +266,17 @@ def test_masks():
     assert np.allclose(weights_tgt_masked[1:].todense(), weights_unmasked[1:].todense())
 
 
-def test_regrid_data():
+@pytest.mark.parametrize(
+    "src_type,tgt_type",
+    [
+        ("grid", "grid"),
+        ("grid", "mesh"),
+        ("mesh", "grid"),
+        ("grid", "curv"),
+        ("curv", "grid"),
+    ],
+)
+def test_regrid_data(src_type, tgt_type):
     """
     Test initialisation of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
@@ -274,25 +284,27 @@ def test_regrid_data():
     """
     # Create two similar grids so that source data and expected result
     # data ought to look similar by visual inspection.
-    src = _grid_cube(5, 4, [-180, 180], [-90, 90], circular=True)
-    tgt = _grid_cube(4, 5, [-180, 180], [-90, 90], circular=True)
+    if src_type == "grid":
+        src = _grid_cube(5, 4, [-180, 180], [-90, 90], circular=True)
+    elif src_type == "mesh":
+        src = _gridlike_mesh_cube(5, 4)
+    elif src_type == "curv":
+        src = _curvilinear_cube(5, 4, [-180, 180], [-90, 90])
 
-    src_curv = _curvilinear_cube(5, 4, [-180, 180], [-90, 90])
-    tgt_curv = _curvilinear_cube(4, 5, [-180, 180], [-90, 90])
+    if tgt_type == "grid":
+        tgt = _grid_cube(4, 5, [-180, 180], [-90, 90], circular=True)
+    elif tgt_type == "mesh":
+        tgt = _gridlike_mesh_cube(4, 5)
+    elif tgt_type == "curv":
+        tgt = _curvilinear_cube(4, 5, [-180, 180], [-90, 90])
 
-    src_mesh_cube = _gridlike_mesh_cube(5, 4)
-    tgt_mesh_cube = _gridlike_mesh_cube(4, 5)
-
-    src_data = np.arange(20).reshape([4, 5])
-    src.data = src_data
-    src_curv.data = src_data
-    src_mesh_cube.data = np.arange(20)
+    if src_type == "mesh":
+        src.data = np.arange(20)
+    else:
+        src_data = np.arange(20).reshape([4, 5])
+        src.data = src_data
 
     rg = ESMFNearestRegridder(src, tgt)
-    rg_g2m = ESMFNearestRegridder(src, tgt_mesh_cube)
-    rg_m2g = ESMFNearestRegridder(src_mesh_cube, tgt)
-    rg_g2c = ESMFNearestRegridder(src, tgt_curv)
-    rg_c2g = ESMFNearestRegridder(src_curv, tgt)
 
     # when two source points are equidistant from a
     # target point, the chosen source point is dependent on the index which ESMF
@@ -307,12 +319,8 @@ def test_regrid_data():
             [15, 16, 18, 19],
         ]
     )
-    result = rg(src)
-    result_g2m = rg_g2m(src)
-    result_m2g = rg_m2g(src_mesh_cube)
-    result_g2c = rg_g2c(src)
-    result_c2g = rg_c2g(src_curv)
+    if tgt_type == "mesh":
+        expected_data = expected_data.flatten()
 
-    for res in [result, result_m2g, result_c2g, result_g2c]:
-        np.testing.assert_allclose(expected_data, res.data)
-    np.testing.assert_allclose(expected_data.flatten(), result_g2m.data)
+    result = rg(src)
+    np.testing.assert_allclose(expected_data, result.data)
