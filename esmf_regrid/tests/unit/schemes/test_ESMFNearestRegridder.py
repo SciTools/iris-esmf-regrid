@@ -1,4 +1,4 @@
-"""Unit tests for :func:`esmf_regrid.schemes.ESMFNearestRegridder`."""
+"""Unit tests for :class:`esmf_regrid.schemes.ESMFNearestRegridder`."""
 
 from cf_units import Unit
 import numpy as np
@@ -16,7 +16,7 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 
 def test_dim_switching():
     """
-    Test calling of :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test calling of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that the regridder accepts a cube with dimensions in a different
     order than the cube which initialised it. Checks that dimension order is
@@ -44,7 +44,7 @@ def test_dim_switching():
 
 def test_differing_grids():
     """
-    Test calling of :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test calling of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that the regridder raises an error when given a cube with a different
     grid to the one it was initialised with.
@@ -73,7 +73,7 @@ def test_differing_grids():
 
 def test_curvilinear_equivalence():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that equivalent curvilinear and rectilinear coordinates give the same
     results.
@@ -103,7 +103,7 @@ def test_curvilinear_equivalence():
 
 def test_curvilinear_and_rectilinear():
     """
-    Test :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that a cube with both curvilinear and rectilinear coords still works.
     Checks that the DimCoords have priority over AuxCoords.
@@ -156,7 +156,7 @@ def test_curvilinear_and_rectilinear():
 
 def test_unit_equivalence():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that equivalent coordinates in degrees and radians give the same results.
     """
@@ -224,7 +224,7 @@ def test_unit_equivalence():
 
 def test_masks():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that the `use_src_mask` and `use_tgt_mask` keywords work properly.
     """
@@ -268,7 +268,7 @@ def test_masks():
 
 def test_regrid_data():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFNearestRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Checks that regridding mathematics behaves in an expected way.
     """

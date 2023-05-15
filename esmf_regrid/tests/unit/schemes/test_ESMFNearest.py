@@ -1,15 +1,15 @@
-"""Unit tests for :func:`esmf_regrid.schemes.ESMFNearest`."""
+"""Unit tests for :class:`esmf_regrid.schemes.ESMFNearest`."""
 
 import numpy as np
 from numpy import ma
 import pytest
 
 from esmf_regrid.schemes import ESMFNearest
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.__init__ import (
     _test_mask_from_init,
     _test_mask_from_regridder,
 )
+from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
@@ -66,7 +66,7 @@ def test_cube_regrid(src_type, tgt_type):
 @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
 def test_mask_from_init(mask_keyword):
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFNearest`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFNearest`.
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
@@ -76,7 +76,7 @@ def test_mask_from_init(mask_keyword):
 @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
 def test_mask_from_regridder(mask_keyword):
     """
-    Test regridder method of :func:`esmf_regrid.schemes.ESMFNearest`.
+    Test regridder method of :class:`esmf_regrid.schemes.ESMFNearest`.
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """

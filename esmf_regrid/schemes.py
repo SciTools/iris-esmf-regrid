@@ -983,12 +983,14 @@ class ESMFNearest:
     between horizontal grids/meshes. It uses :mod:`esmpy` to handle
     calculations and allows for different coordinate systems.
 
-    Note that by default, masked data is handled by masking the result when the
+    Notes
+    -----
+    By default, masked data is handled by masking the result when the
     nearest source point is masked, however, if `use_src_mask` is True, then
     the nearest unmasked point is used instead. This only works when the mask is
     constant over all non-horizontal dimensions otherwise an error is thrown.
 
-    Note that when two source points are a constant distance from a target point,
+    When two source points are a constant distance from a target point,
     the decision for which point is used is based on the indexing which ESMF gives
     the points. ESMF describes this decision as somewhat arbitrary:
     https://earthsystemmodeling.org/docs/release/latest/ESMF_refdoc/node3.html#SECTION03023000000000000000
@@ -999,7 +1001,7 @@ class ESMFNearest:
 
     def __init__(self, use_src_mask=False, use_tgt_mask=False):
         """
-        Area-weighted scheme for regridding between rectilinear grids.
+        Nearest neighbour scheme for regridding between rectilinear grids.
 
         Parameters
         ----------
@@ -1081,12 +1083,13 @@ class _ESMFRegridder:
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
         :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
-        mdtol : float, default=0
+        mdtol : float, default=None
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
-            if all the contributing elements of data are masked.
+            if all the contributing elements of data are masked. If no value is given,
+            this will default to 1 for conservative regridding and 0 otherwise.
         use_src_mask, use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source/target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data

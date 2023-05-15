@@ -56,9 +56,10 @@ def regrid_unstructured_to_rectilinear(
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
     method : str, default="conservative"
-        Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
+        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
+        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
     tgt_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
@@ -219,9 +220,10 @@ def regrid_rectilinear_to_unstructured(
         will mean the resulting element will be masked if and only if all the
         overlapping cells of the ``src_cube`` are masked.
     method : str, default="conservative"
-        Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
+        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
+        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
     src_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.

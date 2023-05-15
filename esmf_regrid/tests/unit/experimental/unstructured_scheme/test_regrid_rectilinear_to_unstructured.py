@@ -71,7 +71,7 @@ def test_flat_cubes():
 
 
 @pytest.mark.parametrize("method", ("bilinear", "nearest"))
-def test_other_methods(method):
+def test_node_friendly_methods(method):
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
