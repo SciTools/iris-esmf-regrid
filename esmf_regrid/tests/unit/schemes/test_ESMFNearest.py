@@ -6,12 +6,12 @@ import pytest
 
 from esmf_regrid.schemes import ESMFNearest
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
-from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
-    _gridlike_mesh_cube,
-)
 from esmf_regrid.tests.unit.schemes.__init__ import (
     _test_mask_from_init,
     _test_mask_from_regridder,
+)
+from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
+    _gridlike_mesh_cube,
 )
 
 
