@@ -937,7 +937,7 @@ class ESMFBilinear:
         """Return a representation of the class."""
         return "ESMFBilinear(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid):
+    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -947,6 +947,12 @@ class ESMFBilinear:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the src_grid.
+            If True, the mask will be derived from src_grid.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
+            If True, the mask will be derived from tgt_grid.
 
         Returns
         -------
@@ -956,6 +962,10 @@ class ESMFBilinear:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
+        if use_src_mask is None:
+            use_src_mask = self.use_src_mask
+        if use_tgt_mask is None:
+            use_tgt_mask = self.use_tgt_mask
         return ESMFBilinearRegridder(
             src_grid,
             tgt_grid,
@@ -988,7 +998,18 @@ class ESMFNearest:
     """
 
     def __init__(self, use_src_mask=False, use_tgt_mask=False):
-        """Area-weighted scheme for regridding between rectilinear grids."""
+        """
+        Area-weighted scheme for regridding between rectilinear grids.
+
+        Parameters
+        ----------
+        use_src_mask : bool, default=False
+            If True, derive a mask from source cube which will tell :mod:`esmpy`
+            which points to ignore.
+        use_tgt_mask : bool, default=False
+            If True, derive a mask from target cube which will tell :mod:`esmpy`
+            which points to ignore.
+        """
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
 
@@ -996,7 +1017,7 @@ class ESMFNearest:
         """Return a representation of the class."""
         return "ESMFNearest()"
 
-    def regridder(self, src_grid, tgt_grid):
+    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1006,12 +1027,12 @@ class ESMFNearest:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
-        use_src_mask : bool, default=False
-            If True, derive a mask from source cube which will tell :mod:`esmpy`
-            which points to ignore.
-        use_tgt_mask : bool, default=False
-            If True, derive a mask from target cube which will tell :mod:`esmpy`
-            which points to ignore.
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the src_grid.
+            If True, the mask will be derived from src_grid.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
+            If True, the mask will be derived from tgt_grid.
 
         Returns
         -------
@@ -1021,6 +1042,10 @@ class ESMFNearest:
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
         """
+        if use_src_mask is None:
+            use_src_mask = self.use_src_mask
+        if use_tgt_mask is None:
+            use_tgt_mask = self.use_tgt_mask
         return ESMFNearestRegridder(
             src_grid,
             tgt_grid,
