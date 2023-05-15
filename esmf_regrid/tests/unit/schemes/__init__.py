@@ -151,4 +151,3 @@ def _test_mask_from_regridder(scheme, mask_keyword):
     np.testing.assert_allclose(
         getattr(rg_from_different, regridder_attr), mask_different
     )
-
