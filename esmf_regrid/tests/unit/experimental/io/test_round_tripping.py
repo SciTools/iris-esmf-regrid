@@ -178,7 +178,7 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path):
 
 
 @pytest.mark.parametrize("method", ["bilinear", "nearest"])
-def test_GridToMeshESMFRegridder_bilinear_round_trip(tmp_path, method):
+def test_GridToMeshESMFRegridder_other_method_round_trip(tmp_path, method):
     """Test save/load round tripping for `GridToMeshESMFRegridder`."""
     original_rg, src = _make_grid_to_mesh_regridder(method=method)
     filename = tmp_path / "regridder.nc"
