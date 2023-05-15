@@ -10,12 +10,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - [PR#198](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/198)
-  Refactor regridders to all derive from the same class `_ESMFRegridder`.
-  This adds functionality to the `ESMFAreaWeighted` scheme and adds the
-  `ESMFBilinear` scheme, previously only available for unstructured
-  regridding. These schemes are now able to handle both grids and meshes.
+  As a result of refactoring regridders to all derive from the same class,
+  `_ESMFRegridder`, functionality has been added to the `ESMFAreaWeighted`
+  scheme and a new scheme, `ESMFBilinear`, has been added.
+  These schemes are now able to handle both grids and meshes.
   Additionally, they are also able to specify the resolution of cells in
   these grids with the `src_resolution` and `tgt_resolution` keywords.
+  [@stephenworsley](https://github.com/stephenworsley) with extensive review
+  work from [@trexfeathers](https://github.com/trexfeathers)
+
+### Changed
+
+- [PR#198](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/198)
+  Refactor regridders to all derive from the same class `_ESMFRegridder`.
   For the sake of consistency, the resolution keyword in
   `GridToMeshESMFRegridder` and `MeshToGridESMFRegridder` have been
   replaced by `src_resolution` and `tgt_resolution` respectively.
