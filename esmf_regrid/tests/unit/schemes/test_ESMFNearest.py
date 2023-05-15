@@ -9,6 +9,10 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
+from esmf_regrid.tests.unit.schemes.__init__ import (
+    _test_mask_from_init,
+    _test_mask_from_regridder,
+)
 
 
 @pytest.mark.parametrize(
@@ -66,34 +70,7 @@ def test_mask_from_init(mask_keyword):
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
-    # Create a scheme with and without masking behaviour
-    kwargs = {mask_keyword: True}
-    default_scheme = ESMFNearest()
-    masked_scheme = ESMFNearest(**kwargs)
-    assert getattr(default_scheme, mask_keyword) is False
-    assert getattr(masked_scheme, mask_keyword) is True
-
-    n_lons_src = 6
-    n_lats_src = 4
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    cube = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
-    data = np.zeros([n_lats_src, n_lons_src])
-    mask = np.zeros([n_lats_src, n_lons_src])
-    mask[0, 0] = 1
-    data = ma.array(data, mask=mask)
-    cube.data = data
-
-    # Create a regridder from the scheme.
-    default_rg = default_scheme.regridder(cube, cube)
-    masked_rg = masked_scheme.regridder(cube, cube)
-
-    # Remove "use_" from the keyword to get the equivalent attr used on the regridder.
-    regridder_attr = mask_keyword[4:]
-
-    # Check that the mask stored on the regridder is correct.
-    assert getattr(default_rg, regridder_attr) is None
-    np.testing.assert_allclose(getattr(masked_rg, regridder_attr), mask)
+    _test_mask_from_init(ESMFNearest, mask_keyword)
 
 
 @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
@@ -103,36 +80,4 @@ def test_mask_from_regridder(mask_keyword):
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
-    n_lons_src = 6
-    n_lats_src = 4
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    cube = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
-    data = np.zeros([n_lats_src, n_lons_src])
-    mask = np.zeros([n_lats_src, n_lons_src])
-    mask[0, 0] = 1
-    data = ma.array(data, mask=mask)
-    cube.data = data
-
-    mask_different = np.zeros([n_lats_src, n_lons_src])
-    mask_different[1, 2] = 1
-
-    # Create a scheme without default masking behaviour.
-    default_scheme = ESMFNearest()
-
-    # Create a regridder from the mask on the cube.
-    kwargs = {mask_keyword: True}
-    rg_from_cube = default_scheme.regridder(cube, cube, **kwargs)
-
-    # Create a regridder from a user supplied mask.
-    kwargs_different = {mask_keyword: mask_different}
-    rg_from_different = default_scheme.regridder(cube, cube, **kwargs_different)
-
-    # Remove "use_" from the keyword to get the equivalent attr used on the regridder.
-    regridder_attr = mask_keyword[4:]
-
-    # Check that the mask stored on the regridder is correct.
-    np.testing.assert_allclose(getattr(rg_from_cube, regridder_attr), mask)
-    np.testing.assert_allclose(
-        getattr(rg_from_different, regridder_attr), mask_different
-    )
+    _test_mask_from_regridder(ESMFNearest, mask_keyword)
