@@ -70,8 +70,8 @@ def test_mask_from_init(mask_keyword):
     kwargs = {mask_keyword: True}
     default_scheme = ESMFNearest()
     masked_scheme = ESMFNearest(**kwargs)
-    assert getattr(default_scheme, mask_keyword) == False
-    assert getattr(masked_scheme, mask_keyword) == True
+    assert getattr(default_scheme, mask_keyword) is False
+    assert getattr(masked_scheme, mask_keyword) is True
 
     n_lons_src = 6
     n_lats_src = 4
