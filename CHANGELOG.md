@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- [PR#198](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/198)
+  Refactor regridders to all derive from the same class `_ESMFRegridder`.
+  This adds functionality to the `ESMFAreaWeighted` scheme and adds the
+  `ESMFBilinear` scheme, previously only available for unstructured
+  regridding. These schemes are now able to handle both grids and meshes.
+  Additionally, they are also able to specify the resolution of cells in
+  these grids with the `src_resolution` and `tgt_resolution` keywords.
+  For the sake of consistency, the resolution keyword in
+  `GridToMeshESMFRegridder` and `MeshToGridESMFRegridder` have been
+  replaced by `src_resolution` and `tgt_resolution` respectively.
+  [@stephenworsley](https://github.com/stephenworsley)with extensive review
+  work from [@trexfeathers](https://github.com/trexfeathers)
+
 ## [0.6] - 2023-03-31
 
 ### Added
