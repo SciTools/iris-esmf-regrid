@@ -70,7 +70,7 @@ jobs:
           path: |
             .nox
             $CONDA/pkgs
-          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ IRIS_SOURCE }}
+          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${IRIS_SOURCE}
 
       - name: Cache test data directory
         id: cache-test-data
@@ -84,13 +84,13 @@ jobs:
       - name: Fetch the test data
         if: steps.cache-test-data.outputs.cache-hit != 'true'
         run: |
-          wget --quiet https://github.com/SciTools/iris-test-data/archive/v${{ IRIS_TEST_DATA_VERSION }}.zip -O iris-test-data.zip
+          wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
           unzip -q iris-test-data.zip
-          mv iris-test-data-${{ IRIS_TEST_DATA_VERSION }} ${{ github.workspace }}/${{ IRIS_TEST_DATA_PATH }}
+          mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${{ github.workspace }}/${IRIS_TEST_DATA_PATH}
 
       - name: Set test data var
         run: |
-          echo "OVERRIDE_TEST_DATA_REPOSITORY=${{ github.workspace }}/${{ IRIS_TEST_DATA_PATH }}/test_data" >> $GITHUB_ENV
+          echo "OVERRIDE_TEST_DATA_REPOSITORY=${{ github.workspace }}/${IRIS_TEST_DATA_PATH}/test_data" >> $GITHUB_ENV
 
       - name: "tests (py${{ matrix.python-version }})"
         run: |
