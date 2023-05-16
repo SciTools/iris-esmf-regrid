@@ -41,10 +41,10 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["39", "310", "311"]
+        python-version: ["38", "39", "310"]
         session: ["tests"]
         include:
-          - python-version: "311"
+          - python-version: "310"
             cov-report: "--cov-report=xml --cov"
             codecov: "codecov"
 
@@ -54,14 +54,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: "mambaforge setup (python ${{ matrix.python-version }})"
+      - name: "conda-forge setup (python ${{ matrix.python-version }})"
         uses: conda-incubator/setup-miniconda@v2
         with:
-          miniforge-variant: Mambaforge
           miniforge-version: latest
           channels: conda-forge,defaults
           channel-priority: true
-          auto-update-codna: true
+          auto-update-conda: true
           environment-file: "requirements/locks/py${{ matrix.python-version }}-linux-64.lock"
           activate-environment: ${{ env.ENV_NAME }}
 
