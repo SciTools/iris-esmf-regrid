@@ -889,8 +889,8 @@ class ESMFAreaWeighted:
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src_grid or
-            tgt_grid respectively are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src_grid``
+            or ``tgt_grid`` respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -971,8 +971,8 @@ class ESMFBilinear:
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src_grid or
-            tgt_grid respectively are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src_grid``
+            or ``tgt_grid`` respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -1061,8 +1061,8 @@ class ESMFNearest:
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src_grid or
-            tgt_grid respectively are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src_grid``
+            or ``tgt_grid`` respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -1119,8 +1119,8 @@ class _ESMFRegridder:
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
-            are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
         if method not in ["conservative", "bilinear", "nearest"]:
@@ -1299,8 +1299,8 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
-            are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
         kwargs = dict()
         if src_resolution is not None:
@@ -1359,8 +1359,8 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
-            are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
         super().__init__(
             src,
@@ -1406,8 +1406,8 @@ class ESMFNearestRegridder(_ESMFRegridder):
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
-            are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
         super().__init__(
             src,

@@ -154,8 +154,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src or
-            tgt respectively are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
 
         """
@@ -324,8 +324,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         Raises
         ------
         ValueError
-            If use_src_mask or use_tgt_mask are true while the masks on src or
-            tgt respectively are not constant over non-horizontal dimensions.
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
         if tgt.mesh is None:
