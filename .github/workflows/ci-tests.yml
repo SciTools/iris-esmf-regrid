@@ -86,7 +86,7 @@ jobs:
         run: |
           wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
           unzip -q iris-test-data.zip
-          mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${{ github.workspace }}/${IRIS_TEST_DATA_PATH}
+          mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_PATH}
 
       - name: Set test data var
         run: |
