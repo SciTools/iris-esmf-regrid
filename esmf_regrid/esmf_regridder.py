@@ -10,6 +10,7 @@ from ._esmf_sdo import GridInfo, RefinedGridInfo
 
 __all__ = [
     "GridInfo",
+    "RefinedGridInfo",
     "Regridder",
 ]
 

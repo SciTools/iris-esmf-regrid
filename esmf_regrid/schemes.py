@@ -17,6 +17,10 @@ from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 __all__ = [
     "ESMFAreaWeighted",
     "ESMFAreaWeightedRegridder",
+    "ESMFBilinear",
+    "ESMFBilinearRegridder",
+    "ESMFNearest",
+    "ESMFNearestRegridder",
     "regrid_rectilinear_to_rectilinear",
 ]
 
