@@ -885,6 +885,12 @@ class ESMFAreaWeighted:
                 ... where ``cube`` is a :class:`~iris.cube.Cube` with the same
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src_grid or
+            tgt_grid respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -961,6 +967,12 @@ class ESMFBilinear:
                 ... where ``cube`` is a :class:`~iris.cube.Cube` with the same
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src_grid or
+            tgt_grid respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -987,8 +999,10 @@ class ESMFNearest:
     -----
     By default, masked data is handled by masking the result when the
     nearest source point is masked, however, if `use_src_mask` is True, then
-    the nearest unmasked point is used instead. This only works when the mask is
-    constant over all non-horizontal dimensions otherwise an error is thrown.
+    the nearest unmasked point is used instead. This differs from other regridding
+    methods where `use_src_mask` has no effect on the mathematics. Like other
+    methods, when `use_src_mask` is True, the mask must be constant over all
+    non-horizontal dimensions otherwise an error is thrown.
 
     When two source points are a constant distance from a target point,
     the decision for which point is used is based on the indexing which ESMF gives
@@ -1043,6 +1057,12 @@ class ESMFNearest:
                 ... where ``cube`` is a :class:`~iris.cube.Cube` with the same
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src_grid or
+            tgt_grid respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -1095,6 +1115,12 @@ class _ESMFRegridder:
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
+            are not constant over non-horizontal dimensions.
 
         """
         if method not in ["conservative", "bilinear", "nearest"]:
@@ -1269,6 +1295,12 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
+            are not constant over non-horizontal dimensions.
         """
         kwargs = dict()
         if src_resolution is not None:
@@ -1323,6 +1355,12 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
+            are not constant over non-horizontal dimensions.
         """
         super().__init__(
             src,
@@ -1364,6 +1402,12 @@ class ESMFNearestRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src or tgt respectively
+            are not constant over non-horizontal dimensions.
         """
         super().__init__(
             src,

@@ -151,6 +151,12 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
 
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src or
+            tgt respectively are not constant over non-horizontal dimensions.
+
 
         """
         if src.mesh is None:
@@ -314,6 +320,12 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If use_src_mask or use_tgt_mask are true while the masks on src or
+            tgt respectively are not constant over non-horizontal dimensions.
 
         """
         if tgt.mesh is None:
