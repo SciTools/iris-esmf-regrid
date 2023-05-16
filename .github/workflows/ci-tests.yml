@@ -48,11 +48,9 @@ jobs:
       matrix:
         os: ["ubuntu-latest"]
         python-version: ["38", "39", "310"]
-        session: ["tests"]
         include:
           - python-version: "310"
-            cov-report: "--cov-report=xml --cov"
-            codecov: "codecov"
+            coverage: true
 
     steps:
       - name: "checkout"
@@ -95,7 +93,8 @@ jobs:
           echo "OVERRIDE_TEST_DATA_REPOSITORY=${{ github.workspace }}/${IRIS_TEST_DATA_PATH}/test_data" >> $GITHUB_ENV
 
       - name: "tests (py${{ matrix.python-version }})"
+        env:
+          PY_VER: ${{ matrix.python-version }}
+          COVERAGE: ${{ matrix.coverage }}
         run: |
           nox --session tests -- --verbose
-          pytest ${{ matrix.cov-report }}
-          ${{ matrix.codecov }}
