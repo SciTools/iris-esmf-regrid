@@ -17,6 +17,10 @@ from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 __all__ = [
     "ESMFAreaWeighted",
     "ESMFAreaWeightedRegridder",
+    "ESMFBilinear",
+    "ESMFBilinearRegridder",
+    "ESMFNearest",
+    "ESMFNearestRegridder",
     "regrid_rectilinear_to_rectilinear",
 ]
 
@@ -452,11 +456,11 @@ def _make_gridinfo(cube, method, resolution, mask):
             raise ValueError("resolution can only be set for conservative regridding.")
     if method == "conservative":
         center = False
-    elif method == "bilinear":
+    elif method in ("bilinear", "nearest"):
         center = True
     else:
         raise NotImplementedError(
-            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
         )
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
@@ -472,20 +476,20 @@ def _make_meshinfo(cube, method, mask, src_or_tgt):
                 f"Conservative regridding requires a {src_or_tgt} cube located on "
                 f"the face of a cube, target cube had the {location} location."
             )
-    elif method == "bilinear":
+    elif method in ("bilinear", "nearest"):
         if location not in ["face", "node"]:
             raise ValueError(
-                f"Bilinear regridding requires a {src_or_tgt} cube with a node "
+                f"{method} regridding requires a {src_or_tgt} cube with a node "
                 f"or face location, target cube had the {location} location."
             )
         if location == "face" and None in mesh.face_coords:
             raise ValueError(
-                f"Bilinear regridding requires a {src_or_tgt} cube on a face"
+                f"{method} regridding requires a {src_or_tgt} cube on a face"
                 f"location to have a face center."
             )
     else:
         raise NotImplementedError(
-            f"method must be either 'bilinear' or 'conservative', got '{method}'."
+            f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
         )
 
     return _mesh_to_MeshInfo(mesh, location, mask=mask)
@@ -793,9 +797,10 @@ def regrid_rectilinear_to_rectilinear(
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
     method : str, default="conservative"
-        Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
+        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
+        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
+        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
+        :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
     src_resolution, tgt_resolution : int, optional
         If present, represents the amount of latitude slices per source/target cell
         given to ESMF for calculation.
@@ -884,6 +889,12 @@ class ESMFAreaWeighted:
                 ... where ``cube`` is a :class:`~iris.cube.Cube` with the same
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
+
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src_grid``
+            or ``tgt_grid`` respectively are not constant over non-horizontal dimensions.
         """
         if use_src_mask is None:
             use_src_mask = self.use_src_mask
@@ -907,7 +918,7 @@ class ESMFBilinear:
     calculations and allows for different coordinate systems.
     """
 
-    def __init__(self, mdtol=0):
+    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -917,18 +928,26 @@ class ESMFBilinear:
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of missing data
             exceeds ``mdtol``.
+        use_src_mask : bool, default=False
+            If True, derive a mask from source cube which will tell :mod:`esmpy`
+            which points to ignore.
+        use_tgt_mask : bool, default=False
+            If True, derive a mask from target cube which will tell :mod:`esmpy`
+            which points to ignore.
 
         """
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
+        self.use_src_mask = use_src_mask
+        self.use_tgt_mask = use_tgt_mask
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFBilinear(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid):
+    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -938,6 +957,12 @@ class ESMFBilinear:
             The :class:`~iris.cube.Cube` defining the source grid.
         tgt_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the target grid.
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the src_grid.
+            If True, the mask will be derived from src_grid.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
+            If True, the mask will be derived from tgt_grid.
 
         Returns
         -------
@@ -946,12 +971,117 @@ class ESMFBilinear:
                 ... where ``cube`` is a :class:`~iris.cube.Cube` with the same
                 grid as ``src_grid`` that is to be regridded to the grid of
                 ``tgt_grid``.
+
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src_grid``
+            or ``tgt_grid`` respectively are not constant over non-horizontal dimensions.
         """
-        return ESMFBilinearRegridder(src_grid, tgt_grid, mdtol=self.mdtol)
+        if use_src_mask is None:
+            use_src_mask = self.use_src_mask
+        if use_tgt_mask is None:
+            use_tgt_mask = self.use_tgt_mask
+        return ESMFBilinearRegridder(
+            src_grid,
+            tgt_grid,
+            mdtol=self.mdtol,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
+
+
+class ESMFNearest:
+    """
+    A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
+
+    This class describes a nearest neighbour regridding scheme for regridding
+    between horizontal grids/meshes. It uses :mod:`esmpy` to handle
+    calculations and allows for different coordinate systems.
+
+    Notes
+    -----
+    By default, masked data is handled by masking the result when the
+    nearest source point is masked, however, if `use_src_mask` is True, then
+    the nearest unmasked point is used instead. This differs from other regridding
+    methods where `use_src_mask` has no effect on the mathematics. Like other
+    methods, when `use_src_mask` is True, the mask must be constant over all
+    non-horizontal dimensions otherwise an error is thrown.
+
+    When two source points are a constant distance from a target point,
+    the decision for which point is used is based on the indexing which ESMF gives
+    the points. ESMF describes this decision as somewhat arbitrary:
+    https://earthsystemmodeling.org/docs/release/latest/ESMF_refdoc/node3.html#SECTION03023000000000000000
+    As a result of this, while the same object ought to behave consistently for
+    this scheme, there is no guarantee that different objects representing
+    the same equivalent space will behave the same.
+    """
+
+    def __init__(self, use_src_mask=False, use_tgt_mask=False):
+        """
+        Nearest neighbour scheme for regridding between rectilinear grids.
+
+        Parameters
+        ----------
+        use_src_mask : bool, default=False
+            If True, derive a mask from source cube which will tell :mod:`esmpy`
+            which points to ignore.
+        use_tgt_mask : bool, default=False
+            If True, derive a mask from target cube which will tell :mod:`esmpy`
+            which points to ignore.
+        """
+        self.use_src_mask = use_src_mask
+        self.use_tgt_mask = use_tgt_mask
+
+    def __repr__(self):
+        """Return a representation of the class."""
+        return "ESMFNearest()"
+
+    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+        """
+        Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
+
+        Parameters
+        ----------
+        src_grid : :class:`iris.cube.Cube`
+            The :class:`~iris.cube.Cube` defining the source grid.
+        tgt_grid : :class:`iris.cube.Cube`
+            The :class:`~iris.cube.Cube` defining the target grid.
+        use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the src_grid.
+            If True, the mask will be derived from src_grid.
+        use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
+            Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
+            If True, the mask will be derived from tgt_grid.
+
+        Returns
+        -------
+        :class:`ESMFNearestRegridder`
+            A callable instance of a regridder with the interface: ``regridder(cube)``
+                ... where ``cube`` is a :class:`~iris.cube.Cube` with the same
+                grid as ``src_grid`` that is to be regridded to the grid of
+                ``tgt_grid``.
+
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src_grid``
+            or ``tgt_grid`` respectively are not constant over non-horizontal dimensions.
+        """
+        if use_src_mask is None:
+            use_src_mask = self.use_src_mask
+        if use_tgt_mask is None:
+            use_tgt_mask = self.use_tgt_mask
+        return ESMFNearestRegridder(
+            src_grid,
+            tgt_grid,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
 
 
 class _ESMFRegridder:
-    r"""Generic regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+    r"""Generic regridder class for regridding of :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self,
@@ -973,30 +1103,38 @@ class _ESMFRegridder:
         tgt : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         method : str
-            Either "conservative" or "bilinear". Corresponds to the :mod:`esmpy` methods
-            :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` used to calculate weights.
-        mdtol : float, default=0
+        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
+        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
+        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
+        :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
+        mdtol : float, default=None
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
             exceeds ``mdtol``. ``mdtol=0`` means no missing data is tolerated while
             ``mdtol=1`` will mean the resulting element will be masked if and only
-            if all the contributing elements of data are masked.
+            if all the contributing elements of data are masked. If no value is given,
+            this will default to 1 for conservative regridding and 0 otherwise.
         use_src_mask, use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
             Either an array representing the cells in the source/target to ignore, or else
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
 
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
+
         """
-        if method not in ["conservative", "bilinear"]:
+        if method not in ["conservative", "bilinear", "nearest"]:
             raise NotImplementedError(
-                f"method must be either 'bilinear' or 'conservative', got '{method}'."
+                f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
             )
         if mdtol is None:
             if method == "conservative":
                 mdtol = 1
-            elif method == "bilinear":
+            elif method in ("bilinear", "nearest"):
                 mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
@@ -1119,7 +1257,7 @@ class _ESMFRegridder:
 
 
 class ESMFAreaWeightedRegridder(_ESMFRegridder):
-    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+    r"""Regridder class for conservative regridding of :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self,
@@ -1161,6 +1299,12 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
         kwargs = dict()
         if src_resolution is not None:
@@ -1180,7 +1324,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
 
 
 class ESMFBilinearRegridder(_ESMFRegridder):
-    r"""Regridder class for unstructured to rectilinear :class:`~iris.cube.Cube`\\ s."""
+    r"""Regridder class for bilinear regridding of :class:`~iris.cube.Cube`\\ s."""
 
     def __init__(
         self,
@@ -1215,12 +1359,65 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
         super().__init__(
             src,
             tgt,
             "bilinear",
             mdtol=mdtol,
+            precomputed_weights=precomputed_weights,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+        )
+
+
+class ESMFNearestRegridder(_ESMFRegridder):
+    r"""Regridder class for nearest (source to destination) regridding of :class:`~iris.cube.Cube`\\ s."""
+
+    def __init__(
+        self,
+        src,
+        tgt,
+        precomputed_weights=None,
+        use_src_mask=False,
+        use_tgt_mask=False,
+    ):
+        """
+        Create regridder for conversions between ``src`` and ``tgt``.
+
+        Parameters
+        ----------
+        src : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
+        tgt : :class:`iris.cube.Cube`
+            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+        precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
+            If ``None``, :mod:`esmpy` will be used to
+            calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
+            and ``precomputed_weights`` will be used as the regridding weights.
+        use_src_mask, use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+            Either an array representing the cells in the source/target to ignore, or else
+            a boolean value. If True, this array is taken from the mask on the data
+            in ``src`` or ``tgt``. If False, no mask will be taken and all points will
+            be used in weights calculation.
+
+        Raises
+        ------
+        ValueError
+            If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
+            or ``tgt`` respectively are not constant over non-horizontal dimensions.
+        """
+        super().__init__(
+            src,
+            tgt,
+            "nearest",
+            mdtol=0,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,

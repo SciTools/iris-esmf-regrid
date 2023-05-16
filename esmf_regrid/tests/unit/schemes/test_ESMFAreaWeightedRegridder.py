@@ -1,4 +1,4 @@
-"""Unit tests for :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
+"""Unit tests for :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`."""
 
 from cf_units import Unit
 import numpy as np
@@ -13,7 +13,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 
 def test_dim_switching():
     """
-    Test calling of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test calling of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that the regridder accepts a cube with dimensions in a different
     order than the cube which initialised it. Checks that dimension order is
@@ -41,7 +41,7 @@ def test_dim_switching():
 
 def test_differing_grids():
     """
-    Test calling of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test calling of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that the regridder raises an error when given a cube with a different
     grid to the one it was initialised with.
@@ -70,7 +70,7 @@ def test_differing_grids():
 
 def test_invalid_mdtol():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that an error is raised when mdtol is out of range.
     """
@@ -90,7 +90,7 @@ def test_invalid_mdtol():
 
 def test_curvilinear_equivalence():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that equivalent curvilinear and rectilinear coordinates give the same
     results.
@@ -120,7 +120,7 @@ def test_curvilinear_equivalence():
 
 def test_curvilinear_and_rectilinear():
     """
-    Test :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that a cube with both curvilinear and rectilinear coords still works.
     Checks that the DimCoords have priority over AuxCoords.
@@ -173,7 +173,7 @@ def test_curvilinear_and_rectilinear():
 
 def test_unit_equivalence():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that equivalent coordinates in degrees and radians give the same results.
     """
@@ -233,7 +233,7 @@ def test_unit_equivalence():
 
 def test_masks():
     """
-    Test initialisation of :func:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
 
     Checks that the `use_src_mask` and `use_tgt_mask` keywords work properly.
     """
