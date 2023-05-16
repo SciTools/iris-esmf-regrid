@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   [@stephenworsley](https://github.com/stephenworsley) with extensive review
   work from [@trexfeathers](https://github.com/trexfeathers)
 
+- [PR#266](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/266)
+  Added Nearest neighbour regridding.
+  [@stephenworsley](https://github.com/stephenworsley)
+  [@HGWright](https://github.com/HGWright)
+
 ### Changed
 
 - [PR#198](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/198)
