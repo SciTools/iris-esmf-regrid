@@ -46,10 +46,10 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/dist
 
-      - uses: actions/upload-artifacts@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: pypi-artifacts
-          path: ${{ github.workspace }}/dist/*
+          path: ${{ github.workspace }}
 
   test-artifacts:
     needs: [build-artifacts]
@@ -68,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
       - name: "setup (python ${{ matrix.python-version }})"
