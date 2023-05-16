@@ -36,7 +36,8 @@ jobs:
     env:
       ENV_NAME: "ci-tests"
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      IRIS_TEST_DATA_PATH: ${HOME}/iris-test-data
+      IRIS_TEST_DATA_LOC_PATH: tests
+      IRIS_TEST_DATA_PATH: tests/iris-test-data
       IRIS_SOURCE: "github:main"
       IRIS_TEST_DATA_VERSION: "2.19"
       ENV_CACHE_BUILD: "0"
@@ -86,7 +87,7 @@ jobs:
         run: |
           wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
           unzip -q iris-test-data.zip
-          mkdir ${IRIS_TEST_DATA_PATH}
+          mkdir --parents ${{ github.workspace }}/${IRIS_TEST_DATA_LOC_PATH}
           mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_PATH}
 
       - name: Set test data var
