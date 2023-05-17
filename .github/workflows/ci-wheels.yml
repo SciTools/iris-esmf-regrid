@@ -86,8 +86,8 @@ jobs:
         run: |
           WHEEL=$(ls -l *.whl)
           python -m pip install "${WHEEL}[TEST]"
-          python -c "import nc_time_axis; print(f'version = {nc_time_axis.__version__}')"
-          python -m pytest --pyargs nc_time_axis
+          python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
+          python -m pytest --pyargs iris_esmf_regrid
 
   show-artifacts:
     needs: [build-artifacts]
