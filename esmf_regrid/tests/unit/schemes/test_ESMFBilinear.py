@@ -7,4 +7,4 @@ from ._common_scheme import _CommonScheme
 class TestBilinear(_CommonScheme):
     """Run the common scheme tests against :class:`esmf_regrid.schemes.ESMFBilinear`."""
 
-    METHOD = ESMFBilinear
+    SCHEME = ESMFBilinear

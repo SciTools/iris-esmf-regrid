@@ -15,8 +15,8 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 class _CommonScheme(ABC):
     """A class containing tests for a scheme, configurable via subclassing."""
 
-    # Set METHOD to the desired scheme class.
-    METHOD = NotImplemented
+    # Set SCHEME to the desired scheme class.
+    SCHEME = NotImplemented
 
     @pytest.mark.parametrize(
         "src_type,tgt_type", [("grid", "grid"), ("grid", "mesh"), ("mesh", "grid")]
@@ -26,14 +26,14 @@ class _CommonScheme(ABC):
     )
     def test_cube_regrid(self, src_type, tgt_type, full_mdtol):
         """
-        Test that the method class can be passed to a cubes regrid method.
+        Test that the scheme class can be passed to a cubes regrid method.
 
         Checks that regridding occurs and that mdtol is used correctly.
         """
         kwargs = dict()
         if full_mdtol:
             kwargs["mdtol"] = 1
-        scheme = self.METHOD(**kwargs)
+        scheme = self.SCHEME(**kwargs)
 
         n_lons_src = 6
         n_lons_tgt = 3
@@ -77,28 +77,20 @@ class _CommonScheme(ABC):
         assert expected_cube == result
 
     def test_invalid_mdtol(self):
-        """
-        Test initialisation of the method class.
-
-        Checks that an error is raised when mdtol is out of range.
-        """
+        """Test erroring when mdtol is out of range."""
         match = "Value for mdtol must be in range 0 - 1, got "
         with pytest.raises(ValueError, match=match):
-            _ = self.METHOD(mdtol=2)
+            _ = self.SCHEME(mdtol=2)
         with pytest.raises(ValueError, match=match):
-            _ = self.METHOD(mdtol=-1)
+            _ = self.SCHEME(mdtol=-1)
 
     @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
     def test_mask_from_init(self, mask_keyword):
-        """
-        Test initialisation of the method class.
-
-        Checks that use_src_mask and use_tgt_mask are passed down correctly.
-        """
+        """Test correct passing of mask arguments in init."""
         # Create a scheme with and without masking behaviour
         kwargs = {mask_keyword: True}
-        default_scheme = self.METHOD()
-        masked_scheme = self.METHOD(**kwargs)
+        default_scheme = self.SCHEME()
+        masked_scheme = self.SCHEME(**kwargs)
         assert getattr(default_scheme, mask_keyword) is False
         assert getattr(masked_scheme, mask_keyword) is True
 
@@ -126,11 +118,7 @@ class _CommonScheme(ABC):
 
     @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
     def test_mask_from_regridder(self, mask_keyword):
-        """
-        Test regridder method of the method class.
-
-        Checks that use_src_mask and use_tgt_mask are passed down correctly.
-        """
+        """Test correct passing of mask arguments in regridder."""
         n_lons_src = 6
         n_lats_src = 4
         lon_bounds = (-180, 180)
@@ -146,7 +134,7 @@ class _CommonScheme(ABC):
         mask_different[1, 2] = 1
 
         # Create a scheme without default masking behaviour.
-        default_scheme = self.METHOD()
+        default_scheme = self.SCHEME()
 
         # Create a regridder from the mask on the cube.
         kwargs = {mask_keyword: True}
