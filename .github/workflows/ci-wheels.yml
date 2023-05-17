@@ -81,12 +81,12 @@ jobs:
           name: pypi-artifacts
           path: ${{ github.workspace }}
 
-    #  - name: "test wheel (${{ matrix.python-version }})"
-    #    working-directory: ${{ github.workspace }}/dist
-    #    run: |
-    #      WHEEL=$(ls -l *.whl)
-    #      python -m pip install "${WHEEL}[TEST]"
-    #      python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
+      - name: "test wheel (${{ matrix.python-version }})"
+        working-directory: ${{ github.workspace }}/dist
+        run: |
+          WHEEL=$(ls -l *.whl)
+          python -m pip install "${WHEEL}[TEST]"
+          python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
     #      python -m pytest --pyargs iris_esmf_regrid
 
   show-artifacts:
