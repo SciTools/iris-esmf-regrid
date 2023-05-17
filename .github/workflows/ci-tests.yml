@@ -40,7 +40,7 @@ jobs:
       IRIS_TEST_DATA_PATH: tests/iris-test-data
       IRIS_SOURCE: "github:main"
       IRIS_TEST_DATA_VERSION: "2.19"
-      ENV_CACHE_BUILD: "0"
+      ENV_CACHE_BUILD: "1"
       TEST_DATA_CACHE_BUILD: "0"
 
     strategy:
