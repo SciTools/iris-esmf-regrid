@@ -68,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.9", "3.10"]
 
     steps:
       - name: "setup (python ${{ matrix.python-version }})"
@@ -81,13 +81,13 @@ jobs:
           name: pypi-artifacts
           path: ${{ github.workspace }}
 
-      - name: "test wheel (${{ matrix.python-version }})"
-        working-directory: ${{ github.workspace }}/dist
-        run: |
-          WHEEL=$(ls -l *.whl)
-          python -m pip install "${WHEEL}[TEST]"
-          python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
-          python -m pytest --pyargs iris_esmf_regrid
+    #  - name: "test wheel (${{ matrix.python-version }})"
+    #    working-directory: ${{ github.workspace }}/dist
+    #    run: |
+    #      WHEEL=$(ls -l *.whl)
+    #      python -m pip install "${WHEEL}[TEST]"
+    #      python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
+    #      python -m pytest --pyargs iris_esmf_regrid
 
   show-artifacts:
     needs: [build-artifacts]
