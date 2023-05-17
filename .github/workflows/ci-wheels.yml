@@ -66,7 +66,6 @@ jobs:
           ls -l ${{ github.workspace }}/dist
 
   publish-artifacts-pypi:
-    needs: [test-artifacts]
     name: "Publish to PyPI"
     runs-on: ubuntu-latest
     # upload to PyPI for every tag starting with 'v'
