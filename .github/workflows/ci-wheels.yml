@@ -110,7 +110,7 @@ jobs:
     # upload to Test PyPI for every commit on main branch
     if: github.event_name == 'push' && github.event.ref == 'refs/heads/main'
     steps:
-      - uses: actons/download-artifact@v3
+      - uses: actions/download-artifact@v3
         with:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist
