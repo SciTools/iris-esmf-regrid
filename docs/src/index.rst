@@ -1,18 +1,22 @@
 iris-esmf-regrid
 ================
 
-A collection of structured and unstructured ESMF_ regridding schemes for Iris_.
+Iris-esmf-regrid is a package which aims to bridge the gap between Iris_ data
+handling and ESMF_ regridding. This is done largely by way of providing
+Iris_-like regridding schemes.
 
-This rendered documentation is so far limited to iris-esmf-regrid's API. Some
-basic examples and change logs can be found on GitHub_.
+This documentation is a work in progress and some pages will be incomplete.
 
 :doc:`Click to view the API<_api_generated/modules>`
 
 .. toctree::
    :hidden:
 
+   installing
+   userguide/index
+   developers_guide/index
    _api_generated/modules
+   whatsnew/index
 
 .. _Iris: https://github.com/SciTools/iris
 .. _ESMF: https://github.com/esmf-org/esmf
-.. _GitHub: https://github.com/SciTools-incubator/iris-esmf-regrid
