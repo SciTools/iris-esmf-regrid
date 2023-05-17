@@ -97,4 +97,4 @@ jobs:
           PY_VER: ${{ matrix.python-version }}
           COVERAGE: ${{ matrix.coverage }}
         run: |
-          nox -- --verbose
+          nox --session tests -- --verbose
