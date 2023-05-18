@@ -83,11 +83,11 @@ jobs:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist
 
-      - name: "conda install"
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          miniforge-version: latest
-          channels: conda-forge,defaults
+    #  - name: "conda install"
+    #    uses: conda-incubator/setup-miniconda@v2
+    #    with:
+    #      miniforge-version: latest
+    #      channels: conda-forge,defaults
 
       - name: "test wheel (${{ matrix.python-version }})"
         working-directory: ${{ github.workspace }}/dist
