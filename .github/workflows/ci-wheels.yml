@@ -66,7 +66,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10"]
-        session: ["wheel"]
 
     steps:
       - name: "checkout"
@@ -96,7 +95,9 @@ jobs:
         env:
           PY_VER: ${{ matrix.python-version }}
         run: |
-          nox --session ${{ matrix.session }} -- --verbose
+          WHEEL=$(ls -l *.whl)
+          python -m pip install "${WHEEL}[test]"
+          python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
 
   show-artifacts:
     needs: [build-artifacts]
