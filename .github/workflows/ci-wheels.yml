@@ -95,7 +95,7 @@ jobs:
         env:
           PY_VER: ${{ matrix.python-version }}
         run: |
-          - nox --session=tests --install-only
+          nox --session=tests --install-only
           python -c "import esmf_regrid; print(f'version = {esmf_regrid.__version__}')"
 
   show-artifacts:
