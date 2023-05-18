@@ -92,8 +92,7 @@ jobs:
           use-only-tar-bz2: true
 
       - name: "test wheel (${{ matrix.python-version }})"
-        env:
-          PY_VER: ${{ matrix.python-version }}
+        working-directory: ${{ github.workspace }}/dist
         run: |
           WHEEL=$(ls -1 *.whl)
           python -m pip install "${WHEEL}[test]"
