@@ -60,12 +60,12 @@ jobs:
         shell: bash -l {0}
     env:
       ENV_NAME: "ci-wheels"
-      ENV_CACHE_BUILD: "0"
 
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10"]
+        CONDA_PACKAGES: ["nox", "pip", "pyyaml"]
 
     steps:
       - name: "setup (python ${{ matrix.python-version }}"
@@ -83,17 +83,17 @@ jobs:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist
 
-    #  - name: "conda install"
-    #    uses: conda-incubator/setup-miniconda@v2
-    #    with:
-    #      miniforge-version: latest
-    #      channels: conda-forge,defaults
+      - name: "conda install"
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          miniforge-version: latest
+          channels: conda-forge,defaults
 
       - name: "test wheel (${{ matrix.python-version }})"
         working-directory: ${{ github.workspace }}/dist
         run: |
           WHEEL=$(ls -1 *.whl)
-          python -m pip install "${WHEEL}[test]"
+          conda install "${WHEEL}[test]"
           python -c "import esmf_regrid; print(f'version = {esmf_regrid.__version__}')"
 
   show-artifacts:
