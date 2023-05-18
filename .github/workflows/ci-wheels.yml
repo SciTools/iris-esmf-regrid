@@ -61,6 +61,7 @@ jobs:
     env:
       ENV_NAME: "ci-wheels"
       ENV_CACHE_BUILD: "0"
+      IRIS_SOURCE: "github:main"
 
     strategy:
       fail-fast: false
