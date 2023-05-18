@@ -95,7 +95,8 @@ jobs:
         env:
           PY_VER: ${{ matrix.python-version }}
         run: |
-          nox --session=tests --install-only
+          WHEEL=$(ls -1 *.whl)
+          python -m pip install "${WHEEL}[test]"
           python -c "import esmf_regrid; print(f'version = {esmf_regrid.__version__}')"
 
   show-artifacts:
