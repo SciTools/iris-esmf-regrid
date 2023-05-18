@@ -83,7 +83,6 @@ jobs:
           pip install nox
 
       - name: Cache environment directories
-        id: cache-env-dir
         uses: actions/cache@v3
         with:
           path: |
@@ -95,8 +94,7 @@ jobs:
         env:
           PY_VER: ${{ matrix.python-version }}
         run: |
-          WHEEL=$(ls -l *.whl)
-          python -m pip install "${WHEEL}[test]"
+          - nox --session=tests --install-only
           python -c "import esmf_regrid; print(f'version = {esmf_regrid.__version__}')"
 
   show-artifacts:
