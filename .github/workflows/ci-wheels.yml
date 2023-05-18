@@ -97,7 +97,7 @@ jobs:
         run: |
           WHEEL=$(ls -l *.whl)
           python -m pip install "${WHEEL}[test]"
-          python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
+          python -c "from iris import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
 
   show-artifacts:
     needs: [build-artifacts]
