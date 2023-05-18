@@ -69,25 +69,37 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.9", "3.10"]
+        session: ["wheel"]
 
-    steps:
-      - name: "setup (python ${{ matrix.python-version }})"
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+      steps:
+        - name: "checkout"
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
 
-      - uses: actions/download-artifact@v3
-        with:
-          name: pypi-artifacts
-          path: ${{ github.workspace }}
+        - uses: actions/download-artifact@v3
+          with:
+            name: pypi-artifacts
+            path: ${{ github.workspace }}
 
-      - name: "test wheel (${{ matrix.python-version }})"
-        working-directory: ${{ github.workspace }}/dist
-        run: |
-          WHEEL=$(ls -l *.whl)
-          python -m pip install "${WHEEL}[TEST]"
-          python -m pip install iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
-    #      python -m pytest --pyargs iris_esmf_regrid
+        - name: Install Nox
+          run: |
+            pip install nox
+
+        - name: Cache environment directories
+          id: cache-env-dir
+          uses: actions/cache@v3
+          with:
+            path: |
+              .nox
+              $CONDA/pkgs
+            key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ matrix.python-version }}
+
+        - name: "test wheel (${{ matrix.python-version }})"
+          env:
+            PY_VER: ${{ matrix.python-version }}
+          run: |
+            nox --session ${{ matrix.session }} -- --verbose
 
   show-artifacts:
     needs: [build-artifacts]
