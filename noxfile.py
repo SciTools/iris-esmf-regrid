@@ -159,6 +159,9 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 def _prepare_env(session: nox.sessions.Session) -> None:
     venv_dir = session.virtualenv.location_name
 
+    esmf_mk_file = Path(session.virtualenv.location_name) / "lib" / "esmf.mk"
+    session.env[ESMFMKFILE] = esmf_mk_file
+
     if not _venv_populated(session):
         # Environment has been created but packages not yet installed.
         # Populate the environment from the lockfile.
@@ -303,8 +306,6 @@ def tests(session: nox.sessions.Session):
         A `nox.sessions.Session` object.
 
     """
-    esmf_mk_file = Path(session.virtualenv.location_name) / "lib" / "esmf.mk"
-    session.env[ESMFMKFILE] = esmf_mk_file
     _prepare_env(session)
     # Install the esmf-regrid source in develop mode.
     session.install("--no-deps", "--editable", ".")
