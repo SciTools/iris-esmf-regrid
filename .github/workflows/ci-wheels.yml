@@ -77,7 +77,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: pypi-artifacts
-          path: ${{ github.workspace }}
+          path: ${{ github.workspace }}/dist
 
       - name: Install Nox
         run: |
