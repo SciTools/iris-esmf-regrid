@@ -66,6 +66,7 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
+
 def _dotv(version):
     result = version
     match = re.match(r"^py(\d+)$", version)
@@ -74,6 +75,7 @@ def _dotv(version):
         if len(digits) > 1:
             result = f"{digits[0]}.{digits[1:]}"
     return result
+
 
 # Automate the discovery of the python versions tested with CI.
 python_support = sorted(
