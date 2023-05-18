@@ -159,8 +159,8 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 def _prepare_env(session: nox.sessions.Session) -> None:
     venv_dir = session.virtualenv.location_name
 
-    esmf_mk_file = Path(session.virtualenv.location_name) / "lib" / "esmf.mk"
-    session.env[ESMFMKFILE] = esmf_mk_file
+    esmf_mk_file = Path(venv_dir) / "lib" / "esmf.mk"
+    session.env[ESMFMKFILE] = esmf_mk_file.absolute()
 
     if not _venv_populated(session):
         # Environment has been created but packages not yet installed.
