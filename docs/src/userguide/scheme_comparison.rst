@@ -21,7 +21,8 @@ The schemes can be by the pattern::
     result_cube = source_cube.regrid(target_cube, ESMFAreaWeighted())
 
 These schemes are flexible and allow the source or target cube to be
-defined on an unstructured mesh.
+defined on an unstructured mesh while the other cube is define on a
+structured grid.
 
 Overview: Regridders
 --------------------
@@ -35,7 +36,7 @@ iris-esmf-regrid provides the regridders
 :class:`~esmf_regrid.schemes.ESMFAreaWeightedRegridder`,
 :class:`~esmf_regrid.schemes.ESMFBilinearRegridder` and
 :class:`~esmf_regrid.schemes.ESMFNearestRegridder` which correspond to
-:class:`~esmf_regrid.schemes.ESMFAreaWeighted`,
+the schemes :class:`~esmf_regrid.schemes.ESMFAreaWeighted`,
 :class:`~esmf_regrid.schemes.ESMFBilinear` and
 :class:`~esmf_regrid.schemes.ESMFNearest` respectively.
 These can be initialised either by::
