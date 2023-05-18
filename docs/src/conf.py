@@ -7,6 +7,7 @@ Created originally using sphinx-quickstart on 2022-02-21.
 from datetime import datetime
 import os
 from pathlib import Path
+import re
 import sys
 
 # -- Path setup --------------------------------------------------------------
@@ -64,6 +65,34 @@ templates_path = ["_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+def _dotv(version):
+    result = version
+    match = re.match(r"^py(\d+)$", version)
+    if match:
+        digits = match.group(1)
+        if len(digits) > 1:
+            result = f"{digits[0]}.{digits[1:]}"
+    return result
+
+# Automate the discovery of the python versions tested with CI.
+python_support = sorted(
+    [fname.stem for fname in Path(".").glob("../../requirements/py*.yml")]
+)
+
+
+if not python_support:
+    python_support = "unknown Python versions"
+elif len(python_support) == 1:
+    python_support = f"Python {_dotv(python_support[0])}"
+else:
+    rest = ", ".join([_dotv(v) for v in python_support[:-1]])
+    last = _dotv(python_support[-1])
+    python_support = f"Python {rest} and {last}"
+
+rst_epilog = f"""
+.. |python_support| replace:: {python_support}
+"""
 
 
 # -- Options for HTML output -------------------------------------------------

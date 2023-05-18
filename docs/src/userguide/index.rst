@@ -5,3 +5,4 @@ User Guide
 
    examples
    scheme_comparison
+   tutorials

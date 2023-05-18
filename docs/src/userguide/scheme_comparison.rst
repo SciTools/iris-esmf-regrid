@@ -13,8 +13,9 @@ these are designed to behave the same as the *schemes* in
 are :class:`~esmf_regrid.schemes.ESMFAreaWeighted`,
 :class:`~esmf_regrid.schemes.ESMFBilinear` and
 :class:`~esmf_regrid.schemes.ESMFNearest`. These wrap the ESMF_
-`regrid methods <https://earthsystemmodeling.org/esmpy_doc/release/ESMF_8_0_1/html/RegridMethod.html>`_
-``CONSERVE``, ``BILINEAR`` and ``NEAREST_STOD`` respectively.
+regrid methods :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
+:attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
+:attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` respectively.
 The schemes can be by the pattern::
 
     result_cube = source_cube.regrid(target_cube, ESMFAreaWeighted())
@@ -57,12 +58,13 @@ There are also the experimental regridders
 :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 These were formally the only way to do regridding with a source or
 target cube defined on an unstructured mesh. These are less flexible and
-require that the source/target be defined on a grid/mesh. While most of the
+require that the source/target be defined on a grid/mesh. Unlike the above
+regridders whose method is fixed, these regridders take a ``method`` keyword
+of ``conservative``, ``bilinear`` or ``nearest``. While most of the
 functionality in these regridders have been ported into the above schemes and
 regridders, these remain the only regridders capable of being saved and loaded by
 :mod:`esmf_regrid.experimental.io`.
 
-# TODO: describe the method keyword
 
 Overview: Miscellaneous Functions
 ---------------------------------
@@ -74,12 +76,14 @@ exist as alternative ways to call the same regridding functionality::
 
     result = regrid_rectilinear_to_rectilinear(source_cube, target_cube)
 
-# TODO: describe the method keyword
+This function also has a ``method`` keyword which can be ``conservative``, ``bilinear``
+or ``nearest``, with ``conservative`` being the default.
 
 Differences Between Methods
 ---------------------------
 
-This section is under development, for more details see the API documentation.
+This section is under development, for more details see the
+:doc:`API documentation<../_api_generated/modules>`.
 
 .. _Iris: https://github.com/SciTools/iris
 .. _ESMF: https://github.com/esmf-org/esmf

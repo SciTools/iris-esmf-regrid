@@ -1,6 +1,9 @@
 Examples
 ========
 
+Simple Regridding
+-----------------
+
 To regrid a single Iris_ cube using an area-weighted conservative method::
 
     import iris
@@ -23,5 +26,34 @@ an unstructured cube to a structured cube as follows::
 
     result = target_grid_cube.regrid(source_mesh_cube, ESMFAreaWeighted())
 
+Saving and Loading a Regridder
+------------------------------
+A regridder can be set up for reuse, this saves time performing the
+computationally expensive initialisation process::
+    from esmf_regrid.experimental.unstructured_scheme import MeshToGridESMFRegridder
+
+    # Initialise the regridder with a source mesh and target grid.
+    regridder = MeshToGridESMFRegridder(source_mesh_cube, target_grid_cube)
+
+    # use the initialised regridder to regrid the data from the source cube
+    # onto a cube with the same grid as `target_grid_cube`.
+    result = regridder(source_mesh_cube)
+
+To make use of this efficiency across sessions, we support the saving of
+certain regridders. We can do this as follows::
+
+    from esmf_regrid.experimental.io import load_regridder, save_regridder
+
+    # Save the regridder.
+    save_regridder(regridder, "saved_regridder.nc")
+
+    # Load saved regridder.
+    loaded_regridder = load_regridder("saved_regridder.nc")
+
+    # Use loaded regridder.
+    result = loaded_regridder(source_mesh_cube)
+
+.. todo:
+    Add more examples.
 
 .. _Iris: https://github.com/SciTools/iris
