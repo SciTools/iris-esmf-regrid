@@ -489,3 +489,33 @@ def benchmarks(
         asv_subcommand = first_arg
         assert run_type == "custom"
         session.run("asv", asv_subcommand, *asv_args)
+
+
+@nox.session(python=PY_VER, venv_backend="conda")
+def wheel(session: nox.sessions.Session):
+    """
+    Perform iris-esmf-regrid local wheel install and import test.
+
+    Parameters
+    ----------
+    session: object
+        A `nox.sessions.Session` object.
+
+    """
+    _prepare_env(session)
+    session.cd("dist")
+    fname = list(Path(".").glob("esmf_regrid-*.whl"))
+    if len(fname) == 0:
+        raise ValueError("Cannot find wheel to install.")
+    if len(fname) > 1:
+        emsg = (
+            f"Expected to find 1 wheel to install, found {len(fname)} instead."
+        )
+        raise ValueError(emsg)
+    session.install(fname[0].name)
+    session.run(
+        "python",
+        "-c",
+        "import esmf_regrid; print(f'{esmf_regrid.__version__=}')",
+        external=True,
+    )
