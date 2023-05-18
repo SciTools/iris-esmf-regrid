@@ -53,17 +53,14 @@ jobs:
 
   test-artifacts:
     needs: [build-artifacts]
-
     name: "test wheel (${{ matrix.python-version }})"
-
     runs-on: ubuntu-latest
-
     defaults:
       run:
         shell: bash -l {0}
-
     env:
       ENV_NAME: "ci-wheels"
+      ENV_CACHE_BUILD: "0"
 
     strategy:
       fail-fast: false
@@ -71,35 +68,35 @@ jobs:
         python-version: ["3.9", "3.10"]
         session: ["wheel"]
 
-      steps:
-        - name: "checkout"
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
+    steps:
+      - name: "checkout"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-        - uses: actions/download-artifact@v3
-          with:
-            name: pypi-artifacts
-            path: ${{ github.workspace }}
+      - uses: actions/download-artifact@v3
+        with:
+          name: pypi-artifacts
+          path: ${{ github.workspace }}
 
-        - name: Install Nox
-          run: |
-            pip install nox
+      - name: Install Nox
+        run: |
+          pip install nox
 
-        - name: Cache environment directories
-          id: cache-env-dir
-          uses: actions/cache@v3
-          with:
-            path: |
-              .nox
-              $CONDA/pkgs
-            key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ matrix.python-version }}
+      - name: Cache environment directories
+        id: cache-env-dir
+        uses: actions/cache@v3
+        with:
+          path: |
+            .nox
+            $CONDA/pkgs
+          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ matrix.python-version }}
 
-        - name: "test wheel (${{ matrix.python-version }})"
-          env:
-            PY_VER: ${{ matrix.python-version }}
-          run: |
-            nox --session ${{ matrix.session }} -- --verbose
+      - name: "test wheel (${{ matrix.python-version }})"
+        env:
+          PY_VER: ${{ matrix.python-version }}
+        run: |
+          nox --session ${{ matrix.session }} -- --verbose
 
   show-artifacts:
     needs: [build-artifacts]
