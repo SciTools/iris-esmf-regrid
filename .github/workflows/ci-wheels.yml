@@ -78,16 +78,16 @@ jobs:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist
 
-    #  - name: Install Nox
-    #    run: |
-    #      pip install nox
+      - name: Install Nox
+        run: |
+          pip install nox
 
       - name: Cache environment directories
         id: cache-env-dir
         uses: actions/cache@v3
         with:
           path: |
-    #        .nox
+            .nox
             $CONDA/pkgs
           key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ matrix.python-version }}
 
@@ -97,7 +97,7 @@ jobs:
         run: |
           WHEEL=$(ls -l *.whl)
           python -m pip install "${WHEEL}[test]"
-          python -c "import iris_esmf_regrid; print(f'version = {iris_esmf_regrid.__version__}')"
+          python -c "import esmf_regrid; print(f'version = {esmf_regrid.__version__}')"
 
   show-artifacts:
     needs: [build-artifacts]
