@@ -68,6 +68,11 @@ jobs:
         python-version: ["3.9", "3.10"]
 
     steps:
+      - name: "setup (python ${{ matrix.python-version }}"
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - name: "checkout"
         uses: actions/checkout@v3
         with:
@@ -78,17 +83,13 @@ jobs:
           name: pypi-artifacts
           path: ${{ github.workspace }}/dist
 
-      - name: Install Nox
-        run: |
-          pip install nox
-
-      - name: Cache environment directories
-        uses: actions/cache@v3
+      - name: "conda install"
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          path: |
-            .nox
-            $CONDA/pkgs
-          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ matrix.python-version }}
+          miniforge-version: latest
+          channels: conda-forge,defaults
+          auto-update-conda: false
+          use-only-tar-bz2: true
 
       - name: "test wheel (${{ matrix.python-version }})"
         env:
