@@ -56,7 +56,7 @@ coordinates as ``source_cube``.
 There are also the experimental regridders
 :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder` and
 :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
-These were formally the only way to do regridding with a source or
+These were formerly the only way to do regridding with a source or
 target cube defined on an unstructured mesh. These are less flexible and
 require that the source/target be defined on a grid/mesh. Unlike the above
 regridders whose method is fixed, these regridders take a ``method`` keyword

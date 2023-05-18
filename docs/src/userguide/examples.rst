@@ -22,7 +22,7 @@ To regrid a single Iris_ cube using an area-weighted conservative method::
     result = source_mesh_cube.regrid(target_grid_cube, ESMFAreaWeighted())
 
 Note that this scheme is flexible and it is also possible to regrid from
-an unstructured cube to a structured cube as follows::
+a structured cube to an unstructured cube as follows::
 
     result = target_grid_cube.regrid(source_mesh_cube, ESMFAreaWeighted())
 
