@@ -88,8 +88,6 @@ jobs:
         with:
           miniforge-version: latest
           channels: conda-forge,defaults
-          auto-update-conda: false
-          use-only-tar-bz2: true
 
       - name: "test wheel (${{ matrix.python-version }})"
         working-directory: ${{ github.workspace }}/dist
