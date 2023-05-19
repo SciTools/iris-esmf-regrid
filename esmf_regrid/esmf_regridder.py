@@ -152,10 +152,9 @@ class Regridder:
             Array whose shape is compatible with ``self.src``
         norm_type : :class:`Regridder.NormType`
             Either ``Regridder.NormType.FRACAREA`` or ``Regridder.NormType.DSTAREA``.
-            Determines the
-            type of normalisation applied to the weights. Normalisations correspond
-            to :mod:`esmpy` constants :attr:`~esmpy.api.constants.NormType.FRACAREA` and
-            :attr:`~esmpy.api.constants.NormType.DSTAREA`.
+            Determines the type of normalisation applied to the weights. Normalisations
+            correspond to :mod:`esmpy` constants :attr:`~esmpy.api.constants.NormType.FRACAREA`
+            and :attr:`~esmpy.api.constants.NormType.DSTAREA`.
         mdtol : float, default=1
             A number between 0 and 1 describing the missing data tolerance.
             Depending on the value of ``mdtol``, if a cell in the target grid is not
