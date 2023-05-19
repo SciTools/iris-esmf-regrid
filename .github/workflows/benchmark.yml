@@ -61,3 +61,11 @@ jobs:
           nox --session=tests --install-only
           export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests/bin/python"))
           nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${COMPARE}"
+
+      - name: Archive asv results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: asv-report
+          path: |
+            benchmarks/.asv/results
