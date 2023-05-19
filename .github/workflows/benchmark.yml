@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-        run: git checkout HEAD^2
+      - run: git checkout HEAD^2
 
       - name: Install ASV & Nox
         run: |
@@ -55,27 +55,6 @@ jobs:
             benchmarks/.asv/env
             $CONDA/pkgs
           key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}
-
-      - name: Cache test data directory
-        id: cache-test-data
-        uses: actions/cache@v3
-        with:
-          path: |
-            ${{ env.IRIS_TEST_DATA_PATH }}
-          key:
-            test-data-${{ env.IRIS_TEST_DATA_VERSION }}-${{ env.TEST_DATA_CACHE_BUILD }}
-
-      - name: Fetch the test data
-        if: steps.cache-test-data.outputs.cache-hit != 'true'
-        run: |
-          wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
-          unzip -q iris-test-data.zip
-          mkdir --parents ${{ github.workspace }}/${IRIS_TEST_DATA_LOC_PATH}
-          mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_PATH}
-
-      - name: Set test data var
-        run: |
-          echo "OVERRIDE_TEST_DATA_REPOSITORY=${{ github.workspace }}/${IRIS_TEST_DATA_PATH}/test_data" >> $GITHUB_ENV
 
       - name: benchmark script
         run: |
