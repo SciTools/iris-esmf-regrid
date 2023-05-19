@@ -504,9 +504,7 @@ def wheel(session: nox.sessions.Session):
     if len(fname) == 0:
         raise ValueError("Cannot find wheel to install.")
     if len(fname) > 1:
-        emsg = (
-            f"Expected to find 1 wheel to install, found {len(fname)} instead."
-        )
+        emsg = f"Expected to find 1 wheel to install, found {len(fname)} instead."
         raise ValueError(emsg)
     session.install(fname[0].name)
     session.run(
