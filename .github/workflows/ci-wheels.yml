@@ -61,6 +61,8 @@ jobs:
     env:
       ENV_NAME: "ci-wheels"
       ENV_CACHE_BUILD: "0"
+      #: If you change the IRIS_SOURCE here you will also need to change it in
+      #: the noxfile and the tests and benchmark workflows.
       IRIS_SOURCE: "github:main"
 
     strategy:
