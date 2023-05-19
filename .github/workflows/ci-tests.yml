@@ -23,6 +23,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  IRIS_SOURCE: "github:main"
+
 jobs:
   tests:
     name: "${{ matrix.session }} (py${{ matrix.python-version }} ${{ matrix.os }})"
@@ -38,7 +41,6 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       IRIS_TEST_DATA_LOC_PATH: tests
       IRIS_TEST_DATA_PATH: tests/iris-test-data
-      IRIS_SOURCE: "github:main"
       IRIS_TEST_DATA_VERSION: "2.19"
       ENV_CACHE_BUILD: "0"
       TEST_DATA_CACHE_BUILD: "0"

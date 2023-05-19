@@ -32,7 +32,6 @@ jobs:
       IRIS_TEST_DATA_LOC_PATH: benchmarks
       IRIS_TEST_DATA_PATH: benchmarks/iris-test-data
       IRIS_TEST_DATA_VERSION: "2.19"
-      IRIS_SOURCE: "github:main"
       ENV_CACHE_BUILD: "0"
       TEST_DATA_CACHE_BUILD: "0"
 
@@ -41,7 +40,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: git checkout HEAD^2
+#      - run: git checkout HEAD^2
 
       - name: Install ASV & Nox
         run: |
