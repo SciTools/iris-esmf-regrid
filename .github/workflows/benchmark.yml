@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   benchmark:
-    name: "performance benchmarks (py${{ matrix.python-version }} ${{ matrix.os }}"
+    name: "performance benchmarks (py${{ matrix.python-version }}"
 
     runs-on: ubuntu-latest
 
@@ -40,6 +40,10 @@ jobs:
       ENV_CACHE_BUILD: "0"
       TEST_DATA_CACHE_BUILD: "0"
 
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    
     steps:
       - name: "checkout"
         uses: actions/checkout@v3
