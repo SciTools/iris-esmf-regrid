@@ -32,6 +32,7 @@ jobs:
       IRIS_TEST_DATA_LOC_PATH: benchmarks
       IRIS_TEST_DATA_PATH: benchmarks/iris-test-data
       IRIS_TEST_DATA_VERSION: "2.19"
+      IRIS_SOURCE: "github:main"
       ENV_CACHE_BUILD: "0"
       TEST_DATA_CACHE_BUILD: "0"
 

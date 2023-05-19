@@ -25,14 +25,16 @@ nox.options.reuse_existing_virtualenvs = True
 #: Name of the package to test.
 PACKAGE = "esmf_regrid"
 
-#: Cirrus-CI environment variable hook.
+#: GHA-CI environment variable hook.
 PY_VER = os.environ.get("PY_VER", ["3.8", "3.9", "3.10"])
 
-#: Cirrus-CI environment variable hook.
+#: GHA-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
 
-#: Cirrus-CI environment variable hook.
-IRIS_SOURCE = os.environ.get("IRIS_SOURCE", None)
+#: GHA-CI environment variable hook.
+#: If you change the IRIS_SOURCE here you will also need to change it in
+#: the tests, wheel and benchmark workflows.
+IRIS_SOURCE = os.environ.get("IRIS_SOURCE", "github:main")
 
 IRIS_GITHUB = "https://github.com/scitools/iris.git"
 LOCKFILE_PLATFORM = "linux-64"
@@ -127,13 +129,6 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 
     """
     result = IRIS_SOURCE
-    if not result:
-        # ci-tests sets IRIS_SOURCE. Need to fetch the value (if any) when
-        # called outside ci-tests (e.g. user, ASV).
-        # ci-tests = single-source-of-truth.
-        with Path(".github/workflows/ci-tests.yml").open("r") as file:
-            gha_config = yaml.load(file, Loader=yaml.FullLoader)
-        result = gha_config["env"].get("IRIS_SOURCE", None)
 
     # The CLI overrides the environment variable.
     for arg in session.posargs:

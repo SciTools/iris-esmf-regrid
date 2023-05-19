@@ -23,8 +23,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  IRIS_SOURCE: "github:main"
+
 
 jobs:
   tests:
@@ -39,6 +38,7 @@ jobs:
     env:
       ENV_NAME: "ci-tests"
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      IRIS_SOURCE: "github:main"
       IRIS_TEST_DATA_LOC_PATH: tests
       IRIS_TEST_DATA_PATH: tests/iris-test-data
       IRIS_TEST_DATA_VERSION: "2.19"
