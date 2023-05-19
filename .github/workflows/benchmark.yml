@@ -5,15 +5,15 @@ name: benchmark-check
 on:
   pull_request:
     #only_if: ${SKIP_BENCHMARK_TASK} == ""
-    push:
-      branches:
-        - "main"
-        - "v*x"
-        - "!auto-update-lockfiles"
-        - "!pre-commit-ci-update-config"
-        - "!dependabot/*"
-      tags:
-        - "v*"
+  push:
+    branches:
+      - "main"
+      - "v*x"
+      - "!auto-update-lockfiles"
+      - "!pre-commit-ci-update-config"
+      - "!dependabot/*"
+    tags:
+      - "v*"
 
   workflow_dispatch:
 
