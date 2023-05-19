@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   benchmark:
-    name: "performance benchmarks (py${{ matrix.python-version }}"
+    name: "performance benchmarks (py${{ matrix.python-version }})"
 
     runs-on: ubuntu-latest
 
