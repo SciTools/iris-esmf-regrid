@@ -1,0 +1,82 @@
+# Use ASV to check performance reqressions in the last 24 hours' commits.
+
+name: benchmark-check
+
+on:
+  pull_request:
+    #only_if: ${SKIP_BENCHMARK_TASK} == ""
+    push:
+      branches:
+        - "main"
+        - "v*x"
+        - "!auto-update-lockfiles"
+        - "!pre-commit-ci-update-config"
+        - "!dependabot/*"
+      tags:
+        - "v*"
+
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+
+    env:
+      PY_VER: "3.10"
+      IRIS_TEST_DATA_LOC_PATH: benchmarks
+      IRIS_TEST_DATA_PATH: benchmarks/iris-test-data
+      IRIS_TEST_DATA_VERSION: "2.19"
+      IRIS_SOURCE: "github:main"
+      ENV_CACHE_BUILD: "0"
+      TEST_DATA_CACHE_BUILD: "0"
+
+    steps:
+      - name: "checkout"
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install ASV & Nox
+        run: |
+          pip install asv nox
+
+      - name: Cache environment directories
+        uses: actions/cache@v3
+        with:
+          path: |
+            .nox
+            benchmarks/.asv/env
+            $CONDA/pkgs
+          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}
+
+      - name: Cache test data directory
+        id: cache-test-data
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ env.IRIS_TEST_DATA_PATH }}
+          key:
+            test-data-${{ env.IRIS_TEST_DATA_VERSION }}-${{ env.TEST_DATA_CACHE_BUILD }}
+
+      - name: Fetch the test data
+        if: steps.cache-test-data.outputs.cache-hit != 'true'
+        run: |
+          wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
+          unzip -q iris-test-data.zip
+          mkdir --parents ${{ github.workspace }}/${IRIS_TEST_DATA_LOC_PATH}
+          mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${IRIS_TEST_DATA_PATH}
+
+      - name: Set test data var
+        run: |
+          echo "OVERRIDE_TEST_DATA_REPOSITORY=${{ github.workspace }}/${IRIS_TEST_DATA_PATH}/test_data" >> $GITHUB_ENV
+
+      - name: benchmark script
+        run: |
+          if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/$github.base_ref }}"; fi;
+          export COMPARE="HEAD~"
+          nox --session=tests --install-only
+          export DATA_GEN_PYTHON=$(realpath $find .nox -path "*tests/bin/python"))
+          nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${COMPARE}"
