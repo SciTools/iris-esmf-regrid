@@ -55,15 +55,14 @@ jobs:
             $CONDA/pkgs
           key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}
 
-      - name: benchmark script
+      - name: Benchmark script
         run: |
           if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/$github.base_ref }}"; fi;
           nox --session=tests --install-only
           export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests/bin/python"))
-          nox --no-reuse-existing-virtualenvs --session="benchmarks(branch)" -- "${COMPARE}"
+          nox --session="benchmarks(branch)" -- "${COMPARE}"
 
-      - name: Archive asv results
-        if: ${{ always() }}
+      - name: Archive ASV results
         uses: actions/upload-artifact@v3
         with:
           name: asv-report
