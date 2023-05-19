@@ -23,8 +23,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
-
 jobs:
   tests:
     name: "${{ matrix.session }} (py${{ matrix.python-version }} ${{ matrix.os }})"
@@ -36,7 +34,6 @@ jobs:
         shell: bash -l {0}
 
     env:
-      ENV_NAME: "ci-tests"
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       #: If you change the IRIS_SOURCE here you will also need to change it in
       #: the noxfile and the benchmark and wheel workflows.
@@ -59,8 +56,6 @@ jobs:
     steps:
       - name: "checkout"
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       - name: Install Nox
         run: |

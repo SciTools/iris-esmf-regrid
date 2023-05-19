@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   benchmark:
-    name: "performance benchmarks (py${{ matrix.python-version }}"
+    name: "performance benchmarks (py${{ matrix.python-version }})"
 
     runs-on: ubuntu-latest
 
@@ -50,7 +50,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - run: git checkout HEAD^2
+      - if: ${{ github.event_name != 'pull_request' }};
+        run: git checkout HEAD^2
 
       - name: Install ASV & Nox
         run: |
