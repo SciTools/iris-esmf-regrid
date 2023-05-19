@@ -25,14 +25,17 @@ __all__ = [
     "regrid_rectilinear_to_rectilinear",
 ]
 
+
 class Method(Enum):
     CONSERVATIVE = "conservative"
     BILINEAR = "bilinear"
     NEAREST = "nearest"
 
+
 class Location(Enum):
     FACE = "face"
     NODE = "node"
+
 
 def _get_coord(cube, axis):
     try:

@@ -5,9 +5,11 @@ import numpy as np
 from .. import esmpy
 from .._esmf_sdo import SDO
 
+
 class Location(Enum):
     FACE = "face"
     NODE = "node"
+
 
 class MeshInfo(SDO):
     """
