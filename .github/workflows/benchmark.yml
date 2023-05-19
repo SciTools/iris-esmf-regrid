@@ -1,10 +1,12 @@
-# Use ASV to check performance reqressions in the last 24 hours' commits.
+# reference:
+#   - https://github.com/actions/cache
+#   - https://github.com/actions/checkout
 
 name: benchmark-check
 
 on:
   pull_request:
-    #only_if: ${SKIP_BENCHMARK_TASK} == ""
+
   push:
     branches:
       - "main"
@@ -41,7 +43,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-#      - run: git checkout HEAD^2
+      - run: git checkout HEAD^2
 
       - name: Install ASV & Nox
         run: |
