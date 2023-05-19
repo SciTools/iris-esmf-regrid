@@ -41,7 +41,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-#      - run: git checkout HEAD^2
+      - run: git checkout HEAD^2
 
       - name: Install ASV & Nox
         run: |
@@ -58,7 +58,7 @@ jobs:
 
       - name: Benchmark script
         run: |
-          if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/$github.base_ref }}"; fi;
+          if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/${{ github.base_ref }}"; fi;
           nox --session=tests --install-only
           export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests/bin/python"))
           nox --session="benchmarks(branch)" -- "${COMPARE}"

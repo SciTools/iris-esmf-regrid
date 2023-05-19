@@ -128,12 +128,12 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
     """
     result = IRIS_SOURCE
     if not result:
-        # .cirrus.yml sets IRIS_SOURCE. Need to fetch the value (if any) when
-        # called outside Cirrus (e.g. user, ASV).
-        # .cirrus.yml = single-source-of-truth.
-        with Path(".cirrus.yml").open("r") as file:
-            cirrus_config = yaml.load(file, Loader=yaml.FullLoader)
-        result = cirrus_config["env"].get("IRIS_SOURCE", None)
+        # ci-tests sets IRIS_SOURCE. Need to fetch the value (if any) when
+        # called outside ci-tests (e.g. user, ASV).
+        # ci-tests = single-source-of-truth.
+        with Path(".github/workflows/ci-tests.yml").open("r") as file:
+            gha_config = yaml.load(file, Loader=yaml.FullLoader)
+        result = gha_config["env"].get("IRIS_SOURCE", None)
 
     # The CLI overrides the environment variable.
     for arg in session.posargs:
