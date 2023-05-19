@@ -23,6 +23,9 @@ concurrency:
 
 jobs:
   benchmark:
+    name: "benchmarks (py${{ matrix.python-version }} ${{ matrix.os }}"
+
+    runs-on: ubuntu-latest
 
     env:
       PY_VER: "3.10"
