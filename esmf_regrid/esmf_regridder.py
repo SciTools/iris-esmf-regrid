@@ -3,6 +3,7 @@
 import numpy as np
 from numpy import ma
 import scipy.sparse
+from enum import Enum
 
 import esmf_regrid
 from . import esmpy
@@ -13,6 +14,7 @@ __all__ = [
     "RefinedGridInfo",
     "Regridder",
 ]
+
 
 
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
@@ -57,7 +59,14 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 class Regridder:
     """Regridder for directly interfacing with :mod:`esmpy`."""
 
-    def __init__(self, src, tgt, method="conservative", precomputed_weights=None):
+    class Method(Enum):
+        CONSERVATIVE = esmpy.RegridMethod.CONSERVE
+        BILINEAR = esmpy.RegridMethod.BILINEAR
+        NEAREST = esmpy.RegridMethod.NEAREST_STOD
+
+    NormType = Enum('NormType', ['FRACAREA', 'DSTAREA'])
+
+    def __init__(self, src, tgt, method=None, precomputed_weights=None):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
 
@@ -76,8 +85,9 @@ class Regridder:
             Describes the target mesh/grid.
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
-        method : str
-            Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
+        method : :class:`Regridder.Method`
+            Either Regridder.Method.CONSERVATIVE, Regridder.Method.BILINEAR or Regridder.Method.NEAREST.
+            Corresponds to the :mod:`esmpy` methods
             :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
             :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
             :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
@@ -89,17 +99,11 @@ class Regridder:
         self.src = src
         self.tgt = tgt
 
-        if method == "conservative":
-            esmf_regrid_method = esmpy.RegridMethod.CONSERVE
-        elif method == "bilinear":
-            esmf_regrid_method = esmpy.RegridMethod.BILINEAR
-        elif method == "nearest":
-            esmf_regrid_method = esmpy.RegridMethod.NEAREST_STOD
-        else:
-            raise ValueError(
-                f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
-            )
-        self.method = method
+        # Sets default value, as this can't be done with class attributes within __init__()
+        if method is None:
+            method = self.Method.CONSERVATIVE
+        if not isinstance(method, self.Method):
+            raise ValueError("TEMP ERROR MESSAGE")
 
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
@@ -107,7 +111,7 @@ class Regridder:
             weights_dict = _get_regrid_weights_dict(
                 src.make_esmf_field(),
                 tgt.make_esmf_field(),
-                regrid_method=esmf_regrid_method,
+                regrid_method=method.value,
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
@@ -144,7 +148,7 @@ class Regridder:
             self.esmf_version = None
             self.weight_matrix = precomputed_weights
 
-    def regrid(self, src_array, norm_type="fracarea", mdtol=1):
+    def regrid(self, src_array, norm_type=None, mdtol=1):
         """
         Perform regridding on an array of data.
 
@@ -152,8 +156,9 @@ class Regridder:
         ----------
         src_array : :obj:`~numpy.typing.ArrayLike`
             Array whose shape is compatible with ``self.src``
-        norm_type : str
-            Either ``fracarea`` or ``dstarea``, defaults to ``fracarea``. Determines the
+        norm_type : :class:`Regridder.NormType`
+            Either ``Regridder.NormType.FRACAREA`` or ``Regridder.NormType.DSTAREA``,
+            defaults to ``Regridder.NormType.FRACAREA``. Determines the
             type of normalisation applied to the weights. Normalisations correspond
             to :mod:`esmpy` constants :attr:`~esmpy.api.constants.NormType.FRACAREA` and
             :attr:`~esmpy.api.constants.NormType.DSTAREA`.
@@ -173,6 +178,12 @@ class Regridder:
             An array whose shape is compatible with ``self.tgt``.
 
         """
+        # Sets default value, as this can't be done with class attributes within method call
+        if norm_type is None:
+            norm_type = self.NormType.FRACAREA
+        if not isinstance(norm_type, self.NormType):
+            raise ValueError("TEMP ERROR MESSAGE")
+
         array_shape = src_array.shape
         main_shape = array_shape[-self.src.dims :]
         if main_shape != self.src.shape:
@@ -190,9 +201,9 @@ class Regridder:
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
         normalisations = np.ones([self.tgt.size, extra_size])
-        if norm_type == "fracarea":
+        if norm_type == self.NormType.FRACAREA:
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
-        elif norm_type == "dstarea":
+        elif norm_type == self.NormType.DSTAREA:
             pass
         else:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')

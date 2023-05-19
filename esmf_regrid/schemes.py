@@ -3,6 +3,7 @@
 from collections import namedtuple
 import copy
 import functools
+from enum import Enum
 
 from cf_units import Unit
 import dask.array as da
@@ -24,6 +25,14 @@ __all__ = [
     "regrid_rectilinear_to_rectilinear",
 ]
 
+class Method(Enum):
+    CONSERVATIVE = "conservative"
+    BILINEAR = "bilinear"
+    NEAREST = "nearest"
+
+class Location(Enum):
+    FACE = "face"
+    NODE = "node"
 
 def _get_coord(cube, axis):
     try:
