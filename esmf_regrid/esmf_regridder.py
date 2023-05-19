@@ -16,7 +16,6 @@ __all__ = [
 ]
 
 
-
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
     # The value, in array form, that ESMF should treat as an affirmative mask.
     expected_mask = np.array([True])
@@ -64,7 +63,7 @@ class Regridder:
         BILINEAR = esmpy.RegridMethod.BILINEAR
         NEAREST = esmpy.RegridMethod.NEAREST_STOD
 
-    NormType = Enum('NormType', ['FRACAREA', 'DSTAREA'])
+    NormType = Enum("NormType", ["FRACAREA", "DSTAREA"])
 
     def __init__(self, src, tgt, method=None, precomputed_weights=None):
         """
