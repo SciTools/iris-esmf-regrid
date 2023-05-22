@@ -25,6 +25,7 @@ __all__ = [
     "regrid_rectilinear_to_rectilinear",
 ]
 
+
 def _get_coord(cube, axis):
     try:
         coord = cube.coord(axis=axis, dim_coords=True)
@@ -1122,7 +1123,9 @@ class _ESMFRegridder:
 
         """
         if not isinstance(method, Regridder.Method):
-            raise ValueError("``method```` must be a member of the ``Regridder.Method`` enum.")
+            raise ValueError(
+                "``method```` must be a member of the ``Regridder.Method`` enum."
+            )
         if mdtol is None:
             if method == Regridder.Method.CONSERVATIVE:
                 mdtol = 1
