@@ -50,6 +50,8 @@ jobs:
         with:
           fetch-depth: 0
       - if: ${{ github.event_name == 'pull_request' }}
+        # TODO: change HEAD^2 to ${{ github.head_ref }} to match iris behaviour.
+        #  Currently, this checks out the HEAD of the pull request.
         run: git checkout HEAD^2
 
       - name: Install ASV & Nox
