@@ -60,10 +60,10 @@ def test_esmpy_normalisation():
 
     tgt_field_dstarea = esmpy_dstarea_regridder(src_field, tgt_field)
     result_esmpy_dstarea = tgt_field_dstarea.data
-    result_dstarea = regridder.regrid(src_array, norm_type="dstarea")
+    result_dstarea = regridder.regrid(src_array, norm_type=Regridder.NormType.DSTAREA)
     assert ma.allclose(result_esmpy_dstarea, result_dstarea)
 
     tgt_field_fracarea = esmpy_fracarea_regridder(src_field, tgt_field)
     result_esmpy_fracarea = tgt_field_fracarea.data
-    result_fracarea = regridder.regrid(src_array, norm_type="fracarea")
+    result_fracarea = regridder.regrid(src_array, norm_type=Regridder.NormType.FRACAREA)
     assert ma.allclose(result_esmpy_fracarea, result_fracarea)

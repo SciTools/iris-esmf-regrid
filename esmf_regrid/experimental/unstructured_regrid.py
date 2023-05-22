@@ -1,14 +1,10 @@
 """Provides :mod:`esmpy` representations of UGRID meshes."""
 
 import numpy as np
+from enum import Enum
 
 from .. import esmpy
 from .._esmf_sdo import SDO
-
-
-class Location(Enum):
-    FACE = "face"
-    NODE = "node"
 
 
 class MeshInfo(SDO):
@@ -23,6 +19,10 @@ class MeshInfo(SDO):
     contain enough information for area weighted regridding and may be
     inappropriate for other :mod:`esmpy` regridding schemes.
     """
+
+    class Location(Enum):
+        FACE = "face"
+        NODE = "node"
 
     def __init__(
         self,

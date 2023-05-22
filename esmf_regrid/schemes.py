@@ -25,18 +25,6 @@ __all__ = [
     "regrid_rectilinear_to_rectilinear",
 ]
 
-
-class Method(Enum):
-    CONSERVATIVE = "conservative"
-    BILINEAR = "bilinear"
-    NEAREST = "nearest"
-
-
-class Location(Enum):
-    FACE = "face"
-    NODE = "node"
-
-
 def _get_coord(cube, axis):
     try:
         coord = cube.coord(axis=axis, dim_coords=True)
@@ -464,15 +452,15 @@ def _make_gridinfo(cube, method, resolution, mask):
     if resolution is not None:
         if not (isinstance(resolution, int) and resolution > 0):
             raise ValueError("resolution must be a positive integer.")
-        if method != "conservative":
+        if method != Regridder.Method.CONSERVATIVE:
             raise ValueError("resolution can only be set for conservative regridding.")
-    if method == "conservative":
+    if method == Regridder.Method.CONSERVATIVE:
         center = False
-    elif method in ("bilinear", "nearest"):
+    elif method in (Regridder.Method.BILINEAR, Regridder.Method.NEAREST):
         center = True
     else:
         raise NotImplementedError(
-            f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
+            f"method must be a member of the Regridder.Method enum, got '{method}'."
         )
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
@@ -482,26 +470,26 @@ def _make_meshinfo(cube, method, mask, src_or_tgt):
     location = cube.location
     if mesh is None:
         raise ValueError(f"The {src_or_tgt} cube is not defined on a mesh.")
-    if method == "conservative":
+    if method == Regridder.Method.CONSERVATIVE:
         if location != "face":
             raise ValueError(
                 f"Conservative regridding requires a {src_or_tgt} cube located on "
                 f"the face of a cube, target cube had the {location} location."
             )
-    elif method in ("bilinear", "nearest"):
-        if location not in ["face", "node"]:
+    elif method in (Regridder.Method.BILINEAR, Regridder.Method.NEAREST):
+        if location not in [Regridder.Location.FACE, Regridder.Location.NODE]:
             raise ValueError(
                 f"{method} regridding requires a {src_or_tgt} cube with a node "
                 f"or face location, target cube had the {location} location."
             )
-        if location == "face" and None in mesh.face_coords:
+        if location == Regridder.Location.FACE and None in mesh.face_coords:
             raise ValueError(
                 f"{method} regridding requires a {src_or_tgt} cube on a face"
                 f"location to have a face center."
             )
     else:
         raise NotImplementedError(
-            f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
+            f"method must be a member of Regridder.Method enum, got '{method}'."
         )
 
     return _mesh_to_MeshInfo(mesh, location, mask=mask)
@@ -779,7 +767,7 @@ def regrid_rectilinear_to_rectilinear(
     src_cube,
     grid_cube,
     mdtol=0,
-    method="conservative",
+    method=Regridder.Method.CONSERVATIVE,
     src_resolution=None,
     tgt_resolution=None,
 ):
@@ -808,11 +796,8 @@ def regrid_rectilinear_to_rectilinear(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
-    method : str, default="conservative"
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
+    method : :class:`Regridder.Method`
+        The method to be used to calculate weights.
     src_resolution, tgt_resolution : int, optional
         If present, represents the amount of latitude slices per source/target cell
         given to ESMF for calculation.
@@ -1114,11 +1099,8 @@ class _ESMFRegridder:
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
         tgt : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
-        method : str
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE`,
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST_STOD` used to calculate weights.
+        method : :class:`Regridder.Method`
+            The method to be used to calculate weights.
         mdtol : float, default=None
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1139,14 +1121,12 @@ class _ESMFRegridder:
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
-        if method not in ["conservative", "bilinear", "nearest"]:
-            raise NotImplementedError(
-                f"method must be either 'bilinear', 'conservative' or 'nearest', got '{method}'."
-            )
+        if not isinstance(method, Regridder.Method):
+            raise ValueError("``method```` must be a member of the ``Regridder.Method`` enum.")
         if mdtol is None:
-            if method == "conservative":
+            if method == Regridder.Method.CONSERVATIVE:
                 mdtol = 1
-            elif method in ("bilinear", "nearest"):
+            elif method in (Regridder.Method.NEAREST, Regridder.Method.BILINEAR):
                 mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."

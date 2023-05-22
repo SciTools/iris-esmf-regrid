@@ -116,8 +116,8 @@ def test_Regridder_regrid():
     )
     assert ma.allclose(result_half_mdtol, expected_half_mdtol)
 
-    # Regrid with norm_type="dstarea".
-    result_dstarea = rg.regrid(src_masked, norm_type="dstarea")
+    # Regrid with norm_type=Regridder.NormType.DSTAREA.
+    result_dstarea = rg.regrid(src_masked, norm_type=Regridder.NormType.DSTAREA)
     expected_dstarea = ma.array(
         [
             [0.3325805974343169, 0.4999999999999999, 0.6674194025656823],
