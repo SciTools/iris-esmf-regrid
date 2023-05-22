@@ -7,6 +7,7 @@ Created originally using sphinx-quickstart on 2022-02-21.
 from datetime import datetime
 import os
 from pathlib import Path
+import re
 import sys
 
 # -- Path setup --------------------------------------------------------------
@@ -66,6 +67,36 @@ templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
+def _dotv(version):
+    result = version
+    match = re.match(r"^py(\d+)$", version)
+    if match:
+        digits = match.group(1)
+        if len(digits) > 1:
+            result = f"{digits[0]}.{digits[1:]}"
+    return result
+
+
+# Automate the discovery of the python versions tested with CI.
+python_support = sorted(
+    [fname.stem for fname in Path(".").glob("../../requirements/py*.yml")]
+)
+
+
+if not python_support:
+    python_support = "unknown Python versions"
+elif len(python_support) == 1:
+    python_support = f"Python {_dotv(python_support[0])}"
+else:
+    rest = ", ".join([_dotv(v) for v in python_support[:-1]])
+    last = _dotv(python_support[-1])
+    python_support = f"Python {rest} and {last}"
+
+rst_epilog = f"""
+.. |python_support| replace:: {python_support}
+"""
+
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -86,10 +117,10 @@ html_theme_options = {
 }
 
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+# # Add any paths that contain custom static files (such as style sheets) here,
+# # relative to this directory. They are copied after the builtin static files,
+# # so a file named "default.css" will overwrite the builtin "default.css".
+# html_static_path = ["_static"]
 
 
 # -- api generation configuration ---------------------------------------------
