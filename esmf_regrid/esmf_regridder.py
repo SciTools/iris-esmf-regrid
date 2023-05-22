@@ -98,7 +98,9 @@ class Regridder:
 
         # type checks method
         if not isinstance(method, self.Method):
-            raise ValueError("``method```` must be a member of the ``Regridder.Method`` enum.")
+            raise ValueError(
+                "``method```` must be a member of the ``Regridder.Method`` enum."
+            )
 
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
@@ -174,7 +176,9 @@ class Regridder:
         """
         # Sets default value, as this can't be done with class attributes within method call
         if not isinstance(norm_type, self.NormType):
-            raise ValueError("``norm_type```` must be a member of the ``Regridder.NormType`` enum.")
+            raise ValueError(
+                "``norm_type```` must be a member of the ``Regridder.NormType`` enum."
+            )
 
         array_shape = src_array.shape
         main_shape = array_shape[-self.src.dims :]
