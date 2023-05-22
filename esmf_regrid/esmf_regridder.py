@@ -145,7 +145,7 @@ class Regridder:
             self.esmf_version = None
             self.weight_matrix = precomputed_weights
 
-    def regrid(self, src_array, norm_type=NormType.FRACERA, mdtol=1):
+    def regrid(self, src_array, norm_type=NormType.FRACAREA, mdtol=1):
         """
         Perform regridding on an array of data.
 
