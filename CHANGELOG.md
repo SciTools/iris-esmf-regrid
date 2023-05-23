@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.7] - 2023-05-23
 
 ### Added
 
@@ -18,11 +18,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   these grids with the `src_resolution` and `tgt_resolution` keywords.
   [@stephenworsley](https://github.com/stephenworsley) with extensive review
   work from [@trexfeathers](https://github.com/trexfeathers)
-
 - [PR#266](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/266)
   Added Nearest neighbour regridding.
   [@stephenworsley](https://github.com/stephenworsley)
   [@HGWright](https://github.com/HGWright)
+- [PR#272](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/272)
+  Add support for Python 3.11.
+  [@stephenworsley](https://github.com/stephenworsley)
 
 ### Changed
 
@@ -33,6 +35,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   replaced by `src_resolution` and `tgt_resolution` respectively.
   [@stephenworsley](https://github.com/stephenworsley) with extensive review
   work from [@trexfeathers](https://github.com/trexfeathers)
+
+### Removed
+
+- [PR#272](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/272)
+  Remove support for Python 3.8.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+### Fixed
+
+- [PR#258](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/258)
+  Allow the documentation to build properly.
+  [@zklaus](https://github.com/zklaus)
 
 ## [0.6] - 2023-03-31
 
