@@ -50,7 +50,10 @@ jobs:
         with:
           fetch-depth: 0
       - if: ${{ github.event_name == 'pull_request' }}
-        # TODO: change HEAD^2 to ${{ github.head_ref }} to match iris behaviour.
+        # TODO: remove this, so we can benchmark using GHA's default
+        #  commit - a simulated merge. Requires adapting 
+        #  --session="benchmarks(branch)" to accept inputs for both
+        #  commits to compare (instead of deriving one of them).
         #  Currently, this checks out the HEAD of the pull request.
         run: git checkout HEAD^2
 
