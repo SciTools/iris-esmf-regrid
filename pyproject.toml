@@ -18,9 +18,9 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 description = "Iris regridding scheme using ESMF"
@@ -45,7 +45,7 @@ Issues = "https://github.com/SciTools-incubator/iris-esmf-regrid/issues"
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py39', 'py310', 'py311']
 include = '\.pyi?$'
 
 [tool.pytest.ini_options]
