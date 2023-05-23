@@ -26,7 +26,7 @@ nox.options.reuse_existing_virtualenvs = True
 PACKAGE = "esmf_regrid"
 
 #: GHA-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.8", "3.9", "3.10"])
+PY_VER = os.environ.get("PY_VER", ["3.9", "3.10", "3.11"])
 
 #: GHA-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
