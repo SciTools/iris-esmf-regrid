@@ -3,7 +3,6 @@
 from collections import namedtuple
 import copy
 import functools
-from enum import Enum
 
 from cf_units import Unit
 import dask.array as da
@@ -1311,7 +1310,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         super().__init__(
             src,
             tgt,
-            "conservative",
+            Regridder.Method.CONSERVATIVE,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             **kwargs,
@@ -1364,7 +1363,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         super().__init__(
             src,
             tgt,
-            "bilinear",
+            Regridder.Method.BILINEAR,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
@@ -1411,7 +1410,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         super().__init__(
             src,
             tgt,
-            "nearest",
+            Regridder.Method.NEAREST,
             mdtol=0,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
