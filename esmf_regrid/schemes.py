@@ -10,6 +10,7 @@ import iris.coords
 import iris.cube
 from iris.exceptions import CoordinateNotFoundError
 import numpy as np
+from . import Constants
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
@@ -452,15 +453,15 @@ def _make_gridinfo(cube, method, resolution, mask):
     if resolution is not None:
         if not (isinstance(resolution, int) and resolution > 0):
             raise ValueError("resolution must be a positive integer.")
-        if method != Regridder.Method.CONSERVATIVE:
+        if method != Constants.Method.CONSERVATIVE:
             raise ValueError("resolution can only be set for conservative regridding.")
-    if method == Regridder.Method.CONSERVATIVE:
+    if method == Constants.Method.CONSERVATIVE:
         center = False
-    elif method in (Regridder.Method.BILINEAR, Regridder.Method.NEAREST):
+    elif method in (Constants.Method.BILINEAR, Constants.Method.NEAREST):
         center = True
     else:
         raise NotImplementedError(
-            f"method must be a member of the Regridder.Method enum, got '{method}'."
+            f"method must be a member of the Constants.Method enum, got '{method}'."
         )
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
@@ -470,26 +471,26 @@ def _make_meshinfo(cube, method, mask, src_or_tgt):
     location = cube.location
     if mesh is None:
         raise ValueError(f"The {src_or_tgt} cube is not defined on a mesh.")
-    if method == Regridder.Method.CONSERVATIVE:
+    if method == Constants.Method.CONSERVATIVE:
         if location != "face":
             raise ValueError(
                 f"Conservative regridding requires a {src_or_tgt} cube located on "
                 f"the face of a cube, target cube had the {location} location."
             )
-    elif method in (Regridder.Method.BILINEAR, Regridder.Method.NEAREST):
-        if location not in [Regridder.Location.FACE, Regridder.Location.NODE]:
+    elif method in (Constants.Method.BILINEAR, Constants.Method.NEAREST):
+        if location not in [Constants.Location.FACE, Constants.Location.NODE]:
             raise ValueError(
                 f"{method} regridding requires a {src_or_tgt} cube with a node "
                 f"or face location, target cube had the {location} location."
             )
-        if location == Regridder.Location.FACE and None in mesh.face_coords:
+        if location == Constants.Location.FACE and None in mesh.face_coords:
             raise ValueError(
                 f"{method} regridding requires a {src_or_tgt} cube on a face"
                 f"location to have a face center."
             )
     else:
         raise NotImplementedError(
-            f"method must be a member of Regridder.Method enum, got '{method}'."
+            f"method must be a member of Constants.Method enum, got '{method}'."
         )
 
     return _mesh_to_MeshInfo(mesh, location, mask=mask)
@@ -767,7 +768,7 @@ def regrid_rectilinear_to_rectilinear(
     src_cube,
     grid_cube,
     mdtol=0,
-    method=Regridder.Method.CONSERVATIVE,
+    method=Constants.Method.CONSERVATIVE,
     src_resolution=None,
     tgt_resolution=None,
 ):
@@ -796,7 +797,7 @@ def regrid_rectilinear_to_rectilinear(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
-    method : :class:`Regridder.Method`
+    method : :class:`Constants.Method`
         The method to be used to calculate weights.
     src_resolution, tgt_resolution : int, optional
         If present, represents the amount of latitude slices per source/target cell
@@ -1099,7 +1100,7 @@ class _ESMFRegridder:
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
         tgt : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
-        method : :class:`Regridder.Method`
+        method : :class:`Constants.Method`
             The method to be used to calculate weights.
         mdtol : float, default=None
             Tolerance of missing data. The value returned in each element of
@@ -1121,14 +1122,14 @@ class _ESMFRegridder:
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
-        if not isinstance(method, Regridder.Method):
+        if not isinstance(method, Constants.Method):
             raise ValueError(
-                "``method```` must be a member of the ``Regridder.Method`` enum."
+                "``method```` must be a member of the ``Constants.Method`` enum."
             )
         if mdtol is None:
-            if method == Regridder.Method.CONSERVATIVE:
+            if method == Constants.Method.CONSERVATIVE:
                 mdtol = 1
-            elif method in (Regridder.Method.NEAREST, Regridder.Method.BILINEAR):
+            elif method in (Constants.Method.NEAREST, Constants.Method.BILINEAR):
                 mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
@@ -1310,7 +1311,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         super().__init__(
             src,
             tgt,
-            Regridder.Method.CONSERVATIVE,
+            Constants.Method.CONSERVATIVE,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             **kwargs,
@@ -1363,7 +1364,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         super().__init__(
             src,
             tgt,
-            Regridder.Method.BILINEAR,
+            Constants.Method.BILINEAR,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
@@ -1410,7 +1411,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         super().__init__(
             src,
             tgt,
-            Regridder.Method.NEAREST,
+            Constants.Method.NEAREST,
             mdtol=0,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,

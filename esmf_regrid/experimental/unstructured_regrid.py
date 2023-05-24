@@ -1,9 +1,9 @@
 """Provides :mod:`esmpy` representations of UGRID meshes."""
 
 import numpy as np
-from enum import Enum
 
 from .. import esmpy
+from .. import Constants
 from .._esmf_sdo import SDO
 
 
@@ -20,10 +20,6 @@ class MeshInfo(SDO):
     inappropriate for other :mod:`esmpy` regridding schemes.
     """
 
-    class Location(Enum):
-        FACE = "face"
-        NODE = "node"
-
     def __init__(
         self,
         node_coords,
@@ -33,7 +29,7 @@ class MeshInfo(SDO):
         areas=None,
         mask=None,
         elem_coords=None,
-        location="face",
+        location=Constants.Location.FACE,
     ):
         """
         Create a :class:`MeshInfo` object describing a UGRID-like mesh.
@@ -68,8 +64,8 @@ class MeshInfo(SDO):
             An ``Nx2`` array describing the location of the face centers of the mesh.
             ``elem_coords[:,0]`` describes the longitudes in degrees and
             ``elem_coords[:,1]`` describes the latitudes in degrees.
-        location : str, default="face"
-            Either "face" or "node". Describes the location for data on the mesh.
+        location : :class:`Constants.Location`
+            Member of Constants.Location enum. Describes the location for data on the mesh.
         """
         self.node_coords = node_coords
         self.fnc = face_node_connectivity
@@ -77,16 +73,16 @@ class MeshInfo(SDO):
         self.esi = elem_start_index
         self.areas = areas
         self.elem_coords = elem_coords
-        if location == "face":
+        if location == Constants.Location.FACE:
             field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
-        elif location == "node":
+        elif location == Constants.Location.NODE:
             field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
         else:
             raise ValueError(
                 f"The mesh location '{location}' is not supported, only "
-                f"'face' and 'node' are supported."
+                f"members of Constants.Location enum are accepted."
             )
         super().__init__(
             shape=shape,

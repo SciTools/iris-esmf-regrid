@@ -7,6 +7,7 @@ import numpy as np
 from numpy import ma
 import pytest
 
+from esmf_regrid._constants import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
 )
@@ -74,7 +75,7 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
-@pytest.mark.parametrize("method", ["bilinear", "nearest"])
+@pytest.mark.parametrize("method", [Constants.Method.BILINEAR, Constants.Method.NEAREST])
 def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
@@ -152,7 +153,7 @@ def test_multidim_cubes():
     expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, :]
     assert np.allclose(expected_data, result.data)
 
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords(Constants.Location.FACE)
     expected_cube = Cube(expected_data)
     expected_cube.add_dim_coord(time, 0)
     expected_cube.add_aux_coord(mesh_coord_x, 1)
@@ -202,7 +203,7 @@ def test_invalid_method():
     with pytest.raises(NotImplementedError):
         _ = GridToMeshESMFRegridder(src, face_tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(src, node_tgt, method="conservative")
+        _ = GridToMeshESMFRegridder(src, node_tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (
         "Conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."

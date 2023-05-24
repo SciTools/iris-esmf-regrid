@@ -3,10 +3,10 @@
 import numpy as np
 from numpy import ma
 import scipy.sparse
-from enum import Enum
 
 import esmf_regrid
 from . import esmpy
+from . import Constants
 from ._esmf_sdo import GridInfo, RefinedGridInfo
 
 __all__ = [
@@ -14,7 +14,6 @@ __all__ = [
     "RefinedGridInfo",
     "Regridder",
 ]
-
 
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
     # The value, in array form, that ESMF should treat as an affirmative mask.
@@ -58,16 +57,7 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 class Regridder:
     """Regridder for directly interfacing with :mod:`esmpy`."""
 
-    class Method(Enum):
-        CONSERVATIVE = esmpy.RegridMethod.CONSERVE
-        BILINEAR = esmpy.RegridMethod.BILINEAR
-        NEAREST = esmpy.RegridMethod.NEAREST_STOD
-
-    NormType = Enum("NormType", ["FRACAREA", "DSTAREA"])
-    # used in other files, placed here to have them all in one place
-    Location = Enum("Location", ["FACE", "NODE"])
-
-    def __init__(self, src, tgt, method=Method.CONSERVATIVE, precomputed_weights=None):
+    def __init__(self, src, tgt, method=Constants.Method.CONSERVATIVE, precomputed_weights=None):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
 
@@ -86,7 +76,7 @@ class Regridder:
             Describes the target mesh/grid.
             Data output by this regridder will be a :class:`numpy.ndarray` whose
             shape is compatible with ``tgt``.
-        method : :class:`Regridder.Method`
+        method : :class:`Constants.Method`
             The method to be used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
@@ -97,9 +87,9 @@ class Regridder:
         self.tgt = tgt
 
         # type checks method
-        if not isinstance(method, self.Method):
+        if not isinstance(method, Constants.Method):
             raise ValueError(
-                "``method```` must be a member of the ``Regridder.Method`` enum."
+                "``method```` must be a member of the ``Constants.Method`` enum."
             )
 
         self.esmf_regrid_version = esmf_regrid.__version__
@@ -145,7 +135,7 @@ class Regridder:
             self.esmf_version = None
             self.weight_matrix = precomputed_weights
 
-    def regrid(self, src_array, norm_type=NormType.FRACAREA, mdtol=1):
+    def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """
         Perform regridding on an array of data.
 
@@ -153,8 +143,8 @@ class Regridder:
         ----------
         src_array : :obj:`~numpy.typing.ArrayLike`
             Array whose shape is compatible with ``self.src``
-        norm_type : :class:`Regridder.NormType`
-            Either ``Regridder.NormType.FRACAREA`` or ``Regridder.NormType.DSTAREA``.
+        norm_type : :class:`Constants.NormType`
+            Either ``Constants.NormType.FRACAREA`` or ``Constants.NormType.DSTAREA``.
             Determines the type of normalisation applied to the weights. Normalisations
             correspond to :mod:`esmpy` constants :attr:`~esmpy.api.constants.NormType.FRACAREA`
             and :attr:`~esmpy.api.constants.NormType.DSTAREA`.
@@ -175,9 +165,9 @@ class Regridder:
 
         """
         # Sets default value, as this can't be done with class attributes within method call
-        if not isinstance(norm_type, self.NormType):
+        if not isinstance(norm_type, Constants.NormType):
             raise ValueError(
-                "``norm_type```` must be a member of the ``Regridder.NormType`` enum."
+                "``norm_type```` must be a member of the ``Constants.NormType`` enum."
             )
 
         array_shape = src_array.shape
@@ -197,9 +187,9 @@ class Regridder:
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
         normalisations = np.ones([self.tgt.size, extra_size])
-        if norm_type == self.NormType.FRACAREA:
+        if norm_type == Constants.NormType.FRACAREA:
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
-        elif norm_type == self.NormType.DSTAREA:
+        elif norm_type == Constants.NormType.DSTAREA:
             pass
         else:
             raise ValueError(f'Normalisation type "{norm_type}" is not supported')

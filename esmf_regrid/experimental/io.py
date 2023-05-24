@@ -8,6 +8,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
+from .. import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -124,7 +125,7 @@ def save_regridder(rg, filename):
     save_version = esmf_regrid.__version__
 
     # Currently, all schemes use the fracarea normalization.
-    normalization = "fracarea"
+    normalization = Constants.NormType.FRACAREA
 
     mdtol = rg.mdtol
     attributes = {
@@ -203,7 +204,7 @@ def load_regridder(filename):
 
     # Determine the regridding method, allowing for files created when
     # conservative regridding was the only method.
-    method = weights_cube.attributes.get(METHOD, "conservative")
+    method = weights_cube.attributes.get(METHOD, Constants.Method.CONSERVATICE)
     resolution = weights_cube.attributes.get(RESOLUTION, None)
     if resolution is not None:
         resolution = int(resolution)
