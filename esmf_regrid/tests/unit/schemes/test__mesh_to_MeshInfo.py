@@ -7,6 +7,7 @@ import numpy as np
 from numpy import ma
 import scipy.sparse
 
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.schemes import _mesh_to_MeshInfo
 
@@ -191,7 +192,7 @@ def _gridlike_mesh(n_lons, n_lats):
     return mesh
 
 
-def _gridlike_mesh_cube(n_lons, n_lats, location="face"):
+def _gridlike_mesh_cube(n_lons, n_lats, location=Constants.Location.FACE):
     mesh = _gridlike_mesh(n_lons, n_lats)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords(location)
     data = np.zeros_like(mesh_coord_x.points)
@@ -204,7 +205,7 @@ def _gridlike_mesh_cube(n_lons, n_lats, location="face"):
 def test__mesh_to_MeshInfo():
     """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._mesh_to_MeshInfo`."""
     mesh = _example_mesh()
-    meshinfo = _mesh_to_MeshInfo(mesh, location="face")
+    meshinfo = _mesh_to_MeshInfo(mesh, location=Constants.Location.FACE)
 
     expected_nodes = np.array(
         [
@@ -228,7 +229,7 @@ def test__mesh_to_MeshInfo():
 def test_anticlockwise_validity():
     """Test validity of objects derived from Mesh objects with anticlockwise orientation."""
     mesh = _example_mesh()
-    meshinfo = _mesh_to_MeshInfo(mesh, location="face")
+    meshinfo = _mesh_to_MeshInfo(mesh, location=Constants.Location.FACE)
 
     # Ensure conversion to ESMF works without error.
     _ = meshinfo.make_esmf_field()
@@ -244,7 +245,7 @@ def test_anticlockwise_validity():
 def test_large_mesh_validity():
     """Test validity of objects derived from a large gridlike Mesh."""
     mesh = _gridlike_mesh(40, 20)
-    meshinfo = _mesh_to_MeshInfo(mesh, location="face")
+    meshinfo = _mesh_to_MeshInfo(mesh, location=Constants.Location.FACE)
 
     # Ensure conversion to ESMF works without error.
     _ = meshinfo.make_esmf_field()

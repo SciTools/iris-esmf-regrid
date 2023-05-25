@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ma
 import pytest
 import scipy.sparse
-
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.tests import make_grid_args
 
@@ -116,8 +116,8 @@ def test_Regridder_regrid():
     )
     assert ma.allclose(result_half_mdtol, expected_half_mdtol)
 
-    # Regrid with norm_type=Regridder.NormType.DSTAREA.
-    result_dstarea = rg.regrid(src_masked, norm_type=Regridder.NormType.DSTAREA)
+    # Regrid with norm_type=Constants.NormType.DSTAREA.
+    result_dstarea = rg.regrid(src_masked, norm_type=Constants.NormType.DSTAREA)
     expected_dstarea = ma.array(
         [
             [0.3325805974343169, 0.4999999999999999, 0.6674194025656823],
