@@ -15,6 +15,7 @@ __all__ = [
     "Regridder",
 ]
 
+
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
     # The value, in array form, that ESMF should treat as an affirmative mask.
     expected_mask = np.array([True])
@@ -57,7 +58,9 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 class Regridder:
     """Regridder for directly interfacing with :mod:`esmpy`."""
 
-    def __init__(self, src, tgt, method=Constants.Method.CONSERVATIVE, precomputed_weights=None):
+    def __init__(
+        self, src, tgt, method=Constants.Method.CONSERVATIVE, precomputed_weights=None
+    ):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
 

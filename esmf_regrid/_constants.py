@@ -1,7 +1,8 @@
 from enum import Enum
 from . import esmpy
 
-class Constants():
+
+class Constants:
     class Method(Enum):
         CONSERVATIVE = esmpy.RegridMethod.CONSERVE
         BILINEAR = esmpy.RegridMethod.BILINEAR
