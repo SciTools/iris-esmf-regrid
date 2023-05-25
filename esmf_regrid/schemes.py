@@ -171,28 +171,36 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     londim, latdim = len(lon.shape), len(lat.shape)
     assert londim == latdim
     assert londim in (1, 2)
-    if londim == 1:
-        # Ensure coords come from a proper grid.
-        assert isinstance(lon, iris.coords.DimCoord)
-        assert isinstance(lat, iris.coords.DimCoord)
-        circular = lon.circular
-        lon_bound_array = lon.contiguous_bounds()
-        lat_bound_array = lat.contiguous_bounds()
-        # TODO: perform checks on lat/lon.
-    elif londim == 2:
-        assert cube.coord_dims(lon) == cube.coord_dims(lat)
-        if not np.any(mask):
-            assert lon.is_contiguous()
-            assert lat.is_contiguous()
+    if not center:
+        if londim == 1:
+            # Ensure coords come from a proper grid.
+            assert isinstance(lon, iris.coords.DimCoord)
+            assert isinstance(lat, iris.coords.DimCoord)
+            circular = lon.circular
             lon_bound_array = lon.contiguous_bounds()
             lat_bound_array = lat.contiguous_bounds()
+            # TODO: perform checks on lat/lon.
+        elif londim == 2:
+            assert cube.coord_dims(lon) == cube.coord_dims(lat)
+            if not np.any(mask):
+                assert lon.is_contiguous()
+                assert lat.is_contiguous()
+                lon_bound_array = lon.contiguous_bounds()
+                lat_bound_array = lat.contiguous_bounds()
+            else:
+                lon_bound_array = _contiguous_masked(lon.bounds, mask)
+                lat_bound_array = _contiguous_masked(lat.bounds, mask)
+            # 2D coords must be AuxCoords, which do not have a circular attribute.
+            circular = False
+        lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
+        lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
+    else:
+        lon_bound_array = None
+        lat_bound_array = None
+        if londim == 1:
+            circular = lon.circular
         else:
-            lon_bound_array = _contiguous_masked(lon.bounds, mask)
-            lat_bound_array = _contiguous_masked(lat.bounds, mask)
-        # 2D coords must be AuxCoords, which do not have a circular attribute.
-        circular = False
-    lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
-    lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
+            circular = False
     lon_points = lon.units.convert(lon.points, Unit("degrees"))
     lat_points = lon.units.convert(lat.points, Unit("degrees"))
     if resolution is None:

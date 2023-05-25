@@ -162,7 +162,7 @@ class GridInfo(SDO):
         self.lons = lons
         self.lats = lats
         londims = len(self.lons.shape)
-        if len(lonbounds.shape) != londims:
+        if lonbounds is not None and len(lonbounds.shape) != londims:
             msg = (
                 f"The dimensionality of longitude bounds "
                 f"({len(lonbounds.shape)}) is incompatible with the "
@@ -170,7 +170,7 @@ class GridInfo(SDO):
             )
             raise ValueError(msg)
         latdims = len(self.lats.shape)
-        if len(latbounds.shape) != latdims:
+        if latbounds is not None and len(latbounds.shape) != latdims:
             msg = (
                 f"The dimensionality of latitude bounds "
                 f"({len(latbounds.shape)}) is incompatible with the "
@@ -219,26 +219,31 @@ class GridInfo(SDO):
         londims = len(self.lons.shape)
 
         if londims == 1:
-            if self.circular:
-                adjustedlonbounds = self._refined_lonbounds[:-1]
-            else:
-                adjustedlonbounds = self._refined_lonbounds
+            if self._refined_lonbounds is not None:
+                if self.circular:
+                    adjustedlonbounds = self._refined_lonbounds[:-1]
+                else:
+                    adjustedlonbounds = self._refined_lonbounds
+                cornerlons, cornerlats = np.meshgrid(
+                    adjustedlonbounds, self._refined_latbounds
+                )
             centerlons, centerlats = np.meshgrid(self.lons, self.lats)
-            cornerlons, cornerlats = np.meshgrid(
-                adjustedlonbounds, self._refined_latbounds
-            )
         elif londims == 2:
             if self.circular:
                 slice = np.s_[:, :-1]
             else:
                 slice = np.s_[:]
-            centerlons = self.lons[slice]
-            centerlats = self.lats[slice]
-            cornerlons = self._refined_lonbounds[slice]
-            cornerlats = self._refined_latbounds[slice]
+            centerlons = self.lons[:]
+            centerlats = self.lats[:]
+            if self._refined_lonbounds is not None:
+                cornerlons = self._refined_lonbounds[slice]
+                cornerlats = self._refined_latbounds[slice]
 
         truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
-        truecorners = ccrs.Geodetic().transform_points(self.crs, cornerlons, cornerlats)
+        if self._refined_lonbounds is not None:
+            truecorners = ccrs.Geodetic().transform_points(
+                self.crs, cornerlons, cornerlats
+            )
 
         # The following note in xESMF suggests that the arrays passed to ESMPy ought to
         # be fortran ordered:
@@ -246,8 +251,12 @@ class GridInfo(SDO):
         # It is yet to be determined what effect this has on performance.
         truecenterlons = np.asfortranarray(truecenters[..., 0])
         truecenterlats = np.asfortranarray(truecenters[..., 1])
-        truecornerlons = np.asfortranarray(truecorners[..., 0])
-        truecornerlats = np.asfortranarray(truecorners[..., 1])
+        if self._refined_lonbounds is not None:
+            truecornerlons = np.asfortranarray(truecorners[..., 0])
+            truecornerlats = np.asfortranarray(truecorners[..., 1])
+        else:
+            truecornerlons = None
+            truecornerlats = None
 
         info = (
             shape,
@@ -283,12 +292,6 @@ class GridInfo(SDO):
         else:
             grid = esmpy.Grid(shape, pole_kind=[1, 1])
 
-        grid.add_coords(staggerloc=esmpy.StaggerLoc.CORNER)
-        grid_corner_x = grid.get_coords(0, staggerloc=esmpy.StaggerLoc.CORNER)
-        grid_corner_x[:] = truecornerlons
-        grid_corner_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CORNER)
-        grid_corner_y[:] = truecornerlats
-
         # Grid center points are added here, this is not necessary for
         # conservative area weighted regridding
         if self.center:
@@ -297,6 +300,12 @@ class GridInfo(SDO):
             grid_center_x[:] = truecenterlons
             grid_center_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CENTER)
             grid_center_y[:] = truecenterlats
+        else:
+            grid.add_coords(staggerloc=esmpy.StaggerLoc.CORNER)
+            grid_corner_x = grid.get_coords(0, staggerloc=esmpy.StaggerLoc.CORNER)
+            grid_corner_x[:] = truecornerlons
+            grid_corner_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CORNER)
+            grid_corner_y[:] = truecornerlats
 
         def add_get_item(grid, **kwargs):
             grid.add_item(**kwargs)
