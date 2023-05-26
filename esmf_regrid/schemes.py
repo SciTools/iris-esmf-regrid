@@ -914,9 +914,13 @@ class ESMFAreaWeighted:
         ----------
         src_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the source.
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
         tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
             The unstructured :class:`~iris.cube.Cube`or
             :class:`~iris.experimental.ugrid.Mesh` defining the target.
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
@@ -1373,9 +1377,13 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source.
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
         tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
             The unstructured :class:`~iris.cube.Cube`or
             :class:`~iris.experimental.ugrid.Mesh` defining the target.
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
