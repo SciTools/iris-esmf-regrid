@@ -144,6 +144,12 @@ class Regridder:
             self.esmf_version = None
             self.weight_matrix = precomputed_weights
 
+    def _out_dtype(self, in_dtype):
+        """Return the expected output dtype for a given input dtype."""
+        weight_dtype = self.weight_matrix.dtype
+        out_dtype = (np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)).dtype
+        return out_dtype
+
     def regrid(self, src_array, norm_type="fracarea", mdtol=1):
         """
         Perform regridding on an array of data.
@@ -184,11 +190,7 @@ class Regridder:
         extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix @ src_inverted_mask
-        src_dtype = src_array.dtype
-        if np.issubdtype(src_dtype, np.floating):
-            out_dtype = src_dtype
-        else:
-            out_dtype = np.float64
+        out_dtype = self._out_dtype(src_array.dtype)
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
@@ -204,7 +206,7 @@ class Regridder:
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
-        flat_tgt = self.weight_matrix.astype(out_dtype) @ flat_src
+        flat_tgt = self.weight_matrix @ flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array

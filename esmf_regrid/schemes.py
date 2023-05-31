@@ -267,7 +267,7 @@ def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
     return result
 
 
-def _map_complete_blocks(src, func, dims, out_sizes):
+def _map_complete_blocks(src, func, dims, out_sizes, dtype=None):
     """
     Apply a function to complete blocks.
 
@@ -291,6 +291,8 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         Dimensions that cannot be chunked.
     out_sizes : tuple of int
         Output size of dimensions that cannot be chunked.
+    dtype : type, optional
+        Type of the output array, if not given, the dtype of src is used.
 
     Returns
     -------
@@ -303,6 +305,8 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         return func(src.data)
 
     data = src.lazy_data()
+    if dtype is None:
+        dtype = data.dtype
 
     # Ensure dims are not chunked
     in_chunks = list(data.chunks)
@@ -364,7 +368,7 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         chunks=out_chunks,
         drop_axis=dropped_dims,
         new_axis=new_axis,
-        dtype=src.dtype,
+        dtype=dtype,
     )
 
 
@@ -546,6 +550,8 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         mdtol=mdtol,
     )
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -559,6 +565,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         regrid,
         (grid_x_dim, grid_y_dim),
         chunk_shape,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
@@ -630,6 +637,8 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         mdtol=mdtol,
     )
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -643,6 +652,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         regrid,
         (mesh_dim,),
         chunk_shape,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
@@ -730,6 +740,8 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     else:
         raise NotImplementedError(f"Unrecognised location {location}.")
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -738,6 +750,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         regrid,
         (grid_x_dim, grid_y_dim),
         chunk_shape,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(

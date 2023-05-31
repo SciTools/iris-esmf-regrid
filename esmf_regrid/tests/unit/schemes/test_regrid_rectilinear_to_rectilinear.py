@@ -167,7 +167,9 @@ def test_laziness(src_transposed, tgt_transposed):
     lat_bounds = (-90, 90)
 
     grid = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
-    src_data = np.arange(n_lats * n_lons * h).reshape([n_lats, n_lons, h])
+    src_data = np.arange(n_lats * n_lons * h, dtype=np.float32).reshape(
+        [n_lats, n_lons, h]
+    )
     src_data = da.from_array(src_data, chunks=[3, 5, 1])
     src = Cube(src_data)
     src.add_dim_coord(grid.coord("latitude"), 0)
@@ -185,6 +187,8 @@ def test_laziness(src_transposed, tgt_transposed):
     assert src.has_lazy_data()
     result = regrid_rectilinear_to_rectilinear(src, tgt)
     assert result.has_lazy_data()
+    assert result.lazy_data().dtype == np.float64
+    assert result.data.dtype == np.float64
     assert np.allclose(result.data, src_data)
 
 
@@ -227,7 +231,7 @@ def test_laziness_curvilinear(src_transposed, tgt_transposed):
     extra = AuxCoord(np.arange(e), long_name="extra dim")
 
     src_data = np.empty([h, src_lats, t, src_lons, e])
-    src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
+    src_data[:] = np.arange(t * h * e, dtype=np.float32).reshape([h, t, e])[
         :, np.newaxis, :, np.newaxis, :
     ]
     src_data_lazy = da.array(src_data)
@@ -253,6 +257,8 @@ def test_laziness_curvilinear(src_transposed, tgt_transposed):
     result_lazy = regrid_rectilinear_to_rectilinear(src_cube_lazy, tgt_grid)
 
     assert result_lazy.has_lazy_data()
+    assert result.lazy_data().dtype == np.float64
+    assert result.data.dtype == np.float64
 
     assert result_lazy == result
 
