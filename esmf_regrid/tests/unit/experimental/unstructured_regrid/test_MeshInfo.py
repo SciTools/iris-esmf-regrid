@@ -100,9 +100,7 @@ def test_regrid_bilinear_with_mesh():
     mesh_args = _make_small_mesh_args()
     elem_coords = np.array([[5, 0], [5, 10]])
     node_mesh = MeshInfo(*mesh_args, location="face")
-    face_mesh = MeshInfo(
-        *mesh_args, elem_coords=elem_coords, location="face"
-    )
+    face_mesh = MeshInfo(*mesh_args, elem_coords=elem_coords, location="face")
 
     # We create a grid with the following shape:
     # 20/3 +---+
