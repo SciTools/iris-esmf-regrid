@@ -29,7 +29,7 @@ class MeshInfo(SDO):
         areas=None,
         mask=None,
         elem_coords=None,
-        location=Constants.Location.FACE,
+        location="face",
     ):
         """
         Create a :class:`MeshInfo` object describing a UGRID-like mesh.
@@ -73,10 +73,10 @@ class MeshInfo(SDO):
         self.esi = elem_start_index
         self.areas = areas
         self.elem_coords = elem_coords
-        if location == Constants.Location.FACE:
+        if location == "face":
             field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
-        elif location == Constants.Location.NODE:
+        elif location == "node":
             field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
         else:

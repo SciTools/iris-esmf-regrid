@@ -75,9 +75,7 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
-@pytest.mark.parametrize(
-    "method", [Constants.Method.BILINEAR, Constants.Method.NEAREST]
-)
+@pytest.mark.parametrize("method", [Constants.Method.BILINEAR, Constants.Method.NEAREST])
 def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
@@ -155,7 +153,7 @@ def test_multidim_cubes():
     expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, :]
     assert np.allclose(expected_data, result.data)
 
-    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords(Constants.Location.FACE)
+    mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
     expected_cube = Cube(expected_data)
     expected_cube.add_dim_coord(time, 0)
     expected_cube.add_aux_coord(mesh_coord_x, 1)

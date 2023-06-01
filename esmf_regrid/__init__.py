@@ -8,7 +8,7 @@ except ImportError as exc:
         raise exc
 
 # constants is used within schemes, so needs to imported first
-from ._constants import *
+from ._constants import Constants
 from .schemes import *
 
 

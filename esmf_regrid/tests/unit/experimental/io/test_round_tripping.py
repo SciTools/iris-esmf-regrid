@@ -42,9 +42,9 @@ def _make_grid_to_mesh_regridder(
     src.coord("longitude").var_name = "longitude"
     src.coord("latitude").var_name = "latitude"
     if method == Constants.Method.BILINEAR:
-        location = Constants.Location.NODE
+        location = "node"
     else:
-        location = Constants.Location.FACE
+        location = "face"
     tgt = _gridlike_mesh_cube(tgt_lons, tgt_lats, location=location)
 
     if masks:
@@ -92,9 +92,9 @@ def _make_mesh_to_grid_regridder(
     tgt.coord("longitude").var_name = "longitude"
     tgt.coord("latitude").var_name = "latitude"
     if method == Constants.Method.BILINEAR:
-        location = Constants.Location.NODE
+        location = "node"
     else:
-        location = Constants.Location.FACE
+        location = "face"
     src = _gridlike_mesh_cube(src_lons, src_lats, location=location)
 
     if masks:
@@ -126,7 +126,7 @@ def _make_mesh_to_grid_regridder(
     "method",
     [
         Constants.Method.CONSERVATIVE,
-        Constants.Location.BILINEAR,
+        Constants.Method.BILINEAR,
         Constants.Method.NEAREST,
     ],
 )
@@ -241,7 +241,7 @@ def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker):
     "method",
     [
         Constants.Method.CONSERVATIVE,
-        Constants.Location.BILINEAR,
+        Constants.Method.BILINEAR,
         Constants.Method.NEAREST,
     ],
 )
