@@ -4,6 +4,7 @@ from iris.coords import AuxCoord
 from iris.cube import Cube
 import numpy as np
 
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.schemes import (
