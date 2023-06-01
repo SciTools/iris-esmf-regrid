@@ -75,7 +75,9 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
-@pytest.mark.parametrize("method", [Constants.Method.BILINEAR, Constants.Method.NEAREST])
+@pytest.mark.parametrize(
+    "method", [Constants.Method.BILINEAR, Constants.Method.NEAREST]
+)
 def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
