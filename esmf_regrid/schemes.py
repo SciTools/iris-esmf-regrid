@@ -478,7 +478,7 @@ def _make_meshinfo(cube, method, mask, src_or_tgt):
                 f"the face of a cube, target cube had the {location} location."
             )
     elif method in (Constants.Method.BILINEAR, Constants.Method.NEAREST):
-        if location not in ["face", "face"]:
+        if location not in ["face", "node"]:
             raise ValueError(
                 f"{method} regridding requires a {src_or_tgt} cube with a node "
                 f"or face location, target cube had the {location} location."
