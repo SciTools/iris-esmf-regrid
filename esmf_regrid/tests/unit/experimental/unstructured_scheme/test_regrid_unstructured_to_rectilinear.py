@@ -64,7 +64,7 @@ def test_flat_cubes():
     assert expected_cube == result
 
 
-@pytest.mark.parametrize("method", ("bilinear", "nearest"))
+@pytest.mark.parametrize("method", (Constants.Method.BILINEAR, Constants.Method.NEAREST))
 def test_node_friendly_methods(method):
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
@@ -112,25 +112,25 @@ def test_invalid_args():
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError):
-        _ = regrid_unstructured_to_rectilinear(tgt, tgt, method="bilinear")
+        _ = regrid_unstructured_to_rectilinear(tgt, tgt, method=Constants.Method.BILINEAR)
     with pytest.raises(NotImplementedError):
         _ = regrid_unstructured_to_rectilinear(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_unstructured_to_rectilinear(node_src, tgt, method="conservative")
+        _ = regrid_unstructured_to_rectilinear(node_src, tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (
         "Conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method="bilinear")
+        _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method=Constants.Method.BILINEAR)
     expected_message = (
         "bilinear regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method="nearest")
+        _ = regrid_unstructured_to_rectilinear(edge_src, tgt, method=Constants.Method.NEAREST)
     expected_message = (
         "nearest regridding requires a source cube with a node "
         "or face location, target cube had the edge location."

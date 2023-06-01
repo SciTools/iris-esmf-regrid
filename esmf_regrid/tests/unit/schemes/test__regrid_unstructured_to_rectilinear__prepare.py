@@ -61,7 +61,7 @@ def test_flat_cubes():
     lat_bounds = (-90, 90)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-        src, tgt, method="conservative"
+        src, tgt, method=Constants.Method.CONSERVATIVE
     )
     (mesh_dim,), (grid_x, grid_y), regridder = regrid_info
 
