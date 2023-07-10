@@ -9,6 +9,7 @@ import dask.array as da
 import iris.coords
 import iris.cube
 from iris.exceptions import CoordinateNotFoundError
+from iris.experimental.ugrid import Mesh
 import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
@@ -33,39 +34,43 @@ def _get_coord(cube, axis):
     return coord
 
 
-def _get_mask(cube, use_mask=True):
+def _get_mask(cube_or_mesh, use_mask=True):
     if use_mask is False:
         result = None
     elif use_mask is True:
-        src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
-
-        horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
-        other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
-
-        # Find a representative slice of data that spans both horizontal coords.
-        if cube.coord_dims(src_x) == cube.coord_dims(src_y):
-            slices = cube.slices([src_x])
+        if isinstance(cube_or_mesh, Mesh):
+            result = None
         else:
-            slices = cube.slices([src_x, src_y])
-        data = next(slices).data
-        if np.ma.is_masked(data):
-            # Check that the mask is constant along all other dimensions.
-            full_mask = da.ma.getmaskarray(cube.core_data())
-            if not np.array_equal(
-                da.all(full_mask, axis=other_dims).compute(),
-                da.any(full_mask, axis=other_dims).compute(),
-            ):
-                raise ValueError(
-                    "The mask derived from the cube is not constant over non-horizontal dimensions."
-                    "Consider passing in an explicit mask instead."
-                )
-            mask = np.ma.getmaskarray(data)
-            # Due to structural reasons, the mask should be transposed for curvilinear grids.
-            if cube.coord_dims(src_x) != cube.coord_dims(src_y):
-                mask = mask.T
-        else:
-            mask = None
-        result = mask
+            cube = cube_or_mesh
+            src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+
+            horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
+            other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
+
+            # Find a representative slice of data that spans both horizontal coords.
+            if cube.coord_dims(src_x) == cube.coord_dims(src_y):
+                slices = cube.slices([src_x])
+            else:
+                slices = cube.slices([src_x, src_y])
+            data = next(slices).data
+            if np.ma.is_masked(data):
+                # Check that the mask is constant along all other dimensions.
+                full_mask = da.ma.getmaskarray(cube.core_data())
+                if not np.array_equal(
+                    da.all(full_mask, axis=other_dims).compute(),
+                    da.any(full_mask, axis=other_dims).compute(),
+                ):
+                    raise ValueError(
+                        "The mask derived from the cube is not constant over non-horizontal dimensions."
+                        "Consider passing in an explicit mask instead."
+                    )
+                mask = np.ma.getmaskarray(data)
+                # Due to structural reasons, the mask should be transposed for curvilinear grids.
+                if cube.coord_dims(src_x) != cube.coord_dims(src_y):
+                    mask = mask.T
+            else:
+                mask = None
+            result = mask
     else:
         result = use_mask
     return result
@@ -465,9 +470,12 @@ def _make_gridinfo(cube, method, resolution, mask):
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
 
-def _make_meshinfo(cube, method, mask, src_or_tgt):
-    mesh = cube.mesh
-    location = cube.location
+def _make_meshinfo(cube_or_mesh, method, mask, src_or_tgt, location=None):
+    if isinstance(cube_or_mesh, Mesh):
+        mesh = cube_or_mesh
+    else:
+        mesh = cube_or_mesh.mesh
+        location = cube_or_mesh.location
     if mesh is None:
         raise ValueError(f"The {src_or_tgt} cube is not defined on a mesh.")
     if method == "conservative":
@@ -660,12 +668,13 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 def _regrid_rectilinear_to_unstructured__prepare(
     src_grid_cube,
-    target_mesh_cube,
+    tgt_cube_or_mesh,
     method,
     precomputed_weights=None,
     src_resolution=None,
     src_mask=None,
     tgt_mask=None,
+    tgt_location=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
@@ -676,8 +685,12 @@ def _regrid_rectilinear_to_unstructured__prepare(
     """
     grid_x = _get_coord(src_grid_cube, "x")
     grid_y = _get_coord(src_grid_cube, "y")
-    mesh = target_mesh_cube.mesh
-    location = target_mesh_cube.location
+    if isinstance(tgt_cube_or_mesh, Mesh):
+        mesh = tgt_cube_or_mesh
+        location = tgt_location
+    else:
+        mesh = tgt_cube_or_mesh.mesh
+        location = tgt_cube_or_mesh.location
 
     if grid_x.ndim == 1:
         (grid_x_dim,) = src_grid_cube.coord_dims(grid_x)
@@ -685,7 +698,9 @@ def _regrid_rectilinear_to_unstructured__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
-    meshinfo = _make_meshinfo(target_mesh_cube, method, tgt_mask, "target")
+    meshinfo = _make_meshinfo(
+        tgt_cube_or_mesh, method, tgt_mask, "target", location=tgt_location
+    )
     gridinfo = _make_gridinfo(src_grid_cube, method, src_resolution, src_mask)
 
     regridder = Regridder(
@@ -755,6 +770,7 @@ def _regrid_unstructured_to_unstructured__prepare(
     target_mesh_cube,
     method,
     precomputed_weights=None,
+    tgt_location=None,
 ):
     raise NotImplementedError
 
@@ -832,7 +848,9 @@ class ESMFAreaWeighted:
 
     """
 
-    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
+    def __init__(
+        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location=None
+    ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -860,12 +878,20 @@ class ESMFAreaWeighted:
         self.mdtol = mdtol
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
+        self.tgt_location = tgt_location
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFAreaWeighted(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+    def regridder(
+        self,
+        src_grid,
+        tgt_grid,
+        use_src_mask=None,
+        use_tgt_mask=None,
+        tgt_location=None,
+    ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -900,12 +926,15 @@ class ESMFAreaWeighted:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if tgt_location is None:
+            tgt_location = self.tgt_location
         return ESMFAreaWeightedRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -918,7 +947,9 @@ class ESMFBilinear:
     calculations and allows for different coordinate systems.
     """
 
-    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
+    def __init__(
+        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location=None
+    ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -942,12 +973,20 @@ class ESMFBilinear:
         self.mdtol = mdtol
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
+        self.tgt_location = tgt_location
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFBilinear(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+    def regridder(
+        self,
+        src_grid,
+        tgt_grid,
+        use_src_mask=None,
+        use_tgt_mask=None,
+        tgt_location=None,
+    ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -982,12 +1021,15 @@ class ESMFBilinear:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if tgt_location is None:
+            tgt_location = self.tgt_location
         return ESMFBilinearRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -1017,7 +1059,7 @@ class ESMFNearest:
     the same equivalent space will behave the same.
     """
 
-    def __init__(self, use_src_mask=False, use_tgt_mask=False):
+    def __init__(self, use_src_mask=False, use_tgt_mask=False, tgt_location=None):
         """
         Nearest neighbour scheme for regridding between rectilinear grids.
 
@@ -1032,12 +1074,20 @@ class ESMFNearest:
         """
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
+        self.tgt_location = tgt_location
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFNearest()"
 
-    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+    def regridder(
+        self,
+        src_grid,
+        tgt_grid,
+        use_src_mask=None,
+        use_tgt_mask=None,
+        tgt_location=None,
+    ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1072,11 +1122,14 @@ class ESMFNearest:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if tgt_location is None:
+            tgt_location = self.tgt_location
         return ESMFNearestRegridder(
             src_grid,
             tgt_grid,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -1091,6 +1144,7 @@ class _ESMFRegridder:
         mdtol=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
         **kwargs,
     ):
         """
@@ -1148,15 +1202,17 @@ class _ESMFRegridder:
         kwargs["tgt_mask"] = self.tgt_mask
 
         src_is_mesh = src.mesh is not None
-        tgt_is_mesh = tgt.mesh is not None
+        tgt_is_mesh = isinstance(tgt, Mesh) or tgt.mesh is not None
         if src_is_mesh:
             if tgt_is_mesh:
                 prepare_func = _regrid_unstructured_to_unstructured__prepare
+                kwargs["tgt_location"] = tgt_location
             else:
                 prepare_func = _regrid_unstructured_to_rectilinear__prepare
         else:
             if tgt_is_mesh:
                 prepare_func = _regrid_rectilinear_to_unstructured__prepare
+                kwargs["tgt_location"] = tgt_location
             else:
                 prepare_func = _regrid_rectilinear_to_rectilinear__prepare
         regrid_info = prepare_func(src, tgt, method, **kwargs)
@@ -1269,6 +1325,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgt_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1319,6 +1376,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             "conservative",
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
+            tgt_location="face",
             **kwargs,
         )
 
@@ -1334,6 +1392,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         precomputed_weights=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1374,6 +1433,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -1387,6 +1447,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         precomputed_weights=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1421,4 +1482,5 @@ class ESMFNearestRegridder(_ESMFRegridder):
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
