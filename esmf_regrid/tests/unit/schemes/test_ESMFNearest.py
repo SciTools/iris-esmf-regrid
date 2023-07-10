@@ -17,7 +17,8 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 
 
 @pytest.mark.parametrize(
-    "src_type,tgt_type", [("grid", "grid"), ("grid", "mesh"), ("grid", "just_mesh"), ("mesh", "grid")]
+    "src_type,tgt_type",
+    [("grid", "grid"), ("grid", "mesh"), ("grid", "just_mesh"), ("mesh", "grid")],
 )
 def test_cube_regrid(src_type, tgt_type):
     """
