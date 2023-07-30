@@ -75,7 +75,9 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
-@pytest.mark.parametrize("method", [Constants.Method.BILINEAR, Constants.Method.NEAREST])
+@pytest.mark.parametrize(
+    "method", [Constants.Method.BILINEAR, Constants.Method.NEAREST]
+)
 def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
@@ -239,12 +241,16 @@ def test_invalid_resolution():
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(src, tgt, method=Constants.Method.CONSERVATIVE, src_resolution=-1)
+        _ = GridToMeshESMFRegridder(
+            src, tgt, method=Constants.Method.CONSERVATIVE, src_resolution=-1
+        )
     expected_message = "resolution must be a positive integer."
     assert expected_message in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = GridToMeshESMFRegridder(src, tgt, method=Constants.Method.BILINEAR, src_resolution=4)
+        _ = GridToMeshESMFRegridder(
+            src, tgt, method=Constants.Method.BILINEAR, src_resolution=4
+        )
     expected_message = "resolution can only be set for conservative regridding."
     assert expected_message in str(excinfo.value)
 
