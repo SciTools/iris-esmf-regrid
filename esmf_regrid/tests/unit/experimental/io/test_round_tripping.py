@@ -3,6 +3,7 @@
 import numpy as np
 from numpy import ma
 import pytest
+from ..... import Constants
 
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
@@ -19,7 +20,7 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 
 
 def _make_grid_to_mesh_regridder(
-    method="conservative",
+    method=Constants.Method.CONSERVATIVE,
     resolution=None,
     grid_dims=1,
     circular=True,
@@ -40,7 +41,7 @@ def _make_grid_to_mesh_regridder(
         src = _curvilinear_cube(src_lons, src_lats, lon_bounds, lat_bounds)
     src.coord("longitude").var_name = "longitude"
     src.coord("latitude").var_name = "latitude"
-    if method == "bilinear":
+    if method == Constants.Method.BILINEAR:
         location = "node"
     else:
         location = "face"
@@ -72,7 +73,7 @@ def _make_grid_to_mesh_regridder(
 
 
 def _make_mesh_to_grid_regridder(
-    method="conservative", resolution=None, grid_dims=1, circular=True, masks=False
+    method=Constants.Method.CONSERVATIVE, resolution=None, grid_dims=1, circular=True, masks=False
 ):
     src_lons = 3
     src_lats = 4
@@ -86,7 +87,7 @@ def _make_mesh_to_grid_regridder(
         tgt = _curvilinear_cube(tgt_lons, tgt_lats, lon_bounds, lat_bounds)
     tgt.coord("longitude").var_name = "longitude"
     tgt.coord("latitude").var_name = "latitude"
-    if method == "bilinear":
+    if method == Constants.Method.BILINEAR:
         location = "node"
     else:
         location = "face"
@@ -117,7 +118,7 @@ def _make_mesh_to_grid_regridder(
     return rg, src
 
 
-@pytest.mark.parametrize("method", ["conservative", "bilinear", "nearest"])
+@pytest.mark.parametrize("method", [Constants.Method.CONSERVATIVE, Constants.Method.BILINEAR, Constants.Method.NEAREST])
 def test_GridToMeshESMFRegridder_round_trip(tmp_path, method):
     """Test save/load round tripping for `GridToMeshESMFRegridder`."""
     original_rg, src = _make_grid_to_mesh_regridder(method=method, circular=True)
@@ -157,7 +158,7 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path, method):
         == loaded_rg.regridder.esmf_regrid_version
     )
 
-    if method == "conservative":
+    if method == Constants.Method.CONSERVATIVE:
         # Ensure resolution is equal.
         assert original_rg.resolution == loaded_rg.resolution
         original_res_rg, _ = _make_grid_to_mesh_regridder(method=method, resolution=8)
@@ -225,7 +226,7 @@ def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker):
     assert np.array_equal(loaded_rg.tgt_mask, original_rg.tgt_mask)
 
 
-@pytest.mark.parametrize("method", ["conservative", "bilinear", "nearest"])
+@pytest.mark.parametrize("method", [Constants.Method.CONSERVATIVE, Constants.Method.BILINEAR, Constants.Method.NEAREST])
 def test_MeshToGridESMFRegridder_round_trip(tmp_path, method):
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
     original_rg, src = _make_mesh_to_grid_regridder(method=method, circular=True)
@@ -264,7 +265,7 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path, method):
         == loaded_rg.regridder.esmf_regrid_version
     )
 
-    if method == "conservative":
+    if method == Constants.Method.CONSERVATIVE:
         # Ensure resolution is equal.
         assert original_rg.resolution == loaded_rg.resolution
         original_res_rg, _ = _make_mesh_to_grid_regridder(method=method, resolution=8)

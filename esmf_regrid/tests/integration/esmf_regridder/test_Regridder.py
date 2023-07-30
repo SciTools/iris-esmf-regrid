@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ma
 
 from esmf_regrid import esmpy
-from esmf_regrid import Constants
+from .... import Constants
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.tests import make_grid_args
 

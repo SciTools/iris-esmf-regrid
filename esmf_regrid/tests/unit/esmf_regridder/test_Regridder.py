@@ -5,7 +5,7 @@ from numpy import ma
 import pytest
 import scipy.sparse
 
-from esmf_regrid import Constants
+from .... import Constants
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.tests import make_grid_args
 

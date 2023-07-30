@@ -5,7 +5,7 @@ from iris.cube import Cube
 import numpy as np
 import pytest
 
-from esmf_regrid import Constants
+from ..... import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_unstructured_to_rectilinear,
 )
