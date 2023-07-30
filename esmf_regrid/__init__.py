@@ -8,6 +8,6 @@ except ImportError as exc:
         raise exc
 
 from .schemes import *
-
+from .constants import Constants
 
 __version__ = "0.6.0"

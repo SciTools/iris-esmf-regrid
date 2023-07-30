@@ -6,6 +6,7 @@ from iris.cube import Cube
 import numpy as np
 import pytest
 
+from esmf_regrid import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
@@ -68,7 +69,7 @@ def test_flat_cubes():
     assert expected_cube == result
 
 
-@pytest.mark.parametrize("method", ["bilinear", "nearest"])
+@pytest.mark.parametrize("method", [Constants.Method.BILINEAR, Constants.Method.NEAREST])
 def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
@@ -197,21 +198,21 @@ def test_invalid_method():
     with pytest.raises(NotImplementedError):
         _ = MeshToGridESMFRegridder(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(node_src, tgt, method="conservative")
+        _ = MeshToGridESMFRegridder(node_src, tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (
         "Conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(edge_src, tgt, method="bilinear")
+        _ = MeshToGridESMFRegridder(edge_src, tgt, method=Constants.Method.BILINEAR)
     expected_message = (
         "bilinear regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(edge_src, tgt, method="nearest")
+        _ = MeshToGridESMFRegridder(edge_src, tgt, method=Constants.Method.NEAREST)
     expected_message = (
         "nearest regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
@@ -233,12 +234,12 @@ def test_invalid_resolution():
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(src, tgt, method="conservative", tgt_resolution=-1)
+        _ = MeshToGridESMFRegridder(src, tgt, method=Constants.Method.CONSERVATIVE, tgt_resolution=-1)
     expected_message = "resolution must be a positive integer."
     assert expected_message in str(excinfo.value)
 
     with pytest.raises(ValueError) as excinfo:
-        _ = MeshToGridESMFRegridder(src, tgt, method="bilinear", tgt_resolution=4)
+        _ = MeshToGridESMFRegridder(src, tgt, method=Constants.Method.BILINEAR, tgt_resolution=4)
     expected_message = "resolution can only be set for conservative regridding."
     assert expected_message in str(excinfo.value)
 
@@ -256,9 +257,9 @@ def test_default_mdtol():
     src = _gridlike_mesh_cube(n_lons, n_lats)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    rg_con = MeshToGridESMFRegridder(src, tgt, method="conservative")
+    rg_con = MeshToGridESMFRegridder(src, tgt, method=Constants.Method.CONSERVATIVE)
     assert rg_con.mdtol == 1
-    rg_bi = MeshToGridESMFRegridder(src, tgt, method="bilinear")
+    rg_bi = MeshToGridESMFRegridder(src, tgt, method=Constants.Method.BILINEAR)
     assert rg_bi.mdtol == 0
 
 

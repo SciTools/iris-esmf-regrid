@@ -1,5 +1,5 @@
 """Provides an iris interface for unstructured regridding."""
-
+from .. import Constants
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
@@ -14,7 +14,7 @@ def regrid_unstructured_to_rectilinear(
     src_cube,
     grid_cube,
     mdtol=0,
-    method="conservative",
+    method=Constants.Method.CONSERVATIVE,
     tgt_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
@@ -105,7 +105,7 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
         src,
         tgt,
         mdtol=None,
-        method="conservative",
+        method=Constants.Method.CONSERVATIVE,
         precomputed_weights=None,
         tgt_resolution=None,
         use_src_mask=False,
@@ -181,7 +181,7 @@ def regrid_rectilinear_to_unstructured(
     src_cube,
     mesh_cube,
     mdtol=0,
-    method="conservative",
+    method=Constants.Method.CONSERVATIVE,
     src_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
@@ -276,7 +276,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         src,
         tgt,
         mdtol=None,
-        method="conservative",
+        method=Constants.Method.CONSERVATIVE,
         precomputed_weights=None,
         src_resolution=None,
         use_src_mask=False,

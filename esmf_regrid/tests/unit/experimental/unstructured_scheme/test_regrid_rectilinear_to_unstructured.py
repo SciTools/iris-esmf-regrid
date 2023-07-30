@@ -6,6 +6,7 @@ import numpy as np
 from numpy import ma
 import pytest
 
+from esmf_regrid import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_rectilinear_to_unstructured,
 )
@@ -70,7 +71,7 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
-@pytest.mark.parametrize("method", ("bilinear", "nearest"))
+@pytest.mark.parametrize("method", (Constants.Method.BILINEAR, Constants.Method.NEAREST))
 def test_node_friendly_methods(method):
     """
     Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
@@ -118,25 +119,25 @@ def test_invalid_args():
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(ValueError):
-        _ = regrid_rectilinear_to_unstructured(src, src, method="bilinear")
+        _ = regrid_rectilinear_to_unstructured(src, src, method=Constants.Method.BILINEAR)
     with pytest.raises(NotImplementedError):
         _ = regrid_rectilinear_to_unstructured(src, face_tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_rectilinear_to_unstructured(src, node_tgt, method="conservative")
+        _ = regrid_rectilinear_to_unstructured(src, node_tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (
         "Conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method="bilinear")
+        _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method=Constants.Method.BILINEAR)
     expected_message = (
         "bilinear regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method="nearest")
+        _ = regrid_rectilinear_to_unstructured(src, edge_tgt, method=Constants.Method.NEAREST)
     expected_message = (
         "nearest regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
