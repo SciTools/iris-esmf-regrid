@@ -73,7 +73,11 @@ def _make_grid_to_mesh_regridder(
 
 
 def _make_mesh_to_grid_regridder(
-    method=Constants.Method.CONSERVATIVE, resolution=None, grid_dims=1, circular=True, masks=False
+    method=Constants.Method.CONSERVATIVE,
+    resolution=None,
+    grid_dims=1,
+    circular=True,
+    masks=False,
 ):
     src_lons = 3
     src_lats = 4
@@ -118,7 +122,14 @@ def _make_mesh_to_grid_regridder(
     return rg, src
 
 
-@pytest.mark.parametrize("method", [Constants.Method.CONSERVATIVE, Constants.Method.BILINEAR, Constants.Method.NEAREST])
+@pytest.mark.parametrize(
+    "method",
+    [
+        Constants.Method.CONSERVATIVE,
+        Constants.Method.BILINEAR,
+        Constants.Method.NEAREST,
+    ],
+)
 def test_GridToMeshESMFRegridder_round_trip(tmp_path, method):
     """Test save/load round tripping for `GridToMeshESMFRegridder`."""
     original_rg, src = _make_grid_to_mesh_regridder(method=method, circular=True)
@@ -226,7 +237,14 @@ def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker):
     assert np.array_equal(loaded_rg.tgt_mask, original_rg.tgt_mask)
 
 
-@pytest.mark.parametrize("method", [Constants.Method.CONSERVATIVE, Constants.Method.BILINEAR, Constants.Method.NEAREST])
+@pytest.mark.parametrize(
+    "method",
+    [
+        Constants.Method.CONSERVATIVE,
+        Constants.Method.BILINEAR,
+        Constants.Method.NEAREST,
+    ],
+)
 def test_MeshToGridESMFRegridder_round_trip(tmp_path, method):
     """Test save/load round tripping for `MeshToGridESMFRegridder`."""
     original_rg, src = _make_mesh_to_grid_regridder(method=method, circular=True)
