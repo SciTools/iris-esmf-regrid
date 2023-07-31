@@ -4,7 +4,6 @@ from iris.coords import AuxCoord
 from iris.cube import Cube
 import numpy as np
 
-from .... import Constants
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.schemes import (
@@ -16,7 +15,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _example_mesh,
 )
-
+from esmf_regrid import Constants
 
 def _full_mesh():
     mesh = _example_mesh()

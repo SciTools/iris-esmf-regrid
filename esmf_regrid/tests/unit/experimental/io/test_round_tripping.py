@@ -3,7 +3,6 @@
 import numpy as np
 from numpy import ma
 import pytest
-from ..... import Constants
 
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
@@ -17,6 +16,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
+from esmf_regrid import Constants
 
 
 def _make_grid_to_mesh_regridder(
