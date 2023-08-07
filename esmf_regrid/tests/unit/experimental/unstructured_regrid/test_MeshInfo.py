@@ -9,7 +9,6 @@ from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.tests import get_result_path, make_grid_args
 
 
-
 def _make_small_mesh_args():
     ugrid_node_coords = np.array(
         [[0.0, 0.0], [0.0, 10.0], [10.0, 0.0], [10.0, 10.0], [10.0, 20.0]]
