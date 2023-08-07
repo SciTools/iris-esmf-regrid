@@ -5,6 +5,7 @@ from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
 import pytest
+from esmf_regrid import Constants
 
 from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
@@ -21,7 +22,6 @@ from esmf_regrid.tests.unit.schemes.test__regrid_unstructured_to_rectilinear__pr
     _flat_mesh_cube,
     _full_mesh,
 )
-from esmf_regrid import Constants
 
 
 def _add_metadata(cube):

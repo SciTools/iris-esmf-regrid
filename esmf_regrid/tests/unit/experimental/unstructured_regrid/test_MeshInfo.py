@@ -2,12 +2,12 @@
 
 import numpy as np
 from numpy import ma
+from esmf_regrid import Constants
 
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.tests import get_result_path, make_grid_args
 
-from esmf_regrid import Constants
 
 def _make_small_mesh_args():
     ugrid_node_coords = np.array(
