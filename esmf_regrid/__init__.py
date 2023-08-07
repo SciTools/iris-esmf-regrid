@@ -7,7 +7,7 @@ except ImportError as exc:
     except ImportError:
         raise exc
 
-from .schemes import *
 from .constants import Constants
+from .schemes import *
 
 __version__ = "0.6.0"
