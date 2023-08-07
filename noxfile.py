@@ -25,14 +25,16 @@ nox.options.reuse_existing_virtualenvs = True
 #: Name of the package to test.
 PACKAGE = "esmf_regrid"
 
-#: Cirrus-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.8", "3.9", "3.10"])
+#: GHA-CI environment variable hook.
+PY_VER = os.environ.get("PY_VER", ["3.9", "3.10", "3.11"])
 
-#: Cirrus-CI environment variable hook.
+#: GHA-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
 
-#: Cirrus-CI environment variable hook.
-IRIS_SOURCE = os.environ.get("IRIS_SOURCE", None)
+#: GHA-CI environment variable hook.
+#: If you change the IRIS_SOURCE here you will also need to change it in
+#: the tests, wheel and benchmark workflows.
+IRIS_SOURCE = os.environ.get("IRIS_SOURCE", "github:main")
 
 IRIS_GITHUB = "https://github.com/scitools/iris.git"
 LOCKFILE_PLATFORM = "linux-64"
@@ -127,13 +129,6 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 
     """
     result = IRIS_SOURCE
-    if not result:
-        # .cirrus.yml sets IRIS_SOURCE. Need to fetch the value (if any) when
-        # called outside Cirrus (e.g. user, ASV).
-        # .cirrus.yml = single-source-of-truth.
-        with Path(".cirrus.yml").open("r") as file:
-            cirrus_config = yaml.load(file, Loader=yaml.FullLoader)
-        result = cirrus_config["env"].get("IRIS_SOURCE", None)
 
     # The CLI overrides the environment variable.
     for arg in session.posargs:
@@ -158,6 +153,9 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 
 def _prepare_env(session: nox.sessions.Session) -> None:
     venv_dir = session.virtualenv.location_name
+
+    esmf_mk_file = Path(venv_dir) / "lib" / "esmf.mk"
+    session.env[ESMFMKFILE] = esmf_mk_file.absolute()
 
     if not _venv_populated(session):
         # Environment has been created but packages not yet installed.
@@ -303,8 +301,6 @@ def tests(session: nox.sessions.Session):
         A `nox.sessions.Session` object.
 
     """
-    esmf_mk_file = Path(session.virtualenv.location_name) / "lib" / "esmf.mk"
-    session.env[ESMFMKFILE] = esmf_mk_file
     _prepare_env(session)
     # Install the esmf-regrid source in develop mode.
     session.install("--no-deps", "--editable", ".")
@@ -312,7 +308,7 @@ def tests(session: nox.sessions.Session):
     if COVERAGE:
         # Execute the tests with code coverage.
         session.run("pytest", "--cov-report=xml", "--cov")
-        session.run("codecov")
+        session.run("codecov", "--required")
     else:
         # Execute the tests.
         session.run("pytest")
@@ -489,3 +485,31 @@ def benchmarks(
         asv_subcommand = first_arg
         assert run_type == "custom"
         session.run("asv", asv_subcommand, *asv_args)
+
+
+@nox.session(python=PY_VER, venv_backend="conda")
+def wheel(session: nox.sessions.Session):
+    """
+    Perform iris-esmf-regrid local wheel install and import test.
+
+    Parameters
+    ----------
+    session: object
+        A `nox.sessions.Session` object.
+
+    """
+    _prepare_env(session)
+    session.cd("dist")
+    fname = list(Path(".").glob("esmf_regrid-*.whl"))
+    if len(fname) == 0:
+        raise ValueError("Cannot find wheel to install.")
+    if len(fname) > 1:
+        emsg = f"Expected to find 1 wheel to install, found {len(fname)} instead."
+        raise ValueError(emsg)
+    session.install(fname[0].name)
+    session.run(
+        "python",
+        "-c",
+        "import esmf_regrid; print(f'{esmf_regrid.__version__=}')",
+        external=True,
+    )
