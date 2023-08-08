@@ -7,7 +7,7 @@ performance shifts between commits using statistical analysis, but can also
 be easily repurposed for manual comparative and scalability analyses.
 
 The benchmarks are run as part of the CI (the `benchmark_task` in
-[`.cirrus.yml`](../.cirrus.yml)), with any notable shifts in performance
+[`benchmark.yml`](../.github/workflows/benchmark.yml)), with any notable shifts in performance
 raising a ❌ failure.
 
 ## Running benchmarks
