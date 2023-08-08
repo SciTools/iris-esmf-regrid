@@ -110,6 +110,7 @@ def save_regridder(rg, filename):
         raise TypeError(msg)
 
     method = rg.method
+    print(f"DEBUG method: ", method)
     resolution = rg.resolution
 
     weight_matrix = rg.regridder.weight_matrix

@@ -2,6 +2,7 @@
 
 import pytest
 
+from esmf_regrid import Constants
 from esmf_regrid.schemes import _ESMFRegridder
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
@@ -21,4 +22,4 @@ def test_invalid_method():
     src = tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(NotImplementedError):
-        _ = _ESMFRegridder(src, tgt, method="other")
+        _ = _ESMFRegridder(src, tgt, method=Constants.Method.OTHER)
