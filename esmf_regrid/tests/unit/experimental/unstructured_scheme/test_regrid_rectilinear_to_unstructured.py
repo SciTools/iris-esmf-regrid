@@ -131,7 +131,7 @@ def test_invalid_args():
             src, node_tgt, method=Constants.Method.CONSERVATIVE
         )
     expected_message = (
-        "Method.CONSERVATIVE regridding requires a target cube located on "
+        "Conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
