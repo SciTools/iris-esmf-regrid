@@ -209,7 +209,9 @@ def load_regridder(filename):
 
     # Determine the regridding method, allowing for files created when
     # conservative regridding was the only method.
-    method = getattr(Constants.Method, weights_cube.attributes.get(METHOD, "CONSERVATIVE"))
+    method = getattr(
+        Constants.Method, weights_cube.attributes.get(METHOD, "CONSERVATIVE")
+    )
 
     resolution = weights_cube.attributes.get(RESOLUTION, None)
     if resolution is not None:
