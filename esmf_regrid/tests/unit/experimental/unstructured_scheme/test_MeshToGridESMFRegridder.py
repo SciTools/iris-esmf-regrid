@@ -94,6 +94,7 @@ def test_node_friendly_methods(method):
     face_regridder = MeshToGridESMFRegridder(face_src, tgt, method=method)
     node_regridder = MeshToGridESMFRegridder(node_src, tgt, method=method)
 
+    print(node_regridder.regridder.method)
     assert face_regridder.regridder.method == method
     assert node_regridder.regridder.method == method
 
@@ -209,14 +210,14 @@ def test_invalid_method():
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(edge_src, tgt, method=Constants.Method.BILINEAR)
     expected_message = (
-        "bilinear regridding requires a source cube with a node "
+        "Method.BILINEAR regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(edge_src, tgt, method=Constants.Method.NEAREST)
     expected_message = (
-        "nearest regridding requires a source cube with a node "
+        "Method.NEAREST regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)

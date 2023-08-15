@@ -1121,10 +1121,6 @@ class _ESMFRegridder:
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
-        if method not in Constants.Method:
-            raise NotImplementedError(
-                f"method must be a member of Constants.Method, got '{method}'."
-            )
         if mdtol is None:
             if method == Constants.Method.CONSERVATIVE:
                 mdtol = 1

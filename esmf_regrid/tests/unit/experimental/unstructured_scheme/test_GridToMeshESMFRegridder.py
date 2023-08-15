@@ -97,6 +97,9 @@ def test_node_friendly_methods(method):
     face_regridder = GridToMeshESMFRegridder(src, face_tgt, method=method)
     node_regridder = GridToMeshESMFRegridder(src, node_tgt, method=method)
 
+    print(face_regridder)
+    print(dir(face_regridder.regridder))
+
     assert face_regridder.regridder.method == method
     assert node_regridder.regridder.method == method
 
@@ -203,7 +206,7 @@ def test_invalid_method():
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
     with pytest.raises(NotImplementedError):
-        _ = GridToMeshESMFRegridder(src, face_tgt, method="other")
+        _ = GridToMeshESMFRegridder(src, face_tgt, method=Constants.Method.OTHER)
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, node_tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (
@@ -214,14 +217,14 @@ def test_invalid_method():
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, edge_tgt, method=Constants.Method.BILINEAR)
     expected_message = (
-        "bilinear regridding requires a target cube with a node "
+        "Method.BILINEAR regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, edge_tgt, method=Constants.Method.NEAREST)
     expected_message = (
-        "nearest regridding requires a target cube with a node "
+        "Method.NEAREST regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
