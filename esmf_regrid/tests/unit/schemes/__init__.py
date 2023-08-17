@@ -6,8 +6,8 @@ import pytest
 
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
-    _gridlike_mesh_cube,
     _gridlike_mesh,
+    _gridlike_mesh_cube,
 )
 
 

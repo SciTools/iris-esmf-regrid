@@ -870,6 +870,9 @@ class ESMFAreaWeighted:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         """
         if not (0 <= mdtol <= 1):
@@ -898,15 +901,20 @@ class ESMFAreaWeighted:
         Parameters
         ----------
         src_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the target grid.
+            The :class:`~iris.cube.Cube` defining the source.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
+            
 
         Returns
         -------
@@ -965,6 +973,9 @@ class ESMFBilinear:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         """
         if not (0 <= mdtol <= 1):
@@ -993,15 +1004,19 @@ class ESMFBilinear:
         Parameters
         ----------
         src_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the target grid.
+            The :class:`~iris.cube.Cube` defining the source.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Returns
         -------
@@ -1071,6 +1086,9 @@ class ESMFNearest:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
         """
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
@@ -1094,15 +1112,19 @@ class ESMFNearest:
         Parameters
         ----------
         src_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the target grid.
+            The :class:`~iris.cube.Cube` defining the source.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Returns
         -------
@@ -1154,7 +1176,7 @@ class _ESMFRegridder:
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         method : str
         Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
@@ -1173,6 +1195,9 @@ class _ESMFRegridder:
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
@@ -1325,7 +1350,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgt_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
-        tgt_location=None,
+        tgt_location="face",
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1333,9 +1358,10 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The rectilinear :class:`~iris.cube.Cube` providing the source.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1356,18 +1382,24 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default="face"
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
         ValueError
             If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
-            or ``tgt`` respectively are not constant over non-horizontal dimensions.
+            or ``tgt`` respectively are not constant over non-horizontal dimensions or
+            if tgt_location is not "face".
         """
         kwargs = dict()
         if src_resolution is not None:
             kwargs["src_resolution"] = src_resolution
         if tgt_resolution is not None:
             kwargs["tgt_resolution"] = tgt_resolution
+        if tgt_location is not None and tgt_location != "face":
+            raise ValueError("For area weighted regridding, target location must be 'face'.")
         kwargs["use_src_mask"] = use_src_mask
         kwargs["use_tgt_mask"] = use_tgt_mask
         super().__init__(
@@ -1400,9 +1432,10 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The rectilinear :class:`~iris.cube.Cube` providing the source.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1418,6 +1451,9 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
@@ -1455,9 +1491,10 @@ class ESMFNearestRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The rectilinear :class:`~iris.cube.Cube` providing the source.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
@@ -1467,6 +1504,9 @@ class ESMFNearestRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------

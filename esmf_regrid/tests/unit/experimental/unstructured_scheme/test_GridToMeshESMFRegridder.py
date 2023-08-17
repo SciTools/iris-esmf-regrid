@@ -434,6 +434,38 @@ def test_curvilinear():
     assert result_lazy == result
 
 
+def test_mesh_target():
+    """
+    Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Tests with a mesh as the target.
+    """
+    n_tgt_lons = 5
+    n_tgt_lats = 4
+    tgt = _gridlike_mesh(n_tgt_lons, n_tgt_lats)
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    src = _add_metadata(src)
+    src.data[:] = 1  # Ensure all data in the source is one.
+    regridder = GridToMeshESMFRegridder(src, tgt, tgt_location="face")
+    result = regridder(src)
+
+    expected_data = np.ones([n_tgt_lats * n_tgt_lons])
+    expected_cube = _add_metadata(_gridlike_mesh_cube(n_tgt_lons, n_tgt_lats))
+
+    # Lenient check for data.
+    assert np.allclose(expected_data, result.data)
+
+    # Check metadata and scalar coords.
+    expected_cube.data = result.data
+    assert expected_cube == result
+
+
 @pytest.mark.parametrize(
     "resolution", (None, 2), ids=("no resolution", "with resolution")
 )
