@@ -97,9 +97,6 @@ def test_node_friendly_methods(method):
     face_regridder = GridToMeshESMFRegridder(src, face_tgt, method=method)
     node_regridder = GridToMeshESMFRegridder(src, node_tgt, method=method)
 
-    print(face_regridder)
-    print(dir(face_regridder.regridder))
-
     assert face_regridder.regridder.method == method
     assert node_regridder.regridder.method == method
 

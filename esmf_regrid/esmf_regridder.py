@@ -88,6 +88,7 @@ class Regridder:
         """
         self.src = src
         self.tgt = tgt
+        self.method = method
 
         # type checks method
         if not isinstance(method, Constants.Method):
