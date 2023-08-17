@@ -9,8 +9,10 @@ class Constants:
             try:
                 super().__getattribute__(name)
             except AttributeError:
-                raise NotImplementedError("The method you have chosen hasn't been implemented yet. "
-                                          "Must be a member of the Method enum.")
+                raise NotImplementedError(
+                    "The method you have chosen hasn't been implemented yet. "
+                    "Must be a member of the Method enum."
+                )
 
     class Method(Enum, metaclass=MethodMeta):
         CONSERVATIVE = esmpy.RegridMethod.CONSERVE
