@@ -914,7 +914,7 @@ class ESMFAreaWeighted:
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
-            
+
 
         Returns
         -------
@@ -1399,7 +1399,9 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         if tgt_resolution is not None:
             kwargs["tgt_resolution"] = tgt_resolution
         if tgt_location is not None and tgt_location != "face":
-            raise ValueError("For area weighted regridding, target location must be 'face'.")
+            raise ValueError(
+                "For area weighted regridding, target location must be 'face'."
+            )
         kwargs["use_src_mask"] = use_src_mask
         kwargs["use_tgt_mask"] = use_tgt_mask
         super().__init__(
