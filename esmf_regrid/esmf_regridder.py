@@ -5,8 +5,8 @@ from numpy import ma
 import scipy.sparse
 
 import esmf_regrid
+from esmf_regrid import Constants
 from . import esmpy
-from . import Constants
 from ._esmf_sdo import GridInfo, RefinedGridInfo
 
 __all__ = [
