@@ -4,6 +4,7 @@ from enum import Enum
 
 from . import esmpy
 
+
 class Constants:
     """Encompassing class for best practice import."""
     class Method(Enum):
