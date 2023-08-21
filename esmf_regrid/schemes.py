@@ -11,8 +11,8 @@ import iris.cube
 from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 
-from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid import Constants
+from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
 __all__ = [

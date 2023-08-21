@@ -1,6 +1,5 @@
 """Provides an iris interface for unstructured regridding."""
 from esmf_regrid import Constants
-
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
