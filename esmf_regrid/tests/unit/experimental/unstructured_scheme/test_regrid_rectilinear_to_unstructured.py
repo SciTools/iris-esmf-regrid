@@ -21,7 +21,6 @@ from esmf_regrid.tests.unit.schemes.test__regrid_unstructured_to_rectilinear__pr
 )
 
 
-
 def _add_metadata(cube):
     result = cube.copy()
     result.units = "K"
