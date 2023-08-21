@@ -6,8 +6,8 @@ from iris.cube import Cube
 import numpy as np
 from numpy import ma
 import pytest
-from esmf_regrid import Constants
 
+from esmf_regrid import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
 )

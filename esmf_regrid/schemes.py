@@ -13,8 +13,7 @@ import numpy as np
 
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
-
-from . import Constants
+from esmf_regrid import Constants
 
 __all__ = [
     "ESMFAreaWeighted",
@@ -461,7 +460,7 @@ def _make_gridinfo(cube, method, resolution, mask):
     elif method in (Constants.Method.NEAREST, Constants.Method.BILINEAR):
         center = True
     else:
-        raise NotImplementedError(f"method must be a member of Constants.Method enum.")
+        raise NotImplementedError("method must be a member of Constants.Method enum.")
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
 

@@ -110,10 +110,6 @@ def save_regridder(rg, filename):
         )
         raise TypeError(msg)
 
-    ## Option One: eval()
-    method = str(rg.method)
-
-    ## Option Two: getattr()
     method = str(rg.method.name)
 
     resolution = rg.resolution

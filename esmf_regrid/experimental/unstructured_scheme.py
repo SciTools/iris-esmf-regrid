@@ -1,5 +1,4 @@
 """Provides an iris interface for unstructured regridding."""
-from .. import Constants
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
@@ -8,7 +7,7 @@ from esmf_regrid.schemes import (
     _regrid_unstructured_to_rectilinear__perform,
     _regrid_unstructured_to_rectilinear__prepare,
 )
-
+from esmf_regrid import Constants
 
 def regrid_unstructured_to_rectilinear(
     src_cube,
