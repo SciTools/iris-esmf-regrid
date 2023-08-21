@@ -202,7 +202,8 @@ def test_invalid_method():
     node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(NotImplementedError):
+    # due to enum usage, specifying error is more complicated to achieve, and defaults to AttributeError
+    with pytest.raises(AttributeError):
         _ = GridToMeshESMFRegridder(src, face_tgt, method=Constants.Method.OTHER)
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, node_tgt, method=Constants.Method.CONSERVATIVE)

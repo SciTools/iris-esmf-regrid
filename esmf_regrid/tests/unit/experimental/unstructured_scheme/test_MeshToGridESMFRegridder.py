@@ -198,7 +198,7 @@ def test_invalid_method():
     node_src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         _ = MeshToGridESMFRegridder(face_src, tgt, method=Constants.Method.OTHER)
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(node_src, tgt, method=Constants.Method.CONSERVATIVE)

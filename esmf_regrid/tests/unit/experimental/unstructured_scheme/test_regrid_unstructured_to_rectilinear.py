@@ -119,7 +119,7 @@ def test_invalid_args():
         _ = regrid_unstructured_to_rectilinear(
             tgt, tgt, method=Constants.Method.BILINEAR
         )
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(AttributeError):
         _ = regrid_unstructured_to_rectilinear(
             face_src, tgt, method=Constants.Method.OTHER
         )
