@@ -326,7 +326,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
-        tgt_location : str or None, default="face"
+        tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
 

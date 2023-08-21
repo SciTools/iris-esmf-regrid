@@ -849,7 +849,7 @@ class ESMFAreaWeighted:
     """
 
     def __init__(
-        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location=None
+        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location="face"
     ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
@@ -870,7 +870,7 @@ class ESMFAreaWeighted:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
-        tgt_location : str or None, default=None
+        tgt_location : str or None, default="face"
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
 
@@ -878,10 +878,14 @@ class ESMFAreaWeighted:
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
+        if tgt_location is not None and tgt_location != "face":
+            raise ValueError(
+                "For area weighted regridding, target location must be 'face'."
+            )
         self.mdtol = mdtol
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
-        self.tgt_location = tgt_location
+        self.tgt_location = "face"
 
     def __repr__(self):
         """Return a representation of the class."""
@@ -893,7 +897,7 @@ class ESMFAreaWeighted:
         tgt_grid,
         use_src_mask=None,
         use_tgt_mask=None,
-        tgt_location=None,
+        tgt_location="face",
     ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
@@ -911,7 +915,7 @@ class ESMFAreaWeighted:
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
-        tgt_location : str or None, default=None
+        tgt_location : str or None, default="face"
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
 
@@ -934,15 +938,17 @@ class ESMFAreaWeighted:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
-        if tgt_location is None:
-            tgt_location = self.tgt_location
+        if tgt_location is not None and tgt_location != "face":
+            raise ValueError(
+                "For area weighted regridding, target location must be 'face'."
+            )
         return ESMFAreaWeightedRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
-            tgt_location=tgt_location,
+            tgt_location="face",
         )
 
 

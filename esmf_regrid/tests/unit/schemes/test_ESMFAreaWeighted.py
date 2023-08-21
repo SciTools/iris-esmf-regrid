@@ -51,3 +51,14 @@ def test_mask_from_regridder(mask_keyword):
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
     _test_mask_from_regridder(ESMFAreaWeighted, mask_keyword)
+
+
+def test_invalid_tgt_location():
+    """
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeighted`.
+
+    Checks that initialisation fails when tgt_location is not "face".
+    """
+    match = "For area weighted regridding, target location must be 'face'."
+    with pytest.raises(ValueError, match=match):
+        _ = ESMFAreaWeighted(tgt_location="node")
