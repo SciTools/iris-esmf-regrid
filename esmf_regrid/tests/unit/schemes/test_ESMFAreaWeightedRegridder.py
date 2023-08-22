@@ -88,6 +88,24 @@ def test_invalid_mdtol():
         _ = ESMFAreaWeightedRegridder(src, tgt, mdtol=-1)
 
 
+def test_invalid_tgt_location():
+    """
+    Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
+    Checks that initialisation fails when tgt_location is not "face".
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    match = "For area weighted regridding, target location must be 'face'."
+    with pytest.raises(ValueError, match=match):
+        _ = ESMFAreaWeightedRegridder(src, tgt, tgt_location="node")
+
+
 def test_curvilinear_equivalence():
     """
     Test initialisation of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.

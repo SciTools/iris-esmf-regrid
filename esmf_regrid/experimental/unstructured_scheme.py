@@ -1,5 +1,7 @@
 """Provides an iris interface for unstructured regridding."""
 
+from iris.experimental.ugrid import Mesh
+
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
@@ -281,16 +283,18 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         src_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
     ):
         """
         Create regridder for conversions between source grid and target mesh.
 
         Parameters
         ----------
-        src_grid_cube : :class:`iris.cube.Cube`
+        src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` cube providing the source grid.
-        target_mesh_cube : :class:`iris.cube.Cube`
-            The unstructured :class:`~iris.cube.Cube` providing the target mesh.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` providing the target mesh.
         mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -322,6 +326,9 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
@@ -330,7 +337,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
-        if tgt.mesh is None:
+        if not isinstance(tgt, Mesh) and tgt.mesh is None:
             raise ValueError("tgt has no mesh.")
         super().__init__(
             src,
@@ -341,6 +348,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             src_resolution=src_resolution,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
         self.resolution = src_resolution
         self.mesh, self.location = self._tgt
