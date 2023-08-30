@@ -75,9 +75,11 @@ class MeshInfo(SDO):
         if location == "face":
             field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
+            index_offset = self.esi
         elif location == "node":
             field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
+            index_offset = self.nsi
         else:
             raise ValueError(
                 f"The mesh location '{location}' is not supported, only "
@@ -85,7 +87,7 @@ class MeshInfo(SDO):
             )
         super().__init__(
             shape=shape,
-            index_offset=self.esi,
+            index_offset=index_offset,
             field_kwargs=field_kwargs,
             mask=mask,
         )

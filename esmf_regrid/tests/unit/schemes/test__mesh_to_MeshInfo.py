@@ -73,7 +73,7 @@ def _example_mesh():
     return mesh
 
 
-def _gridlike_mesh(n_lons, n_lats):
+def _gridlike_mesh(n_lons, n_lats, nsi=0):
     """
     Generate a global mesh with geometry similar to a rectilinear grid.
 
@@ -159,9 +159,9 @@ def _gridlike_mesh(n_lons, n_lats):
 
     # Translate the mesh information into iris objects.
     fnc = Connectivity(
-        fnc_ma,
+        fnc_ma + nsi,
         cf_role="face_node_connectivity",
-        start_index=0,
+        start_index=nsi,
     )
     enc = Connectivity(
         enc_array,
@@ -191,8 +191,8 @@ def _gridlike_mesh(n_lons, n_lats):
     return mesh
 
 
-def _gridlike_mesh_cube(n_lons, n_lats, location="face"):
-    mesh = _gridlike_mesh(n_lons, n_lats)
+def _gridlike_mesh_cube(n_lons, n_lats, location="face", nsi=0):
+    mesh = _gridlike_mesh(n_lons, n_lats, nsi=nsi)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords(location)
     data = np.zeros_like(mesh_coord_x.points)
     cube = Cube(data)

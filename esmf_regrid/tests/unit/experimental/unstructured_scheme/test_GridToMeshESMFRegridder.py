@@ -74,8 +74,9 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
+@pytest.mark.parametrize("nsi", [0, 1])
 @pytest.mark.parametrize("method", ["bilinear", "nearest"])
-def test_node_friendly_methods(method):
+def test_node_friendly_methods(method, nsi):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
@@ -86,8 +87,8 @@ def test_node_friendly_methods(method):
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
-    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face", nsi=nsi)
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node", nsi=nsi)
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
