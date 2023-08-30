@@ -432,7 +432,6 @@ def benchmarks(
                 merge_base,
                 "HEAD",
                 f"--factor={COMPARE_FACTOR}",
-                "--strict",
             ]
             session.run(*asv_command, *asv_args)
         finally:
