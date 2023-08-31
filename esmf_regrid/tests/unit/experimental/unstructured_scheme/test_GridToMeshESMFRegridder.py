@@ -74,8 +74,9 @@ def test_flat_cubes():
     assert expected_cube == result_transposed
 
 
+@pytest.mark.parametrize("nsi", [0, 1])
 @pytest.mark.parametrize("method", ["bilinear", "nearest"])
-def test_node_friendly_methods(method):
+def test_node_friendly_methods(method, nsi):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
@@ -86,8 +87,8 @@ def test_node_friendly_methods(method):
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
-    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+    face_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="face", nsi=nsi)
+    node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node", nsi=nsi)
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
@@ -432,6 +433,38 @@ def test_curvilinear():
     result.data = expected_data
     assert expected_cube == result
     assert result_lazy == result
+
+
+def test_mesh_target():
+    """
+    Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
+
+    Tests with a mesh as the target.
+    """
+    n_tgt_lons = 5
+    n_tgt_lats = 4
+    tgt = _gridlike_mesh(n_tgt_lons, n_tgt_lats)
+
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    src = _add_metadata(src)
+    src.data[:] = 1  # Ensure all data in the source is one.
+    regridder = GridToMeshESMFRegridder(src, tgt, tgt_location="face")
+    result = regridder(src)
+
+    expected_data = np.ones([n_tgt_lats * n_tgt_lons])
+    expected_cube = _add_metadata(_gridlike_mesh_cube(n_tgt_lons, n_tgt_lats))
+
+    # Lenient check for data.
+    assert np.allclose(expected_data, result.data)
+
+    # Check metadata and scalar coords.
+    expected_cube.data = result.data
+    assert expected_cube == result
 
 
 @pytest.mark.parametrize(
