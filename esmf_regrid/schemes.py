@@ -191,6 +191,8 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
             lat_bound_array = _contiguous_masked(lat.bounds, mask)
         # 2D coords must be AuxCoords, which do not have a circular attribute.
         circular = False
+    lon_points = lon.points
+    lat_points = lat.points
     if crs is None:
         lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
         lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
