@@ -55,7 +55,7 @@ def test_mask_from_regridder(mask_keyword):
 
 
 def test_non_degree_crs():
-    """Test for coordinates with non-degree units"""
+    """Test for coordinates with non-degree units."""
     expected_sum = 35.90837983047451
     expected_unmasked = 13
     _test_non_degree_crs(ESMFBilinear, expected_sum, expected_unmasked)

@@ -1,6 +1,6 @@
 """Unit tests for `esmf_regrid.schemes`."""
 
-from iris.coord_systems import TransverseMercator, GeogCS
+from iris.coord_systems import GeogCS, TransverseMercator
 import numpy as np
 from numpy import ma
 import pytest
@@ -170,7 +170,7 @@ def _test_mask_from_regridder(scheme, mask_keyword):
 
 
 def _test_non_degree_crs(scheme, expected_sum, expected_unmasked):
-    """Test regridding scheme is compatible with coordinates with non-degree units"""
+    """Test regridding scheme is compatible with coordinates with non-degree units."""
     coord_system = TransverseMercator(
         49,
         -2,
@@ -208,7 +208,7 @@ def _test_non_degree_crs(scheme, expected_sum, expected_unmasked):
     result = tm_cube.regrid(cube_tgt, scheme())
 
     # Check that the data is as expected.
-    assert result.data.sum() == expected_sum
+    assert np.isclose(result.data.sum(), expected_sum)
 
     # Check that the number of masked points is as expected.
     assert (1 - result.data.mask).sum() == expected_unmasked
