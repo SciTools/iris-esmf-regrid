@@ -8,7 +8,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import Constants
+from esmf_regrid import Constants, check_method
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -110,7 +110,7 @@ def save_regridder(rg, filename):
         )
         raise TypeError(msg)
 
-    method = str(rg.method.name)
+    method = str(check_method(rg.method).name)
 
     resolution = rg.resolution
 

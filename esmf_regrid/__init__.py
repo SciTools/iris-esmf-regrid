@@ -8,7 +8,7 @@ except ImportError as exc:
         raise exc
 
 # constants needs to be above schemes, as it is used within
-from .constants import Constants
+from .constants import Constants, check_method, check_norm
 from .schemes import *
 
 __version__ = "0.8.dev0"

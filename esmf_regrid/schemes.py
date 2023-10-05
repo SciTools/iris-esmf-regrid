@@ -11,7 +11,7 @@ import iris.cube
 from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 
-from esmf_regrid import Constants
+from esmf_regrid import Constants, check_method
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
@@ -450,6 +450,7 @@ MeshRecord = namedtuple("MeshRecord", ["mesh", "location"])
 
 
 def _make_gridinfo(cube, method, resolution, mask):
+    method = check_method(method)
     if resolution is not None:
         if not (isinstance(resolution, int) and resolution > 0):
             raise ValueError("resolution must be a positive integer.")
@@ -459,12 +460,11 @@ def _make_gridinfo(cube, method, resolution, mask):
         center = False
     elif method in (Constants.Method.NEAREST, Constants.Method.BILINEAR):
         center = True
-    else:
-        raise NotImplementedError("method must be a member of Constants.Method enum.")
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
 
 def _make_meshinfo(cube, method, mask, src_or_tgt):
+    method = check_method(method)
     mesh = cube.mesh
     location = cube.location
     if mesh is None:
@@ -486,10 +486,6 @@ def _make_meshinfo(cube, method, mask, src_or_tgt):
                 f"{method} regridding requires a {src_or_tgt} cube on a face"
                 f"location to have a face center."
             )
-    else:
-        raise NotImplementedError(
-            f"method must be part of Constants.Method enum, got '{method}'."
-        )
 
     return _mesh_to_MeshInfo(mesh, location, mask=mask)
 
@@ -1120,6 +1116,7 @@ class _ESMFRegridder:
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
+        method = check_method(method)
         if mdtol is None:
             if method == Constants.Method.CONSERVATIVE:
                 mdtol = 1

@@ -82,7 +82,7 @@ def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
 
-    Tests with method="bilinear" and method="nearest".
+    Tests with method=Constants.Method.BILINEAR and method=Constants.Method.NEAREST.
     """
     n_lons = 6
     n_lats = 5
@@ -202,9 +202,8 @@ def test_invalid_method():
     node_tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
 
-    # due to enum usage, specifying error is more complicated to achieve, and defaults to AttributeError
-    with pytest.raises(AttributeError):
-        _ = GridToMeshESMFRegridder(src, face_tgt, method=Constants.Method.OTHER)
+    with pytest.raises(ValueError):
+        _ = GridToMeshESMFRegridder(src, face_tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
         _ = GridToMeshESMFRegridder(src, node_tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (

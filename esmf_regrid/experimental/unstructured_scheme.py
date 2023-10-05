@@ -1,5 +1,5 @@
 """Provides an iris interface for unstructured regridding."""
-from esmf_regrid import Constants
+from esmf_regrid import Constants, check_method
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
@@ -55,11 +55,8 @@ def regrid_unstructured_to_rectilinear(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
-    method : str, default="conservative"
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+    method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+        The method used to calculate weights.
     tgt_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
@@ -84,6 +81,7 @@ def regrid_unstructured_to_rectilinear(
         raise ValueError("src_cube has no mesh.")
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(grid_cube, use_tgt_mask)
+    method = check_method(method)
 
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
         src_cube,
@@ -127,11 +125,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked. Defaults to 1
             for conservative regregridding and 0 for bilinear regridding.
-        method : str, default="conservative"
-            Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy`
-            methods :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-            :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+        method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+            The method used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
@@ -226,11 +221,8 @@ def regrid_rectilinear_to_unstructured(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of the ``src_cube`` are masked.
-    method : str, default="conservative"
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+    method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+        The method used to calculate weights.
     src_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
@@ -255,6 +247,7 @@ def regrid_rectilinear_to_unstructured(
         raise ValueError("mesh_cube has no mesh.")
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(mesh_cube, use_tgt_mask)
+    method = check_method(method)
 
     regrid_info = _regrid_rectilinear_to_unstructured__prepare(
         src_cube,
@@ -298,11 +291,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked. Defaults to 1
             for conservative regregridding and 0 for bilinear regridding.
-        method : str, default="conservative"
-            Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy`
-            methods :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-            :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+        method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+            The method used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed

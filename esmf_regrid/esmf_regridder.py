@@ -5,7 +5,7 @@ from numpy import ma
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import Constants
+from esmf_regrid import Constants, check_method, check_norm
 from . import esmpy
 from ._esmf_sdo import GridInfo, RefinedGridInfo
 
@@ -88,13 +88,8 @@ class Regridder:
         """
         self.src = src
         self.tgt = tgt
-        self.method = method
-
         # type checks method
-        if not isinstance(method, Constants.Method):
-            raise ValueError(
-                "``method```` must be a member of the ``Constants.Method`` enum."
-            )
+        self.method = check_method(method)
 
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
@@ -149,9 +144,7 @@ class Regridder:
             Array whose shape is compatible with ``self.src``
         norm_type : :class:`Constants.NormType`
             Either ``Constants.NormType.FRACAREA`` or ``Constants.NormType.DSTAREA``.
-            Determines the type of normalisation applied to the weights. Normalisations
-            correspond to :mod:`esmpy` constants :attr:`~esmpy.api.constants.NormType.FRACAREA`
-            and :attr:`~esmpy.api.constants.NormType.DSTAREA`.
+            Determines the type of normalisation applied to the weights.
         mdtol : float, default=1
             A number between 0 and 1 describing the missing data tolerance.
             Depending on the value of ``mdtol``, if a cell in the target grid is not
@@ -169,10 +162,7 @@ class Regridder:
 
         """
         # Sets default value, as this can't be done with class attributes within method call
-        if not isinstance(norm_type, Constants.NormType):
-            raise ValueError(
-                "``norm_type```` must be a member of the ``Constants.NormType`` enum."
-            )
+        norm_type = check_norm(norm_type)
 
         array_shape = src_array.shape
         main_shape = array_shape[-self.src.dims :]
@@ -195,8 +185,6 @@ class Regridder:
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == Constants.NormType.DSTAREA:
             pass
-        else:
-            raise ValueError(f'Normalisation type "{norm_type}" is not supported')
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))

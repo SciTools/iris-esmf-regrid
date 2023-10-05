@@ -76,7 +76,7 @@ def test_node_friendly_methods(method):
     """
     Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
-    Tests with method="bilinear" and method="nearest".
+    Tests with method=Constants.Method.BILINEAR and method=Constants.Method.NEAREST.
     """
     n_lons = 6
     n_lats = 5
