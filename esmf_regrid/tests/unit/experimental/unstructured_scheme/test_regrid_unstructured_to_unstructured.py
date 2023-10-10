@@ -8,13 +8,10 @@ import pytest
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_unstructured_to_unstructured,
 )
-from esmf_regrid.tests.unit.schemes.test__cube_to_MeshInfo import (
-    _gridlike_mesh_cube,
-)
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
-from esmf_regrid.tests.unit.schemes.test__regrid_unstructured_to_unstructured__prepare import (
+from esmf_regrid.tests.unit.schemes.test__regrid_unstructured_to_rectilinear__prepare import (
     _flat_mesh_cube,
     _full_mesh,
 )
