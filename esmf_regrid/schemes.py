@@ -777,7 +777,6 @@ def _regrid_unstructured_to_unstructured__prepare(
     tgt_mask=None,
     tgt_location=None,
 ):
-
     if isinstance(tgt_cube_or_mesh, Mesh):
         mesh = tgt_cube_or_mesh
         location = tgt_location
@@ -788,10 +787,15 @@ def _regrid_unstructured_to_unstructured__prepare(
     mesh_dim = src_mesh_cube.mesh_dim()
 
     src_meshinfo = _make_meshinfo(src_mesh_cube, method, src_mask, "source")
-    tgt_meshinfo = _make_meshinfo(tgt_cube_or_mesh, method, tgt_mask, "target", location=tgt_location)
+    tgt_meshinfo = _make_meshinfo(
+        tgt_cube_or_mesh, method, tgt_mask, "target", location=tgt_location
+    )
 
     regridder = Regridder(
-        src_meshinfo, tgt_meshinfo, method=method, precomputed_weights=precomputed_weights
+        src_meshinfo,
+        tgt_meshinfo,
+        method=method,
+        precomputed_weights=precomputed_weights,
     )
 
     regrid_info = RegridInfo(
@@ -804,7 +808,6 @@ def _regrid_unstructured_to_unstructured__prepare(
 
 
 def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
-
     (mesh_dim,) = regrid_info.dims
     mesh, location = regrid_info.target
     regridder = regrid_info.regridder
@@ -816,7 +819,7 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
         num_out_dims=1,
         mdtol=mdtol,
     )
-    if location =="face":
+    if location == "face":
         face_node = mesh.face_node_connectivity
         chunk_shape = (face_node.shape[face_node.location_axis],)
     elif location == "node":

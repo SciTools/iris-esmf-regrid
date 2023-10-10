@@ -442,5 +442,7 @@ def regrid_unstructured_to_unstructured(
         src_mask=src_mask,
         tgt_mask=tgt_mask,
     )
-    result = _regrid_rectilinear_to_unstructured__perform(src_mesh_cube, regrid_info, mdtol)
+    result = _regrid_rectilinear_to_unstructured__perform(
+        src_mesh_cube, regrid_info, mdtol
+    )
     return result
