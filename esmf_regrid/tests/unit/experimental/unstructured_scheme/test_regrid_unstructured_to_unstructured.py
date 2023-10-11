@@ -39,9 +39,7 @@ def test_flat_cubes():
 
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    tgt = _flat_mesh_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _flat_mesh_cube()
     # Ensure data in the target grid is different to the expected data.
     # i.e. target grid data is all zero, expected data is all one
     tgt.data[:] = 0
@@ -70,8 +68,6 @@ def test_node_friendly_methods(method):
     """
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
     src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     # Ensure data in the target mesh is different to the expected data.
@@ -101,8 +97,6 @@ def test_invalid_args():
     """
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
     node_src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     edge_src = _gridlike_mesh_cube(n_lons, n_lats, location="edge")
     face_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
@@ -164,8 +158,6 @@ def test_multidim_cubes():
 
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
     tgt = _gridlike_mesh_cube(n_lons, n_lats)
 
     result = regrid_unstructured_to_unstructured(cube, tgt)
