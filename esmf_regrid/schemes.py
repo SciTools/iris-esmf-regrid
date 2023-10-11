@@ -787,7 +787,9 @@ def _regrid_unstructured_to_unstructured__prepare(
 
     mesh_dim = src_mesh_cube.mesh_dim()
 
-    src_meshinfo = _make_meshinfo(src_mesh_cube, method, src_location, src_mask, "source")
+    src_meshinfo = _make_meshinfo(
+        src_mesh_cube, method, src_location, src_mask, "source"
+    )
     tgt_meshinfo = _make_meshinfo(
         tgt_cube_or_mesh, method, tgt_mask, "target", location=tgt_location
     )
