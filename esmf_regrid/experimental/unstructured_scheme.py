@@ -9,6 +9,8 @@ from esmf_regrid.schemes import (
     _regrid_rectilinear_to_unstructured__prepare,
     _regrid_unstructured_to_rectilinear__perform,
     _regrid_unstructured_to_rectilinear__prepare,
+    _regrid_unstructured_to_unstructured__perform,
+    _regrid_unstructured_to_unstructured__prepare,
 )
 
 
@@ -360,7 +362,6 @@ def regrid_unstructured_to_unstructured(
     tgt_mesh_cube,
     mdtol=0,
     method="conservative",
-    src_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
 ):
@@ -434,15 +435,14 @@ def regrid_unstructured_to_unstructured(
     src_mask = _get_mask(src_mesh_cube, use_src_mask)
     tgt_mask = _get_mask(tgt_mesh_cube, use_tgt_mask)
 
-    regrid_info = _regrid_rectilinear_to_unstructured__prepare(
+    regrid_info = _regrid_unstructured_to_unstructured__prepare(
         src_mesh_cube,
         tgt_mesh_cube,
         method=method,
-        src_resolution=src_resolution,
         src_mask=src_mask,
         tgt_mask=tgt_mask,
     )
-    result = _regrid_rectilinear_to_unstructured__perform(
+    result = _regrid_unstructured_to_unstructured__perform(
         src_mesh_cube, regrid_info, mdtol
     )
     return result
