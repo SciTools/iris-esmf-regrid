@@ -102,8 +102,6 @@ def test_invalid_args():
     face_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
     tgt = _gridlike_mesh_cube(n_lons, n_lats)
 
-    with pytest.raises(ValueError):
-        _ = regrid_unstructured_to_unstructured(tgt, tgt, method="bilinear")
     with pytest.raises(NotImplementedError):
         _ = regrid_unstructured_to_unstructured(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
@@ -163,7 +161,7 @@ def test_multidim_cubes():
     result = regrid_unstructured_to_unstructured(cube, tgt)
 
     # Lenient check for data.
-    expected_data = np.empty([t, n_lats, n_lons, h])
+    expected_data = np.empty([t, n_lats * n_lons, h])
     expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, np.newaxis, :]
     assert np.allclose(expected_data, result.data)
 
