@@ -78,7 +78,7 @@ def test_node_friendly_methods(method):
     src.data[:] = 1  # Ensure all data in the source is one.
     result = regrid_unstructured_to_unstructured(src, tgt, method=method)
 
-    expected_data = np.ones(tgt.data)
+    expected_data = np.ones_like(tgt.data)
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
@@ -162,7 +162,7 @@ def test_multidim_cubes():
 
     # Lenient check for data.
     expected_data = np.empty([t, n_lats * n_lons, h])
-    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, np.newaxis, :]
+    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, :]
     assert np.allclose(expected_data, result.data)
 
     expected_cube = Cube(expected_data)
