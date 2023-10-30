@@ -134,11 +134,9 @@ def test_multidim_cubes():
     Tests with multidimensional cubes. The source cube contains
     coordinates on the dimensions before and after the mesh dimension.
     """
-    tgt = _flat_mesh_cube()
-    tgt_mesh = tgt.mesh
+
     mesh = _full_mesh()
     mesh_length = mesh.connectivity(contains_face=True).shape[0]
-    tgt_mesh_length = mesh.connectivity(contains_face=True).shape[0]
 
     h = 2
     t = 3
