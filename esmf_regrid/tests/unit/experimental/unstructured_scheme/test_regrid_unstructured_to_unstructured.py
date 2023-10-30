@@ -148,7 +148,7 @@ def test_multidim_cubes():
     cube = Cube(src_data)
     mesh_coord_x, mesh_coord_y = mesh.to_MeshCoords("face")
     cube.add_aux_coord(mesh_coord_x, 1)
-    cube.add_aux_coord(mesh_coord_y, 1)
+    cube.add_aux_coord(mesh_coord_y, 2)
     cube.add_dim_coord(time, 0)
     cube.add_dim_coord(height, 2)
 
