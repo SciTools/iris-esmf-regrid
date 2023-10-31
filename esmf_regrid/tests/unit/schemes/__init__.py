@@ -1,10 +1,11 @@
 """Unit tests for `esmf_regrid.schemes`."""
 
-from iris.coord_systems import GeogCS, TransverseMercator
+from iris.coord_systems import OSGB
 import numpy as np
 from numpy import ma
 import pytest
 
+from esmf_regrid.schemes import ESMFAreaWeighted, ESMFBilinear, ESMFNearest
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
@@ -169,17 +170,11 @@ def _test_mask_from_regridder(scheme, mask_keyword):
     )
 
 
-def _test_non_degree_crs(scheme, expected_sum, expected_unmasked):
+def _test_non_degree_crs(scheme):
     """Test regridding scheme is compatible with coordinates with non-degree units."""
-    coord_system = TransverseMercator(
-        49,
-        -2,
-        false_easting=400000,
-        false_northing=-100000,
-        scale_factor_at_central_meridian=0.9996012717,
-        ellipsoid=GeogCS(semi_major_axis=6377563.396, semi_minor_axis=6356256.91),
-    )
+    coord_system = OSGB()
 
+    # This definition comes from a small section of real user data.
     n_lons_src = 2
     n_lats_src = 3
     lon_bounds = (-197500, -192500)
@@ -206,6 +201,14 @@ def _test_non_degree_crs(scheme, expected_sum, expected_unmasked):
     )
 
     result = tm_cube.regrid(cube_tgt, scheme())
+
+    # Set expected results, this varies depending on the scheme.
+    if scheme is ESMFAreaWeighted:
+        expected_sum, expected_unmasked = 50.86147272655136, 21
+    elif scheme is ESMFBilinear:
+        expected_sum, expected_unmasked = 35.90837983047451, 13
+    elif scheme is ESMFNearest:
+        expected_sum, expected_unmasked = 490, 168
 
     # Check that the data is as expected.
     assert np.isclose(result.data.sum(), expected_sum)

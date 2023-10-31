@@ -196,8 +196,8 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     if crs is None:
         lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
         lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
-        lon_points = lon.units.convert(lon.points, Unit("degrees"))
-        lat_points = lon.units.convert(lat.points, Unit("degrees"))
+        lon_points = lon.units.convert(lon_points, Unit("degrees"))
+        lat_points = lon.units.convert(lat_points, Unit("degrees"))
     if resolution is None:
         grid_info = GridInfo(
             lon_points,

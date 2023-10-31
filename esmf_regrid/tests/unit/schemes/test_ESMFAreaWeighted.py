@@ -67,6 +67,4 @@ def test_invalid_tgt_location():
 
 def test_non_degree_crs():
     """Test for coordinates with non-degree units."""
-    expected_sum = 50.86147272655136
-    expected_unmasked = 21
-    _test_non_degree_crs(ESMFAreaWeighted, expected_sum, expected_unmasked)
+    _test_non_degree_crs(ESMFAreaWeighted)
