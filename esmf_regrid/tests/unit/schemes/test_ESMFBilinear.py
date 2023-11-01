@@ -8,6 +8,7 @@ from esmf_regrid.tests.unit.schemes.__init__ import (
     _test_invalid_mdtol,
     _test_mask_from_init,
     _test_mask_from_regridder,
+    _test_non_degree_crs,
 )
 
 
@@ -51,3 +52,8 @@ def test_mask_from_regridder(mask_keyword):
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
     _test_mask_from_regridder(ESMFBilinear, mask_keyword)
+
+
+def test_non_degree_crs():
+    """Test for coordinates with non-degree units."""
+    _test_non_degree_crs(ESMFBilinear)

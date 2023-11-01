@@ -1,9 +1,11 @@
 """Unit tests for `esmf_regrid.schemes`."""
 
+from iris.coord_systems import OSGB
 import numpy as np
 from numpy import ma
 import pytest
 
+from esmf_regrid.schemes import ESMFAreaWeighted, ESMFBilinear, ESMFNearest
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
@@ -166,3 +168,50 @@ def _test_mask_from_regridder(scheme, mask_keyword):
     np.testing.assert_allclose(
         getattr(rg_from_different, regridder_attr), mask_different
     )
+
+
+def _test_non_degree_crs(scheme):
+    """Test regridding scheme is compatible with coordinates with non-degree units."""
+    coord_system = OSGB()
+
+    # This definition comes from a small section of real user data.
+    n_lons_src = 2
+    n_lats_src = 3
+    lon_bounds = (-197500, -192500)
+    lat_bounds = (1247500, 1237500)
+    tm_cube = _grid_cube(
+        n_lons_src,
+        n_lats_src,
+        lon_bounds,
+        lat_bounds,
+        circular=False,
+        coord_system=coord_system,
+        standard_names=["projection_x_coordinate", "projection_y_coordinate"],
+        units="m",
+    )
+    data = np.arange(n_lats_src * n_lons_src).reshape([n_lats_src, n_lons_src])
+    tm_cube.data = data
+
+    n_lons_tgt = 12
+    n_lats_tgt = 14
+    lon_bounds_tgt = (-13, -12.8)
+    lat_bounds_tgt = (60.5, 60.7)
+    cube_tgt = _grid_cube(
+        n_lons_tgt, n_lats_tgt, lon_bounds_tgt, lat_bounds_tgt, circular=True
+    )
+
+    result = tm_cube.regrid(cube_tgt, scheme())
+
+    # Set expected results, this varies depending on the scheme.
+    if scheme is ESMFAreaWeighted:
+        expected_sum, expected_unmasked = 50.86147272655136, 21
+    elif scheme is ESMFBilinear:
+        expected_sum, expected_unmasked = 35.90837983047451, 13
+    elif scheme is ESMFNearest:
+        expected_sum, expected_unmasked = 490, 168
+
+    # Check that the data is as expected.
+    assert np.isclose(result.data.sum(), expected_sum)
+
+    # Check that the number of masked points is as expected.
+    assert (1 - result.data.mask).sum() == expected_unmasked

@@ -8,6 +8,7 @@ from esmf_regrid.schemes import ESMFNearest
 from esmf_regrid.tests.unit.schemes.__init__ import (
     _test_mask_from_init,
     _test_mask_from_regridder,
+    _test_non_degree_crs,
 )
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
@@ -94,3 +95,8 @@ def test_mask_from_regridder(mask_keyword):
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
     _test_mask_from_regridder(ESMFNearest, mask_keyword)
+
+
+def test_non_degree_crs():
+    """Test for coordinates with non-degree units."""
+    _test_non_degree_crs(ESMFNearest)
