@@ -516,6 +516,13 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     src_mask=None,
     tgt_mask=None,
 ):
+    """
+    First (setup) part of 'regrid_rectilinear_to_rectilinear'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
     tgt_x = _get_coord(tgt_grid_cube, "x")
     tgt_y = _get_coord(tgt_grid_cube, "y")
     src_x = _get_coord(src_grid_cube, "x")
@@ -544,6 +551,12 @@ def _regrid_rectilinear_to_rectilinear__prepare(
 
 
 def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_rectilinear_to_rectilinear'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
     grid_x_dim, grid_y_dim = regrid_info.dims
     grid_x, grid_y = regrid_info.target
     regridder = regrid_info.regridder
@@ -778,6 +791,13 @@ def _regrid_unstructured_to_unstructured__prepare(
     src_location=None,
     tgt_location=None,
 ):
+    """
+    First (setup) part of 'regrid_unstructured_to_unstructured'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
     if isinstance(tgt_cube_or_mesh, Mesh):
         mesh = tgt_cube_or_mesh
         location = tgt_location
@@ -811,6 +831,12 @@ def _regrid_unstructured_to_unstructured__prepare(
 
 
 def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_unstructured_to_unstructured'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
     (mesh_dim,) = regrid_info.dims
     mesh, location = regrid_info.target
     regridder = regrid_info.regridder

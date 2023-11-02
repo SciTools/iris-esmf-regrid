@@ -390,10 +390,10 @@ def regrid_unstructured_to_unstructured(
 
     Parameters
     ----------
-    src_cube : :class:`iris.cube.Cube`
-        A rectilinear instance of :class:`~iris.cube.Cube` that supplies the data,
+    src_mesh_cube : :class:`iris.cube.Cube`
+        A unstructured instance of :class:`~iris.cube.Cube` that supplies the data,
         metadata and coordinates.
-    mesh_cube : :class:`iris.cube.Cube`
+    tgt_mesh_cube : :class:`iris.cube.Cube`
         An unstructured instance of :class:`~iris.cube.Cube` that supplies the desired
         horizontal mesh definition.
     mdtol : float, default=0
@@ -410,9 +410,6 @@ def regrid_unstructured_to_unstructured(
         :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
         :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
         :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
-    src_resolution : int, optional
-        If present, represents the amount of latitude slices per cell
-        given to ESMF for calculation.
     use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the source to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
