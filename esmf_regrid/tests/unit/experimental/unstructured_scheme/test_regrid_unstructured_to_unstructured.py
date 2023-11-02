@@ -167,7 +167,7 @@ def test_multidim_cubes():
     expected_cube.add_dim_coord(time, 0)
     expected_cube.add_aux_coord(tgt.coord("latitude"), 1)
     expected_cube.add_aux_coord(tgt.coord("longitude"), 1)
-    expected_cube.add_dim_coord(height, 3)
+    expected_cube.add_dim_coord(height, 2)
 
     # Check metadata and scalar coords.
     result.data = expected_data
