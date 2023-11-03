@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.9] - 2023-11-03
+
+### Added
+
+- [PR#178](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/178)
+  Added support for coordinate systems with non-degree type units.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+- [PR#311](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/311)
+  Added support for Mesh to Mesh regridding.
+  [@HGWright](https://github.com/HGWright)
 
 ### Fixed
 
