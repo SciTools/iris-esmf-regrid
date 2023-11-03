@@ -10,4 +10,4 @@ except ImportError as exc:
 from .schemes import *
 
 
-__version__ = "0.9.0"
+__version__ = "0.10.dev0"
