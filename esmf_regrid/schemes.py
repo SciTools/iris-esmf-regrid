@@ -12,7 +12,7 @@ from iris.exceptions import CoordinateNotFoundError
 from iris.experimental.ugrid import Mesh
 import numpy as np
 
-from esmf_regrid import Constants, check_method
+from esmf_regrid import check_method, Constants
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 

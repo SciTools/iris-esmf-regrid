@@ -2,7 +2,7 @@
 
 from iris.experimental.ugrid import Mesh
 
-from esmf_regrid import Constants, check_method
+from esmf_regrid import check_method, Constants
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,

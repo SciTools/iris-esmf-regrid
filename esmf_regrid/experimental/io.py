@@ -8,7 +8,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import Constants, check_method
+from esmf_regrid import check_method, Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,

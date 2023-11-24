@@ -30,6 +30,10 @@ norm_dict = {
     "dstarea": Constants.NormType.DSTAREA}
 
 def check_method(method):
+    """
+    Checks that method is a member of the `Constants.Method` enim, else raises
+    an error.
+    """
     if method in method_dict.keys():
         result = method_dict[method]
     elif method in method_dict.values():
@@ -39,6 +43,10 @@ def check_method(method):
     return result
 
 def check_norm(norm):
+    """
+    Checks that normtype is a member of the `Constants.NormType` enum, else raises
+    an error.
+    """
     if norm in norm_dict.keys():
         result = norm_dict[norm]
     elif norm in norm_dict.values():

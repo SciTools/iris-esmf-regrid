@@ -5,7 +5,7 @@ from numpy import ma
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import Constants, check_method, check_norm
+from esmf_regrid import check_method, check_norm, Constants
 from . import esmpy
 from ._esmf_sdo import GridInfo, RefinedGridInfo
 
