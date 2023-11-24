@@ -2,7 +2,6 @@
 
 import pytest
 
-from esmf_regrid import Constants
 from esmf_regrid.schemes import _ESMFRegridder
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
