@@ -1,15 +1,15 @@
 import pytest
 from esmf_regrid import Constants, check_method, check_norm
 
+
 @pytest.mark.parametrize(
     "method",
     [
         ["conservative", Constants.Method.CONSERVATIVE],
         ["bilinear", Constants.Method.BILINEAR],
-        ["nearest", Constants.Method.NEAREST]
-    ]
+        ["nearest", Constants.Method.NEAREST],
+    ],
 )
-
 def test_check_method_validates(method):
     # with original text-input behaviour
     assert check_method(method[0]) == method[1]
@@ -23,12 +23,13 @@ def test_invalid_method():
     with pytest.raises(AttributeError):
         _ = check_method(Constants.Method.OTHER)
 
+
 @pytest.mark.parametrize(
     "norm",
     [
         ["fracarea", Constants.NormType.FRACAREA],
-        ["dstarea", Constants.NormType.DSTAREA]
-    ]
+        ["dstarea", Constants.NormType.DSTAREA],
+    ],
 )
 def test_check_norm_validates(norm):
     # with original text-input behaviour

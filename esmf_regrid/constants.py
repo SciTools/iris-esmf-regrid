@@ -17,17 +17,22 @@ class Constants:
 
     class NormType(Enum):
         """holds enums for norm types."""
+
         FRACAREA = esmpy.api.constants.NormType.FRACAREA
         DSTAREA = esmpy.api.constants.NormType.DSTAREA
+
 
 method_dict = {
     "conservative": Constants.Method.CONSERVATIVE,
     "bilinear": Constants.Method.BILINEAR,
-    "nearest": Constants.Method.NEAREST}
+    "nearest": Constants.Method.NEAREST,
+}
 
 norm_dict = {
     "fracarea": Constants.NormType.FRACAREA,
-    "dstarea": Constants.NormType.DSTAREA}
+    "dstarea": Constants.NormType.DSTAREA,
+}
+
 
 def check_method(method):
     if method in method_dict.keys():
@@ -35,8 +40,11 @@ def check_method(method):
     elif method in method_dict.values():
         result = method
     else:
-        raise ValueError(f"Method must be a member of `Constants.Method` enum, instead got {method}")
+        raise ValueError(
+            f"Method must be a member of `Constants.Method` enum, instead got {method}"
+        )
     return result
+
 
 def check_norm(norm):
     if norm in norm_dict.keys():
@@ -44,5 +52,7 @@ def check_norm(norm):
     elif norm in norm_dict.values():
         result = norm
     else:
-        raise ValueError(f"NormType must be a member of `Constants.NormType` enum, instead got {norm}")
+        raise ValueError(
+            f"NormType must be a member of `Constants.NormType` enum, instead got {norm}"
+        )
     return result
