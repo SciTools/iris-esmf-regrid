@@ -68,6 +68,7 @@ def test_flat_cubes():
     expected_cube.data = result.data
     assert expected_cube == result
 
+
 @pytest.mark.parametrize("nsi", [0, 1])
 @pytest.mark.parametrize(
     "method", [Constants.Method.BILINEAR, Constants.Method.NEAREST]
