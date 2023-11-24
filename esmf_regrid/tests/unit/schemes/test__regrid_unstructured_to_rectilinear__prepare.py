@@ -70,5 +70,5 @@ def test_flat_cubes():
     assert mesh_dim == 0
     assert grid_x == tgt.coord("longitude")
     assert grid_y == tgt.coord("latitude")
-    assert type(regridder.tgt) == GridInfo
-    assert type(regridder.src) == MeshInfo
+    assert type(regridder.tgt) is GridInfo
+    assert type(regridder.src) is MeshInfo

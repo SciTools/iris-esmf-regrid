@@ -67,12 +67,14 @@ def _grid_cube(
     lat_outer_bounds,
     circular=False,
     coord_system=None,
+    standard_names=["longitude", "latitude"],
+    units="degrees",
 ):
     lon_points, lon_bounds = _generate_points_and_bounds(n_lons, lon_outer_bounds)
     lon = DimCoord(
         lon_points,
-        "longitude",
-        units="degrees",
+        standard_names[0],
+        units=units,
         bounds=lon_bounds,
         circular=circular,
         coord_system=coord_system,
@@ -80,8 +82,8 @@ def _grid_cube(
     lat_points, lat_bounds = _generate_points_and_bounds(n_lats, lat_outer_bounds)
     lat = DimCoord(
         lat_points,
-        "latitude",
-        units="degrees",
+        standard_names[1],
+        units=units,
         bounds=lat_bounds,
         coord_system=coord_system,
     )

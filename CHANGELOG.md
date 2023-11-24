@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9] - 2023-11-03
+
+### Added
+
+- [PR#178](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/178)
+  Added support for coordinate systems with non-degree type units.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+- [PR#311](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/311)
+  Added support for Mesh to Mesh regridding.
+  [@HGWright](https://github.com/HGWright)
+
+### Fixed
+
+- [PR#301](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/301)
+  Fixed a bug which caused errors when regridding with the node locations
+  of a mesh whose face_node_connectivity had non-zero start_index.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+## [0.8] - 2023-08-22
+
+### Added
+
+- [PR#289](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/289)
+  Added the ability to regrid onto a Mesh as a target instead of a Cube.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.7] - 2023-05-23
 
 ### Added

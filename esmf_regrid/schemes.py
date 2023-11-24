@@ -9,6 +9,7 @@ import dask.array as da
 import iris.coords
 import iris.cube
 from iris.exceptions import CoordinateNotFoundError
+from iris.experimental.ugrid import Mesh
 import numpy as np
 
 from esmf_regrid import Constants, check_method
@@ -34,39 +35,43 @@ def _get_coord(cube, axis):
     return coord
 
 
-def _get_mask(cube, use_mask=True):
+def _get_mask(cube_or_mesh, use_mask=True):
     if use_mask is False:
         result = None
     elif use_mask is True:
-        src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
-
-        horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
-        other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
-
-        # Find a representative slice of data that spans both horizontal coords.
-        if cube.coord_dims(src_x) == cube.coord_dims(src_y):
-            slices = cube.slices([src_x])
+        if isinstance(cube_or_mesh, Mesh):
+            result = None
         else:
-            slices = cube.slices([src_x, src_y])
-        data = next(slices).data
-        if np.ma.is_masked(data):
-            # Check that the mask is constant along all other dimensions.
-            full_mask = da.ma.getmaskarray(cube.core_data())
-            if not np.array_equal(
-                da.all(full_mask, axis=other_dims).compute(),
-                da.any(full_mask, axis=other_dims).compute(),
-            ):
-                raise ValueError(
-                    "The mask derived from the cube is not constant over non-horizontal dimensions."
-                    "Consider passing in an explicit mask instead."
-                )
-            mask = np.ma.getmaskarray(data)
-            # Due to structural reasons, the mask should be transposed for curvilinear grids.
-            if cube.coord_dims(src_x) != cube.coord_dims(src_y):
-                mask = mask.T
-        else:
-            mask = None
-        result = mask
+            cube = cube_or_mesh
+            src_x, src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
+
+            horizontal_dims = set(cube.coord_dims(src_x)) | set(cube.coord_dims(src_y))
+            other_dims = tuple(set(range(cube.ndim)) - horizontal_dims)
+
+            # Find a representative slice of data that spans both horizontal coords.
+            if cube.coord_dims(src_x) == cube.coord_dims(src_y):
+                slices = cube.slices([src_x])
+            else:
+                slices = cube.slices([src_x, src_y])
+            data = next(slices).data
+            if np.ma.is_masked(data):
+                # Check that the mask is constant along all other dimensions.
+                full_mask = da.ma.getmaskarray(cube.core_data())
+                if not np.array_equal(
+                    da.all(full_mask, axis=other_dims).compute(),
+                    da.any(full_mask, axis=other_dims).compute(),
+                ):
+                    raise ValueError(
+                        "The mask derived from the cube is not constant over non-horizontal dimensions."
+                        "Consider passing in an explicit mask instead."
+                    )
+                mask = np.ma.getmaskarray(data)
+                # Due to structural reasons, the mask should be transposed for curvilinear grids.
+                if cube.coord_dims(src_x) != cube.coord_dims(src_y):
+                    mask = mask.T
+            else:
+                mask = None
+            result = mask
     else:
         result = use_mask
     return result
@@ -187,10 +192,13 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
             lat_bound_array = _contiguous_masked(lat.bounds, mask)
         # 2D coords must be AuxCoords, which do not have a circular attribute.
         circular = False
-    lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
-    lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
-    lon_points = lon.units.convert(lon.points, Unit("degrees"))
-    lat_points = lon.units.convert(lat.points, Unit("degrees"))
+    lon_points = lon.points
+    lat_points = lat.points
+    if crs is None:
+        lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
+        lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
+        lon_points = lon.units.convert(lon_points, Unit("degrees"))
+        lat_points = lon.units.convert(lat_points, Unit("degrees"))
     if resolution is None:
         grid_info = GridInfo(
             lon_points,
@@ -463,10 +471,13 @@ def _make_gridinfo(cube, method, resolution, mask):
     return _cube_to_GridInfo(cube, center=center, resolution=resolution, mask=mask)
 
 
-def _make_meshinfo(cube, method, mask, src_or_tgt):
+def _make_meshinfo(cube_or_mesh, method, mask, src_or_tgt, location=None):
     method = check_method(method)
-    mesh = cube.mesh
-    location = cube.location
+    if isinstance(cube_or_mesh, Mesh):
+        mesh = cube_or_mesh
+    else:
+        mesh = cube_or_mesh.mesh
+        location = cube_or_mesh.location
     if mesh is None:
         raise ValueError(f"The {src_or_tgt} cube is not defined on a mesh.")
     if method == Constants.Method.CONSERVATIVE:
@@ -500,6 +511,13 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     src_mask=None,
     tgt_mask=None,
 ):
+    """
+    First (setup) part of 'regrid_rectilinear_to_rectilinear'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
     tgt_x = _get_coord(tgt_grid_cube, "x")
     tgt_y = _get_coord(tgt_grid_cube, "y")
     src_x = _get_coord(src_grid_cube, "x")
@@ -528,6 +546,12 @@ def _regrid_rectilinear_to_rectilinear__prepare(
 
 
 def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
+    """
+    Second (regrid) part of 'regrid_rectilinear_to_rectilinear'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
     grid_x_dim, grid_y_dim = regrid_info.dims
     grid_x, grid_y = regrid_info.target
     regridder = regrid_info.regridder
@@ -655,12 +679,13 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
 
 def _regrid_rectilinear_to_unstructured__prepare(
     src_grid_cube,
-    target_mesh_cube,
+    tgt_cube_or_mesh,
     method,
     precomputed_weights=None,
     src_resolution=None,
     src_mask=None,
     tgt_mask=None,
+    tgt_location=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
@@ -671,8 +696,12 @@ def _regrid_rectilinear_to_unstructured__prepare(
     """
     grid_x = _get_coord(src_grid_cube, "x")
     grid_y = _get_coord(src_grid_cube, "y")
-    mesh = target_mesh_cube.mesh
-    location = target_mesh_cube.location
+    if isinstance(tgt_cube_or_mesh, Mesh):
+        mesh = tgt_cube_or_mesh
+        location = tgt_location
+    else:
+        mesh = tgt_cube_or_mesh.mesh
+        location = tgt_cube_or_mesh.location
 
     if grid_x.ndim == 1:
         (grid_x_dim,) = src_grid_cube.coord_dims(grid_x)
@@ -680,7 +709,9 @@ def _regrid_rectilinear_to_unstructured__prepare(
     else:
         grid_y_dim, grid_x_dim = src_grid_cube.coord_dims(grid_x)
 
-    meshinfo = _make_meshinfo(target_mesh_cube, method, tgt_mask, "target")
+    meshinfo = _make_meshinfo(
+        tgt_cube_or_mesh, method, tgt_mask, "target", location=tgt_location
+    )
     gridinfo = _make_gridinfo(src_grid_cube, method, src_resolution, src_mask)
 
     regridder = Regridder(
@@ -746,16 +777,96 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
 
 def _regrid_unstructured_to_unstructured__prepare(
-    src_grid_cube,
-    target_mesh_cube,
+    src_mesh_cube,
+    tgt_cube_or_mesh,
     method,
     precomputed_weights=None,
+    src_mask=None,
+    tgt_mask=None,
+    src_location=None,
+    tgt_location=None,
 ):
-    raise NotImplementedError
+    """
+    First (setup) part of 'regrid_unstructured_to_unstructured'.
+
+    Check inputs and calculate the sparse regrid matrix and related info.
+    The 'regrid info' returned can be re-used over many 2d slices.
+
+    """
+    if isinstance(tgt_cube_or_mesh, Mesh):
+        mesh = tgt_cube_or_mesh
+        location = tgt_location
+    else:
+        mesh = tgt_cube_or_mesh.mesh
+        location = tgt_cube_or_mesh.location
+
+    mesh_dim = src_mesh_cube.mesh_dim()
+
+    src_meshinfo = _make_meshinfo(
+        src_mesh_cube, method, src_mask, "source", location=src_location
+    )
+    tgt_meshinfo = _make_meshinfo(
+        tgt_cube_or_mesh, method, tgt_mask, "target", location=tgt_location
+    )
+
+    regridder = Regridder(
+        src_meshinfo,
+        tgt_meshinfo,
+        method=method,
+        precomputed_weights=precomputed_weights,
+    )
+
+    regrid_info = RegridInfo(
+        dims=[mesh_dim],
+        target=MeshRecord(mesh, location),
+        regridder=regridder,
+    )
+
+    return regrid_info
 
 
 def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
-    raise NotImplementedError
+    """
+    Second (regrid) part of 'regrid_unstructured_to_unstructured'.
+
+    Perform the prepared regrid calculation on a single cube.
+
+    """
+    (mesh_dim,) = regrid_info.dims
+    mesh, location = regrid_info.target
+    regridder = regrid_info.regridder
+
+    regrid = functools.partial(
+        _regrid_along_dims,
+        regridder,
+        dims=[mesh_dim],
+        num_out_dims=1,
+        mdtol=mdtol,
+    )
+    if location == "face":
+        face_node = mesh.face_node_connectivity
+        chunk_shape = (face_node.shape[face_node.location_axis],)
+    elif location == "node":
+        chunk_shape = mesh.node_coords[0].shape
+    else:
+        raise NotImplementedError(f"Unrecognised location {location}.")
+
+    new_data = _map_complete_blocks(
+        src_cube,
+        regrid,
+        (mesh_dim,),
+        chunk_shape,
+    )
+
+    new_cube = _create_cube(
+        new_data,
+        src_cube,
+        (mesh_dim,),
+        mesh.to_MeshCoords(location),
+        1,
+    )
+
+    return new_cube
 
 
 def regrid_rectilinear_to_rectilinear(
@@ -824,7 +935,9 @@ class ESMFAreaWeighted:
 
     """
 
-    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
+    def __init__(
+        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location="face"
+    ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -844,35 +957,55 @@ class ESMFAreaWeighted:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
+        tgt_location : str or None, default="face"
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         """
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
+        if tgt_location is not None and tgt_location != "face":
+            raise ValueError(
+                "For area weighted regridding, target location must be 'face'."
+            )
         self.mdtol = mdtol
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
+        self.tgt_location = "face"
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFAreaWeighted(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+    def regridder(
+        self,
+        src_grid,
+        tgt_grid,
+        use_src_mask=None,
+        use_tgt_mask=None,
+        tgt_location="face",
+    ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
         Parameters
         ----------
         src_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the target grid.
+            The :class:`~iris.cube.Cube` defining the source.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
+        tgt_location : str or None, default="face"
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
+
 
         Returns
         -------
@@ -892,12 +1025,17 @@ class ESMFAreaWeighted:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if tgt_location is not None and tgt_location != "face":
+            raise ValueError(
+                "For area weighted regridding, target location must be 'face'."
+            )
         return ESMFAreaWeightedRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location="face",
         )
 
 
@@ -910,7 +1048,9 @@ class ESMFBilinear:
     calculations and allows for different coordinate systems.
     """
 
-    def __init__(self, mdtol=0, use_src_mask=False, use_tgt_mask=False):
+    def __init__(
+        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location=None
+    ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
 
@@ -926,6 +1066,9 @@ class ESMFBilinear:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         """
         if not (0 <= mdtol <= 1):
@@ -934,27 +1077,39 @@ class ESMFBilinear:
         self.mdtol = mdtol
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
+        self.tgt_location = tgt_location
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFBilinear(mdtol={})".format(self.mdtol)
 
-    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+    def regridder(
+        self,
+        src_grid,
+        tgt_grid,
+        use_src_mask=None,
+        use_tgt_mask=None,
+        tgt_location=None,
+    ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
         Parameters
         ----------
         src_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the target grid.
+            The :class:`~iris.cube.Cube` defining the source.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Returns
         -------
@@ -974,12 +1129,15 @@ class ESMFBilinear:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if tgt_location is None:
+            tgt_location = self.tgt_location
         return ESMFBilinearRegridder(
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -1009,7 +1167,7 @@ class ESMFNearest:
     the same equivalent space will behave the same.
     """
 
-    def __init__(self, use_src_mask=False, use_tgt_mask=False):
+    def __init__(self, use_src_mask=False, use_tgt_mask=False, tgt_location=None):
         """
         Nearest neighbour scheme for regridding between rectilinear grids.
 
@@ -1021,30 +1179,45 @@ class ESMFNearest:
         use_tgt_mask : bool, default=False
             If True, derive a mask from target cube which will tell :mod:`esmpy`
             which points to ignore.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
         """
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
+        self.tgt_location = tgt_location
 
     def __repr__(self):
         """Return a representation of the class."""
         return "ESMFNearest()"
 
-    def regridder(self, src_grid, tgt_grid, use_src_mask=None, use_tgt_mask=None):
+    def regridder(
+        self,
+        src_grid,
+        tgt_grid,
+        use_src_mask=None,
+        use_tgt_mask=None,
+        tgt_location=None,
+    ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
         Parameters
         ----------
         src_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the source grid.
-        tgt_grid : :class:`iris.cube.Cube`
-            The :class:`~iris.cube.Cube` defining the target grid.
+            The :class:`~iris.cube.Cube` defining the source.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
         use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the tgt_grid.
             If True, the mask will be derived from tgt_grid.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Returns
         -------
@@ -1064,11 +1237,14 @@ class ESMFNearest:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if tgt_location is None:
+            tgt_location = self.tgt_location
         return ESMFNearestRegridder(
             src_grid,
             tgt_grid,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -1083,6 +1259,7 @@ class _ESMFRegridder:
         mdtol=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
         **kwargs,
     ):
         """
@@ -1092,7 +1269,7 @@ class _ESMFRegridder:
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         method : :class:`Constants.Method`
             The method to be used to calculate weights.
@@ -1108,6 +1285,9 @@ class _ESMFRegridder:
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
@@ -1134,15 +1314,17 @@ class _ESMFRegridder:
         kwargs["tgt_mask"] = self.tgt_mask
 
         src_is_mesh = src.mesh is not None
-        tgt_is_mesh = tgt.mesh is not None
+        tgt_is_mesh = isinstance(tgt, Mesh) or tgt.mesh is not None
         if src_is_mesh:
             if tgt_is_mesh:
                 prepare_func = _regrid_unstructured_to_unstructured__prepare
+                kwargs["tgt_location"] = tgt_location
             else:
                 prepare_func = _regrid_unstructured_to_rectilinear__prepare
         else:
             if tgt_is_mesh:
                 prepare_func = _regrid_rectilinear_to_unstructured__prepare
+                kwargs["tgt_location"] = tgt_location
             else:
                 prepare_func = _regrid_rectilinear_to_rectilinear__prepare
         regrid_info = prepare_func(src, tgt, method, **kwargs)
@@ -1255,6 +1437,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgt_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location="face",
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1262,9 +1445,10 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The rectilinear :class:`~iris.cube.Cube` providing the source.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1285,18 +1469,26 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default="face"
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
         ValueError
             If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
-            or ``tgt`` respectively are not constant over non-horizontal dimensions.
+            or ``tgt`` respectively are not constant over non-horizontal dimensions or
+            if tgt_location is not "face".
         """
         kwargs = dict()
         if src_resolution is not None:
             kwargs["src_resolution"] = src_resolution
         if tgt_resolution is not None:
             kwargs["tgt_resolution"] = tgt_resolution
+        if tgt_location is not None and tgt_location != "face":
+            raise ValueError(
+                "For area weighted regridding, target location must be 'face'."
+            )
         kwargs["use_src_mask"] = use_src_mask
         kwargs["use_tgt_mask"] = use_tgt_mask
         super().__init__(
@@ -1305,6 +1497,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             Constants.Method.CONSERVATIVE,
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
+            tgt_location="face",
             **kwargs,
         )
 
@@ -1320,6 +1513,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         precomputed_weights=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1327,9 +1521,10 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The rectilinear :class:`~iris.cube.Cube` providing the source.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1345,6 +1540,9 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
@@ -1360,6 +1558,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
 
 
@@ -1373,6 +1572,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         precomputed_weights=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        tgt_location=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1380,9 +1580,10 @@ class ESMFNearestRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The rectilinear :class:`~iris.cube.Cube` providing the source.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+            The unstructured :class:`~iris.cube.Cube`or
+            :class:`~iris.experimental.ugrid.Mesh` defining the target.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
@@ -1392,6 +1593,9 @@ class ESMFNearestRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``src`` or ``tgt``. If False, no mask will be taken and all points will
             be used in weights calculation.
+        tgt_location : str or None, default=None
+            Either "face" or "node". Describes the location for data on the mesh
+            if the target is not a :class:`~iris.cube.Cube`.
 
         Raises
         ------
@@ -1407,4 +1611,5 @@ class ESMFNearestRegridder(_ESMFRegridder):
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            tgt_location=tgt_location,
         )
