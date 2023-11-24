@@ -404,6 +404,7 @@ def regrid_unstructured_to_unstructured(
         A new :class:`~iris.cube.Cube` instance.
 
     """
+    method = check_method(method)
     if tgt_mesh_cube.mesh is None:
         raise ValueError("mesh_cube has no mesh.")
     src_mask = _get_mask(src_mesh_cube, use_src_mask)
