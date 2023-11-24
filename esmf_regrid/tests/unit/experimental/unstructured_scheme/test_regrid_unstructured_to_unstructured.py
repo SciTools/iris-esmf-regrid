@@ -107,7 +107,7 @@ def test_invalid_args():
     with pytest.raises(ValueError) as excinfo:
         _ = regrid_unstructured_to_unstructured(node_src, tgt, method="conservative")
     expected_message = (
-        "Method.CONSERVATIVE regridding requires a source cube located on "
+        "Conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
