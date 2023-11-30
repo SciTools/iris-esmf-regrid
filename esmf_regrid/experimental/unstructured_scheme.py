@@ -382,11 +382,8 @@ def regrid_unstructured_to_unstructured(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of the ``src_cube`` are masked.
-    method : str, default="conservative"
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+    method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+            The method used to calculate weights.
     use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
         Either an array representing the cells in the source to ignore, or else
         a boolean value. If True, this array is taken from the mask on the data
