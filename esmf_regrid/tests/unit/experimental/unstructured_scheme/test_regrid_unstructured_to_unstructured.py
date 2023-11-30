@@ -102,12 +102,12 @@ def test_invalid_args():
     face_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
     tgt = _gridlike_mesh_cube(n_lons, n_lats)
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(ValueError):
         _ = regrid_unstructured_to_unstructured(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
         _ = regrid_unstructured_to_unstructured(node_src, tgt, method="conservative")
     expected_message = (
-        "Conservative regridding requires a source cube located on "
+        "conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)

@@ -7,6 +7,8 @@ except ImportError as exc:
     except ImportError:
         raise exc
 
+# constants needs to be above schemes, as it is used within
+from .constants import Constants, check_method, check_norm
 from .schemes import *
 
 
