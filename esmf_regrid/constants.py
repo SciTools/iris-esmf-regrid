@@ -42,7 +42,7 @@ def check_method(method):
         result = method
     else:
         raise ValueError(
-            f"Method must be a member of `Constants.Method` enum, instead got {method.name.lower()}"
+            f"Method must be a member of `Constants.Method` enum, instead got {method}"
         )
     return result
 
