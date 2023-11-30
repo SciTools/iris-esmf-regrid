@@ -352,7 +352,7 @@ def regrid_unstructured_to_unstructured(
     src_mesh_cube,
     tgt_mesh_cube,
     mdtol=0,
-    method="conservative",
+    method=Constants.Method.CONSERVATIVE,
     use_src_mask=False,
     use_tgt_mask=False,
 ):

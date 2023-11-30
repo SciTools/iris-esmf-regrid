@@ -204,21 +204,21 @@ def test_invalid_method():
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(node_src, tgt, method=Constants.Method.CONSERVATIVE)
     expected_message = (
-        "Conservative regridding requires a source cube located on "
+        "conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(edge_src, tgt, method=Constants.Method.BILINEAR)
     expected_message = (
-        "Method.BILINEAR regridding requires a source cube with a node "
+        "bilinear regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
         _ = MeshToGridESMFRegridder(edge_src, tgt, method=Constants.Method.NEAREST)
     expected_message = (
-        "Method.NEAREST regridding requires a source cube with a node "
+        "nearest regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)

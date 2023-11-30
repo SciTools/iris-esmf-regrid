@@ -131,7 +131,7 @@ def test_invalid_args():
             src, node_tgt, method=Constants.Method.CONSERVATIVE
         )
     expected_message = (
-        "Conservative regridding requires a target cube located on "
+        "conservative regridding requires a target cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
@@ -140,7 +140,7 @@ def test_invalid_args():
             src, edge_tgt, method=Constants.Method.BILINEAR
         )
     expected_message = (
-        "Method.BILINEAR regridding requires a target cube with a node "
+        "bilinear regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
@@ -149,7 +149,7 @@ def test_invalid_args():
             src, edge_tgt, method=Constants.Method.NEAREST
         )
     expected_message = (
-        "Method.NEAREST regridding requires a target cube with a node "
+        "nearest regridding requires a target cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)

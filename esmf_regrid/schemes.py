@@ -483,18 +483,18 @@ def _make_meshinfo(cube_or_mesh, method, mask, src_or_tgt, location=None):
     if method == Constants.Method.CONSERVATIVE:
         if location != "face":
             raise ValueError(
-                f"Conservative regridding requires a {src_or_tgt} cube located on "
+                f"{method.name.lower()} regridding requires a {src_or_tgt} cube located on "
                 f"the face of a cube, target cube had the {location} location."
             )
     elif method in (Constants.Method.NEAREST, Constants.Method.BILINEAR):
         if location not in ["face", "node"]:
             raise ValueError(
-                f"{method} regridding requires a {src_or_tgt} cube with a node "
+                f"{method.name.lower()} regridding requires a {src_or_tgt} cube with a node "
                 f"or face location, target cube had the {location} location."
             )
         if location == "face" and None in mesh.face_coords:
             raise ValueError(
-                f"{method} regridding requires a {src_or_tgt} cube on a face"
+                f"{method.name.lower()} regridding requires a {src_or_tgt} cube on a face"
                 f"location to have a face center."
             )
 
