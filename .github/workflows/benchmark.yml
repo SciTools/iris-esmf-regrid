@@ -78,7 +78,7 @@ jobs:
           nox --session="benchmarks(branch)" -- "${COMPARE}"
 
       - name: Archive ASV results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: asv-report
           path: |
