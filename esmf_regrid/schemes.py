@@ -327,7 +327,7 @@ def _map_complete_blocks(src, func, active_dims, out_sizes, *args, **kwargs):
     if num_out == 1:
         out_chunks[sorted_dims[0]] = out_sizes[0]
     else:
-        for dim, size in zip(dims, out_sizes):
+        for dim, size in zip(active_dims, out_sizes):
             # Note: when mapping 2D to 2D, this will be the only alteration to
             # out_chunks, the same as iris._lazy_data.map_complete_blocks
             out_chunks[dim] = size
