@@ -239,16 +239,16 @@ def _mesh_to_MeshInfo(mesh, location, mask=None):
     return meshinfo
 
 
-def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
+def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
     """
     Perform regridding on data over specific dimensions.
 
     Parameters
     ----------
-    regridder : Regridder
-        An instance of Regridder initialised to perform regridding.
     data : array
         The data to be regrid.
+    regridder : Regridder
+        An instance of Regridder initialised to perform regridding.
     dims : tuple of int
         The dimensions in the source data to regrid along.
     num_out_dims : int
@@ -276,7 +276,7 @@ def _regrid_along_dims(regridder, data, dims, num_out_dims, mdtol):
     return result
 
 
-def _map_complete_blocks(src, func, dims, out_sizes):
+def _map_complete_blocks(src, func, active_dims, out_sizes, *args, **kwargs):
     """
     Apply a function to complete blocks.
 
@@ -296,7 +296,7 @@ def _map_complete_blocks(src, func, dims, out_sizes):
         Source :class:`~iris.cube.Cube` that function is applied to.
     func : function
         Function to apply.
-    dims : tuple of int
+    active_dims : tuple of int
         Dimensions that cannot be chunked.
     out_sizes : tuple of int
         Output size of dimensions that cannot be chunked.
@@ -309,21 +309,21 @@ def _map_complete_blocks(src, func, dims, out_sizes):
 
     """
     if not src.has_lazy_data():
-        return func(src.data)
+        return func(src.data, *args, **kwargs)
 
     data = src.lazy_data()
 
     # Ensure dims are not chunked
     in_chunks = list(data.chunks)
-    for dim in dims:
+    for dim in active_dims:
         in_chunks[dim] = src.shape[dim]
     data = data.rechunk(in_chunks)
 
     # Determine output chunks
-    num_dims = len(dims)
+    num_dims = len(active_dims)
     num_out = len(out_sizes)
     out_chunks = list(data.chunks)
-    sorted_dims = sorted(dims)
+    sorted_dims = sorted(active_dims)
     if num_out == 1:
         out_chunks[sorted_dims[0]] = out_sizes[0]
     else:
@@ -370,10 +370,12 @@ def _map_complete_blocks(src, func, dims, out_sizes):
 
     return data.map_blocks(
         func,
+        *args,
         chunks=out_chunks,
         drop_axis=dropped_dims,
         new_axis=new_axis,
         dtype=src.dtype,
+        **kwargs,
     )
 
 
@@ -556,15 +558,6 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     grid_x, grid_y = regrid_info.target
     regridder = regrid_info.regridder
 
-    # Set up a function which can accept just chunk of data as an argument.
-    regrid = functools.partial(
-        _regrid_along_dims,
-        regridder,
-        dims=[grid_x_dim, grid_y_dim],
-        num_out_dims=2,
-        mdtol=mdtol,
-    )
-
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -575,9 +568,13 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         chunk_shape = grid_x.shape[::-1]
     new_data = _map_complete_blocks(
         src_cube,
-        regrid,
+        _regrid_along_dims,
         (grid_x_dim, grid_y_dim),
         chunk_shape,
+        regridder=regridder,
+        dims=[grid_x_dim, grid_y_dim],
+        num_out_dims=2,
+        mdtol=mdtol,
     )
 
     new_cube = _create_cube(
@@ -640,15 +637,6 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     grid_x, grid_y = regrid_info.target
     regridder = regrid_info.regridder
 
-    # Set up a function which can accept just chunk of data as an argument.
-    regrid = functools.partial(
-        _regrid_along_dims,
-        regridder,
-        dims=[mesh_dim],
-        num_out_dims=2,
-        mdtol=mdtol,
-    )
-
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -659,9 +647,13 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         chunk_shape = grid_x.shape[::-1]
     new_data = _map_complete_blocks(
         src_cube,
-        regrid,
+        _regrid_along_dims,
         (mesh_dim,),
         chunk_shape,
+        regridder=regridder,
+        dims=[mesh_dim],
+        num_out_dims=2,
+        mdtol=mdtol,
     )
 
     new_cube = _create_cube(
@@ -738,14 +730,6 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     mesh, location = regrid_info.target
     regridder = regrid_info.regridder
 
-    # Set up a function which can accept just chunk of data as an argument.
-    regrid = functools.partial(
-        _regrid_along_dims,
-        regridder,
-        dims=[grid_x_dim, grid_y_dim],
-        num_out_dims=1,
-        mdtol=mdtol,
-    )
     if location == "face":
         face_node = mesh.face_node_connectivity
         # In face_node_connectivity: `location`= face, `connected` = node, so
@@ -761,9 +745,13 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     # the regrid function).
     new_data = _map_complete_blocks(
         src_cube,
-        regrid,
+        _regrid_along_dims,
         (grid_x_dim, grid_y_dim),
         chunk_shape,
+        regridder=regridder,
+        dims=[grid_x_dim, grid_y_dim],
+        num_out_dims=1,
+        mdtol=mdtol,
     )
 
     new_cube = _create_cube(
@@ -836,13 +824,6 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
     mesh, location = regrid_info.target
     regridder = regrid_info.regridder
 
-    regrid = functools.partial(
-        _regrid_along_dims,
-        regridder,
-        dims=[mesh_dim],
-        num_out_dims=1,
-        mdtol=mdtol,
-    )
     if location == "face":
         face_node = mesh.face_node_connectivity
         chunk_shape = (face_node.shape[face_node.location_axis],)
@@ -853,9 +834,13 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
 
     new_data = _map_complete_blocks(
         src_cube,
-        regrid,
+        _regrid_along_dims,
         (mesh_dim,),
         chunk_shape,
+        regridder=regridder,
+        dims=[mesh_dim],
+        num_out_dims=1,
+        mdtol=mdtol,
     )
 
     new_cube = _create_cube(
