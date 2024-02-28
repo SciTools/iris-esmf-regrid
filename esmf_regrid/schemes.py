@@ -2,7 +2,6 @@
 
 from collections import namedtuple
 import copy
-import functools
 
 from cf_units import Unit
 import dask.array as da
