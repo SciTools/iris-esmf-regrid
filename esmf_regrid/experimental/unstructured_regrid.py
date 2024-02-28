@@ -98,8 +98,11 @@ class MeshInfo(SDO):
         num_node = self.node_coords.shape[0]
         num_elem = self.fnc.shape[0]
         nodeId = np.array(range(self.nsi, self.nsi + num_node))
+        nodeId = np.expand_dims(nodeId, -1)
         nodeCoord = self.node_coords.flatten()
+        nodeCoord = np.expand_dims(nodeCoord, -1)
         nodeOwner = np.zeros([num_node])  # regridding currently serial
+        nodeOwner = np.expand_dims(nodeOwner, -1)
         elemId = np.array(range(self.esi, self.esi + num_elem))
         elemType = self.fnc.count(axis=1)
         # Experiments seem to indicate that ESMF is using 0 indexing here
