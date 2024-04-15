@@ -75,11 +75,9 @@ class MeshInfo(SDO):
         if location == "face":
             field_kwargs = {"meshloc": esmpy.MeshLoc.ELEMENT}
             shape = (len(face_node_connectivity),)
-            index_offset = self.esi
         elif location == "node":
             field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
-            index_offset = self.nsi
         else:
             raise ValueError(
                 f"The mesh location '{location}' is not supported, only "
@@ -87,7 +85,7 @@ class MeshInfo(SDO):
             )
         super().__init__(
             shape=shape,
-            index_offset=index_offset,
+            index_offset=1,
             field_kwargs=field_kwargs,
             mask=mask,
         )
@@ -97,13 +95,10 @@ class MeshInfo(SDO):
         # the data must be translated into a form ESMF understands
         num_node = self.node_coords.shape[0]
         num_elem = self.fnc.shape[0]
-        nodeId = np.array(range(self.nsi, self.nsi + num_node))
-        nodeId = np.expand_dims(nodeId, -1)
+        nodeId = np.array(range(num_node)) + 1
         nodeCoord = self.node_coords.flatten()
-        nodeCoord = np.expand_dims(nodeCoord, -1)
         nodeOwner = np.zeros([num_node])  # regridding currently serial
-        nodeOwner = np.expand_dims(nodeOwner, -1)
-        elemId = np.array(range(self.esi, self.esi + num_elem))
+        elemId = np.array(range(num_elem)) + 1
         elemType = self.fnc.count(axis=1)
         # Experiments seem to indicate that ESMF is using 0 indexing here
         elemConn = self.fnc.compressed() - self.nsi
