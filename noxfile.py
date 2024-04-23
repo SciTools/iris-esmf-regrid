@@ -26,7 +26,7 @@ nox.options.reuse_existing_virtualenvs = True
 PACKAGE = "esmf_regrid"
 
 #: GHA-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.9", "3.10", "3.11"])
+PY_VER = os.environ.get("PY_VER", ["3.10", "3.11"])
 
 #: GHA-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
@@ -308,7 +308,6 @@ def tests(session: nox.sessions.Session):
     if COVERAGE:
         # Execute the tests with code coverage.
         session.run("pytest", "--cov-report=xml", "--cov")
-        session.run("codecov", "--required")
     else:
         # Execute the tests.
         session.run("pytest")
