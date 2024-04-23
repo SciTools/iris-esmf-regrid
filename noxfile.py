@@ -29,9 +29,6 @@ PACKAGE = "esmf_regrid"
 PY_VER = os.environ.get("PY_VER", ["3.9", "3.10", "3.11"])
 
 #: GHA-CI environment variable hook.
-COVERAGE = os.environ.get("COVERAGE", False)
-
-#: GHA-CI environment variable hook.
 #: If you change the IRIS_SOURCE here you will also need to change it in
 #: the tests, wheel and benchmark workflows.
 IRIS_SOURCE = os.environ.get("IRIS_SOURCE", "github:main")
@@ -305,13 +302,8 @@ def tests(session: nox.sessions.Session):
     # Install the esmf-regrid source in develop mode.
     session.install("--no-deps", "--editable", ".")
 
-    if COVERAGE:
-        # Execute the tests with code coverage.
-        session.run("pytest", "--cov-report=xml", "--cov")
-        session.run("codecov", "--required")
-    else:
-        # Execute the tests.
-        session.run("pytest")
+    # Execute the tests.
+    session.run("pytest")
 
 
 @nox.session
