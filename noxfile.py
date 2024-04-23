@@ -308,7 +308,6 @@ def tests(session: nox.sessions.Session):
     if COVERAGE:
         # Execute the tests with code coverage.
         session.run("pytest", "--cov-report=xml", "--cov")
-        session.run("codecov", "--required")
     else:
         # Execute the tests.
         session.run("pytest")
