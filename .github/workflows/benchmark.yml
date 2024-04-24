@@ -45,6 +45,11 @@ jobs:
         python-version: ["3.10"]
 
     steps:
+      - name: "pin conda"
+        run: |
+          conda activate
+          conda install --yes conda<24.3
+
       - name: "checkout"
         uses: actions/checkout@v4
         with:
