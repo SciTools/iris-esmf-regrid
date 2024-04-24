@@ -94,11 +94,12 @@ jobs:
       - name: "tests (py${{ matrix.python-version }})"
         env:
           PY_VER: ${{ matrix.python-version }}
+          COVERAGE: ${{ matrix.coverage }}
         run: |
           nox --session tests -- --verbose
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
+        if: ${{ matrix.coverage }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-        if: ${{ matrix.coverage }}

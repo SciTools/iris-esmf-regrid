@@ -95,10 +95,10 @@ class MeshInfo(SDO):
         # the data must be translated into a form ESMF understands
         num_node = self.node_coords.shape[0]
         num_elem = self.fnc.shape[0]
-        nodeId = np.array(range(num_node)) + 1
+        nodeId = np.arange(1, num_node + 1)
         nodeCoord = self.node_coords.flatten()
         nodeOwner = np.zeros([num_node])  # regridding currently serial
-        elemId = np.array(range(num_elem)) + 1
+        elemId = np.arange(1, num_elem + 1)
         elemType = self.fnc.count(axis=1)
         # Experiments seem to indicate that ESMF is using 0 indexing here
         elemConn = self.fnc.compressed() - self.nsi
