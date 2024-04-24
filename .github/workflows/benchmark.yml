@@ -47,6 +47,7 @@ jobs:
     steps:
       - name: "pin conda"
         run: |
+          conda init
           conda activate
           conda install --yes conda<24.3
 
