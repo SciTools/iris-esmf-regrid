@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: "checkout"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - if: ${{ github.event_name == 'pull_request' }}
@@ -62,7 +62,7 @@ jobs:
           pip install asv nox
 
       - name: Cache environment directories
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .nox
@@ -78,7 +78,7 @@ jobs:
           nox --session="benchmarks(branch)" -- "${COMPARE}"
 
       - name: Archive ASV results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: asv-report
           path: |

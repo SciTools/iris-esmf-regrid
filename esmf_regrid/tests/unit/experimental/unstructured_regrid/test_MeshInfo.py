@@ -3,6 +3,7 @@
 import numpy as np
 from numpy import ma
 
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import GridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.tests import get_result_path, make_grid_args
@@ -111,7 +112,9 @@ def test_regrid_bilinear_with_mesh():
     grid_args = [ar * 2 for ar in make_grid_args(2, 3)]
     grid = GridInfo(*grid_args, center=True)
 
-    mesh_to_grid_regridder = Regridder(node_mesh, grid, method="bilinear")
+    mesh_to_grid_regridder = Regridder(
+        node_mesh, grid, method=Constants.Method.BILINEAR
+    )
     mesh_input = np.arange(5)
     grid_output = mesh_to_grid_regridder.regrid(mesh_input)
     # For a flat surface, we would expect the fractional part of these values
@@ -132,13 +135,17 @@ def test_regrid_bilinear_with_mesh():
     expected_grid_output = ma.array(expected_grid_output, mask=expected_grid_mask)
     assert ma.allclose(expected_grid_output, grid_output)
 
-    grid_to_mesh_regridder = Regridder(grid, node_mesh, method="bilinear")
+    grid_to_mesh_regridder = Regridder(
+        grid, node_mesh, method=Constants.Method.BILINEAR
+    )
     grid_input = np.array([[0, 0], [1, 0], [2, 1]])
     mesh_output = grid_to_mesh_regridder.regrid(grid_input)
     expected_mesh_output = ma.array([0.0, 1.5, 0.0, 0.5, -1], mask=[0, 0, 0, 0, 1])
     assert ma.allclose(expected_mesh_output, mesh_output)
 
-    grid_to_face_mesh_regridder = Regridder(grid, face_mesh, method="bilinear")
+    grid_to_face_mesh_regridder = Regridder(
+        grid, face_mesh, method=Constants.Method.BILINEAR
+    )
     grid_input_2 = np.array([[0, 0], [1, 0], [4, 1]])
     face_mesh_output = grid_to_face_mesh_regridder.regrid(grid_input_2)
     expected_face_mesh_output = np.array([0.0, 1.4888258584989558])

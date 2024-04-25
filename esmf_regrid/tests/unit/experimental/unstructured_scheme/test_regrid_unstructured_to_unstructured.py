@@ -1,16 +1,12 @@
-"""Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`."""
+"""Unit tests for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_unstructured`."""
 
 from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube
 import numpy as np
 import pytest
 
-from esmf_regrid import Constants
 from esmf_regrid.experimental.unstructured_scheme import (
-    regrid_unstructured_to_rectilinear,
-)
-from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
-    _grid_cube,
+    regrid_unstructured_to_unstructured,
 )
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
@@ -35,7 +31,7 @@ def _add_metadata(cube):
 
 def test_flat_cubes():
     """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_unstructured`.
 
     Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
     """
@@ -43,16 +39,14 @@ def test_flat_cubes():
 
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _flat_mesh_cube()
     # Ensure data in the target grid is different to the expected data.
     # i.e. target grid data is all zero, expected data is all one
     tgt.data[:] = 0
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_unstructured_to_rectilinear(src, tgt)
+    result = regrid_unstructured_to_unstructured(src, tgt)
 
     expected_data = np.ones([n_lats, n_lons])
     expected_cube = _add_metadata(tgt)
@@ -65,30 +59,26 @@ def test_flat_cubes():
     assert expected_cube == result
 
 
-@pytest.mark.parametrize(
-    "method", (Constants.Method.BILINEAR, Constants.Method.NEAREST)
-)
+@pytest.mark.parametrize("method", ("bilinear", "nearest"))
 def test_node_friendly_methods(method):
     """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_unstructured`.
 
     Tests with the bilinear and nearest method.
     """
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
     src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
-    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
-    # Ensure data in the target grid is different to the expected data.
-    # i.e. target grid data is all zero, expected data is all one
+    tgt = _gridlike_mesh_cube(n_lons, n_lats, location="node")
+    # Ensure data in the target mesh is different to the expected data.
+    # i.e. target mesh data is all zero, expected data is all one
     tgt.data[:] = 0
 
     src = _add_metadata(src)
     src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_unstructured_to_rectilinear(src, tgt, method=method)
+    result = regrid_unstructured_to_unstructured(src, tgt, method=method)
 
-    expected_data = np.ones([n_lats, n_lons])
+    expected_data = np.ones_like(tgt.data)
     expected_cube = _add_metadata(tgt)
 
     # Lenient check for data.
@@ -101,47 +91,35 @@ def test_node_friendly_methods(method):
 
 def test_invalid_args():
     """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_unstructured`.
 
     Tests that an appropriate error is raised when arguments are invalid.
     """
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
     node_src = _gridlike_mesh_cube(n_lons, n_lats, location="node")
     edge_src = _gridlike_mesh_cube(n_lons, n_lats, location="edge")
     face_src = _gridlike_mesh_cube(n_lons, n_lats, location="face")
-    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _gridlike_mesh_cube(n_lons, n_lats)
 
     with pytest.raises(ValueError):
-        _ = regrid_unstructured_to_rectilinear(
-            tgt, tgt, method=Constants.Method.BILINEAR
-        )
-    with pytest.raises(ValueError):
-        _ = regrid_unstructured_to_rectilinear(face_src, tgt, method="other")
+        _ = regrid_unstructured_to_unstructured(face_src, tgt, method="other")
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_unstructured_to_rectilinear(
-            node_src, tgt, method=Constants.Method.CONSERVATIVE
-        )
+        _ = regrid_unstructured_to_unstructured(node_src, tgt, method="conservative")
     expected_message = (
         "conservative regridding requires a source cube located on "
         "the face of a cube, target cube had the node location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_unstructured_to_rectilinear(
-            edge_src, tgt, method=Constants.Method.BILINEAR
-        )
+        _ = regrid_unstructured_to_unstructured(edge_src, tgt, method="bilinear")
     expected_message = (
         "bilinear regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:
-        _ = regrid_unstructured_to_rectilinear(
-            edge_src, tgt, method=Constants.Method.NEAREST
-        )
+        _ = regrid_unstructured_to_unstructured(edge_src, tgt, method="nearest")
     expected_message = (
         "nearest regridding requires a source cube with a node "
         "or face location, target cube had the edge location."
@@ -151,11 +129,12 @@ def test_invalid_args():
 
 def test_multidim_cubes():
     """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_unstructured`.
 
     Tests with multidimensional cubes. The source cube contains
     coordinates on the dimensions before and after the mesh dimension.
     """
+
     mesh = _full_mesh()
     mesh_length = mesh.connectivity(contains_face=True).shape[0]
 
@@ -175,57 +154,21 @@ def test_multidim_cubes():
 
     n_lons = 6
     n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _gridlike_mesh_cube(n_lons, n_lats)
 
-    result = regrid_unstructured_to_rectilinear(cube, tgt)
+    result = regrid_unstructured_to_unstructured(cube, tgt)
 
     # Lenient check for data.
-    expected_data = np.empty([t, n_lats, n_lons, h])
-    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, np.newaxis, :]
+    expected_data = np.empty([t, n_lats * n_lons, h])
+    expected_data[:] = np.arange(t * h).reshape(t, h)[:, np.newaxis, :]
     assert np.allclose(expected_data, result.data)
 
     expected_cube = Cube(expected_data)
     expected_cube.add_dim_coord(time, 0)
-    expected_cube.add_dim_coord(tgt.coord("latitude"), 1)
-    expected_cube.add_dim_coord(tgt.coord("longitude"), 2)
-    expected_cube.add_dim_coord(height, 3)
+    expected_cube.add_aux_coord(tgt.coord("latitude"), 1)
+    expected_cube.add_aux_coord(tgt.coord("longitude"), 1)
+    expected_cube.add_dim_coord(height, 2)
 
     # Check metadata and scalar coords.
     result.data = expected_data
-    assert expected_cube == result
-
-
-def test_resolution():
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
-
-    Tests the tgt_resolution keyword with grids that would otherwise not work.
-    """
-    src = _flat_mesh_cube()
-
-    # The resulting grid has full latitude bounds and cells must be split up.
-    n_lons = 1
-    n_lats = 5
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds)
-    # Ensure data in the target grid is different to the expected data.
-    # i.e. target grid data is all zero, expected data is all one
-    tgt.data[:] = 0
-
-    src = _add_metadata(src)
-    src.data[:] = 1  # Ensure all data in the source is one.
-    result = regrid_unstructured_to_rectilinear(src, tgt, tgt_resolution=8)
-
-    expected_data = np.ones([n_lats, n_lons])
-    expected_cube = _add_metadata(tgt)
-
-    # Lenient check for data.
-    # Note that when tgt_resolution=None, this would be a fully masked array.
-    assert np.allclose(expected_data, result.data)
-
-    # Check metadata and scalar coords.
-    expected_cube.data = result.data
     assert expected_cube == result

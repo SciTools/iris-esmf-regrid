@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/stale@v8.0.0
+    - uses: actions/stale@v9.0.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: '@SciTools-incubator/esmf-regrid-devs This issue is stale due to a lack of activity in the last 90 days. Remove stale label or comment, otherwise this issue will close automatically in 7 days time.'
-        stale-pr-message: '@SciTools-incubator/esmf-regrid-devs This pull-request is stale due to a lack of activity in the last 90 days. Remove stale label or comment, otherwise this pull-request will close automatically in 7 days time.'
+        stale-issue-message: '@SciTools-incubator/esmf-regrid-devs This issue is stale due to a lack of activity in the last 180 days. Remove stale label or comment, otherwise this issue will close automatically in 14 days time.'
+        stale-pr-message: '@SciTools-incubator/esmf-regrid-devs This pull-request is stale due to a lack of activity in the last 180 days. Remove stale label or comment, otherwise this pull-request will close automatically in 14 days time.'
         stale-issue-label: 'Stale: Closure warning'
         stale-pr-label: 'Stale: Closure warning'
         close-issue-message: '@SciTools-incubator/esmf-regrid-devs This stale issue has been automatically closed due to no community activity'
@@ -23,5 +23,5 @@ jobs:
         close-pr-label: 'Stale: Closed'
         exempt-issue-labels: 'Status: Blocked,Status: Decision needed,Status: Needs info,Status: Stalled,Status: Will not fix,Status: Work in progress'
         exempt-pr-labels: 'Status: Blocked,Status: Decision needed,Status: Needs info,Status: Stalled,Status: Will not fix,Status: Work in progress'
-        days-before-stale: 90
-        days-before-close: 7
+        days-before-stale: 180
+        days-before-close: 14
