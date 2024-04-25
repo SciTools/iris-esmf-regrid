@@ -6,6 +6,7 @@ import pytest
 
 from esmf_regrid.schemes import ESMFNearest
 from esmf_regrid.tests.unit.schemes.__init__ import (
+    _test_dtype_handling,
     _test_mask_from_init,
     _test_mask_from_regridder,
     _test_non_degree_crs,
@@ -106,3 +107,21 @@ def test_mask_from_regridder(mask_keyword):
 def test_non_degree_crs():
     """Test for coordinates with non-degree units."""
     _test_non_degree_crs(ESMFNearest)
+
+
+@pytest.mark.parametrize(
+    "src_type,tgt_type",
+    [
+        ("grid", "grid"),
+        ("grid", "mesh"),
+        ("mesh", "grid"),
+        ("mesh", "mesh"),
+    ],
+)
+@pytest.mark.parametrize(
+    "in_dtype",
+    ["float32", "float64"],
+)
+def test_dtype_handling(src_type, tgt_type, in_dtype):
+    """Test regridding scheme handles dtype as expected."""
+    _test_dtype_handling(ESMFNearest, src_type, tgt_type, in_dtype)
