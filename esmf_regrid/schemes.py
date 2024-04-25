@@ -857,7 +857,7 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
         dims=[mesh_dim],
         num_out_dims=1,
         mdtol=mdtol,
-        dtype=dtype,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
