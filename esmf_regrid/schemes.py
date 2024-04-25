@@ -275,7 +275,9 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
     return result
 
 
-def _map_complete_blocks(src, func, active_dims, out_sizes, *args, dtype=None, **kwargs):
+def _map_complete_blocks(
+    src, func, active_dims, out_sizes, *args, dtype=None, **kwargs
+):
     """
     Apply a function to complete blocks.
 
