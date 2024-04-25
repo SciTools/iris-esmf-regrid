@@ -369,7 +369,8 @@ def benchmarks(
     #  for more.
     COMPARE_FACTOR = 2.0
 
-    session.install("asv", "nox", "pyyaml", "conda<24.3")
+    session.install("asv", "nox", "pyyaml")
+    session.run("conda", "install", "--yes", "conda<24.3")
 
     data_gen_var = "DATA_GEN_PYTHON"
     if data_gen_var in os.environ:
