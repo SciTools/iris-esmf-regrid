@@ -392,8 +392,6 @@ def benchmarks(
             Path(".nox").rglob(f"tests*/bin/python{PY_VER}")
         ).resolve()
         session.env[data_gen_var] = data_gen_python
-    esmf_mk_file = data_gen_python.parents[1] / "lib" / "esmf.mk"
-    session.env[ESMFMKFILE] = esmf_mk_file
 
     print("Running ASV...")
     session.cd("benchmarks")
