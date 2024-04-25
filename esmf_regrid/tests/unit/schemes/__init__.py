@@ -217,6 +217,7 @@ def _test_non_degree_crs(scheme):
     # Check that the number of masked points is as expected.
     assert (1 - result.data.mask).sum() == expected_unmasked
 
+
 def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
     """Test regridding scheme handles dtype as expected."""
     n_lons_src = 6
