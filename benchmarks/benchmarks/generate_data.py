@@ -11,6 +11,7 @@ NetCDF file. Could also use pickling but there is a potential risk if the
 benchmark sequence runs over two different Python versions.
 
 """
+
 from inspect import getsource
 from os import environ
 from pathlib import Path
