@@ -1465,8 +1465,10 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             if tgt_location is not "face".
         """
         kwargs = dict()
+        self.src_resolution = src_resolution
         if src_resolution is not None:
             kwargs["src_resolution"] = src_resolution
+        self.tgt_resolution = tgt_resolution
         if tgt_resolution is not None:
             kwargs["tgt_resolution"] = tgt_resolution
         if tgt_location is not None and tgt_location != "face":

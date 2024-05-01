@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ma
 import pytest
 
-from esmf_regrid import Constants
+from esmf_regrid import Constants, ESMFAreaWeighted, ESMFBilinear, ESMFNearest
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -122,6 +122,13 @@ def _make_mesh_to_grid_regridder(
     return rg, src
 
 
+def _compare_ignoring_var_names(x, y):
+    old_var_name = x.var_name
+    x.var_name = y.var_name
+    assert x == y
+    x.var_name = old_var_name
+
+
 @pytest.mark.parametrize(
     "method",
     [
@@ -140,8 +147,8 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path, method):
     assert original_rg.location == loaded_rg.location
     assert original_rg.method == loaded_rg.method
     assert original_rg.mdtol == loaded_rg.mdtol
-    assert original_rg.grid_x == loaded_rg.grid_x
-    assert original_rg.grid_y == loaded_rg.grid_y
+    _compare_ignoring_var_names(original_rg.grid_x, loaded_rg.grid_x)
+    _compare_ignoring_var_names(original_rg.grid_y, loaded_rg.grid_y)
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
 
@@ -187,8 +194,8 @@ def test_GridToMeshESMFRegridder_round_trip(tmp_path, method):
     nc_filename = tmp_path / "non_circular_regridder.nc"
     save_regridder(original_nc_rg, nc_filename)
     loaded_nc_rg = load_regridder(str(nc_filename))
-    assert original_nc_rg.grid_x == loaded_nc_rg.grid_x
-    assert original_nc_rg.grid_y == loaded_nc_rg.grid_y
+    _compare_ignoring_var_names(original_nc_rg.grid_x, loaded_nc_rg.grid_x)
+    _compare_ignoring_var_names(original_nc_rg.grid_y, loaded_nc_rg.grid_y)
 
 
 def test_GridToMeshESMFRegridder_curvilinear_round_trip(tmp_path):
@@ -198,8 +205,8 @@ def test_GridToMeshESMFRegridder_curvilinear_round_trip(tmp_path):
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
 
-    assert original_rg.grid_x == loaded_rg.grid_x
-    assert original_rg.grid_y == loaded_rg.grid_y
+    _compare_ignoring_var_names(original_rg.grid_x, loaded_rg.grid_x)
+    _compare_ignoring_var_names(original_rg.grid_y, loaded_rg.grid_y)
 
     # Demonstrate regridding still gives the same results.
     src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
@@ -255,8 +262,8 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path, method):
     assert original_rg.location == loaded_rg.location
     assert original_rg.method == loaded_rg.method
     assert original_rg.mdtol == loaded_rg.mdtol
-    assert original_rg.grid_x == loaded_rg.grid_x
-    assert original_rg.grid_y == loaded_rg.grid_y
+    _compare_ignoring_var_names(original_rg.grid_x, loaded_rg.grid_x)
+    _compare_ignoring_var_names(original_rg.grid_y, loaded_rg.grid_y)
     # TODO: uncomment when iris mesh comparison becomes available.
     # assert original_rg.mesh == loaded_rg.mesh
 
@@ -301,8 +308,8 @@ def test_MeshToGridESMFRegridder_round_trip(tmp_path, method):
     nc_filename = tmp_path / "non_circular_regridder.nc"
     save_regridder(original_nc_rg, nc_filename)
     loaded_nc_rg = load_regridder(str(nc_filename))
-    assert original_nc_rg.grid_x == loaded_nc_rg.grid_x
-    assert original_nc_rg.grid_y == loaded_nc_rg.grid_y
+    _compare_ignoring_var_names(original_nc_rg.grid_x, loaded_nc_rg.grid_x)
+    _compare_ignoring_var_names(original_nc_rg.grid_y, loaded_nc_rg.grid_y)
 
 
 def test_MeshToGridESMFRegridder_curvilinear_round_trip(tmp_path):
@@ -312,8 +319,8 @@ def test_MeshToGridESMFRegridder_curvilinear_round_trip(tmp_path):
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
 
-    assert original_rg.grid_x == loaded_rg.grid_x
-    assert original_rg.grid_y == loaded_rg.grid_y
+    _compare_ignoring_var_names(original_rg.grid_x, loaded_rg.grid_x)
+    _compare_ignoring_var_names(original_rg.grid_y, loaded_rg.grid_y)
 
     # Demonstrate regridding still gives the same results.
     src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
@@ -323,3 +330,49 @@ def test_MeshToGridESMFRegridder_curvilinear_round_trip(tmp_path):
     loaded_result = loaded_rg(src).data
     assert np.array_equal(original_result, loaded_result)
     assert np.array_equal(original_result.mask, loaded_result.mask)
+
+
+@pytest.mark.parametrize(
+    "src_type,tgt_type",
+    [
+        ("grid", "grid"),
+        ("grid", "mesh"),
+        ("mesh", "grid"),
+        ("mesh", "mesh"),
+    ],
+)
+@pytest.mark.parametrize(
+    "scheme",
+    [ESMFAreaWeighted, ESMFBilinear, ESMFNearest],
+    ids=["conservative", "linear", "nearest"],
+)
+def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
+    """Test save/load round tripping for regridders in `esmf_regrid.schemes`."""
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    if src_type == "grid":
+        src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+    else:
+        src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
+    if tgt_type == "grid":
+        tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+    elif tgt_type == "mesh":
+        tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
+
+    original_rg = scheme().regridder(src, tgt)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(str(filename))
+
+    if src_type == "grid":
+        assert original_rg._src == loaded_rg._src
+    if tgt_type == "grid":
+        assert original_rg._tgt == loaded_rg._tgt
+    if scheme == ESMFAreaWeighted:
+        assert original_rg.src_resolution == loaded_rg.src_resolution
+        assert original_rg.tgt_resolution == loaded_rg.tgt_resolution
+    assert original_rg.mdtol == loaded_rg.mdtol
