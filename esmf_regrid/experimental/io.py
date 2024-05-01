@@ -19,8 +19,8 @@ from esmf_regrid.schemes import (
     ESMFAreaWeightedRegridder,
     ESMFBilinearRegridder,
     ESMFNearestRegridder,
-    MeshRecord,
     GridRecord,
+    MeshRecord,
 )
 
 
@@ -58,7 +58,7 @@ def _add_mask_to_cube(mask, cube, name):
 
 
 @contextmanager
-def managed_var_name(src_cube, tgt_cube):
+def _managed_var_name(src_cube, tgt_cube):
     src_coord_names = []
     src_mesh_coords = []
     if src_cube.mesh is not None:
@@ -255,7 +255,7 @@ def save_regridder(rg, filename):
     )
 
     # Save cubes while ensuring var_names do not conflict for the sake of consistency.
-    with managed_var_name(src_cube, tgt_cube):
+    with _managed_var_name(src_cube, tgt_cube):
         cube_list = CubeList([src_cube, tgt_cube, weights_cube, weight_shape_cube])
 
         for cube in cube_list:
