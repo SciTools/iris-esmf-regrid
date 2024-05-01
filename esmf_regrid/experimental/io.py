@@ -307,7 +307,9 @@ def load_regridder(filename):
     tgt_resolution = weights_cube.attributes.get(TARGET_RESOLUTION, None)
     if resolution is not None:
         resolution = int(resolution)
+    if src_resolution is not None:
         src_resolution = int(src_resolution)
+    if tgt_resolution is not None:
         tgt_resolution = int(tgt_resolution)
 
     # Reconstruct the weight matrix.
