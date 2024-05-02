@@ -114,6 +114,7 @@ class CondaDelegated(Conda):
         message = f"Running delegated environment management for: {self.name}"
         log.info(message)
         env_path = Path(self._path)
+        environ["ESMFMKFILE"] = str(env_path / "lib" / "esmf.mk")
 
         def copy_asv_files(src_parent: Path, dst_parent: Path) -> None:
             """For copying between self._path and a temporary cache."""

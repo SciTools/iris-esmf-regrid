@@ -1,6 +1,5 @@
 """Benchmark tests for iris-esmf-regrid."""
 
-
 from os import environ
 
 

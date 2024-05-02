@@ -26,7 +26,7 @@ nox.options.reuse_existing_virtualenvs = True
 PACKAGE = "esmf_regrid"
 
 #: GHA-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.9", "3.10", "3.11"])
+PY_VER = os.environ.get("PY_VER", ["3.10", "3.11", "3.12"])
 
 #: GHA-CI environment variable hook.
 COVERAGE = os.environ.get("COVERAGE", False)
@@ -308,7 +308,6 @@ def tests(session: nox.sessions.Session):
     if COVERAGE:
         # Execute the tests with code coverage.
         session.run("pytest", "--cov-report=xml", "--cov")
-        session.run("codecov", "--required")
     else:
         # Execute the tests.
         session.run("pytest")
@@ -371,6 +370,7 @@ def benchmarks(
     COMPARE_FACTOR = 2.0
 
     session.install("asv", "nox", "pyyaml")
+    session.run("conda", "install", "--yes", "conda<24.3")
 
     data_gen_var = "DATA_GEN_PYTHON"
     if data_gen_var in os.environ:
@@ -392,8 +392,6 @@ def benchmarks(
             Path(".nox").rglob(f"tests*/bin/python{PY_VER}")
         ).resolve()
         session.env[data_gen_var] = data_gen_python
-    esmf_mk_file = data_gen_python.parents[1] / "lib" / "esmf.mk"
-    session.env[ESMFMKFILE] = esmf_mk_file
 
     print("Running ASV...")
     session.cd("benchmarks")

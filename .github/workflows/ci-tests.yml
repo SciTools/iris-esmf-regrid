@@ -48,14 +48,14 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
         include:
-          - python-version: "3.10"
+          - python-version: "3.11"
             coverage: true
 
     steps:
       - name: "checkout"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Nox
         run: |
@@ -63,7 +63,7 @@ jobs:
 
       - name: Cache environment directories
         id: cache-env-dir
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .nox
@@ -72,7 +72,7 @@ jobs:
 
       - name: Cache test data directory
         id: cache-test-data
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ${{ env.IRIS_TEST_DATA_PATH }}
@@ -97,3 +97,9 @@ jobs:
           COVERAGE: ${{ matrix.coverage }}
         run: |
           nox --session tests -- --verbose
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: ${{ matrix.coverage }}
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

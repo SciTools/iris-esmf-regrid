@@ -8,6 +8,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
+from esmf_regrid import check_method, Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -109,7 +110,8 @@ def save_regridder(rg, filename):
         )
         raise TypeError(msg)
 
-    method = rg.method
+    method = str(check_method(rg.method).name)
+
     resolution = rg.resolution
 
     weight_matrix = rg.regridder.weight_matrix
@@ -203,7 +205,10 @@ def load_regridder(filename):
 
     # Determine the regridding method, allowing for files created when
     # conservative regridding was the only method.
-    method = weights_cube.attributes.get(METHOD, "conservative")
+    method = getattr(
+        Constants.Method, weights_cube.attributes.get(METHOD, "CONSERVATIVE")
+    )
+
     resolution = weights_cube.attributes.get(RESOLUTION, None)
     if resolution is not None:
         resolution = int(resolution)

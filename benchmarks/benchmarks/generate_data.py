@@ -11,11 +11,13 @@ NetCDF file. Could also use pickling but there is a potential risk if the
 benchmark sequence runs over two different Python versions.
 
 """
+
 from inspect import getsource
 from os import environ
 from pathlib import Path
 import re
 from subprocess import CalledProcessError, check_output, run
+import sys
 from textwrap import dedent
 from warnings import warn
 
@@ -55,6 +57,8 @@ elif not BENCHMARK_DATA.is_dir():
 #  False forces a benchmark run to re-make all the data files.
 REUSE_DATA = True
 
+ESMFMKFILE = "ESMFMKFILE"
+
 
 def run_function_elsewhere(func_to_run, *args, **kwargs):
     """
@@ -90,9 +94,12 @@ def run_function_elsewhere(func_to_run, *args, **kwargs):
         f"{func_to_run.__name__}(" + ",".join(func_call_term_strings) + ")"
     )
     python_string = "\n".join([func_string, func_call_string])
+    old_esmf_mk_file = environ.get(ESMFMKFILE, None)
+    environ[ESMFMKFILE] = str(Path(sys.executable).parents[1] / "lib" / "esmf.mk")
     result = run(
         [DATA_GEN_PYTHON, "-c", python_string], capture_output=True, check=True
     )
+    environ[ESMFMKFILE] = old_esmf_mk_file
     return result.stdout
 
 

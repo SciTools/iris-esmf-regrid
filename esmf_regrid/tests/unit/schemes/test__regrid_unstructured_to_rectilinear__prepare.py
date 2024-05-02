@@ -4,6 +4,8 @@ from iris.coords import AuxCoord
 from iris.cube import Cube
 import numpy as np
 
+
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 from esmf_regrid.schemes import (
@@ -61,12 +63,12 @@ def test_flat_cubes():
     lat_bounds = (-90, 90)
     tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
-        src, tgt, method="conservative"
+        src, tgt, method=Constants.Method.CONSERVATIVE
     )
     (mesh_dim,), (grid_x, grid_y), regridder = regrid_info
 
     assert mesh_dim == 0
     assert grid_x == tgt.coord("longitude")
     assert grid_y == tgt.coord("latitude")
-    assert type(regridder.tgt) == GridInfo
-    assert type(regridder.src) == MeshInfo
+    assert type(regridder.tgt) is GridInfo
+    assert type(regridder.src) is MeshInfo

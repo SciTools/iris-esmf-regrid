@@ -2,6 +2,7 @@
 
 from iris.experimental.ugrid import Mesh
 
+from esmf_regrid import check_method, Constants
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
@@ -9,6 +10,8 @@ from esmf_regrid.schemes import (
     _regrid_rectilinear_to_unstructured__prepare,
     _regrid_unstructured_to_rectilinear__perform,
     _regrid_unstructured_to_rectilinear__prepare,
+    _regrid_unstructured_to_unstructured__perform,
+    _regrid_unstructured_to_unstructured__prepare,
 )
 
 
@@ -16,7 +19,7 @@ def regrid_unstructured_to_rectilinear(
     src_cube,
     grid_cube,
     mdtol=0,
-    method="conservative",
+    method=Constants.Method.CONSERVATIVE,
     tgt_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
@@ -57,11 +60,8 @@ def regrid_unstructured_to_rectilinear(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
-    method : str, default="conservative"
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+    method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+        The method used to calculate weights.
     tgt_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
@@ -86,6 +86,7 @@ def regrid_unstructured_to_rectilinear(
         raise ValueError("src_cube has no mesh.")
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(grid_cube, use_tgt_mask)
+    method = check_method(method)
 
     regrid_info = _regrid_unstructured_to_rectilinear__prepare(
         src_cube,
@@ -107,7 +108,7 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
         src,
         tgt,
         mdtol=None,
-        method="conservative",
+        method=Constants.Method.CONSERVATIVE,
         precomputed_weights=None,
         tgt_resolution=None,
         use_src_mask=False,
@@ -129,11 +130,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked. Defaults to 1
             for conservative regregridding and 0 for bilinear regridding.
-        method : str, default="conservative"
-            Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy`
-            methods :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-            :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+        method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+            The method used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
@@ -183,7 +181,7 @@ def regrid_rectilinear_to_unstructured(
     src_cube,
     mesh_cube,
     mdtol=0,
-    method="conservative",
+    method=Constants.Method.CONSERVATIVE,
     src_resolution=None,
     use_src_mask=False,
     use_tgt_mask=False,
@@ -228,11 +226,8 @@ def regrid_rectilinear_to_unstructured(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of the ``src_cube`` are masked.
-    method : str, default="conservative"
-        Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy` methods
-        :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-        :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-        :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+    method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+        The method used to calculate weights.
     src_resolution : int, optional
         If present, represents the amount of latitude slices per cell
         given to ESMF for calculation.
@@ -257,6 +252,7 @@ def regrid_rectilinear_to_unstructured(
         raise ValueError("mesh_cube has no mesh.")
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(mesh_cube, use_tgt_mask)
+    method = check_method(method)
 
     regrid_info = _regrid_rectilinear_to_unstructured__prepare(
         src_cube,
@@ -278,7 +274,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         src,
         tgt,
         mdtol=None,
-        method="conservative",
+        method=Constants.Method.CONSERVATIVE,
         precomputed_weights=None,
         src_resolution=None,
         use_src_mask=False,
@@ -302,11 +298,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             ``mdtol=1`` will mean the resulting element will be masked if and only
             if all the contributing elements of data are masked. Defaults to 1
             for conservative regregridding and 0 for bilinear regridding.
-        method : str, default="conservative"
-            Either "conservative", "bilinear" or "nearest". Corresponds to the :mod:`esmpy`
-            methods :attr:`~esmpy.api.constants.RegridMethod.CONSERVE` or
-            :attr:`~esmpy.api.constants.RegridMethod.BILINEAR` or
-            :attr:`~esmpy.api.constants.RegridMethod.NEAREST` used to calculate weights.
+        method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+            The method used to calculate weights.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
@@ -353,3 +346,75 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         self.resolution = src_resolution
         self.mesh, self.location = self._tgt
         self.grid_x, self.grid_y = self._src
+
+
+def regrid_unstructured_to_unstructured(
+    src_mesh_cube,
+    tgt_mesh_cube,
+    mdtol=0,
+    method=Constants.Method.CONSERVATIVE,
+    use_src_mask=False,
+    use_tgt_mask=False,
+):
+    r"""
+    Regrid rectilinear :class:`~iris.cube.Cube` onto unstructured mesh.
+
+    Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
+    values calculated using weights generated by :mod:`esmpy` to give the weighted
+    mean of :attr:`~iris.cube.Cube.data` values from ``src_mesh_cube`` regridded onto the
+    horizontal mesh of ``tgt_mesh_cube``. The resulting cube will have the same
+    ``mesh_dim`` as ``src_mesh_cube``.
+
+    Parameters
+    ----------
+    src_mesh_cube : :class:`iris.cube.Cube`
+        A unstructured instance of :class:`~iris.cube.Cube` that supplies the data,
+        metadata and coordinates.
+    tgt_mesh_cube : :class:`iris.cube.Cube`
+        An unstructured instance of :class:`~iris.cube.Cube` that supplies the desired
+        horizontal mesh definition.
+    mdtol : float, default=0
+        Tolerance of missing data. The value returned in each element of the
+        returned :class:`~iris.cube.Cube`\\ 's :attr:`~iris.cube.Cube.data` array
+        will be masked if the fraction of masked
+        data in the overlapping cells of the source cube exceeds ``mdtol``. This
+        fraction is calculated based on the area of masked cells within each
+        target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
+        will mean the resulting element will be masked if and only if all the
+        overlapping cells of the ``src_cube`` are masked.
+    method : :class:`Constants.Method`, default=Constants.Method.CONSERVATIVE
+            The method used to calculate weights.
+    use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+        Either an array representing the cells in the source to ignore, or else
+        a boolean value. If True, this array is taken from the mask on the data
+        in ``src_cube``. If False, no mask will be taken and all points will
+        be used in weights calculation.
+    use_tgt_mask : :obj:`~numpy.typing.ArrayLike` or bool, default=False
+        Either an array representing the cells in the target to ignore, or else
+        a boolean value. If True, this array is taken from the mask on the data
+        in ``grid_cube``. If False, no mask will be taken and all points
+        will be used in weights calculation.
+
+    Returns
+    -------
+    :class:`iris.cube.Cube`
+        A new :class:`~iris.cube.Cube` instance.
+
+    """
+    method = check_method(method)
+    if tgt_mesh_cube.mesh is None:
+        raise ValueError("mesh_cube has no mesh.")
+    src_mask = _get_mask(src_mesh_cube, use_src_mask)
+    tgt_mask = _get_mask(tgt_mesh_cube, use_tgt_mask)
+
+    regrid_info = _regrid_unstructured_to_unstructured__prepare(
+        src_mesh_cube,
+        tgt_mesh_cube,
+        method=method,
+        src_mask=src_mask,
+        tgt_mask=tgt_mask,
+    )
+    result = _regrid_unstructured_to_unstructured__perform(
+        src_mesh_cube, regrid_info, mdtol
+    )
+    return result
