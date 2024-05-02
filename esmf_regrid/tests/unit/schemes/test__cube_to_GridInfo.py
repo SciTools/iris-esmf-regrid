@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 import scipy.sparse
 
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.schemes import _contiguous_masked, _cube_to_GridInfo
 
@@ -233,7 +234,7 @@ def test_center(curvilinear):
     # The following test ensures there are no overlapping cells.
     # This catches geometric/topological abnormalities that would arise from,
     # for example: switching lat/lon values, using euclidean coords vs spherical.
-    rg = Regridder(gridinfo, gridinfo, method="bilinear")
+    rg = Regridder(gridinfo, gridinfo, method=Constants.Method.BILINEAR)
     expected_weights = scipy.sparse.identity(n_lats * n_lons)
     assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
     assert gridinfo.crs == GeogCS(EARTH_RADIUS).as_cartopy_crs()
@@ -244,7 +245,9 @@ def test_center(curvilinear):
     # to be geometrically equivalent to the non-circular case.
     circular_gridinfo = _cube_to_GridInfo(cube, center=True)
     circular_gridinfo.circular = True
-    rg_circular = Regridder(circular_gridinfo, gridinfo, method="bilinear")
+    rg_circular = Regridder(
+        circular_gridinfo, gridinfo, method=Constants.Method.BILINEAR
+    )
     assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
 
 
