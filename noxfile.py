@@ -313,175 +313,175 @@ def tests(session: nox.sessions.Session):
         session.run("pytest")
 
 
-@nox.session
-@nox.parametrize(
-    "run_type",
-    ["branch", "sperf", "custom"],
-    ids=["branch", "sperf", "custom"],
-)
-def benchmarks(
-    session: nox.sessions.Session,
-    run_type: Literal["overnight", "branch", "sperf", "custom"],
-):
-    """
-    Perform iris-esmf-regrid performance benchmarks (using Airspeed Velocity).
-
-    All run types require a single Nox positional argument (e.g.
-    ``nox --session="foo" -- my_pos_arg``) - detailed in the parameters
-    section - and can optionally accept a series of further arguments that will
-    be added to session's ASV command.
-
-    Parameters
-    ----------
-    session: object
-        A `nox.sessions.Session` object.
-    run_type: {"branch", "sperf", "custom"}
-        * ``branch``: compares ``HEAD`` and ``HEAD``'s merge-base with the
-          input **base branch**. Fails if a performance regression is detected.
-          This is the session used by IER's CI.
-        * ``sperf``: Run the on-demand SPerf suite of benchmarks (part of the
-          UK Met Office NG-VAT project) for the ``HEAD`` of ``upstream/main``
-          only, and publish the results to the input **publish directory**,
-          within a unique subdirectory for this run.
-        * ``custom``: run ASV with the input **ASV sub-command**, without any
-          preset arguments - must all be supplied by the user. So just like
-          running ASV manually, with the convenience of re-using the session's
-          scripted setup steps.
-
-    Examples
-    --------
-    * ``nox --session="benchmarks(branch)" -- upstream/main``
-    * ``nox --session="benchmarks(branch)" -- upstream/mesh-data-model``
-    * ``nox --session="benchmarks(branch)" -- upstream/main --bench=ci``
-    * ``nox --session="benchmarks(sperf)" -- my_publish_dir
-    * ``nox --session="benchmarks(custom)" -- continuous a1b23d4 HEAD --quick``
-
-    """
-    # Make sure we're not working with a list of Python versions.
-    if not isinstance(PY_VER, str):
-        message = (
-            "benchmarks session requires PY_VER to be a string - representing "
-            f"a single Python version - instead got: {type(PY_VER)} ."
-        )
-        raise ValueError(message)
-
-    # The threshold beyond which shifts are 'notable'. See `asv compare`` docs
-    #  for more.
-    COMPARE_FACTOR = 2.0
-
-    session.install("asv", "nox", "pyyaml")
-    session.run("conda", "install", "--yes", "conda<24.3")
-
-    data_gen_var = "DATA_GEN_PYTHON"
-    if data_gen_var in os.environ:
-        print("Using existing data generation environment.")
-        data_gen_python = Path(os.environ[data_gen_var])
-    else:
-        print("Setting up the data generation environment...")
-        # Get Nox to build an environment for the `tests` session, but don't
-        #  run the session. Will re-use a cached environment if appropriate.
-        session.run_always(
-            "nox",
-            "--session=tests",
-            "--install-only",
-            f"--python={PY_VER}",
-        )
-        # Find the environment built above, set it to be the data generation
-        #  environment.
-        data_gen_python = next(
-            Path(".nox").rglob(f"tests*/bin/python{PY_VER}")
-        ).resolve()
-        session.env[data_gen_var] = data_gen_python
-
-    print("Running ASV...")
-    session.cd("benchmarks")
-    # Skip over setup questions for a new machine.
-    session.run("asv", "machine", "--yes")
-
-    # All run types require one Nox posarg.
-    run_type_arg = {
-        "branch": "base branch",
-        "sperf": "publish directory",
-        "custom": "ASV sub-command",
-    }
-    if run_type not in run_type_arg.keys():
-        message = f"Unsupported run-type: {run_type}"
-        raise NotImplementedError(message)
-    if not session.posargs:
-        message = (
-            f"Missing mandatory first Nox session posarg: " f"{run_type_arg[run_type]}"
-        )
-        raise ValueError(message)
-    first_arg = session.posargs[0]
-    # Optional extra arguments to be passed down to ASV.
-    asv_args = session.posargs[1:]
-
-    if run_type == "branch":
-        base_branch = first_arg
-        git_command = f"git merge-base HEAD {base_branch}"
-        merge_base = session.run(*git_command.split(" "), silent=True, external=True)[
-            :8
-        ]
-
-        try:
-            asv_command = [
-                "asv",
-                "continuous",
-                merge_base,
-                "HEAD",
-                f"--factor={COMPARE_FACTOR}",
-            ]
-            session.run(*asv_command, *asv_args)
-        finally:
-            asv_command = [
-                "asv",
-                "compare",
-                merge_base,
-                "HEAD",
-                f"--factor={COMPARE_FACTOR}",
-                "--split",
-            ]
-            session.run(*asv_command)
-
-    elif run_type == "sperf":
-        publish_dir = Path(first_arg)
-        if not publish_dir.is_dir():
-            message = f"Input 'publish directory' is not a directory: {publish_dir}"
-            raise NotADirectoryError(message)
-        publish_subdir = (
-            publish_dir / f"{run_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        )
-        publish_subdir.mkdir()
-
-        # Activate on demand benchmarks (C/SPerf are deactivated for 'standard' runs).
-        session.env["ON_DEMAND_BENCHMARKS"] = "True"
-        commit_range = "upstream/main^!"
-
-        asv_command = [
-            "asv",
-            "run",
-            commit_range,
-            "--bench=.*Scalability.*",
-            "--attribute",
-            "rounds=1",
-        ]
-        session.run(*asv_command, *asv_args)
-
-        asv_command = ["asv", "publish", commit_range, f"--html-dir={publish_subdir}"]
-        session.run(*asv_command)
-
-        # Print completion message.
-        location = Path().cwd() / ".asv"
-        print(
-            f'New ASV results for "{run_type}".\n'
-            f'See "{publish_subdir}",'
-            f'\n  or JSON files under "{location / "results"}".'
-        )
-
-    else:
-        asv_subcommand = first_arg
-        assert run_type == "custom"
-        session.run("asv", asv_subcommand, *asv_args)
+# @nox.session
+# @nox.parametrize(
+#     "run_type",
+#     ["branch", "sperf", "custom"],
+#     ids=["branch", "sperf", "custom"],
+# )
+# def benchmarks(
+#     session: nox.sessions.Session,
+#     run_type: Literal["branch", "sperf", "custom"],
+# ):
+#     """
+#     Perform iris-esmf-regrid performance benchmarks (using Airspeed Velocity).
+#
+#     All run types require a single Nox positional argument (e.g.
+#     ``nox --session="foo" -- my_pos_arg``) - detailed in the parameters
+#     section - and can optionally accept a series of further arguments that will
+#     be added to session's ASV command.
+#
+#     Parameters
+#     ----------
+#     session: object
+#         A `nox.sessions.Session` object.
+#     run_type: {"branch", "sperf", "custom"}
+#         * ``branch``: compares ``HEAD`` and ``HEAD``'s merge-base with the
+#           input **base branch**. Fails if a performance regression is detected.
+#           This is the session used by IER's CI.
+#         * ``sperf``: Run the on-demand SPerf suite of benchmarks (part of the
+#           UK Met Office NG-VAT project) for the ``HEAD`` of ``upstream/main``
+#           only, and publish the results to the input **publish directory**,
+#           within a unique subdirectory for this run.
+#         * ``custom``: run ASV with the input **ASV sub-command**, without any
+#           preset arguments - must all be supplied by the user. So just like
+#           running ASV manually, with the convenience of re-using the session's
+#           scripted setup steps.
+#
+#     Examples
+#     --------
+#     * ``nox --session="benchmarks(branch)" -- upstream/main``
+#     * ``nox --session="benchmarks(branch)" -- upstream/mesh-data-model``
+#     * ``nox --session="benchmarks(branch)" -- upstream/main --bench=ci``
+#     * ``nox --session="benchmarks(sperf)" -- my_publish_dir
+#     * ``nox --session="benchmarks(custom)" -- continuous a1b23d4 HEAD --quick``
+#
+#     """
+#     # Make sure we're not working with a list of Python versions.
+#     if not isinstance(PY_VER, str):
+#         message = (
+#             "benchmarks session requires PY_VER to be a string - representing "
+#             f"a single Python version - instead got: {type(PY_VER)} ."
+#         )
+#         raise ValueError(message)
+#
+#     # The threshold beyond which shifts are 'notable'. See `asv compare`` docs
+#     #  for more.
+#     COMPARE_FACTOR = 2.0
+#
+#     session.install("asv", "nox", "pyyaml")
+#     session.run("conda", "install", "--yes", "conda<24.3")
+#
+#     data_gen_var = "DATA_GEN_PYTHON"
+#     if data_gen_var in os.environ:
+#         print("Using existing data generation environment.")
+#         data_gen_python = Path(os.environ[data_gen_var])
+#     else:
+#         print("Setting up the data generation environment...")
+#         # Get Nox to build an environment for the `tests` session, but don't
+#         #  run the session. Will re-use a cached environment if appropriate.
+#         session.run_always(
+#             "nox",
+#             "--session=tests",
+#             "--install-only",
+#             f"--python={PY_VER}",
+#         )
+#         # Find the environment built above, set it to be the data generation
+#         #  environment.
+#         data_gen_python = next(
+#             Path(".nox").rglob(f"tests*/bin/python{PY_VER}")
+#         ).resolve()
+#         session.env[data_gen_var] = data_gen_python
+#
+#     print("Running ASV...")
+#     session.cd("benchmarks")
+#     # Skip over setup questions for a new machine.
+#     session.run("asv", "machine", "--yes")
+#
+#     # All run types require one Nox posarg.
+#     run_type_arg = {
+#         "branch": "base branch",
+#         "sperf": "publish directory",
+#         "custom": "ASV sub-command",
+#     }
+#     if run_type not in run_type_arg.keys():
+#         message = f"Unsupported run-type: {run_type}"
+#         raise NotImplementedError(message)
+#     if not session.posargs:
+#         message = (
+#             f"Missing mandatory first Nox session posarg: " f"{run_type_arg[run_type]}"
+#         )
+#         raise ValueError(message)
+#     first_arg = session.posargs[0]
+#     # Optional extra arguments to be passed down to ASV.
+#     asv_args = session.posargs[1:]
+#
+#     if run_type == "branch":
+#         base_branch = first_arg
+#         git_command = f"git merge-base HEAD {base_branch}"
+#         merge_base = session.run(*git_command.split(" "), silent=True, external=True)[
+#             :8
+#         ]
+#
+#         try:
+#             asv_command = [
+#                 "asv",
+#                 "continuous",
+#                 merge_base,
+#                 "HEAD",
+#                 f"--factor={COMPARE_FACTOR}",
+#             ]
+#             session.run(*asv_command, *asv_args)
+#         finally:
+#             asv_command = [
+#                 "asv",
+#                 "compare",
+#                 merge_base,
+#                 "HEAD",
+#                 f"--factor={COMPARE_FACTOR}",
+#                 "--split",
+#             ]
+#             session.run(*asv_command)
+#
+#     elif run_type == "sperf":
+#         publish_dir = Path(first_arg)
+#         if not publish_dir.is_dir():
+#             message = f"Input 'publish directory' is not a directory: {publish_dir}"
+#             raise NotADirectoryError(message)
+#         publish_subdir = (
+#             publish_dir / f"{run_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+#         )
+#         publish_subdir.mkdir()
+#
+#         # Activate on demand benchmarks (C/SPerf are deactivated for 'standard' runs).
+#         session.env["ON_DEMAND_BENCHMARKS"] = "True"
+#         commit_range = "upstream/main^!"
+#
+#         asv_command = [
+#             "asv",
+#             "run",
+#             commit_range,
+#             "--bench=.*Scalability.*",
+#             "--attribute",
+#             "rounds=1",
+#         ]
+#         session.run(*asv_command, *asv_args)
+#
+#         asv_command = ["asv", "publish", commit_range, f"--html-dir={publish_subdir}"]
+#         session.run(*asv_command)
+#
+#         # Print completion message.
+#         location = Path().cwd() / ".asv"
+#         print(
+#             f'New ASV results for "{run_type}".\n'
+#             f'See "{publish_subdir}",'
+#             f'\n  or JSON files under "{location / "results"}".'
+#         )
+#
+#     else:
+#         asv_subcommand = first_arg
+#         assert run_type == "custom"
+#         session.run("asv", asv_subcommand, *asv_args)
 
 
 @nox.session(python=PY_VER, venv_backend="conda")
