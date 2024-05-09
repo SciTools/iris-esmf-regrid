@@ -5,11 +5,9 @@ For further details, see https://nox.thea.codes/en/stable/#
 
 """
 
-from datetime import datetime
 import os
 from pathlib import Path
 import shutil
-from typing import Literal
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 from urllib.request import urlopen
