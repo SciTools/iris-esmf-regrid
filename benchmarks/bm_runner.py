@@ -26,7 +26,7 @@ GH_REPORT_DIR = ROOT_DIR.joinpath(".github", "workflows", "benchmark_reports")
 ASV_HARNESS = "run {posargs} --attribute rounds=4 --interleave-rounds --show-stderr"
 
 
-def echo(echo_string: str):
+def _echo(echo_string: str):
     # Use subprocess for printing to reduce chance of printing out of sequence
     #  with the subsequent calls.
     subprocess.run(["echo", f"BM_RUNNER DEBUG: {echo_string}"])
@@ -39,7 +39,7 @@ def _subprocess_runner(args, asv=False, **kwargs):
     if asv:
         args.insert(0, "asv")
         kwargs["cwd"] = BENCHMARKS_DIR
-    echo(" ".join(args))
+    _echo(" ".join(args))
     kwargs.setdefault("check", True)
     return subprocess.run(args, **kwargs)
 
@@ -65,9 +65,9 @@ def _prep_data_gen_env() -> None:
     python_version = "3.10"
     data_gen_var = "DATA_GEN_PYTHON"
     if data_gen_var in environ:
-        echo("Using existing data generation environment.")
+        _echo("Using existing data generation environment.")
     else:
-        echo("Setting up the data generation environment ...")
+        _echo("Setting up the data generation environment ...")
         # Get Nox to build an environment for the `tests` session, but don't
         #  run the session. Will reuse a cached environment if appropriate.
         _subprocess_runner(
@@ -86,7 +86,7 @@ def _prep_data_gen_env() -> None:
         ).resolve()
         environ[data_gen_var] = str(data_gen_python)
 
-        echo("Installing Mule into data generation environment ...")
+        _echo("Installing Mule into data generation environment ...")
         mule_dir = data_gen_python.parents[1] / "resources" / "mule"
         if not mule_dir.is_dir():
             _subprocess_runner(
@@ -107,7 +107,7 @@ def _prep_data_gen_env() -> None:
             ]
         )
 
-        echo("Data generation environment ready.")
+        _echo("Data generation environment ready.")
 
 
 def _setup_common() -> None:
@@ -116,10 +116,10 @@ def _setup_common() -> None:
 
     _prep_data_gen_env()
 
-    echo("Setting up ASV ...")
+    _echo("Setting up ASV ...")
     _subprocess_runner(["machine", "--yes"], asv=True)
 
-    echo("Setup complete.")
+    _echo("Setup complete.")
 
 
 def _asv_compare(*commits: str) -> None:
@@ -133,12 +133,9 @@ def _asv_compare(*commits: str) -> None:
         )
 
         comparison = _subprocess_runner_capture(asv_command, asv=True)
-        echo(comparison)
+        _echo(comparison)
         shifts = _subprocess_runner_capture([*asv_command, "--only-changed"], asv=True)
-
-        # if shifts or (not overnight_mode):
-        #     # For the overnight run: only post if there are shifts.
-        #     _gh_create_reports(after, comparison, shifts)
+        _echo(shifts)
 
 
 class _SubParserGenerator(ABC):
@@ -184,6 +181,7 @@ class _SubParserGenerator(ABC):
 
 
 class Branch(_SubParserGenerator):
+    """Class for parsing and running the 'branch' argument."""
     name = "branch"
     description = (
         "Performs the same operations as ``overnight``, but always on two commits "
@@ -288,7 +286,7 @@ class _CSPerf(_SubParserGenerator, ABC):
 
         # Print completion message.
         location = BENCHMARKS_DIR / ".asv"
-        echo(
+        _echo(
             f'New ASV results for "{run_type}".\n'
             f'See "{publish_subdir}",'
             f'\n  or JSON files under "{location / "results"}".'
@@ -296,6 +294,7 @@ class _CSPerf(_SubParserGenerator, ABC):
 
 
 class CPerf(_CSPerf):
+    """Class for parsing and running the 'cperf' argument."""
     name = "cperf"
     description = _CSPerf.description.format("CPerf")
     epilog = _CSPerf.epilog.format("cperf")
@@ -306,6 +305,7 @@ class CPerf(_CSPerf):
 
 
 class SPerf(_CSPerf):
+    """Class for parsing and running the 'sperf' argument."""
     name = "sperf"
     description = _CSPerf.description.format("SPerf")
     epilog = _CSPerf.epilog.format("sperf")
@@ -316,6 +316,7 @@ class SPerf(_CSPerf):
 
 
 class Custom(_SubParserGenerator):
+    """Class for parsing and running the 'custom' argument."""
     name = "custom"
     description = (
         "Run ASV with the input **ASV sub-command**, without any preset "
