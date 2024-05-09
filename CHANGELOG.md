@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- [PR#361](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/361)
+  Moved the code for running benchmarks to `bm_runner.py` in line with iris
+  benchmarks.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.9] - 2023-11-03
 
 ### Added
