@@ -182,6 +182,7 @@ class _SubParserGenerator(ABC):
 
 class Branch(_SubParserGenerator):
     """Class for parsing and running the 'branch' argument."""
+
     name = "branch"
     description = (
         "Benchmarks the two commits,``HEAD``, and ``HEAD``'s merge-base with the "
@@ -290,6 +291,7 @@ class _CSPerf(_SubParserGenerator, ABC):
 
 class CPerf(_CSPerf):
     """Class for parsing and running the 'cperf' argument."""
+
     name = "cperf"
     description = _CSPerf.description.format("CPerf")
     epilog = _CSPerf.epilog.format("cperf")
@@ -301,6 +303,7 @@ class CPerf(_CSPerf):
 
 class SPerf(_CSPerf):
     """Class for parsing and running the 'sperf' argument."""
+
     name = "sperf"
     description = _CSPerf.description.format("SPerf")
     epilog = _CSPerf.epilog.format("sperf")
@@ -312,6 +315,7 @@ class SPerf(_CSPerf):
 
 class Custom(_SubParserGenerator):
     """Class for parsing and running the 'custom' argument."""
+
     name = "custom"
     description = (
         "Run ASV with the input **ASV sub-command**, without any preset "
