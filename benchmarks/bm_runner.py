@@ -247,7 +247,7 @@ class _CSPerf(_SubParserGenerator, ABC):
         )
 
     @staticmethod
-    def csperf(args: argparse.Namespace, run_type: Literal["cperf", "sperf"]) -> None:
+    def csperf(args: argparse.Namespace, run_type: str) -> None:
         _setup_common()
 
         publish_dir = Path(args.publish_dir)
@@ -289,16 +289,6 @@ class _CSPerf(_SubParserGenerator, ABC):
         )
 
 
-class CPerf(_CSPerf):
-    """Class for parsing and running the 'cperf' argument."""
-
-    name = "cperf"
-    description = _CSPerf.description.format("CPerf")
-    epilog = _CSPerf.epilog.format("cperf")
-
-    @staticmethod
-    def func(args: argparse.Namespace) -> None:
-        _CSPerf.csperf(args, "cperf")
 
 
 class SPerf(_CSPerf):
@@ -310,7 +300,7 @@ class SPerf(_CSPerf):
 
     @staticmethod
     def func(args: argparse.Namespace) -> None:
-        _CSPerf.csperf(args, "sperf")
+        _CSPerf.csperf(args, ".*Scalability.*")
 
 
 class Custom(_SubParserGenerator):
@@ -345,7 +335,7 @@ def main():
     )
     subparsers = parser.add_subparsers(required=True)
 
-    for gen in (Branch, CPerf, SPerf, Custom):
+    for gen in (Branch, SPerf, Custom):
         _ = gen(subparsers).subparser
 
     parsed = parser.parse_args()
