@@ -289,8 +289,6 @@ class _CSPerf(_SubParserGenerator, ABC):
         )
 
 
-
-
 class SPerf(_CSPerf):
     """Class for parsing and running the 'sperf' argument."""
 
