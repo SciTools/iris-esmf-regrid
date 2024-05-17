@@ -86,27 +86,6 @@ def _prep_data_gen_env() -> None:
         ).resolve()
         environ[data_gen_var] = str(data_gen_python)
 
-        _echo("Installing Mule into data generation environment ...")
-        mule_dir = data_gen_python.parents[1] / "resources" / "mule"
-        if not mule_dir.is_dir():
-            _subprocess_runner(
-                [
-                    "git",
-                    "clone",
-                    "https://github.com/metomi/mule.git",
-                    str(mule_dir),
-                ]
-            )
-        _subprocess_runner(
-            [
-                str(data_gen_python),
-                "-m",
-                "pip",
-                "install",
-                str(mule_dir / "mule"),
-            ]
-        )
-
         _echo("Data generation environment ready.")
 
 
@@ -224,19 +203,20 @@ class Branch(_SubParserGenerator):
         _asv_compare(merge_base, head_sha)
 
 
-class _CSPerf(_SubParserGenerator, ABC):
-    """Common code used by both CPerf and SPerf."""
+class SPerf(_SubParserGenerator):
+    """Class for parsing and running the 'sperf' argument."""
 
+    name = "sperf"
     description = (
-        "Run the on-demand {} suite of benchmarks (part of the UK Met "
+        "Run the on-demand Sperf suite of benchmarks (part of the UK Met "
         "Office NG-VAT project) for the ``HEAD`` of ``upstream/main`` only, "
         "and publish the results to the input **publish_dir**, within a "
         "unique subdirectory for this run.\n"
         "Uses `asv run`."
     )
     epilog = (
-        "e.g. python bm_runner.py {0} my_publish_dir\n"
-        "e.g. python bm_runner.py {0} my_publish_dir --bench=regridding"
+        "e.g. python bm_runner.py sperf my_publish_dir\n"
+        "e.g. python bm_runner.py sperf my_publish_dir --bench=regridding"
     )
 
     def add_arguments(self) -> None:
@@ -247,7 +227,7 @@ class _CSPerf(_SubParserGenerator, ABC):
         )
 
     @staticmethod
-    def csperf(args: argparse.Namespace, run_type: str) -> None:
+    def func(args: argparse.Namespace) -> None:
         _setup_common()
 
         publish_dir = Path(args.publish_dir)
@@ -255,7 +235,7 @@ class _CSPerf(_SubParserGenerator, ABC):
             message = f"Input 'publish directory' is not a directory: {publish_dir}"
             raise NotADirectoryError(message)
         publish_subdir = (
-            publish_dir / f"{run_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            publish_dir / f".*Scalability.*_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         publish_subdir.mkdir()
 
@@ -264,7 +244,9 @@ class _CSPerf(_SubParserGenerator, ABC):
         environ["ON_DEMAND_BENCHMARKS"] = "True"
         commit_range = "upstream/main^!"
 
-        asv_command = ASV_HARNESS.format(posargs=commit_range) + f" --bench={run_type}"
+        asv_command = (
+            ASV_HARNESS.format(posargs=commit_range) + " --bench=.*Scalability.*"
+        )
 
         # Only do a single round.
         asv_command = shlex.split(re.sub(r"rounds=\d", "rounds=1", asv_command))
@@ -283,22 +265,10 @@ class _CSPerf(_SubParserGenerator, ABC):
         # Print completion message.
         location = BENCHMARKS_DIR / ".asv"
         _echo(
-            f'New ASV results for "{run_type}".\n'
+            f'New ASV results for ".*Scalability.*".\n'
             f'See "{publish_subdir}",'
             f'\n  or JSON files under "{location / "results"}".'
         )
-
-
-class SPerf(_CSPerf):
-    """Class for parsing and running the 'sperf' argument."""
-
-    name = "sperf"
-    description = _CSPerf.description.format("SPerf")
-    epilog = _CSPerf.epilog.format("sperf")
-
-    @staticmethod
-    def func(args: argparse.Namespace) -> None:
-        _CSPerf.csperf(args, ".*Scalability.*")
 
 
 class Custom(_SubParserGenerator):
