@@ -208,8 +208,8 @@ class SPerf(_SubParserGenerator):
 
     name = "sperf"
     description = (
-        "Run the on-demand Sperf suite of benchmarks (part of the UK Met "
-        "Office NG-VAT project) for the ``HEAD`` of ``upstream/main`` only, "
+        "Run the on-demand Sperf suite of benchmarks (measuring "
+        "scalability) for the ``HEAD`` of ``upstream/main`` only, "
         "and publish the results to the input **publish_dir**, within a "
         "unique subdirectory for this run.\n"
         "Uses `asv run`."
@@ -235,7 +235,7 @@ class SPerf(_SubParserGenerator):
             message = f"Input 'publish directory' is not a directory: {publish_dir}"
             raise NotADirectoryError(message)
         publish_subdir = (
-            publish_dir / f".*Scalability.*_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            publish_dir / f"sperf_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         publish_subdir.mkdir()
 
@@ -265,7 +265,7 @@ class SPerf(_SubParserGenerator):
         # Print completion message.
         location = BENCHMARKS_DIR / ".asv"
         _echo(
-            f'New ASV results for ".*Scalability.*".\n'
+            f'New ASV results for "sperf".\n'
             f'See "{publish_subdir}",'
             f'\n  or JSON files under "{location / "results"}".'
         )
