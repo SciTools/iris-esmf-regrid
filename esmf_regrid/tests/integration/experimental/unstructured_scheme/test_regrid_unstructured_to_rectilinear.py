@@ -1,6 +1,5 @@
 """Integration tests for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`."""
 
-
 import os
 
 import iris

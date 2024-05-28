@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- [PR#361](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/361)
+  Moved the code for running benchmarks to `bm_runner.py` in line with iris
+  benchmarks.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ### Fixed
 - [PR#239](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/239)
   Ensured dtype is preserved by regridding.
