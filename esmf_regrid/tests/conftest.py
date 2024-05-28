@@ -5,6 +5,7 @@ import pytest
 
 @pytest.fixture(params=["float32", "float64"])
 def in_dtype(request):
+    """Fixture for controlling dtype."""
     return request.param
 
 
@@ -17,4 +18,5 @@ def in_dtype(request):
     ]
 )
 def src_tgt_types(request):
+    """Fixture for controlling type of source and target."""
     return request.param
