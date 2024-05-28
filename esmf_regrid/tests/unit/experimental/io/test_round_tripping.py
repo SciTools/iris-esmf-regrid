@@ -356,7 +356,7 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
     lat_bounds = (-90, 90)
     if src_type == "grid":
         src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
-    else:
+    elif src_type == "mesh":
         src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
     if tgt_type == "grid":
         tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
@@ -376,3 +376,82 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
         assert original_rg.src_resolution == loaded_rg.src_resolution
         assert original_rg.tgt_resolution == loaded_rg.tgt_resolution
     assert original_rg.mdtol == loaded_rg.mdtol
+
+
+@pytest.mark.parametrize(
+    "src_type,tgt_type",
+    [
+        ("grid", "grid"),
+        ("grid", "mesh"),
+        ("mesh", "grid"),
+        ("mesh", "mesh"),
+    ],
+)
+@pytest.mark.parametrize(
+    "scheme",
+    [ESMFAreaWeighted, ESMFBilinear, ESMFNearest],
+    ids=["conservative", "linear", "nearest"],
+)
+def test_generic_regridder_masked(tmp_path, src_type, tgt_type, scheme):
+    """Test save/load round tripping for regridders in `esmf_regrid.schemes`."""
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    if src_type == "grid":
+        src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+        src.data = ma.array(src.data)
+        src.data[0, 0] = ma.masked
+    elif src_type == "mesh":
+        src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
+        src.data = ma.array(src.data)
+        src.data[0] = ma.masked
+    if tgt_type == "grid":
+        tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+        tgt.data = ma.array(tgt.data)
+        tgt.data[0, 0] = ma.masked
+    elif tgt_type == "mesh":
+        tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
+        tgt.data = ma.array(tgt.data)
+        tgt.data[0] = ma.masked
+
+    original_rg = scheme().regridder(src, tgt, use_src_mask=True, use_tgt_mask=True)
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(str(filename))
+
+    assert np.allclose(original_rg.src_mask, loaded_rg.src_mask)
+    assert np.allclose(original_rg.tgt_mask, loaded_rg.tgt_mask)
+
+
+@pytest.mark.parametrize(
+    "scheme",
+    [ESMFAreaWeighted],
+    ids=["conservative"],
+)
+def test_generic_regridder_resolution(tmp_path, scheme):
+    """Test save/load round tripping for regridders in `esmf_regrid.schemes`."""
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+    tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+    src_resolution = 3
+    tgt_resolution = 4
+
+    original_rg = scheme().regridder(
+        src, tgt, src_resolution=src_resolution, tgt_resolution=tgt_resolution
+    )
+    filename = tmp_path / "regridder.nc"
+    save_regridder(original_rg, filename)
+    loaded_rg = load_regridder(str(filename))
+
+    assert loaded_rg.src_resolution == src_resolution
+    assert loaded_rg.regridder.src.resolution == src_resolution
+    assert loaded_rg.tgt_resolution == tgt_resolution
+    assert loaded_rg.regridder.tgt.resolution == tgt_resolution

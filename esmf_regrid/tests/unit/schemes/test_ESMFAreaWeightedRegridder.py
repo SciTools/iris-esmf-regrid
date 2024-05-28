@@ -290,3 +290,28 @@ def test_masks():
         weights_src_masked[:, 1:].todense(), weights_unmasked[:, 1:].todense()
     )
     assert np.allclose(weights_tgt_masked[1:].todense(), weights_unmasked[1:].todense())
+
+
+def test_resolution():
+    """
+    Test calling of :class:`esmf_regrid.schemes.ESMFAreaWeightedRegridder`.
+
+    Checks that the regridder accepts resolution arguments.
+    """
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+    tgt = _grid_cube(n_lons, n_lats, lon_bounds, lat_bounds, circular=True)
+
+    src_resolution = 3
+    tgt_resolution = 4
+
+    regridder = ESMFAreaWeightedRegridder(
+        src, tgt, src_resolution=src_resolution, tgt_resolution=tgt_resolution
+    )
+    assert regridder.src_resolution == src_resolution
+    assert regridder.regridder.src.resolution == src_resolution
+    assert regridder.tgt_resolution == tgt_resolution
+    assert regridder.regridder.tgt.resolution == tgt_resolution

@@ -148,7 +148,9 @@ def save_regridder(rg, filename):
     ]:
         src_grid = rg._src
         if isinstance(src_grid, GridRecord):
-            src_cube = _standard_grid_cube(src_grid, SOURCE_NAME)
+            src_cube = _standard_grid_cube(
+                (src_grid.grid_y, src_grid.grid_x), SOURCE_NAME
+            )
         elif isinstance(src_grid, MeshRecord):
             src_mesh, src_location = src_grid
             src_cube = _standard_mesh_cube(src_mesh, src_location, SOURCE_NAME)
@@ -158,7 +160,9 @@ def save_regridder(rg, filename):
 
         tgt_grid = rg._tgt
         if isinstance(tgt_grid, GridRecord):
-            tgt_cube = _standard_grid_cube(tgt_grid, TARGET_NAME)
+            tgt_cube = _standard_grid_cube(
+                (tgt_grid.grid_y, tgt_grid.grid_x), TARGET_NAME
+            )
         elif isinstance(tgt_grid, MeshRecord):
             tgt_mesh, tgt_location = tgt_grid
             tgt_cube = _standard_mesh_cube(tgt_mesh, tgt_location, TARGET_NAME)

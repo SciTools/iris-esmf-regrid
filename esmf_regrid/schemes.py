@@ -966,6 +966,8 @@ class ESMFAreaWeighted:
         self,
         src_grid,
         tgt_grid,
+        src_resolution=None,
+        tgt_resolution=None,
         use_src_mask=None,
         use_tgt_mask=None,
         tgt_location="face",
@@ -980,6 +982,11 @@ class ESMFAreaWeighted:
         tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
             The unstructured :class:`~iris.cube.Cube`or
             :class:`~iris.experimental.ugrid.Mesh` defining the target.
+        src_resolution, tgt_resolution : int, optional
+            If present, represents the amount of latitude slices per source/target cell
+            given to ESMF for calculation. If resolution is set, ``src`` and ``tgt``
+            respectively must have strictly increasing bounds (bounds may be transposed
+            plus or minus 360 degrees to make the bounds strictly increasing).
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
@@ -1017,6 +1024,8 @@ class ESMFAreaWeighted:
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
+            src_resolution=src_resolution,
+            tgt_resolution=tgt_resolution,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location="face",
