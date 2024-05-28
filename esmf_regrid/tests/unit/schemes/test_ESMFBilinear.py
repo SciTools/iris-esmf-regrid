@@ -66,19 +66,7 @@ def test_non_degree_crs():
     _test_non_degree_crs(ESMFBilinear)
 
 
-@pytest.mark.parametrize(
-    "src_type,tgt_type",
-    [
-        ("grid", "grid"),
-        ("grid", "mesh"),
-        ("mesh", "grid"),
-        ("mesh", "mesh"),
-    ],
-)
-@pytest.mark.parametrize(
-    "in_dtype",
-    ["float32", "float64"],
-)
-def test_dtype_handling(src_type, tgt_type, in_dtype):
+def test_dtype_handling(src_tgt_types, in_dtype):
     """Test regridding scheme handles dtype as expected."""
+    src_type, tgt_type = src_tgt_types
     _test_dtype_handling(ESMFBilinear, src_type, tgt_type, in_dtype)
