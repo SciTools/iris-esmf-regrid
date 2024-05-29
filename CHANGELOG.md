@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   benchmarks.
   [@stephenworsley](https://github.com/stephenworsley)
 
+### Fixed
+- [PR#239](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/239)
+  Ensured dtype is preserved by regridding.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.9] - 2023-11-03
 
 ### Added
