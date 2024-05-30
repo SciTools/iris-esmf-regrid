@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- [PR#357](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/357)
+  Added support for saving and loading of `ESMFAreaWeighted`, `ESMFBilinear`
+  and `ESMFNearest` regridders.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ### Changed
 
 - [PR#361](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/361)
