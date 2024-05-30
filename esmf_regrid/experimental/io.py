@@ -104,14 +104,17 @@ def save_regridder(rg, filename):
     """
     Save a regridder scheme instance.
 
-    Saves either a
-    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`
-    or a
-    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    Saves any of the regridder classes, i.e.
+    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`,
+    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`,
+    :class:`~esmf_regrid.schemes.ESMFAreaWeightedRegridder`,
+    :class:`~esmf_regrid.schemes.ESMFBilinearRegridder` or
+    :class:`~esmf_regrid.schemes.ESMFNearestRegridder`.
+    .
 
     Parameters
     ----------
-    rg : :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder` or :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`
+    rg : :class:`~esmf_regrid.schemes._ESMFRegridder`
         The regridder instance to save.
     filename : str
         The file name to save to.
