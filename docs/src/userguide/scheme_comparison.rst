@@ -61,10 +61,12 @@ These were formerly the only way to do regridding with a source or
 target cube defined on an unstructured mesh. These are less flexible and
 require that the source/target be defined on a grid/mesh. Unlike the above
 regridders whose method is fixed, these regridders take a ``method`` keyword
-of ``conservative``, ``bilinear`` or ``nearest``. While most of the
-functionality in these regridders have been ported into the above schemes and
-regridders, these remain the only regridders capable of being saved and loaded by
-:mod:`esmf_regrid.experimental.io`.
+of ``conservative``, ``bilinear`` or ``nearest``. All the
+functionality in these regridders has now been ported into the above schemes and
+regridders. Before version 0.10, these were the only regridders capable of being
+saved and loaded by :mod:`esmf_regrid.experimental.io`, so while the above generic
+regridders are recomended, these regridders are still available for the sake of
+consistency with regridders saved from older versions.
 
 
 Overview: Miscellaneous Functions
