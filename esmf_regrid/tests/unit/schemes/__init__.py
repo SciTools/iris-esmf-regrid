@@ -1,5 +1,6 @@
 """Unit tests for `esmf_regrid.schemes`."""
 
+import dask.array as da
 from iris.coord_systems import OSGB
 import numpy as np
 from numpy import ma
@@ -215,3 +216,39 @@ def _test_non_degree_crs(scheme):
 
     # Check that the number of masked points is as expected.
     assert (1 - result.data.mask).sum() == expected_unmasked
+
+
+def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
+    """Test regridding scheme handles dtype as expected."""
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+    if in_dtype == "float32":
+        dtype = np.float32
+    elif in_dtype == "float64":
+        dtype = np.float64
+
+    if src_type == "grid":
+        src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+        src_data = np.zeros([n_lats_src, n_lons_src], dtype=dtype)
+        src.data = da.array(src_data)
+    elif src_type == "mesh":
+        src = _gridlike_mesh_cube(n_lons_src, n_lats_src)
+        src_data = np.zeros([n_lats_src * n_lons_src], dtype=dtype)
+        src.data = da.array(src_data)
+    if tgt_type == "grid":
+        tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+    elif tgt_type == "mesh":
+        tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
+
+    result = src.regrid(tgt, scheme())
+
+    expected_dtype = np.float64
+
+    assert result.has_lazy_data()
+
+    assert result.lazy_data().dtype == expected_dtype
+    assert result.data.dtype == expected_dtype

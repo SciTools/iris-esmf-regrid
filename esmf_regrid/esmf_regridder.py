@@ -134,6 +134,12 @@ class Regridder:
             self.esmf_version = None
             self.weight_matrix = precomputed_weights
 
+    def _out_dtype(self, in_dtype):
+        """Return the expected output dtype for a given input dtype."""
+        weight_dtype = self.weight_matrix.dtype
+        out_dtype = (np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)).dtype
+        return out_dtype
+
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """
         Perform regridding on an array of data.
@@ -175,12 +181,13 @@ class Regridder:
         extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = self.weight_matrix @ src_inverted_mask
+        out_dtype = self._out_dtype(src_array.dtype)
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones([self.tgt.size, extra_size])
+        normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
         if norm_type == Constants.NormType.FRACAREA:
             normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
         elif norm_type == Constants.NormType.DSTAREA:
