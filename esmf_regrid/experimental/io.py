@@ -97,7 +97,6 @@ def _clean_var_names(cube):
             coord.var_name = None
         for con in cube.mesh.connectivities():
             con.var_name = None
-    return cube
 
 
 def save_regridder(rg, filename):
@@ -293,8 +292,10 @@ def load_regridder(filename):
         cubes = iris.load(filename)
 
     # Extract the source, target and metadata information.
-    src_cube = _clean_var_names(cubes.extract_cube(SOURCE_NAME))
-    tgt_cube = _clean_var_names(cubes.extract_cube(TARGET_NAME))
+    src_cube = cubes.extract_cube(SOURCE_NAME)
+    _clean_var_names(src_cube)
+    tgt_cube = cubes.extract_cube(TARGET_NAME)
+    _clean_var_names(tgt_cube)
     weights_cube = cubes.extract_cube(WEIGHTS_NAME)
     weight_shape_cube = cubes.extract_cube(WEIGHTS_SHAPE_NAME)
 

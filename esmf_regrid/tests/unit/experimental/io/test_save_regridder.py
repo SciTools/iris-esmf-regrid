@@ -57,8 +57,6 @@ def test_managed_var_name():
 
     with _managed_var_name(src, tgt):
         for coord in src.mesh.coords():
-            print(coord)
             assert coord.var_name != DUMMY_VAR_NAME_SRC
         for coord in tgt.mesh.coords():
-            print(coord)
             assert coord.var_name != DUMMY_VAR_NAME_TGT
