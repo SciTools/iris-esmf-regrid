@@ -12,4 +12,4 @@ from .constants import Constants, check_method, check_norm
 from .schemes import *
 
 
-__version__ = "0.10.0"
+__version__ = "0.11.dev0"
