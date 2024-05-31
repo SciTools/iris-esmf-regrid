@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.10] - 2024-05-31
 
 ### Added
 
@@ -21,9 +21,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   benchmarks.
   [@stephenworsley](https://github.com/stephenworsley)
 
+- [PR#293](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/293)
+  Enumerated method and normtype input.
+  [@ESadek-MO](https://github.com/ESadek-MO)
+
 ### Fixed
+
 - [PR#239](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/239)
   Ensured dtype is preserved by regridding.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+- [PR#353](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/353)
+  Fixed a bug which caused errors with ESMF versions 8.6 and higher.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+- [PR#338](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/338)
+  Fixed a potential memory leak when creating regridders.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ## [0.9] - 2023-11-03
