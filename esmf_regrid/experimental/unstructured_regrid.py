@@ -118,7 +118,7 @@ class MeshInfo(SDO):
         )
         return result
 
-    def _make_esmf_sdo(self):
+    def _make_esmf_sdo(self, ignore_mask=False):
         info = self._as_esmf_info()
         (
             num_node,
@@ -145,7 +145,7 @@ class MeshInfo(SDO):
             elemId,
             elemType,
             elemConn,
-            element_mask=mask,
+            element_mask=None if ignore_mask else mask,
             element_area=areas,
             element_coords=elemCoord,
         )

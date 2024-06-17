@@ -24,12 +24,12 @@ class SDO(ABC):
         self._mask = mask
 
     @abstractmethod
-    def _make_esmf_sdo(self):
+    def _make_esmf_sdo(self, ignore_mask=False):
         pass
 
-    def make_esmf_field(self):
+    def make_esmf_field(self, ignore_mask=False):
         """Return an ESMF field representing the spatial discretisation object."""
-        sdo = self._make_esmf_sdo()
+        sdo = self._make_esmf_sdo(ignore_mask)
         field = esmpy.Field(sdo, **self._field_kwargs)
         return field
 
@@ -260,7 +260,7 @@ class GridInfo(SDO):
         )
         return info
 
-    def _make_esmf_sdo(self):
+    def _make_esmf_sdo(self, ignore_mask=False):
         info = self._as_esmf_info()
         (
             shape,
@@ -288,7 +288,6 @@ class GridInfo(SDO):
         grid_corner_x[:] = truecornerlons
         grid_corner_y = grid.get_coords(1, staggerloc=esmpy.StaggerLoc.CORNER)
         grid_corner_y[:] = truecornerlats
-
         # Grid center points are added here, this is not necessary for
         # conservative area weighted regridding
         if self.center:
@@ -302,7 +301,7 @@ class GridInfo(SDO):
             grid.add_item(**kwargs)
             return grid.get_item(**kwargs)
 
-        if self.mask is not None:
+        if not ignore_mask and self.mask is not None:
             grid_mask = add_get_item(
                 grid, item=esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER
             )

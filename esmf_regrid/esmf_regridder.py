@@ -55,6 +55,30 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
     return matrix
 
 
+def _compute_weights_matrix(src, tgt, method, ignore_mask=False):
+    weights_dict = _get_regrid_weights_dict(
+        src.make_esmf_field(ignore_mask),
+        tgt.make_esmf_field(ignore_mask),
+        regrid_method=method.value,
+    )
+    weight_matrix = _weights_dict_to_sparse_array(
+        weights_dict,
+        (tgt._refined_size, src._refined_size),
+        (tgt.index_offset, src.index_offset),
+    )
+    if isinstance(tgt, RefinedGridInfo):
+        # At this point, the weight matrix represents more target points than
+        # tgt respresents. In order to collapse these points, we collapse the
+        # weights matrix by the appropriate matrix multiplication.
+        weight_matrix = tgt._collapse_weights(is_tgt=True) @ weight_matrix
+    if isinstance(src, RefinedGridInfo):
+        # At this point, the weight matrix represents more source points than
+        # src respresents. In order to collapse these points, we collapse the
+        # weights matrix by the appropriate matrix multiplication.
+        weight_matrix = weight_matrix @ src._collapse_weights(is_tgt=False)
+    return weight_matrix
+
+
 class Regridder:
     """Regridder for directly interfacing with :mod:`esmpy`."""
 
@@ -81,10 +105,13 @@ class Regridder:
             shape is compatible with ``tgt``.
         method : :class:`Constants.Method`
             The method to be used to calculate weights.
-        precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
+        precomputed_weights : :class:`scipy.sparse.spmatrix` or tuple of :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
+            If ``method`` is :obj:`Constants.Method.NEAREST`, a tuple with two
+            sparse matrices can be provided and these will be used as the
+            regridding weights for the data and mask respectively.
         """
         self.src = src
         self.tgt = tgt
@@ -94,45 +121,43 @@ class Regridder:
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
             self.esmf_version = esmpy.__version__
-            weights_dict = _get_regrid_weights_dict(
-                src.make_esmf_field(),
-                tgt.make_esmf_field(),
-                regrid_method=method.value,
-            )
-            self.weight_matrix = _weights_dict_to_sparse_array(
-                weights_dict,
-                (self.tgt._refined_size, self.src._refined_size),
-                (self.tgt.index_offset, self.src.index_offset),
-            )
-            if isinstance(tgt, RefinedGridInfo):
-                # At this point, the weight matrix represents more target points than
-                # tgt respresents. In order to collapse these points, we collapse the
-                # weights matrix by the appropriate matrix multiplication.
-                self.weight_matrix = (
-                    tgt._collapse_weights(is_tgt=True) @ self.weight_matrix
+            self.weight_matrix = _compute_weights_matrix(src, tgt, method)
+            if method is Constants.Method.NEAREST and (
+                src.mask is not None or tgt.mask is not None
+            ):
+                # Nearest regridding will not create weights for masked points,
+                # therefore we need to ignore the masked points when computing
+                # the regridding weights for the mask.
+                self.mask_weight_matrix = _compute_weights_matrix(
+                    src, tgt, method, ignore_mask=True
                 )
-            if isinstance(src, RefinedGridInfo):
-                # At this point, the weight matrix represents more source points than
-                # src respresents. In order to collapse these points, we collapse the
-                # weights matrix by the appropriate matrix multiplication.
-                self.weight_matrix = self.weight_matrix @ src._collapse_weights(
-                    is_tgt=False
-                )
+            else:
+                self.mask_weight_matrix = None
         else:
-            if not scipy.sparse.isspmatrix(precomputed_weights):
-                raise ValueError(
-                    "Precomputed weights must be given as a sparse matrix."
-                )
-            if precomputed_weights.shape != (self.tgt.size, self.src.size):
-                msg = "Expected precomputed weights to have shape {}, got shape {} instead."
-                raise ValueError(
-                    msg.format(
-                        (self.tgt.size, self.src.size),
-                        precomputed_weights.shape,
+            if not isinstance(precomputed_weights, (tuple, list)):
+                precomputed_weights = (precomputed_weights,)
+            for weight_matrix in precomputed_weights:
+                if not scipy.sparse.isspmatrix(weight_matrix):
+                    raise ValueError(
+                        "Precomputed weights must be given as a sparse matrix."
                     )
-                )
+                if weight_matrix.shape != (self.tgt.size, self.src.size):
+                    msg = "Expected precomputed weights to have shape {}, got shape {} instead."
+                    raise ValueError(
+                        msg.format(
+                            (self.tgt.size, self.src.size),
+                            weight_matrix.shape,
+                        )
+                    )
             self.esmf_version = None
-            self.weight_matrix = precomputed_weights
+            self.weight_matrix = precomputed_weights[0]
+            if (
+                self.method == Constants.Method.NEAREST
+                and len(precomputed_weights) == 2
+            ):
+                self.mask_weight_matrix = precomputed_weights[1]
+            else:
+                self.mask_weight_matrix = None
 
     def _out_dtype(self, in_dtype):
         """Return the expected output dtype for a given input dtype."""
@@ -178,24 +203,37 @@ class Regridder:
                 f"got an array with shape ending in {main_shape}."
             )
         extra_shape = array_shape[: -self.src.dims]
-        extra_size = max(1, np.prod(extra_shape))
-        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
-        weight_sums = self.weight_matrix @ src_inverted_mask
-        out_dtype = self._out_dtype(src_array.dtype)
-        # Set the minimum mdtol to be slightly higher than 0 to account for rounding
-        # errors.
-        mdtol = max(mdtol, 1e-8)
-        tgt_mask = weight_sums > 1 - mdtol
-        masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
-        if norm_type == Constants.NormType.FRACAREA:
-            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
-        elif norm_type == Constants.NormType.DSTAREA:
-            pass
-        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
-
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
         flat_tgt = self.weight_matrix @ flat_src
-        flat_tgt = flat_tgt * normalisations
+
+        # Handle normalization and masking.
+        flat_src_mask = self.src._array_to_matrix(ma.getmaskarray(src_array))
+        if self.method == Constants.Method.NEAREST:
+            # Normalization is not required in this case because no destination
+            # point will receive input from more than one source point.
+            if self.mask_weight_matrix is None:
+                flat_tgt_mask = (self.weight_matrix @ flat_src_mask).astype(bool)
+            else:
+                flat_tgt_mask = (self.mask_weight_matrix @ flat_src_mask).astype(bool)
+                if self.tgt.mask is not None:
+                    flat_tgt_mask |= self.tgt._array_to_matrix(self.tgt.mask)
+            flat_tgt = ma.masked_array(flat_tgt, flat_tgt_mask)
+        else:
+            extra_size = max(1, np.prod(extra_shape))
+            weight_sums = self.weight_matrix @ ~flat_src_mask
+            out_dtype = self._out_dtype(src_array.dtype)
+            # Set the minimum mdtol to be slightly higher than 0 to account for rounding
+            # errors.
+            mdtol = max(mdtol, 1e-8)
+            tgt_mask = weight_sums > 1 - mdtol
+            masked_weight_sums = weight_sums * tgt_mask
+            normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
+            if norm_type == Constants.NormType.FRACAREA:
+                normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
+            elif norm_type == Constants.NormType.DSTAREA:
+                pass
+            normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
+            flat_tgt = flat_tgt * normalisations
+
         tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array
