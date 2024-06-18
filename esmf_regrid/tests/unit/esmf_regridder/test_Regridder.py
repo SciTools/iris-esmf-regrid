@@ -56,6 +56,72 @@ def test_Regridder_init():
     assert np.allclose(result.toarray(), expected.toarray())
 
 
+def _expected_nearest_weights():
+    weight_list = np.ones(3)
+    src_idx = np.ones(3)
+    tgt_idx = np.arange(3)
+
+    shape = (4, 2)
+
+    weights = scipy.sparse.csr_matrix((weight_list, (tgt_idx, src_idx)), shape=shape)
+    return weights
+
+
+def _expected_nearest_mask_weights():
+    weight_list = np.ones(4, dtype=bool)
+    src_idx = np.array([0, 0, 1, 1])
+    tgt_idx = np.arange(4)
+
+    shape = (4, 2)
+
+    weights = scipy.sparse.csr_matrix((weight_list, (tgt_idx, src_idx)), shape=shape)
+    return weights
+
+
+def test_Regridder_init_nearest_masked():
+    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
+
+    # The following ASCII visualisation describes the source and target grid
+    # indices and the mask (m) which ESMF assigns to their cells when
+    # computing nearest neighbour weights. Masked cells are not used in the
+    # resulting weights matrix, but should be used in the resulting mask
+    # weights matrix.
+    #
+    # 20  +---+---+       +---+---+
+    #     |   1   |       | 1 | m |
+    # 10  +---+---+       +-------+
+    #     |   m   |       | 0 | 2 |
+    #  0  +---+---+       +-------+
+    #     0  10  20       0       20
+    def _get_points(bounds):
+        points = (bounds[:-1] + bounds[1:]) / 2
+        return points
+
+    lon_bounds = np.array([0, 10, 20])
+    lat_bounds = np.array([0, 20])
+    lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
+    src_mask = np.zeros((len(lat), len(lon)), dtype=bool)
+    src_mask[0, 0] = True
+    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds, center=True, mask=src_mask)
+
+    lon_bounds = np.array([0, 10, 20])
+    lat_bounds = np.array([0, 10, 20])
+    lon, lat = _get_points(lon_bounds), _get_points(lat_bounds)
+    tgt_mask = np.zeros((len(lat), len(lon)), dtype=bool)
+    tgt_mask[1, 1] = True
+    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds, center=True, mask=tgt_mask)
+
+    rg = Regridder(src_grid, tgt_grid, method=Constants.Method.NEAREST)
+
+    result = rg.weight_matrix
+    expected = _expected_nearest_weights()
+    assert np.allclose(result.toarray(), expected.toarray())
+
+    result = rg.mask_weight_matrix
+    expected = _expected_nearest_mask_weights()
+    assert np.allclose(result.toarray(), expected.toarray())
+
+
 def test_Regridder_init_fail():
     """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
