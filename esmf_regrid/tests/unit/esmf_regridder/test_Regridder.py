@@ -56,7 +56,20 @@ def test_Regridder_init():
     assert np.allclose(result.toarray(), expected.toarray())
 
 
-def _expected_nearest_weights():
+def test_Regridder_init_fail():
+    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
+    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+
+    lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
+    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    with pytest.raises(ValueError):
+        _ = Regridder(src_grid, tgt_grid, method="other")
+
+
+@pytest.fixture
+def nearest_weights():
+    """Weights matrix for testing the nearest neighbour regridder."""
     weight_list = np.ones(3)
     src_idx = np.ones(3)
     tgt_idx = np.arange(3)
@@ -67,7 +80,9 @@ def _expected_nearest_weights():
     return weights
 
 
-def _expected_nearest_mask_weights():
+@pytest.fixture
+def nearest_mask_weights():
+    """Mask weights matrix for testing the nearest neighbour regridder."""
     weight_list = np.ones(4, dtype=bool)
     src_idx = np.array([0, 0, 1, 1])
     tgt_idx = np.arange(4)
@@ -78,13 +93,9 @@ def _expected_nearest_mask_weights():
     return weights
 
 
-def test_Regridder_init_nearest_masked():
-    """Test :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`.
-
-    Check that the mask on the source and target array is respected for the
-    weights calculation and ignored for the mask weights calculation when
-    using nearest neighbour regridding.
-    """
+@pytest.fixture
+def nearest_grids():
+    """Source and target grids for testing the nearest neighbour regridder."""
 
     # The following ASCII visualisation describes the source and target grid
     # indices and the mask (m) which ESMF assigns to their cells when
@@ -115,27 +126,29 @@ def test_Regridder_init_nearest_masked():
     tgt_mask = np.zeros((len(lat), len(lon)), dtype=bool)
     tgt_mask[1, 1] = True
     tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds, center=True, mask=tgt_mask)
+    return src_grid, tgt_grid
+
+
+def test_Regridder_init_nearest_masked(
+    nearest_grids,
+    nearest_weights,
+    nearest_mask_weights,
+):
+    """Test :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`.
+
+    Check that the mask on the source and target array is respected for the
+    weights calculation and ignored for the mask weights calculation when
+    using nearest neighbour regridding.
+    """
+    src_grid, tgt_grid = nearest_grids
 
     rg = Regridder(src_grid, tgt_grid, method=Constants.Method.NEAREST)
 
     result = rg.weight_matrix
-    expected = _expected_nearest_weights()
-    assert np.allclose(result.toarray(), expected.toarray())
+    assert np.allclose(result.toarray(), nearest_weights.toarray())
 
     result = rg.mask_weight_matrix
-    expected = _expected_nearest_mask_weights()
-    assert np.allclose(result.toarray(), expected.toarray())
-
-
-def test_Regridder_init_fail():
-    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
-    lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
-    src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
-
-    lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
-    tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
-    with pytest.raises(ValueError):
-        _ = Regridder(src_grid, tgt_grid, method="other")
+    assert np.allclose(result.toarray(), nearest_mask_weights.toarray())
 
 
 def test_Regridder_regrid():
@@ -223,6 +236,65 @@ def test_Regridder_regrid():
 
     with pytest.raises(ValueError):
         _ = rg.regrid(src_masked, norm_type="INVALID")
+
+
+def test_Regridder_regrid_nearest_masked(
+    nearest_grids,
+    nearest_weights,
+    nearest_mask_weights,
+):
+    """Test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
+
+    Check that the mask is computed correctly from the source array and that
+    the target mask is applied.
+    """
+    src_grid, tgt_grid = nearest_grids
+
+    # Set up the regridder with precomputed weights.
+    rg = Regridder(
+        src_grid,
+        tgt_grid,
+        method=Constants.Method.NEAREST,
+        precomputed_weights=(nearest_weights, nearest_mask_weights),
+    )
+
+    src_array = np.arange(4).reshape((2, 1, 2))
+    src_masked = ma.array(
+        src_array,
+        mask=np.array(
+            [
+                [[True, False]],
+                [[True, False]],
+            ]
+        ),
+    )
+
+    result = rg.regrid(src_masked)
+    expected = ma.masked_array(
+        [
+            [
+                [0, 1.0],
+                [0, 0],
+            ],
+            [
+                [0, 3.0],
+                [0, 0],
+            ],
+        ],
+        mask=np.array(
+            [
+                [
+                    [True, False],
+                    [True, True],
+                ],
+                [
+                    [True, False],
+                    [True, True],
+                ],
+            ]
+        ),
+    )
+    assert ma.allclose(result, expected)
 
 
 def test_Regridder_init_small():
