@@ -79,7 +79,12 @@ def _expected_nearest_mask_weights():
 
 
 def test_Regridder_init_nearest_masked():
-    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`."""
+    """Test :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`.
+
+    Check that the mask on the source and target array is respected for the
+    weights calculation and ignored for the mask weights calculation when
+    using nearest neighbour regridding.
+    """
 
     # The following ASCII visualisation describes the source and target grid
     # indices and the mask (m) which ESMF assigns to their cells when
@@ -87,12 +92,12 @@ def test_Regridder_init_nearest_masked():
     # resulting weights matrix, but should be used in the resulting mask
     # weights matrix.
     #
-    # 20  +---+---+       +---+---+
+    # 20  +-------+       +---+---+
     #     |   1   |       | 1 | m |
-    # 10  +---+---+       +-------+
+    # 10  +-------+       +---+---+
     #     |   m   |       | 0 | 2 |
-    #  0  +---+---+       +-------+
-    #     0  10  20       0       20
+    #  0  +-------+       +---+---+
+    #     0      20       0   10  20
     def _get_points(bounds):
         points = (bounds[:-1] + bounds[1:]) / 2
         return points
