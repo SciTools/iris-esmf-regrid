@@ -51,7 +51,7 @@ include = '\.pyi?$'
 [tool.pytest.ini_options]
 addopts = "-ra -v --doctest-modules"
 minversion = "6.0"
-doctest_optionflads = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
+doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
 testpaths = "esmf_regrid"
 
 [tool.setuptools]
