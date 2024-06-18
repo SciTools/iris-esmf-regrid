@@ -16,9 +16,10 @@ __all__ = [
 ]
 
 
-def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
+def _get_regrid_weights_dict(src_field, tgt_field, regrid_method, ignore_mask=False):
     # The value, in array form, that ESMF should treat as an affirmative mask.
-    expected_mask = np.array([True])
+    mask_values = [] if ignore_mask else [1]
+    expected_mask = np.array(mask_values, dtype=np.int32)
     regridder = esmpy.Regrid(
         src_field,
         tgt_field,
@@ -57,9 +58,10 @@ def _weights_dict_to_sparse_array(weights, shape, index_offsets):
 
 def _compute_weights_matrix(src, tgt, method, ignore_mask=False):
     weights_dict = _get_regrid_weights_dict(
-        src.make_esmf_field(ignore_mask),
-        tgt.make_esmf_field(ignore_mask),
+        src.make_esmf_field(),
+        tgt.make_esmf_field(),
         regrid_method=method.value,
+        ignore_mask=ignore_mask,
     )
     weight_matrix = _weights_dict_to_sparse_array(
         weights_dict,
@@ -130,7 +132,7 @@ class Regridder:
                 # the regridding weights for the mask.
                 self.mask_weight_matrix = _compute_weights_matrix(
                     src, tgt, method, ignore_mask=True
-                )
+                ).astype(bool)
             else:
                 self.mask_weight_matrix = None
         else:
@@ -212,9 +214,9 @@ class Regridder:
             # Normalization is not required in this case because no destination
             # point will receive input from more than one source point.
             if self.mask_weight_matrix is None:
-                flat_tgt_mask = (self.weight_matrix @ flat_src_mask).astype(bool)
+                flat_tgt_mask = self.weight_matrix.astype(bool) @ flat_src_mask
             else:
-                flat_tgt_mask = (self.mask_weight_matrix @ flat_src_mask).astype(bool)
+                flat_tgt_mask = self.mask_weight_matrix @ flat_src_mask
                 if self.tgt.mask is not None:
                     flat_tgt_mask |= self.tgt._array_to_matrix(self.tgt.mask)
             flat_tgt = ma.masked_array(flat_tgt, flat_tgt_mask)

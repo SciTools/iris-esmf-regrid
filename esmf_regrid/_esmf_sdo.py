@@ -24,12 +24,12 @@ class SDO(ABC):
         self._mask = mask
 
     @abstractmethod
-    def _make_esmf_sdo(self, ignore_mask=False):
+    def _make_esmf_sdo(self):
         pass
 
-    def make_esmf_field(self, ignore_mask=False):
+    def make_esmf_field(self):
         """Return an ESMF field representing the spatial discretisation object."""
-        sdo = self._make_esmf_sdo(ignore_mask)
+        sdo = self._make_esmf_sdo()
         field = esmpy.Field(sdo, **self._field_kwargs)
         return field
 
@@ -260,7 +260,7 @@ class GridInfo(SDO):
         )
         return info
 
-    def _make_esmf_sdo(self, ignore_mask=False):
+    def _make_esmf_sdo(self):
         info = self._as_esmf_info()
         (
             shape,
@@ -301,7 +301,7 @@ class GridInfo(SDO):
             grid.add_item(**kwargs)
             return grid.get_item(**kwargs)
 
-        if not ignore_mask and self.mask is not None:
+        if self.mask is not None:
             grid_mask = add_get_item(
                 grid, item=esmpy.GridItem.MASK, staggerloc=esmpy.StaggerLoc.CENTER
             )
