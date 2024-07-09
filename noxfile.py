@@ -32,7 +32,7 @@ COVERAGE = os.environ.get("COVERAGE", False)
 #: GHA-CI environment variable hook.
 #: If you change the IRIS_SOURCE here you will also need to change it in
 #: the tests, wheel and benchmark workflows.
-IRIS_SOURCE = os.environ.get("IRIS_SOURCE", "github:main")
+IRIS_SOURCE = os.environ.get("IRIS_SOURCE", "")
 
 IRIS_GITHUB = "https://github.com/scitools/iris.git"
 LOCKFILE_PLATFORM = "linux-64"
