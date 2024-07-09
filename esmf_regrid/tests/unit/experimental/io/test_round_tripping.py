@@ -183,7 +183,7 @@ def test_grid_to_mesh_round_trip(tmp_path, method, regridder):
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
-    src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_data = ma.arange(np.prod(src.data.shape)).reshape(src.data.shape)
     src_data[0, 0] = ma.masked
     src.data = src_data
     # TODO: make this a cube comparison when mesh comparison becomes available.
@@ -259,7 +259,7 @@ def test_grid_to_mesh_curvilinear_round_trip(tmp_path, regridder):
         _compare_ignoring_var_names(original_rg._src[1], loaded_rg._src[1])
 
     # Demonstrate regridding still gives the same results.
-    src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_data = ma.arange(np.prod(src.data.shape)).reshape(src.data.shape)
     src_data[0, 0] = ma.masked
     src.data = src_data
     # TODO: make this a cube comparison when mesh comparison becomes available.
@@ -341,7 +341,7 @@ def test_mesh_to_grid_round_trip(tmp_path, method, regridder):
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
-    src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_data = ma.arange(np.prod(src.data.shape)).reshape(src.data.shape)
     src_data[0] = ma.masked
     src.data = src_data
     original_result = original_rg(src).data
@@ -416,7 +416,7 @@ def test_mesh_to_grid_curvilinear_round_trip(tmp_path, regridder):
         _compare_ignoring_var_names(original_rg._tgt[1], loaded_rg._tgt[1])
 
     # Demonstrate regridding still gives the same results.
-    src_data = ma.arange(np.product(src.data.shape)).reshape(src.data.shape)
+    src_data = ma.arange(np.prod(src.data.shape)).reshape(src.data.shape)
     src_data[0] = ma.masked
     src.data = src_data
     original_result = original_rg(src).data
