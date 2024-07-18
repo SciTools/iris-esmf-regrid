@@ -35,3 +35,4 @@ exclude =
     build
     esmf_regrid/__init__.py
     esmf_regrid/tests/results
+    benchmarks/*

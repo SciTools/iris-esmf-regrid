@@ -284,7 +284,9 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
     return result
 
 
-def _map_complete_blocks(src, func, active_dims, out_sizes, *args, **kwargs):
+def _map_complete_blocks(
+    src, func, active_dims, out_sizes, *args, dtype=None, **kwargs
+):
     """
     Apply a function to complete blocks.
 
@@ -308,6 +310,8 @@ def _map_complete_blocks(src, func, active_dims, out_sizes, *args, **kwargs):
         Dimensions that cannot be chunked.
     out_sizes : tuple of int
         Output size of dimensions that cannot be chunked.
+    dtype : type, optional
+        Type of the output array, if not given, the dtype of src is used.
 
     Returns
     -------
@@ -320,6 +324,8 @@ def _map_complete_blocks(src, func, active_dims, out_sizes, *args, **kwargs):
         return func(src.data, *args, **kwargs)
 
     data = src.lazy_data()
+    if dtype is None:
+        dtype = data.dtype
 
     # Ensure dims are not chunked
     in_chunks = list(data.chunks)
@@ -382,7 +388,7 @@ def _map_complete_blocks(src, func, active_dims, out_sizes, *args, **kwargs):
         chunks=out_chunks,
         drop_axis=dropped_dims,
         new_axis=new_axis,
-        dtype=src.dtype,
+        dtype=dtype,
         **kwargs,
     )
 
@@ -566,6 +572,8 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     grid_x, grid_y = regrid_info.target
     regridder = regrid_info.regridder
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -583,6 +591,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         dims=[grid_x_dim, grid_y_dim],
         num_out_dims=2,
         mdtol=mdtol,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
@@ -645,6 +654,8 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     grid_x, grid_y = regrid_info.target
     regridder = regrid_info.regridder
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -662,6 +673,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
         dims=[mesh_dim],
         num_out_dims=2,
         mdtol=mdtol,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
@@ -748,6 +760,8 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     else:
         raise NotImplementedError(f"Unrecognised location {location}.")
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     # Apply regrid to all the chunks of src_cube, ensuring first that all
     # chunks cover the entire horizontal plane (otherwise they would break
     # the regrid function).
@@ -760,6 +774,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
         dims=[grid_x_dim, grid_y_dim],
         num_out_dims=1,
         mdtol=mdtol,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
@@ -832,6 +847,8 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
     mesh, location = regrid_info.target
     regridder = regrid_info.regridder
 
+    out_dtype = regridder._out_dtype(src_cube.dtype)
+
     if location == "face":
         face_node = mesh.face_node_connectivity
         chunk_shape = (face_node.shape[face_node.location_axis],)
@@ -849,6 +866,7 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
         dims=[mesh_dim],
         num_out_dims=1,
         mdtol=mdtol,
+        dtype=out_dtype,
     )
 
     new_cube = _create_cube(
@@ -975,6 +993,8 @@ class ESMFAreaWeighted:
         self,
         src_grid,
         tgt_grid,
+        src_resolution=None,
+        tgt_resolution=None,
         use_src_mask=None,
         use_tgt_mask=None,
         tgt_location="face",
@@ -993,6 +1013,11 @@ class ESMFAreaWeighted:
             :class:`~iris.experimental.ugrid.Mesh` defining the target.
             If this cube has a grid defined by latitude/longitude coordinates, those
             coordinates must have bounds.
+        src_resolution, tgt_resolution : int, optional
+            If present, represents the amount of latitude slices per source/target cell
+            given to ESMF for calculation. If resolution is set, ``src`` and ``tgt``
+            respectively must have strictly increasing bounds (bounds may be transposed
+            plus or minus 360 degrees to make the bounds strictly increasing).
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
@@ -1030,6 +1055,8 @@ class ESMFAreaWeighted:
             src_grid,
             tgt_grid,
             mdtol=self.mdtol,
+            src_resolution=src_resolution,
+            tgt_resolution=tgt_resolution,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location="face",
@@ -1482,8 +1509,10 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             if tgt_location is not "face".
         """
         kwargs = dict()
+        self.src_resolution = src_resolution
         if src_resolution is not None:
             kwargs["src_resolution"] = src_resolution
+        self.tgt_resolution = tgt_resolution
         if tgt_resolution is not None:
             kwargs["tgt_resolution"] = tgt_resolution
         if tgt_location is not None and tgt_location != "face":

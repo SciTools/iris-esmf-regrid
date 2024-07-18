@@ -31,10 +31,10 @@ Saving and Loading a Regridder
 A regridder can be set up for reuse, this saves time performing the
 computationally expensive initialisation process::
 
-    from esmf_regrid.experimental.unstructured_scheme import MeshToGridESMFRegridder
+    from esmf_regrid.experimental.unstructured_scheme import ESMFAreaWeighted
 
     # Initialise the regridder with a source mesh and target grid.
-    regridder = MeshToGridESMFRegridder(source_mesh_cube, target_grid_cube)
+    regridder = ESMFAreaWeighted().regridder(source_mesh_cube, target_grid_cube)
 
     # use the initialised regridder to regrid the data from the source cube
     # onto a cube with the same grid as `target_grid_cube`.

@@ -5,6 +5,7 @@ import pytest
 from esmf_regrid.schemes import ESMFAreaWeighted
 from esmf_regrid.tests.unit.schemes.__init__ import (
     _test_cube_regrid,
+    _test_dtype_handling,
     _test_invalid_mdtol,
     _test_mask_from_init,
     _test_mask_from_regridder,
@@ -74,3 +75,9 @@ def test_invalid_tgt_location():
 def test_non_degree_crs():
     """Test for coordinates with non-degree units."""
     _test_non_degree_crs(ESMFAreaWeighted)
+
+
+def test_dtype_handling(src_tgt_types, in_dtype):
+    """Test regridding scheme handles dtype as expected."""
+    src_type, tgt_type = src_tgt_types
+    _test_dtype_handling(ESMFAreaWeighted, src_type, tgt_type, in_dtype)

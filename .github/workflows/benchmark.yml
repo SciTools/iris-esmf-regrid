@@ -73,9 +73,7 @@ jobs:
       - name: Benchmark script
         run: |
           if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/${{ github.base_ref }}"; fi;
-          nox --session=tests --install-only
-          export DATA_GEN_PYTHON=$(realpath $(find .nox -path "*tests/bin/python"))
-          nox --session="benchmarks(branch)" -- "${COMPARE}"
+          python benchmarks/bm_runner.py branch ${COMPARE}
 
       - name: Archive ASV results
         uses: actions/upload-artifact@v4
