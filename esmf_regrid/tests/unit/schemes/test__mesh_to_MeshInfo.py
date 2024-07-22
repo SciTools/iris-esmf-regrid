@@ -12,7 +12,6 @@ except ImportError as exc:
         from iris.experimental.ugrid import Mesh as MeshXY
     except ImportError:
         raise exc
-
 import numpy as np
 from numpy import ma
 import scipy.sparse
