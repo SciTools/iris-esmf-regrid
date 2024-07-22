@@ -2,7 +2,11 @@
 
 from iris.coords import AuxCoord
 from iris.cube import Cube
-from iris.experimental.ugrid import Connectivity, Mesh
+from iris.experimental.ugrid import Connectivity
+try:
+    from iris.experimental.ugrid import MeshXY
+except:
+    from iris.experimental.ugrid import Mesh as MeshXY
 import numpy as np
 from numpy import ma
 import scipy.sparse
@@ -69,7 +73,7 @@ def _example_mesh():
     lat_values = [60, -60, -60, 60, 10, 0]
     lons = AuxCoord(lon_values, standard_name="longitude")
     lats = AuxCoord(lat_values, standard_name="latitude")
-    mesh = Mesh(2, ((lons, "x"), (lats, "y")), fnc)
+    mesh = MeshXY(2, ((lons, "x"), (lats, "y")), fnc)
     return mesh
 
 
@@ -170,7 +174,7 @@ def _gridlike_mesh(n_lons, n_lats, nsi=0):
     )
     lons = AuxCoord(node_lons, standard_name="longitude")
     lats = AuxCoord(node_lats, standard_name="latitude")
-    mesh = Mesh(2, ((lons, "x"), (lats, "y")), [fnc, enc])
+    mesh = MeshXY(2, ((lons, "x"), (lats, "y")), [fnc, enc])
 
     # In order to add a mesh to a cube, face locations must be added.
     face_lon_coord = AuxCoord(face_lons, standard_name="longitude")
