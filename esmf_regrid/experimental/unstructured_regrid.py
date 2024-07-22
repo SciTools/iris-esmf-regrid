@@ -99,9 +99,14 @@ class MeshInfo(SDO):
         nodeCoord = self.node_coords.flatten()
         nodeOwner = np.zeros([num_node])  # regridding currently serial
         elemId = np.arange(1, num_elem + 1)
-        elemType = self.fnc.count(axis=1)
-        # Experiments seem to indicate that ESMF is using 0 indexing here
-        elemConn = self.fnc.compressed() - self.nsi
+        if np.ma.isMaskedArray(self.fnc):
+            elemType = self.fnc.count(axis=1)
+            # Experiments seem to indicate that ESMF is using 0 indexing here
+            elemConn = self.fnc.compressed() - self.nsi
+        else:
+            elemType = self.fnc.shape[1] * np.ones(self.fnc.shape[0])
+            # Experiments seem to indicate that ESMF is using 0 indexing here
+            elemConn = self.fnc.flatten() - self.nsi
         elemCoord = self.elem_coords
         result = (
             num_node,
