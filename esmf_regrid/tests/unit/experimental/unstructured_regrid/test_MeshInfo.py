@@ -54,9 +54,11 @@ def test_connectivity_mask_equivalence():
     unmasked_nodes = nodes.filled()
     mesh = MeshInfo(coords, unmasked_nodes, 0)
     esmf_mesh_unmasked = mesh.make_esmf_field()
+    esmf_mesh_unmasked.data[:] = 0
 
     mesh = MeshInfo(coords, nodes, 0)
     esmf_mesh_masked = mesh.make_esmf_field()
+    esmf_mesh_masked.data[:] = 0
     assert esmf_mesh_unmasked.__repr__() == esmf_mesh_masked.__repr__()
 
 
