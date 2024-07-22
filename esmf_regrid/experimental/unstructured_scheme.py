@@ -1,6 +1,13 @@
 """Provides an iris interface for unstructured regridding."""
 
-from iris.experimental.ugrid import Mesh
+try:
+    from iris.experimental.ugrid import MeshXY
+except ImportError as exc:
+    # Prior to v3.10.0, `MeshXY` could was named `Mesh`.
+    try:
+        from iris.experimental.ugrid import Mesh as MeshXY
+    except ImportError:
+        raise exc
 
 from esmf_regrid import check_method, Constants
 from esmf_regrid.schemes import (
@@ -288,9 +295,9 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` cube providing the source grid.
-        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.Mesh` providing the target mesh.
+            :class:`~iris.experimental.ugrid.MeshXY` providing the target mesh.
         mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -330,7 +337,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
 
         """
-        if not isinstance(tgt, Mesh) and tgt.mesh is None:
+        if not isinstance(tgt, MeshXY) and tgt.mesh is None:
             raise ValueError("tgt has no mesh.")
         super().__init__(
             src,
