@@ -8,6 +8,7 @@ import dask.array as da
 import iris.coords
 import iris.cube
 from iris.exceptions import CoordinateNotFoundError
+import numpy as np
 
 try:
     from iris.experimental.ugrid import MeshXY
@@ -17,7 +18,6 @@ except ImportError as exc:
         from iris.experimental.ugrid import Mesh as MeshXY
     except ImportError:
         raise exc
-import numpy as np
 
 from esmf_regrid import check_method, Constants
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
