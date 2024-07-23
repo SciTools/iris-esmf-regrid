@@ -104,7 +104,7 @@ class MeshInfo(SDO):
             # Experiments seem to indicate that ESMF is using 0 indexing here
             elemConn = self.fnc.compressed() - self.nsi
         else:
-            elemType = self.full(fnc.shape[:1], self.fnc.shape[1])
+            elemType = np.full(self.fnc.shape[:1], self.fnc.shape[1])
             # Experiments seem to indicate that ESMF is using 0 indexing here
             elemConn = self.fnc.flatten() - self.nsi
         elemCoord = self.elem_coords
