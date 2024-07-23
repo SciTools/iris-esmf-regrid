@@ -46,6 +46,22 @@ def test_make_mesh():
     assert esmf_mesh_0.__repr__() == esmf_mesh_1.__repr__() == expected_repr
 
 
+def test_connectivity_mask_equivalence():
+    """Test for handling connectivity masks :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
+    coords, nodes, _ = _make_small_mesh_args()
+    coords = coords[:-1]
+    nodes = nodes[:, :-1]
+    unmasked_nodes = nodes.filled()
+    mesh = MeshInfo(coords, unmasked_nodes, 0)
+    esmf_mesh_unmasked = mesh.make_esmf_field()
+    esmf_mesh_unmasked.data[:] = 0
+
+    mesh = MeshInfo(coords, nodes, 0)
+    esmf_mesh_masked = mesh.make_esmf_field()
+    esmf_mesh_masked.data[:] = 0
+    assert esmf_mesh_unmasked.__repr__() == esmf_mesh_masked.__repr__()
+
+
 def test_regrid_with_mesh():
     """Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`."""
     mesh_args = _make_small_mesh_args()
