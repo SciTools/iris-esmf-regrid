@@ -6,9 +6,9 @@ from pathlib import Path
 import dask.array as da
 import iris
 from iris.cube import Cube
-from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 import numpy as np
 
+from esmf_regrid import _load_context
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -252,7 +252,7 @@ class TimeLazyMeshToGridRegridding:
 
         iris.save(src, file, chunksizes=chunk_size)
         # Construct regridder with a loaded version of the grid for consistency.
-        with PARSE_UGRID_ON_LOAD.context():
+        with _load_context():
             loaded_src = iris.load_cube(file)
         regridder = MeshToGridESMFRegridder(loaded_src, tgt)
 
@@ -261,7 +261,7 @@ class TimeLazyMeshToGridRegridding:
     def setup(self, cache):
         """ASV setup method."""
         regridder, file = cache
-        with PARSE_UGRID_ON_LOAD.context():
+        with _load_context():
             self.src = iris.load_cube(file)
             cube = iris.load_cube(file)
         self.result = regridder(cube)
