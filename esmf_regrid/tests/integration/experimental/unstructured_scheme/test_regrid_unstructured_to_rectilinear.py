@@ -4,11 +4,14 @@ import os
 
 import iris
 import numpy as np
+
 try:
     from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
+
     _load_context = PARSE_UGRID_ON_LOAD.context
 except ImportError:
     from contextlib import nullcontext
+
     _load_context = nullcontext
 
 from esmf_regrid.experimental.unstructured_scheme import (

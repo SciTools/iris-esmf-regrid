@@ -18,6 +18,7 @@ if hasattr(_imesh, "PARSE_UGRID_ON_LOAD"):
     _load_context = _imesh.PARSE_UGRID_ON_LOAD
 else:
     from contextlib import nullcontext
+
     _load_context = nullcontext
 
 # constants needs to be above schemes, as it is used within
