@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+
+## [0.11] - 2024-07-31
+
+### Fixed
+
+- [PR#385](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/385)
+  Fixed bug when connectivities are described by non-masked arrays.
+  [@stephenworsley](https://github.com/stephenworsley)
+- [PR#387](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/387)
+  Fixed incompatibilities with changes to iris API in v3.10.0.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+### Added
+
+- [PR#276](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/276)
+  Allow regridding for grids defined on coordinates without bounds for
+  nearest neighbour and bilinear methods.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.10] - 2024-05-31
 
 ### Added
@@ -50,13 +70,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [PR#311](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/311)
   Added support for Mesh to Mesh regridding.
   [@HGWright](https://github.com/HGWright)
-
-### Added
-
-- [PR#276](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/276)
-  Allow regridding for grids defined on coordinates without bounds for
-  nearest neighbour and bilinear methods.
-  [@stephenworsley](https://github.com/stephenworsley)
 
 ### Fixed
 
