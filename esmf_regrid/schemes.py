@@ -179,31 +179,40 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     londim, latdim = len(lon.shape), len(lat.shape)
     assert londim == latdim
     assert londim in (1, 2)
-    if londim == 1:
-        # Ensure coords come from a proper grid.
-        assert isinstance(lon, iris.coords.DimCoord)
-        assert isinstance(lat, iris.coords.DimCoord)
-        circular = lon.circular
-        lon_bound_array = lon.contiguous_bounds()
-        lat_bound_array = lat.contiguous_bounds()
-        # TODO: perform checks on lat/lon.
-    elif londim == 2:
-        assert cube.coord_dims(lon) == cube.coord_dims(lat)
-        if not np.any(mask):
-            assert lon.is_contiguous()
-            assert lat.is_contiguous()
+    if not center:
+        if londim == 1:
+            # Ensure coords come from a proper grid.
+            assert isinstance(lon, iris.coords.DimCoord)
+            assert isinstance(lat, iris.coords.DimCoord)
+            circular = lon.circular
             lon_bound_array = lon.contiguous_bounds()
             lat_bound_array = lat.contiguous_bounds()
+            # TODO: perform checks on lat/lon.
+        elif londim == 2:
+            assert cube.coord_dims(lon) == cube.coord_dims(lat)
+            if not np.any(mask):
+                assert lon.is_contiguous()
+                assert lat.is_contiguous()
+                lon_bound_array = lon.contiguous_bounds()
+                lat_bound_array = lat.contiguous_bounds()
+            else:
+                lon_bound_array = _contiguous_masked(lon.bounds, mask)
+                lat_bound_array = _contiguous_masked(lat.bounds, mask)
+            # 2D coords must be AuxCoords, which do not have a circular attribute.
+            circular = False
+        if crs is None:
+            lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
+            lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
+    else:
+        lon_bound_array = None
+        lat_bound_array = None
+        if londim == 1:
+            circular = lon.circular
         else:
-            lon_bound_array = _contiguous_masked(lon.bounds, mask)
-            lat_bound_array = _contiguous_masked(lat.bounds, mask)
-        # 2D coords must be AuxCoords, which do not have a circular attribute.
-        circular = False
+            circular = False
     lon_points = lon.points
     lat_points = lat.points
     if crs is None:
-        lon_bound_array = lon.units.convert(lon_bound_array, Unit("degrees"))
-        lat_bound_array = lat.units.convert(lat_bound_array, Unit("degrees"))
         lon_points = lon.units.convert(lon_points, Unit("degrees"))
         lat_points = lon.units.convert(lat_points, Unit("degrees"))
     if resolution is None:
@@ -414,7 +423,7 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         The dimensions of the X and Y coordinate within the source Cube.
     tgt_coords : tuple of :class:`iris.coords.Coord`\\ 's
         Either two 1D :class:`iris.coords.DimCoord`\\ 's, two 1D
-        :class:`iris.experimental.ugrid.DimCoord`\\ 's or two 2D
+        :class:`iris.mesh.MeshCoord`\\ 's or two 2D
         :class:`iris.coords.AuxCoord`\\ 's representing the new grid's
         X and Y coordinates.
     num_tgt_dims : int
@@ -1005,9 +1014,13 @@ class ESMFAreaWeighted:
         ----------
         src_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the source.
-        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` defining the target.
+            :class:`~iris.mesh.MeshXY` defining the target.
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
         src_resolution, tgt_resolution : int, optional
             If present, represents the amount of latitude slices per source/target cell
             given to ESMF for calculation. If resolution is set, ``src`` and ``tgt``
@@ -1117,9 +1130,9 @@ class ESMFBilinear:
         ----------
         src_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the source.
-        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` defining the target.
+            :class:`~iris.mesh.MeshXY` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
@@ -1225,9 +1238,9 @@ class ESMFNearest:
         ----------
         src_grid : :class:`iris.cube.Cube`
             The :class:`~iris.cube.Cube` defining the source.
-        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+        tgt_grid : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` defining the target.
+            :class:`~iris.mesh.MeshXY` defining the target.
         use_src_mask : :obj:`~numpy.typing.ArrayLike` or bool, optional
             Array describing which elements :mod:`esmpy` will ignore on the src_grid.
             If True, the mask will be derived from src_grid.
@@ -1288,7 +1301,7 @@ class _ESMFRegridder:
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source grid.
-        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The rectilinear :class:`~iris.cube.Cube` providing the target grid.
         method : :class:`Constants.Method`
             The method to be used to calculate weights.
@@ -1465,9 +1478,13 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source.
-        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
+        tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` defining the target.
+            :class:`~iris.mesh.MeshXY` defining the target.
+            If this cube has a grid defined by latitude/longitude coordinates, those
+            coordinates must have bounds.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1543,9 +1560,9 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source.
-        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.Mesh`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` defining the target.
+            :class:`~iris.mesh.MeshXY` defining the target.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
@@ -1602,9 +1619,9 @@ class ESMFNearestRegridder(_ESMFRegridder):
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` providing the source.
-        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` defining the target.
+            :class:`~iris.mesh.MeshXY` defining the target.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed

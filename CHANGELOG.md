@@ -51,6 +51,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   Added support for Mesh to Mesh regridding.
   [@HGWright](https://github.com/HGWright)
 
+### Added
+
+- [PR#276](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/276)
+  Allow regridding for grids defined on coordinates without bounds for
+  nearest neighbour and bilinear methods.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ### Fixed
 
 - [PR#301](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/301)

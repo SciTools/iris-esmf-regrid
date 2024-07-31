@@ -88,7 +88,8 @@ def test_invalid_mdtol():
         _ = ESMFBilinearRegridder(src, tgt, mdtol=-1)
 
 
-def test_curvilinear_equivalence():
+@pytest.mark.parametrize("with_bounds", (False, True))
+def test_curvilinear_equivalence(with_bounds):
     """
     Test initialisation of :class:`esmf_regrid.schemes.ESMFBilinearRegridder`.
 
@@ -105,6 +106,11 @@ def test_curvilinear_equivalence():
     grid_tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
     curv_src = _curvilinear_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds)
     curv_tgt = _curvilinear_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds)
+    if not with_bounds:
+        curv_src.coord("latitude").bounds = None
+        curv_src.coord("longitude").bounds = None
+        curv_tgt.coord("latitude").bounds = None
+        curv_tgt.coord("longitude").bounds = None
 
     grid_to_grid = ESMFBilinearRegridder(grid_src, grid_tgt)
     grid_to_curv = ESMFBilinearRegridder(grid_src, curv_tgt)
@@ -153,10 +159,10 @@ def test_curvilinear_and_rectilinear():
     tgt.add_dim_coord(grid_lon_tgt, 1)
 
     # Change the AuxCoords to check that the DimCoords have priority.
-    src.coord("latitude").bounds[:] = 0
-    src.coord("longitude").bounds[:] = 0
-    tgt.coord("latitude").bounds[:] = 0
-    tgt.coord("longitude").bounds[:] = 0
+    src.coord("latitude").points[:] = 0
+    src.coord("longitude").points[:] = 0
+    tgt.coord("latitude").points[:] = 0
+    tgt.coord("longitude").points[:] = 0
 
     # Ensure the source data is all ones.
     src.data[:] = 1

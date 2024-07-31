@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 import scipy.sparse
 
+from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.schemes import _contiguous_masked, _cube_to_GridInfo
 
@@ -197,6 +198,56 @@ def test_curvilinear_grid():
     circular_gridinfo = _cube_to_GridInfo(cube)
     circular_gridinfo.circular = True
     rg_circular = Regridder(circular_gridinfo, gridinfo)
+    assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
+
+
+@pytest.mark.parametrize("curvilinear", [True, False])
+def test_center(curvilinear):
+    """Test the beheaviour when center=True."""
+    n_lons = 6
+    n_lats = 5
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+
+    if curvilinear:
+        cube = _curvilinear_cube(
+            n_lons,
+            n_lats,
+            lon_bounds,
+            lat_bounds,
+            coord_system=GeogCS(EARTH_RADIUS),
+        )
+    else:
+        cube = _grid_cube(
+            n_lons,
+            n_lats,
+            lon_bounds,
+            lat_bounds,
+            coord_system=GeogCS(EARTH_RADIUS),
+        )
+    cube.coord("latitude").bounds = None
+    cube.coord("longitude").bounds = None
+    gridinfo = _cube_to_GridInfo(cube, center=True)
+    # Ensure conversion to ESMF works without error
+    _ = gridinfo.make_esmf_field()
+
+    # The following test ensures there are no overlapping cells.
+    # This catches geometric/topological abnormalities that would arise from,
+    # for example: switching lat/lon values, using euclidean coords vs spherical.
+    rg = Regridder(gridinfo, gridinfo, method=Constants.Method.BILINEAR)
+    expected_weights = scipy.sparse.identity(n_lats * n_lons)
+    assert np.array_equal(expected_weights.todense(), rg.weight_matrix.todense())
+    assert gridinfo.crs == GeogCS(EARTH_RADIUS).as_cartopy_crs()
+
+    # While curvilinear coords do not have the "circular" attribute, the code
+    # allows "circular" to be True when setting the core regridder directly.
+    # This describes an ESMF object which is topologically different, but ought
+    # to be geometrically equivalent to the non-circular case.
+    circular_gridinfo = _cube_to_GridInfo(cube, center=True)
+    circular_gridinfo.circular = True
+    rg_circular = Regridder(
+        circular_gridinfo, gridinfo, method=Constants.Method.BILINEAR
+    )
     assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
 
 

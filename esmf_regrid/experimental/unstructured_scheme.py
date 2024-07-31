@@ -294,9 +294,9 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         ----------
         src : :class:`iris.cube.Cube`
             The rectilinear :class:`~iris.cube.Cube` cube providing the source grid.
-        tgt : :class:`iris.cube.Cube` or :class:`iris.experimental.ugrid.MeshXY`
+        tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
             The unstructured :class:`~iris.cube.Cube`or
-            :class:`~iris.experimental.ugrid.MeshXY` providing the target mesh.
+            :class:`~iris.mesh.MeshXY` providing the target mesh.
         mdtol : float, optional
             Tolerance of missing data. The value returned in each element of
             the returned array will be masked if the fraction of masked data
