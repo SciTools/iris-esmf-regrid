@@ -18,7 +18,7 @@ import yaml
 
 
 #: Default to reusing any pre-existing nox environments.
-nox.options.reuse_existing_virtualenvs = True
+nox.options.reuse_existing_virtualenvs = False
 
 #: Name of the package to test.
 PACKAGE = "esmf_regrid"
