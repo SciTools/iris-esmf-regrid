@@ -14,7 +14,7 @@ except ImportError as exc:
         import iris.experimental.ugrid as _imesh
     except ImportError:
         raise exc
-     
+
 if hasattr(_imesh, "PARSE_UGRID_ON_LOAD"):
     _load_context = _imesh.PARSE_UGRID_ON_LOAD
 else:
