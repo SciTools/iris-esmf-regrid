@@ -1,14 +1,13 @@
 """Provides an iris interface for unstructured regridding."""
 
 try:
-    from iris.experimental.ugrid import MeshXY
+    from iris.mesh import MeshXY
 except ImportError as exc:
     # Prior to v3.10.0, `MeshXY` could was named `Mesh`.
     try:
         from iris.experimental.ugrid import Mesh as MeshXY
     except ImportError:
         raise exc
-
 from esmf_regrid import check_method, Constants
 from esmf_regrid.schemes import (
     _ESMFRegridder,

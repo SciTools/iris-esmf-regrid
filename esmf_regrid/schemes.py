@@ -11,7 +11,7 @@ from iris.exceptions import CoordinateNotFoundError
 import numpy as np
 
 try:
-    from iris.experimental.ugrid import MeshXY
+    from iris.mesh import MeshXY
 except ImportError as exc:
     # Prior to v3.10.0, `MeshXY` could was named `Mesh`.
     try:
