@@ -3,8 +3,16 @@
 import os
 
 import iris
-from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 import numpy as np
+
+try:
+    from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
+
+    _load_context = PARSE_UGRID_ON_LOAD.context
+except ImportError:
+    from contextlib import nullcontext
+
+    _load_context = nullcontext
 
 from esmf_regrid.experimental.unstructured_scheme import (
     regrid_unstructured_to_rectilinear,
@@ -22,7 +30,7 @@ def test_real_data():
     src_fn = os.path.join(
         test_data_dir, "NetCDF", "unstructured_grid", "lfric_surface_mean.nc"
     )
-    with PARSE_UGRID_ON_LOAD.context():
+    with _load_context():
         src = iris.load_cube(src_fn, "rainfall_flux")
 
     # Load target grid cube.

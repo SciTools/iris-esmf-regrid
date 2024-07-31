@@ -5,11 +5,11 @@ from contextlib import contextmanager
 import iris
 from iris.coords import AuxCoord
 from iris.cube import Cube, CubeList
-from iris.experimental.ugrid import PARSE_UGRID_ON_LOAD
 import numpy as np
 import scipy.sparse
 
 import esmf_regrid
+from esmf_regrid import _load_context
 from esmf_regrid import check_method, Constants
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -288,7 +288,7 @@ def load_regridder(filename):
     -------
     :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder` or :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`
     """
-    with PARSE_UGRID_ON_LOAD.context():
+    with _load_context():
         cubes = iris.load(filename)
 
     # Extract the source, target and metadata information.
