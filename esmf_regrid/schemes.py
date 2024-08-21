@@ -19,7 +19,7 @@ except ImportError as exc:
     except ImportError:
         raise exc
 
-from esmf_regrid import check_method, Constants
+from esmf_regrid import check_method, Constants, esmpy
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
@@ -32,6 +32,12 @@ __all__ = [
     "ESMFNearestRegridder",
     "regrid_rectilinear_to_rectilinear",
 ]
+
+STANDAR_BILINEAR_EXTAP_ARGS = {
+    "extrap_method": esmpy.ExtrapMethod.NEAREST_IDAVG,
+    "extrap_num_src_pnts": 2,
+    "extrap_dist_exponent": 1,
+}
 
 
 def _get_coord(cube, axis):
@@ -292,6 +298,43 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
     return result
 
 
+def _check_esmf_args(kwargs):
+    #TODO: raise proper warning messages
+    #TODO: check invalid and valid lists are appropriate
+    if kwargs is not None:
+        if not isinstance(kwargs, dict):
+            raise TypeError("")
+        invalid_kwargs = [
+            "filename",
+            "norm_type",
+            "rh_filename",
+            "regrid_method",
+            "src_mask_values",
+            "dst_mask_values",
+            "factors",
+            "src_frac_field",
+            "dst_frac_field",
+            "ignore_degenerate", #TODO: check if this is worth controling
+        ]
+        valid_kwargs = [
+            "pole method",
+            "regrid_pole_npoints",
+            "line_type",
+            "extrap_method",
+            "extrap_num_src_pnts",
+            "extrap_dist_exponent",
+            "extrap_num_levels",
+            "unmapped_action",
+            # "ignore_degenerate",
+            "large_file",
+        ]
+        for kwarg in kwargs.keys():
+            if kwarg in invalid_kwargs:
+                raise ValueError("")
+            if kwarg not in valid_kwargs:
+                raise ValueError("")
+
+
 def _map_complete_blocks(
     src, func, active_dims, out_sizes, *args, dtype=None, **kwargs
 ):
@@ -534,6 +577,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     tgt_resolution=None,
     src_mask=None,
     tgt_mask=None,
+    esmf_args=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_rectilinear'.
@@ -556,8 +600,14 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     srcinfo = _make_gridinfo(src_grid_cube, method, src_resolution, src_mask)
     tgtinfo = _make_gridinfo(tgt_grid_cube, method, tgt_resolution, tgt_mask)
 
+    _check_esmf_args(esmf_args)
+
     regridder = Regridder(
-        srcinfo, tgtinfo, method=method, precomputed_weights=precomputed_weights
+        srcinfo,
+        tgtinfo,
+        method=method,
+        esmf_args=esmf_args,
+        precomputed_weights=precomputed_weights,
     )
 
     regrid_info = RegridInfo(
@@ -620,6 +670,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     tgt_resolution=None,
     src_mask=None,
     tgt_mask=None,
+    esmf_args=None,
 ):
     """
     First (setup) part of 'regrid_unstructured_to_rectilinear'.
@@ -638,8 +689,14 @@ def _regrid_unstructured_to_rectilinear__prepare(
     meshinfo = _make_meshinfo(src_mesh_cube, method, src_mask, "source")
     gridinfo = _make_gridinfo(target_grid_cube, method, tgt_resolution, tgt_mask)
 
+    _check_esmf_args(esmf_args)
+
     regridder = Regridder(
-        meshinfo, gridinfo, method=method, precomputed_weights=precomputed_weights
+        meshinfo,
+        gridinfo,
+        method=method,
+        esmf_args=esmf_args,
+        precomputed_weights=precomputed_weights,
     )
 
     regrid_info = RegridInfo(
@@ -706,6 +763,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     src_mask=None,
     tgt_mask=None,
     tgt_location=None,
+    esmf_args=None,
 ):
     """
     First (setup) part of 'regrid_rectilinear_to_unstructured'.
@@ -734,8 +792,14 @@ def _regrid_rectilinear_to_unstructured__prepare(
     )
     gridinfo = _make_gridinfo(src_grid_cube, method, src_resolution, src_mask)
 
+    _check_esmf_args(esmf_args)
+
     regridder = Regridder(
-        gridinfo, meshinfo, method=method, precomputed_weights=precomputed_weights
+        gridinfo,
+        meshinfo,
+        method=method,
+        esmf_args=esmf_args,
+        precomputed_weights=precomputed_weights,
     )
 
     regrid_info = RegridInfo(
@@ -804,6 +868,7 @@ def _regrid_unstructured_to_unstructured__prepare(
     tgt_mask=None,
     src_location=None,
     tgt_location=None,
+    esmf_args=None,
 ):
     """
     First (setup) part of 'regrid_unstructured_to_unstructured'.
@@ -833,6 +898,7 @@ def _regrid_unstructured_to_unstructured__prepare(
         tgt_meshinfo,
         method=method,
         precomputed_weights=precomputed_weights,
+        esmf_args=esmf_args,
     )
 
     regrid_info = RegridInfo(
@@ -955,7 +1021,12 @@ class ESMFAreaWeighted:
     """
 
     def __init__(
-        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location="face"
+        self,
+        mdtol=0,
+        use_src_mask=False,
+        use_tgt_mask=False,
+        tgt_location="face",
+        esmf_args={},
     ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
@@ -979,6 +1050,8 @@ class ESMFAreaWeighted:
         tgt_location : str or None, default="face"
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         """
         if not (0 <= mdtol <= 1):
@@ -992,10 +1065,20 @@ class ESMFAreaWeighted:
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = "face"
+        _check_esmf_args(esmf_args)
+        self.esmf_args = esmf_args
 
     def __repr__(self):
         """Return a representation of the class."""
-        return "ESMFAreaWeighted(mdtol={})".format(self.mdtol)
+        result = (
+            f"ESMFAreaWeighted("
+            f"    mdtol={self.mdtol},"
+            f"    use_src_mask={self.use_src_mask},"
+            f"    use_tgt_mask={self.use_tgt_mask},"
+            f"    esmf_args={self.esmf_args},"
+            f")"
+        )
+        return result
 
     def regridder(
         self,
@@ -1006,6 +1089,7 @@ class ESMFAreaWeighted:
         use_src_mask=None,
         use_tgt_mask=None,
         tgt_location="face",
+        esmf_args=None,
     ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
@@ -1035,6 +1119,8 @@ class ESMFAreaWeighted:
         tgt_location : str or None, default="face"
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
 
         Returns
@@ -1055,6 +1141,9 @@ class ESMFAreaWeighted:
             use_src_mask = self.use_src_mask
         if use_tgt_mask is None:
             use_tgt_mask = self.use_tgt_mask
+        if esmf_args is None:
+            esmf_args = self.esmf_args
+
         if tgt_location is not None and tgt_location != "face":
             raise ValueError(
                 "For area weighted regridding, target location must be 'face'."
@@ -1068,6 +1157,7 @@ class ESMFAreaWeighted:
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location="face",
+            esmf_args=esmf_args,
         )
 
 
@@ -1081,7 +1171,13 @@ class ESMFBilinear:
     """
 
     def __init__(
-        self, mdtol=0, use_src_mask=False, use_tgt_mask=False, tgt_location=None
+        self,
+        mdtol=0,
+        use_src_mask=False,
+        use_tgt_mask=False,
+        tgt_location=None,
+        extrapolate_gaps=False,
+        esmf_args={},
     ):
         """
         Area-weighted scheme for regridding between rectilinear grids.
@@ -1101,6 +1197,12 @@ class ESMFBilinear:
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        extrapolate_gaps : bool, default=False
+            Use a standard set of ESMF arguments for extrapolation which achieves
+            continuity with bilinear regridding. Useful for situations where gaps
+            between cells would be masked.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         """
         if not (0 <= mdtol <= 1):
@@ -1110,10 +1212,22 @@ class ESMFBilinear:
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = tgt_location
+        if extrapolate_gaps:
+            esmf_args = STANDAR_BILINEAR_EXTAP_ARGS
+        _check_esmf_args(esmf_args)
+        self.esmf_args = esmf_args
 
     def __repr__(self):
         """Return a representation of the class."""
-        return "ESMFBilinear(mdtol={})".format(self.mdtol)
+        result = (
+            f"ESMFBilinear("
+            f"    mdtol={self.mdtol},"
+            f"    use_src_mask={self.use_src_mask},"
+            f"    use_tgt_mask={self.use_tgt_mask},"
+            f"    esmf_args={self.esmf_args},"
+            f")"
+        )
+        return result
 
     def regridder(
         self,
@@ -1122,6 +1236,8 @@ class ESMFBilinear:
         use_src_mask=None,
         use_tgt_mask=None,
         tgt_location=None,
+        extrapolate_gaps=False,
+        esmf_args=None,
     ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
@@ -1142,6 +1258,12 @@ class ESMFBilinear:
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        extrapolate_gaps : bool, default=False
+            Use a standard set of ESMF arguments for extrapolation which achieves
+            continuity with bilinear regridding. Useful for situations where gaps
+            between cells would be masked.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Returns
         -------
@@ -1163,6 +1285,10 @@ class ESMFBilinear:
             use_tgt_mask = self.use_tgt_mask
         if tgt_location is None:
             tgt_location = self.tgt_location
+        if esmf_args is None:
+            esmf_args = self.esmf_args
+        if extrapolate_gaps:
+            esmf_args = STANDAR_BILINEAR_EXTAP_ARGS
         return ESMFBilinearRegridder(
             src_grid,
             tgt_grid,
@@ -1170,6 +1296,7 @@ class ESMFBilinear:
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
+            esmf_args=esmf_args,
         )
 
 
@@ -1199,7 +1326,9 @@ class ESMFNearest:
     the same equivalent space will behave the same.
     """
 
-    def __init__(self, use_src_mask=False, use_tgt_mask=False, tgt_location=None):
+    def __init__(
+        self, use_src_mask=False, use_tgt_mask=False, tgt_location=None, esmf_args={}
+    ):
         """
         Nearest neighbour scheme for regridding between rectilinear grids.
 
@@ -1214,14 +1343,25 @@ class ESMFNearest:
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
         """
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = tgt_location
+        _check_esmf_args(esmf_args)
+        self.esmf_args = esmf_args
 
     def __repr__(self):
         """Return a representation of the class."""
-        return "ESMFNearest()"
+        result = (
+            f"ESMFNearest("
+            f"    use_src_mask={self.use_src_mask},"
+            f"    use_tgt_mask={self.use_tgt_mask},"
+            f"    esmf_args={self.esmf_args},"
+            f")"
+        )
+        return result
 
     def regridder(
         self,
@@ -1230,6 +1370,7 @@ class ESMFNearest:
         use_src_mask=None,
         use_tgt_mask=None,
         tgt_location=None,
+        esmf_args=None,
     ):
         """
         Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
@@ -1250,6 +1391,8 @@ class ESMFNearest:
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Returns
         -------
@@ -1271,12 +1414,15 @@ class ESMFNearest:
             use_tgt_mask = self.use_tgt_mask
         if tgt_location is None:
             tgt_location = self.tgt_location
+        if esmf_args is None:
+            esmf_args = self.esmf_args
         return ESMFNearestRegridder(
             src_grid,
             tgt_grid,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
+            esmf_args=esmf_args,
         )
 
 
@@ -1292,6 +1438,7 @@ class _ESMFRegridder:
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
+        esmf_args=None,
         **kwargs,
     ):
         """
@@ -1339,6 +1486,9 @@ class _ESMFRegridder:
             raise ValueError(msg.format(mdtol))
         self.mdtol = mdtol
         self.method = method
+
+        self.esmf_args = esmf_args
+        kwargs["esmf_args"] = self.esmf_args
 
         self.src_mask = _get_mask(src, use_src_mask)
         kwargs["src_mask"] = self.src_mask
@@ -1470,6 +1620,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location="face",
+        esmf_args=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1508,6 +1659,8 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgt_location : str or None, default="face"
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Raises
         ------
@@ -1536,6 +1689,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             mdtol=mdtol,
             precomputed_weights=precomputed_weights,
             tgt_location="face",
+            esmf_args=esmf_args,
             **kwargs,
         )
 
@@ -1552,6 +1706,8 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
+        extrapolate_gaps=False,
+        esmf_args=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1581,6 +1737,12 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        extrapolate_gaps : bool, default=False
+            Use a standard set of ESMF arguments for extrapolation which achieves
+            continuity with bilinear regridding. Useful for situations where gaps
+            between cells would be masked.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Raises
         ------
@@ -1588,6 +1750,8 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
+        if extrapolate_gaps:
+            esmf_args = STANDAR_BILINEAR_EXTAP_ARGS
         super().__init__(
             src,
             tgt,
@@ -1597,6 +1761,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
+            esmf_args=esmf_args,
         )
 
 
@@ -1611,6 +1776,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
+        esmf_args=None,
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1634,6 +1800,8 @@ class ESMFNearestRegridder(_ESMFRegridder):
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Raises
         ------
@@ -1650,4 +1818,5 @@ class ESMFNearestRegridder(_ESMFRegridder):
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
+            esmf_args=esmf_args,
         )

@@ -16,7 +16,9 @@ __all__ = [
 ]
 
 
-def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
+def _get_regrid_weights_dict(src_field, tgt_field, regrid_method, esmf_args=None):
+    if esmf_args is None:
+        esmf_args = {}
     # The value, in array form, that ESMF should treat as an affirmative mask.
     expected_mask = np.array([True])
     regridder = esmpy.Regrid(
@@ -31,6 +33,7 @@ def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
         src_mask_values=expected_mask,
         dst_mask_values=expected_mask,
         factors=True,
+        **esmf_args,
     )
     # Without specifying deep_copy=true, the information in weights_dict
     # would be corrupted when the ESMF regridder is destoyed.
@@ -59,7 +62,12 @@ class Regridder:
     """Regridder for directly interfacing with :mod:`esmpy`."""
 
     def __init__(
-        self, src, tgt, method=Constants.Method.CONSERVATIVE, precomputed_weights=None
+        self,
+        src,
+        tgt,
+        method=Constants.Method.CONSERVATIVE,
+        esmf_args=None,
+        precomputed_weights=None,
     ):
         """
         Create a regridder from descriptions of horizontal grids/meshes.
@@ -85,6 +93,8 @@ class Regridder:
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
         """
         self.src = src
         self.tgt = tgt
@@ -98,6 +108,7 @@ class Regridder:
                 src.make_esmf_field(),
                 tgt.make_esmf_field(),
                 regrid_method=method.value,
+                esmf_args=esmf_args,
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
