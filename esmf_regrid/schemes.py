@@ -299,8 +299,8 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
 
 
 def _check_esmf_args(kwargs):
-    #TODO: raise proper warning messages
-    #TODO: check invalid and valid lists are appropriate
+    # TODO: raise proper warning messages
+    # TODO: check invalid and valid lists are appropriate
     if kwargs is not None:
         if not isinstance(kwargs, dict):
             raise TypeError("")
@@ -314,7 +314,7 @@ def _check_esmf_args(kwargs):
             "factors",
             "src_frac_field",
             "dst_frac_field",
-            "ignore_degenerate", #TODO: check if this is worth controling
+            "ignore_degenerate",  # TODO: check if this is worth controling
         ]
         valid_kwargs = [
             "pole method",
