@@ -300,10 +300,9 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
 
 def _check_esmf_args(kwargs):
     # TODO: raise proper warning messages
-    # TODO: check invalid and valid lists are appropriate
     if kwargs is not None:
         if not isinstance(kwargs, dict):
-            raise TypeError("")
+            raise TypeError(f"Expected `esmf_args` to be a dict, got a {type(kwargs)}.")
         invalid_kwargs = [
             "filename",
             "norm_type",
@@ -314,7 +313,6 @@ def _check_esmf_args(kwargs):
             "factors",
             "src_frac_field",
             "dst_frac_field",
-            "ignore_degenerate",  # TODO: check if this is worth controling
         ]
         valid_kwargs = [
             "pole method",
@@ -325,14 +323,16 @@ def _check_esmf_args(kwargs):
             "extrap_dist_exponent",
             "extrap_num_levels",
             "unmapped_action",
-            # "ignore_degenerate",
+            "ignore_degenerate",
             "large_file",
         ]
         for kwarg in kwargs.keys():
             if kwarg in invalid_kwargs:
-                raise ValueError("")
+                msg = f"{kwarg} is not an argument which can be controlled by `esmf_args`."
+                raise ValueError(msg)
             if kwarg not in valid_kwargs:
-                raise ValueError("")
+                msg = f"{kwarg} is not a valid argument for `esmpy.Regrid`."
+                raise ValueError(msg)
 
 
 def _map_complete_blocks(

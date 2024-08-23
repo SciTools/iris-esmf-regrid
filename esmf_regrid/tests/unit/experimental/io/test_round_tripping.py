@@ -458,6 +458,8 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
         tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
 
     esmf_args = {
+        "unmapped_action": esmpy.UnmappedAction.ERROR,
+        "ignore_degenerate": False,
         "line_type": esmpy.LineType.CART,
         "large_file": True,
     }

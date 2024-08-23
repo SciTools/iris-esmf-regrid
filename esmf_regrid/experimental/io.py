@@ -50,9 +50,7 @@ RESOLUTION = "resolution"
 SOURCE_RESOLUTION = "src_resolution"
 TARGET_RESOLUTION = "tgt_resolution"
 ESMF_ARGS = "esmf_args"
-# TODO: check this list is accurate
 VALID_ESMF_KWARGS = [
-    # "regrid_method",
     "pole_method",
     "regrid_pole_npoints",
     "line_type",
@@ -61,16 +59,14 @@ VALID_ESMF_KWARGS = [
     "extrap_dist_exponent",
     "extrap_num_levels",
     "unmapped_action",
-    # "ignore_degenerate",
+    "ignore_degenerate",
     "large_file",
 ]
-# REGRID_METHOD_DICT = {e.name: e for e in esmpy.RegridMethod}
 POLE_METHOD_DICT = {e.name: e for e in esmpy.PoleMethod}
 LINE_TYPE_DICT = {e.name: e for e in esmpy.LineType}
 EXTRAP_METHOD_DICT = {e.name: e for e in esmpy.ExtrapMethod}
 UNMAPPED_ACTION_DICT = {e.name: e for e in esmpy.UnmappedAction}
 ESMF_ENUM_ARGS = {
-    # "regrid_method": REGRID_METHOD_DICT,
     "pole_method": POLE_METHOD_DICT,
     "line_type": LINE_TYPE_DICT,
     "extrap_method": EXTRAP_METHOD_DICT,

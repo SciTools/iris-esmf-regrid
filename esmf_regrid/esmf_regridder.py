@@ -19,14 +19,17 @@ __all__ = [
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method, esmf_args=None):
     if esmf_args is None:
         esmf_args = {}
+    # Provide default values
+    if "ignore_degenerate" not in esmf_args:
+        esmf_args["ignore_degenerate"] = True
+    if "unmapped_action" not in esmf_args:
+        esmf_args["unmapped_action"] = esmpy.UnmappedAction.IGNORE
     # The value, in array form, that ESMF should treat as an affirmative mask.
     expected_mask = np.array([True])
     regridder = esmpy.Regrid(
         src_field,
         tgt_field,
-        ignore_degenerate=True,
         regrid_method=regrid_method,
-        unmapped_action=esmpy.UnmappedAction.IGNORE,
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
         norm_type=esmpy.NormType.DSTAREA,
