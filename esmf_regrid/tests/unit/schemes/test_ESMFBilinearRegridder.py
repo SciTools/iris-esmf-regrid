@@ -9,6 +9,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _curvilinear_cube,
     _grid_cube,
 )
+from esmf_regrid import esmpy
 
 
 def test_dim_switching():
@@ -329,3 +330,36 @@ def test_regrid_data():
     )
     result = rg(src)
     np.testing.assert_allclose(expected_data, result.data)
+
+def test_extrapolate_gaps():
+    n_lons = 6
+    n_lats = 5
+    src_lon_bounds = (-140, 180)
+    tgt_lon_bounds = (-180, 180)
+    src_lat_bounds = (-80, 90)
+    tgt_lat_bounds = (-90, 90)
+    src = _grid_cube(n_lons, n_lats, src_lon_bounds, src_lat_bounds, circular=False)
+    src.data = np.arange(n_lons * n_lats).reshape(n_lats, n_lons)
+    tgt = _grid_cube(n_lons, n_lats, tgt_lon_bounds, tgt_lat_bounds, circular=True)
+
+    extrapolate_regridder = ESMFBilinearRegridder(
+        src, tgt, extrapolate_gaps=True
+    )
+    normal_regridder = ESMFBilinearRegridder(
+        src, tgt, extrapolate_gaps=False
+    )
+
+    extrapolate_result = extrapolate_regridder(src)
+    normal_result = normal_regridder(src)
+
+    assert not np.ma.is_masked(extrapolate_result.data)
+    assert np.ma.is_masked(normal_result.data)
+
+    expected_args = {
+    "extrap_method": esmpy.ExtrapMethod.NEAREST_IDAVG,
+    "extrap_num_src_pnts": 2,
+    "extrap_dist_exponent": 1,
+}
+    assert extrapolate_regridder.esmf_args == expected_args
+    assert normal_regridder.esmf_args == {}
+

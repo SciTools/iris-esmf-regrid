@@ -19,6 +19,8 @@ __all__ = [
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method, esmf_args=None):
     if esmf_args is None:
         esmf_args = {}
+    else:
+        esmf_args = esmf_args.copy()
     # Provide default values
     if "ignore_degenerate" not in esmf_args:
         esmf_args["ignore_degenerate"] = True

@@ -299,7 +299,6 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
 
 
 def _check_esmf_args(kwargs):
-    # TODO: raise proper warning messages
     if kwargs is not None:
         if not isinstance(kwargs, dict):
             raise TypeError(f"Expected `esmf_args` to be a dict, got a {type(kwargs)}.")
@@ -328,10 +327,10 @@ def _check_esmf_args(kwargs):
         ]
         for kwarg in kwargs.keys():
             if kwarg in invalid_kwargs:
-                msg = f"{kwarg} is not an argument which can be controlled by `esmf_args`."
+                msg = f"`esmpy.Regrid` argument `{kwarg}` cannot be controlled by `esmf_args`."
                 raise ValueError(msg)
             if kwarg not in valid_kwargs:
-                msg = f"{kwarg} is not a valid argument for `esmpy.Regrid`."
+                msg = f"`{kwarg}` is not a valid argument for `esmpy.Regrid`."
                 raise ValueError(msg)
 
 
@@ -1438,7 +1437,7 @@ class _ESMFRegridder:
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
-        esmf_args=None,
+        esmf_args={},
         **kwargs,
     ):
         """
@@ -1620,7 +1619,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location="face",
-        esmf_args=None,
+        esmf_args={},
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1707,7 +1706,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         use_tgt_mask=False,
         tgt_location=None,
         extrapolate_gaps=False,
-        esmf_args=None,
+        esmf_args={},
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.
@@ -1776,7 +1775,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
-        esmf_args=None,
+        esmf_args={},
     ):
         """
         Create regridder for conversions between ``src`` and ``tgt``.

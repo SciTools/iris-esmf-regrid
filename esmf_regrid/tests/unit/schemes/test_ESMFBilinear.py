@@ -6,6 +6,7 @@ from esmf_regrid.schemes import ESMFBilinear
 from esmf_regrid.tests.unit.schemes.__init__ import (
     _test_cube_regrid,
     _test_dtype_handling,
+    _test_esmf_args,
     _test_invalid_mdtol,
     _test_mask_from_init,
     _test_mask_from_regridder,
@@ -70,3 +71,7 @@ def test_dtype_handling(src_tgt_types, in_dtype):
     """Test regridding scheme handles dtype as expected."""
     src_type, tgt_type = src_tgt_types
     _test_dtype_handling(ESMFBilinear, src_type, tgt_type, in_dtype)
+
+def test_esmf_args():
+    """Test regridding scheme handles esmf_args as expected."""
+    _test_esmf_args(ESMFBilinear)
