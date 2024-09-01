@@ -331,6 +331,7 @@ def test_regrid_data():
     result = rg(src)
     np.testing.assert_allclose(expected_data, result.data)
 
+
 def test_extrapolate_gaps():
     n_lons = 6
     n_lats = 5
@@ -342,12 +343,8 @@ def test_extrapolate_gaps():
     src.data = np.arange(n_lons * n_lats).reshape(n_lats, n_lons)
     tgt = _grid_cube(n_lons, n_lats, tgt_lon_bounds, tgt_lat_bounds, circular=True)
 
-    extrapolate_regridder = ESMFBilinearRegridder(
-        src, tgt, extrapolate_gaps=True
-    )
-    normal_regridder = ESMFBilinearRegridder(
-        src, tgt, extrapolate_gaps=False
-    )
+    extrapolate_regridder = ESMFBilinearRegridder(src, tgt, extrapolate_gaps=True)
+    normal_regridder = ESMFBilinearRegridder(src, tgt, extrapolate_gaps=False)
 
     extrapolate_result = extrapolate_regridder(src)
     normal_result = normal_regridder(src)
@@ -356,10 +353,9 @@ def test_extrapolate_gaps():
     assert np.ma.is_masked(normal_result.data)
 
     expected_args = {
-    "extrap_method": esmpy.ExtrapMethod.NEAREST_IDAVG,
-    "extrap_num_src_pnts": 2,
-    "extrap_dist_exponent": 1,
-}
+        "extrap_method": esmpy.ExtrapMethod.NEAREST_IDAVG,
+        "extrap_num_src_pnts": 2,
+        "extrap_dist_exponent": 1,
+    }
     assert extrapolate_regridder.esmf_args == expected_args
     assert normal_regridder.esmf_args == {}
-

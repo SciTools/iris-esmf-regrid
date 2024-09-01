@@ -72,6 +72,7 @@ def test_dtype_handling(src_tgt_types, in_dtype):
     src_type, tgt_type = src_tgt_types
     _test_dtype_handling(ESMFBilinear, src_type, tgt_type, in_dtype)
 
+
 def test_esmf_args():
     """Test regridding scheme handles esmf_args as expected."""
     _test_esmf_args(ESMFBilinear)

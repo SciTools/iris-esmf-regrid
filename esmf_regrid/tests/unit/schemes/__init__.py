@@ -254,6 +254,7 @@ def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
     assert result.lazy_data().dtype == expected_dtype
     assert result.data.dtype == expected_dtype
 
+
 def _test_esmf_args(scheme):
     """Test regridding scheme handles esmf_args as expected."""
     n_lons_src = 6
@@ -279,12 +280,8 @@ def _test_esmf_args(scheme):
     assert rg_1.esmf_args == valid_esmf_args
     assert rg_2.esmf_args == valid_esmf_args
 
-    invalid_esmf_args_duplicate = {
-        "regrid_method": None
-    }
-    invalid_esmf_args_incorrect = {
-        "invalid_arg": None
-    }
+    invalid_esmf_args_duplicate = {"regrid_method": None}
+    invalid_esmf_args_incorrect = {"invalid_arg": None}
     invalid_esmf_args_type = "invalid_arg"
 
     match_duplicate = "cannot be controlled by `esmf_args`"
