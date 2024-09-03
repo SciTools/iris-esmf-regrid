@@ -9,8 +9,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import _load_context
-from esmf_regrid import check_method, Constants
+from esmf_regrid import _load_context, check_method, Constants, esmpy
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -22,7 +21,6 @@ from esmf_regrid.schemes import (
     GridRecord,
     MeshRecord,
 )
-from esmf_regrid import esmpy
 
 
 SUPPORTED_REGRIDDERS = [

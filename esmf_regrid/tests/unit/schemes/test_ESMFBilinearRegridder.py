@@ -4,12 +4,12 @@ from cf_units import Unit
 import numpy as np
 import pytest
 
+from esmf_regrid import esmpy
 from esmf_regrid.schemes import ESMFBilinearRegridder
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _curvilinear_cube,
     _grid_cube,
 )
-from esmf_regrid import esmpy
 
 
 def test_dim_switching():
@@ -333,6 +333,7 @@ def test_regrid_data():
 
 
 def test_extrapolate_gaps():
+    """Test that `extrapolate_gaps` argument works as expected."""
     n_lons = 6
     n_lats = 5
     src_lon_bounds = (-140, 180)

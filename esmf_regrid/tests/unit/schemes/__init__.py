@@ -6,13 +6,13 @@ import numpy as np
 from numpy import ma
 import pytest
 
+from esmf_regrid import esmpy
 from esmf_regrid.schemes import ESMFAreaWeighted, ESMFBilinear, ESMFNearest
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh,
     _gridlike_mesh_cube,
 )
-from esmf_regrid import esmpy
 
 
 def _test_cube_regrid(scheme, src_type, tgt_type):
@@ -286,18 +286,18 @@ def _test_esmf_args(scheme):
 
     match_duplicate = "cannot be controlled by `esmf_args`"
     with pytest.raises(ValueError, match=match_duplicate):
-        rg = scheme(esmf_args=invalid_esmf_args_duplicate)
+        _ = scheme(esmf_args=invalid_esmf_args_duplicate)
     with pytest.raises(ValueError, match=match_duplicate):
-        rg = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_duplicate)
+        _ = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_duplicate)
 
     match_incorrect = "is not a valid argument for"
     with pytest.raises(ValueError, match=match_incorrect):
-        rg = scheme(esmf_args=invalid_esmf_args_incorrect)
+        _ = scheme(esmf_args=invalid_esmf_args_incorrect)
     with pytest.raises(ValueError, match=match_incorrect):
-        rg = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_incorrect)
+        _ = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_incorrect)
 
     match_type = "Expected `esmf_args` to be a dict, got a "
     with pytest.raises(TypeError, match=match_type):
-        rg = scheme(esmf_args=invalid_esmf_args_type)
+        _ = scheme(esmf_args=invalid_esmf_args_type)
     with pytest.raises(TypeError, match=match_type):
-        rg = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_type)
+        _ = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_type)
