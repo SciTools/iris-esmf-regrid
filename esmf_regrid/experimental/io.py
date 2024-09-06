@@ -288,7 +288,8 @@ def load_regridder(filename):
 
     Returns
     -------
-    :class:`~esmf_regrid.schemes._ESMFRegridder`    """
+    :class:`~esmf_regrid.schemes._ESMFRegridder`
+    """
     with _load_context():
         cubes = iris.load(filename)
 
