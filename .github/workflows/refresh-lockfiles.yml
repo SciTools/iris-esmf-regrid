@@ -32,7 +32,7 @@ jobs:
       - name: generate lockfiles
         run: $CONDA/bin/nox --session update_lockfiles
       - name: create pull request
-        uses: peter-evans/create-pull-request@4320041ed380b20e97d388d56a7fb4f9b8c20e79
+        uses: peter-evans/create-pull-request@6cd32fd93684475c31847837f87bb135d40a2b79
         with:
           commit-message: Updated environment lockfiles
           delete-branch: true
