@@ -35,7 +35,7 @@ from esmf_regrid import __version__ as esmf_r_version
 copyright_years = f"2020 - {datetime.now().year}"
 
 project = "iris-esmf-regrid"
-copyright = f"{copyright_years}, SciTools-incubator"
+copyright = f"{copyright_years}, SciTools"
 author = "iris-esmf-regrid Contributors"
 
 # The full version, including alpha/beta/rc tags
@@ -105,12 +105,12 @@ rst_epilog = f"""
 html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
-    "github_url": "https://github.com/SciTools-incubator/iris-esmf-regrid",
+    "github_url": "https://github.com/SciTools/iris-esmf-regrid",
     "show_prev_next": False,
     "icon_links": [
         {
             "name": "Support",
-            "url": "https://github.com/SciTools-incubator/iris-esmf-regrid/discussions",
+            "url": "https://github.com/SciTools/iris-esmf-regrid/discussions",
             "icon": "fa fa-comments fa-fw",
         }
     ],
@@ -141,10 +141,10 @@ copybutton_line_continuation_character = "\\"
 
 extlinks = {
     "issue": (
-        "https://github.com/SciTools-incubator/iris-esmf-regrid/issues/%s",
+        "https://github.com/SciTools/iris-esmf-regrid/issues/%s",
         "Issue #",
     ),
-    "pull": ("https://github.com/SciTools-incubator/iris-esmf-regrid/pull/%s", "PR #"),
+    "pull": ("https://github.com/SciTools/iris-esmf-regrid/pull/%s", "PR #"),
 }
 
 

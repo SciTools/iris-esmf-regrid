@@ -1,10 +1,10 @@
 {
     "version": 1,
     "project": "esmf_regrid",
-    "project_url": "https://github.com/SciTools-incubator/iris-esmf-regrid",
+    "project_url": "https://github.com/SciTools/iris-esmf-regrid",
     "repo": "..",
     "environment_type": "conda-delegated",
-    "show_commit_url": "https://github.com/SciTools-incubator/iris-esmf-regrid/commit/",
+    "show_commit_url": "https://github.com/SciTools/iris-esmf-regrid/commit/",
     "branches": ["upstream/main"],
     "build_command": [
         "python setup.py build",
