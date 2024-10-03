@@ -6,7 +6,7 @@ authors:
   orcid: "https://orcid.org/0009-0008-1704-8445"
 title: "iris-esmf-regrid"
 abstract: "A collection of structured and unstructured ESMF regridding schemes for Iris"
-repository-code: "https://github.com/SciTools-incubator/iris-esmf-regrid"
+repository-code: "https://github.com/SciTools/iris-esmf-regrid"
 license: "BSD-3-Clause"
 license-url: "https://spdx.org/licenses/BSD-3-Clause.html"
 type: "software"

@@ -39,9 +39,9 @@ name = "esmf_regrid"
 requires-python = ">=3.10"
 
 [project.urls]
-Code = "https://github.com/SciTools-incubator/iris-esmf-regrid"
+Code = "https://github.com/SciTools/iris-esmf-regrid"
 Docs = "https://iris-esmf-regrid.readthedocs.io/en/stable"
-Issues = "https://github.com/SciTools-incubator/iris-esmf-regrid/issues"
+Issues = "https://github.com/SciTools/iris-esmf-regrid/issues"
 
 [tool.black]
 line-length = 88
