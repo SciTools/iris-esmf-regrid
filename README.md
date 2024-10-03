@@ -9,6 +9,7 @@
 [![License](https://img.shields.io/github/license/SciTools/iris-esmf-regrid)](https://github.com/SciTools/iris-esmf-regrid/blob/main/LICENSE)
 [![Contributors](https://img.shields.io/github/contributors/SciTools/iris-esmf-regrid)](https://github.com/SciTools/iris-esmf-regrid/graphs/contributors)
 ![Mark stale issues and pull requests](https://github.com/SciTools/iris-esmf-regrid/workflows/Mark%20stale%20issues%20and%20pull%20requests/badge.svg)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11401116.svg)](https://doi.org/10.5281/zenodo.11401116)
 
 ---
 
