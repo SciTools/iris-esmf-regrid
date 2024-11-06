@@ -16,7 +16,7 @@ except ImportError as exc:
         raise exc
 
 if hasattr(_imesh, "PARSE_UGRID_ON_LOAD"):
-    _load_context = _imesh.PARSE_UGRID_ON_LOAD
+    _load_context = _imesh.PARSE_UGRID_ON_LOAD.context
 else:
     from contextlib import nullcontext
 
