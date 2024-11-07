@@ -6,6 +6,7 @@ Created originally using sphinx-quickstart on 2022-02-21.
 
 from datetime import datetime
 import os
+import locale
 from pathlib import Path
 import re
 import sys
@@ -26,7 +27,7 @@ if on_rtd:
     os.environ["ESMFMKFILE"] = f"{rtd_conda_prefix}/lib/esmf.mk"
     os.environ["PROJ_DATA"] = f"{rtd_conda_prefix}/share/proj"
     os.environ["PROJ_NETWORK"] = "OFF"
-    os.environ["LC_ALL"] = "C"
+    locale.setlocale(locale.LC_NUMERIC, "C")
 
 
 # -- Project information -----------------------------------------------------
