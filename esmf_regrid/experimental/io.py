@@ -9,8 +9,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import _load_context
-from esmf_regrid import check_method, Constants
+from esmf_regrid import _load_context, check_method, Constants, esmpy
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -48,6 +47,29 @@ METHOD = "method"
 RESOLUTION = "resolution"
 SOURCE_RESOLUTION = "src_resolution"
 TARGET_RESOLUTION = "tgt_resolution"
+ESMF_ARGS = "esmf_args"
+VALID_ESMF_KWARGS = [
+    "pole_method",
+    "regrid_pole_npoints",
+    "line_type",
+    "extrap_method",
+    "extrap_num_src_pnts",
+    "extrap_dist_exponent",
+    "extrap_num_levels",
+    "unmapped_action",
+    "ignore_degenerate",
+    "large_file",
+]
+POLE_METHOD_DICT = {e.name: e for e in esmpy.PoleMethod}
+LINE_TYPE_DICT = {e.name: e for e in esmpy.LineType}
+EXTRAP_METHOD_DICT = {e.name: e for e in esmpy.ExtrapMethod}
+UNMAPPED_ACTION_DICT = {e.name: e for e in esmpy.UnmappedAction}
+ESMF_ENUM_ARGS = {
+    "pole_method": POLE_METHOD_DICT,
+    "line_type": LINE_TYPE_DICT,
+    "extrap_method": EXTRAP_METHOD_DICT,
+    "unmapped_action": UNMAPPED_ACTION_DICT,
+}
 
 
 def _add_mask_to_cube(mask, cube, name):
@@ -254,6 +276,21 @@ def save_regridder(rg, filename):
     weights_cube.add_aux_coord(row_coord, 0)
     weights_cube.add_aux_coord(col_coord, 0)
 
+    esmf_args = rg.esmf_args
+    if esmf_args is None:
+        esmf_args = {}
+    for arg in esmf_args.keys():
+        if arg not in VALID_ESMF_KWARGS:
+            raise KeyError(f"{arg} is not considered a valid argument to pass to ESMF.")
+    esmf_arg_attributes = {
+        k: v.name if hasattr(v, "name") else int(v) if isinstance(v, bool) else v
+        for k, v in esmf_args.items()
+    }
+    esmf_arg_coord = AuxCoord(
+        0, var_name=ESMF_ARGS, long_name=ESMF_ARGS, attributes=esmf_arg_attributes
+    )
+    weights_cube.add_aux_coord(esmf_arg_coord)
+
     weight_shape_cube = Cube(
         weight_shape,
         var_name=WEIGHTS_SHAPE_NAME,
@@ -342,6 +379,11 @@ def load_regridder(filename):
     else:
         use_tgt_mask = False
 
+    esmf_args = weights_cube.coord(ESMF_ARGS).attributes
+    for arg, dict in ESMF_ENUM_ARGS.items():
+        if arg in esmf_args:
+            esmf_args[arg] = dict[esmf_args[arg]]
+
     if scheme is GridToMeshESMFRegridder:
         resolution_keyword = SOURCE_RESOLUTION
         kwargs = {resolution_keyword: resolution, "method": method, "mdtol": mdtol}
@@ -365,6 +407,7 @@ def load_regridder(filename):
         precomputed_weights=weight_matrix,
         use_src_mask=use_src_mask,
         use_tgt_mask=use_tgt_mask,
+        esmf_args=esmf_args,
         **kwargs,
     )
 
