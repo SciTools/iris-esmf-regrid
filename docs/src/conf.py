@@ -5,8 +5,8 @@ Created originally using sphinx-quickstart on 2022-02-21.
 """
 
 from datetime import datetime
-import os
 import locale
+import os
 from pathlib import Path
 import re
 import sys
