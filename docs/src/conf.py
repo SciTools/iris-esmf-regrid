@@ -26,6 +26,7 @@ if on_rtd:
     os.environ["ESMFMKFILE"] = f"{rtd_conda_prefix}/lib/esmf.mk"
     os.environ["PROJ_DATA"] = f"{rtd_conda_prefix}/share/proj"
     os.environ["PROJ_NETWORK"] = "OFF"
+    os.environ["LC_ALL"] = "C"
 
 
 # -- Project information -----------------------------------------------------
