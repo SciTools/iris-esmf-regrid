@@ -311,10 +311,12 @@ def load_regridder(filename):
     """
     Load a regridder scheme instance.
 
-    Loads either a
-    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`
-    or a
-    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    Loads any of the regridder classes, i.e.
+    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`,
+    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`,
+    :class:`~esmf_regrid.schemes.ESMFAreaWeightedRegridder`,
+    :class:`~esmf_regrid.schemes.ESMFBilinearRegridder` or
+    :class:`~esmf_regrid.schemes.ESMFNearestRegridder`.
 
     Parameters
     ----------
@@ -323,7 +325,7 @@ def load_regridder(filename):
 
     Returns
     -------
-    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder` or :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`
+    :class:`~esmf_regrid.schemes._ESMFRegridder`
     """
     with _load_context():
         cubes = iris.load(filename)

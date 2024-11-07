@@ -11,16 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- [PR#385](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/385)
+- [PR#385](https://github.com/SciTools/iris-esmf-regrid/pull/385)
   Fixed bug when connectivities are described by non-masked arrays.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#387](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/387)
+- [PR#387](https://github.com/SciTools/iris-esmf-regrid/pull/387)
   Fixed incompatibilities with changes to iris API in v3.10.0.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ### Added
 
-- [PR#276](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/276)
+- [PR#276](https://github.com/SciTools/iris-esmf-regrid/pull/276)
   Allow regridding for grids defined on coordinates without bounds for
   nearest neighbour and bilinear methods.
   [@stephenworsley](https://github.com/stephenworsley)
@@ -29,33 +29,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- [PR#357](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/357)
+- [PR#357](https://github.com/SciTools/iris-esmf-regrid/pull/357)
   Added support for saving and loading of `ESMFAreaWeighted`, `ESMFBilinear`
   and `ESMFNearest` regridders.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#319](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/319)
+- [PR#319](https://github.com/SciTools/iris-esmf-regrid/pull/319)
   Added `CITATION.cff`.
   [@bjlittle](https://github.com/bjlittle)
 
 ### Changed
 
-- [PR#361](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/361)
+- [PR#361](https://github.com/SciTools/iris-esmf-regrid/pull/361)
   Moved the code for running benchmarks to `bm_runner.py` in line with iris
   benchmarks.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#293](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/293)
+- [PR#293](https://github.com/SciTools/iris-esmf-regrid/pull/293)
   Enumerated method and normtype input.
   [@ESadek-MO](https://github.com/ESadek-MO)
 
 ### Fixed
 
-- [PR#239](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/239)
+- [PR#239](https://github.com/SciTools/iris-esmf-regrid/pull/239)
   Ensured dtype is preserved by regridding.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#353](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/353)
+- [PR#353](https://github.com/SciTools/iris-esmf-regrid/pull/353)
   Fixed a bug which caused errors with ESMF versions 8.6 and higher.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#338](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/338)
+- [PR#338](https://github.com/SciTools/iris-esmf-regrid/pull/338)
   Fixed a potential memory leak when creating regridders.
   [@stephenworsley](https://github.com/stephenworsley)
 
@@ -63,17 +63,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- [PR#178](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/178)
+- [PR#178](https://github.com/SciTools/iris-esmf-regrid/pull/178)
   Added support for coordinate systems with non-degree type units.
   [@stephenworsley](https://github.com/stephenworsley)
 
-- [PR#311](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/311)
+- [PR#311](https://github.com/SciTools/iris-esmf-regrid/pull/311)
   Added support for Mesh to Mesh regridding.
   [@HGWright](https://github.com/HGWright)
 
 ### Fixed
 
-- [PR#301](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/301)
+- [PR#301](https://github.com/SciTools/iris-esmf-regrid/pull/301)
   Fixed a bug which caused errors when regridding with the node locations
   of a mesh whose face_node_connectivity had non-zero start_index.
   [@stephenworsley](https://github.com/stephenworsley)
@@ -82,7 +82,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- [PR#289](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/289)
+- [PR#289](https://github.com/SciTools/iris-esmf-regrid/pull/289)
   Added the ability to regrid onto a Mesh as a target instead of a Cube.
   [@stephenworsley](https://github.com/stephenworsley)
 
@@ -90,7 +90,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- [PR#198](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/198)
+- [PR#198](https://github.com/SciTools/iris-esmf-regrid/pull/198)
   As a result of refactoring regridders to all derive from the same class,
   `_ESMFRegridder`, functionality has been added to the `ESMFAreaWeighted`
   scheme and a new scheme, `ESMFBilinear`, has been added.
@@ -99,17 +99,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   these grids with the `src_resolution` and `tgt_resolution` keywords.
   [@stephenworsley](https://github.com/stephenworsley) with extensive review
   work from [@trexfeathers](https://github.com/trexfeathers)
-- [PR#266](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/266)
+- [PR#266](https://github.com/SciTools/iris-esmf-regrid/pull/266)
   Added Nearest neighbour regridding.
   [@stephenworsley](https://github.com/stephenworsley)
   [@HGWright](https://github.com/HGWright)
-- [PR#272](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/272)
+- [PR#272](https://github.com/SciTools/iris-esmf-regrid/pull/272)
   Add support for Python 3.11.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ### Changed
 
-- [PR#198](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/198)
+- [PR#198](https://github.com/SciTools/iris-esmf-regrid/pull/198)
   Refactor regridders to all derive from the same class `_ESMFRegridder`.
   For the sake of consistency, the resolution keyword in
   `GridToMeshESMFRegridder` and `MeshToGridESMFRegridder` have been
@@ -119,13 +119,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Removed
 
-- [PR#272](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/272)
+- [PR#272](https://github.com/SciTools/iris-esmf-regrid/pull/272)
   Remove support for Python 3.8.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ### Fixed
 
-- [PR#258](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/258)
+- [PR#258](https://github.com/SciTools/iris-esmf-regrid/pull/258)
   Allow the documentation to build properly.
   [@zklaus](https://github.com/zklaus)
 
@@ -133,27 +133,27 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- [PR#217](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/217)
+- [PR#217](https://github.com/SciTools/iris-esmf-regrid/pull/217)
   Changed the behaviour of coordinate fetching to allow Cubes with both
   1D DimCoords and 2D AuxCoords. In this case the DimCoords are prioritised.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#220](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/220)
+- [PR#220](https://github.com/SciTools/iris-esmf-regrid/pull/220)
   Matured the benchmarking architecture in line with the latest setup in
   SciTools/iris.
   [@trexfeathers](https://github.com/trexfeathers)
-- [PR#241](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/241)
+- [PR#241](https://github.com/SciTools/iris-esmf-regrid/pull/241)
   Fixed compatibility with esmpy 8.4.
   [@stephenworsley](https://github.com/stephenworsley) with help from 
   [@bjlittle](https://github.com/bjlittle) and
   [@valeriupredoi](https://github.com/valeriupredoi)
-- [PR#219](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/219)
+- [PR#219](https://github.com/SciTools/iris-esmf-regrid/pull/219)
   Added support for 2D AuxCoords with discontiguities under masked values
   with the use_src_mask and use_tgt_mask keywords.
   [@stephenworsley](https://github.com/stephenworsley)with extensive review
   work from [@trexfeathers](https://github.com/trexfeathers)
 
 ### Fixed
-- [PR#242](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/242)
+- [PR#242](https://github.com/SciTools/iris-esmf-regrid/pull/242)
   Fixed an issue which caused regridding to curvilinear grids with lazy
   data to fail.
   [@stephenworsley](https://github.com/stephenworsley)
@@ -165,16 +165,16 @@ curvilinear grids and low resolution grids.
 
 ### Added
 
-- [PR#148](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/148)
+- [PR#148](https://github.com/SciTools/iris-esmf-regrid/pull/148)
   Added support for Bilinear regridding for unstructured regridding.
-- [PR#165](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/165)
+- [PR#165](https://github.com/SciTools/iris-esmf-regrid/pull/165)
   Added RefinedGridInfo and resolution keyword for unstructured regridders.
-- [PR#166](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/166)
+- [PR#166](https://github.com/SciTools/iris-esmf-regrid/pull/166)
   Made weights array handling more robust for different formats of
   pre-computed weights matrices.
-- [PR#175](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/175)
+- [PR#175](https://github.com/SciTools/iris-esmf-regrid/pull/175)
   Add curvilinear support for unstructured regridders.
-- [PR#208](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/208)
+- [PR#208](https://github.com/SciTools/iris-esmf-regrid/pull/208)
   Unpin Python.
  
 ## [0.4] - 2022-02-24
@@ -183,24 +183,24 @@ This release added the ability to regrid data stored on a UGRID mesh.
 
 ### Added
 
-- [PR#31](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/31)
-  [PR#32](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/32)
-  [PR#36](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/36)
-  [PR#39](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/39)
-  [PR#46](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/46)
-  [PR#55](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/55)
-  [PR#96](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/96)
+- [PR#31](https://github.com/SciTools/iris-esmf-regrid/pull/31)
+  [PR#32](https://github.com/SciTools/iris-esmf-regrid/pull/32)
+  [PR#36](https://github.com/SciTools/iris-esmf-regrid/pull/36)
+  [PR#39](https://github.com/SciTools/iris-esmf-regrid/pull/39)
+  [PR#46](https://github.com/SciTools/iris-esmf-regrid/pull/46)
+  [PR#55](https://github.com/SciTools/iris-esmf-regrid/pull/55)
+  [PR#96](https://github.com/SciTools/iris-esmf-regrid/pull/96)
   Added the unstructured regridders `GridToMeshESMFRegridder` and
   `MeshToGridESMFRegridder`.
   [@stephenworsley](https://github.com/stephenworsley) with extensive review
   work from [@abooton](https://github.com/abooton) and
   [@jamesp](https://github.com/jamesp) with benchmarking help from
   [@trexfeathers](https://github.com/trexfeathers)
-- [PR#130](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/130)
-  [PR#137](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/137)
+- [PR#130](https://github.com/SciTools/iris-esmf-regrid/pull/130)
+  [PR#137](https://github.com/SciTools/iris-esmf-regrid/pull/137)
   Added functions for saving of the unstructured regridders.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#155](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/155)
+- [PR#155](https://github.com/SciTools/iris-esmf-regrid/pull/155)
   Enabled Sphinx and RTD for automatically rendering the API.
   [@trexfeathers](https://github.com/trexfeathers)
 
@@ -210,10 +210,10 @@ The major change with this version was the addition of the ability to
 regrid curvilinear grids (i.e. grids with 2D arrays of coordinates).
 
 ### Added
-- [PR#125](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/125)
+- [PR#125](https://github.com/SciTools/iris-esmf-regrid/pull/125)
   Added support for curvilinear grids, i.e. cubes with 2D lat/lon coords.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#124](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/124)
+- [PR#124](https://github.com/SciTools/iris-esmf-regrid/pull/124)
   Improved generation of benchmark data to allow data to be generated from
   a common version/environment.
   [@trexfeathers](https://github.com/trexfeathers)
@@ -225,22 +225,22 @@ This defers the calculation of regridding to the realisation of the data
 when the data is a dask array. Calculations may be parallelised via dask.
  
 ### Added
-- [PR#80](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/80)
+- [PR#80](https://github.com/SciTools/iris-esmf-regrid/pull/80)
   Added support for lazy regridding, this showed an improvement in the
   performance of the regridding benchmarks.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#79](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/79)
+- [PR#79](https://github.com/SciTools/iris-esmf-regrid/pull/79)
   Added support for benchmarks on the CI.
   [@trexfeathers](https://github.com/trexfeathers)
-- [PR#98](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/98)
+- [PR#98](https://github.com/SciTools/iris-esmf-regrid/pull/98)
   Added benchmarks for regridding with realised data.
   [@stephenworsley](https://github.com/stephenworsley)
-- [PR#100](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/100)
+- [PR#100](https://github.com/SciTools/iris-esmf-regrid/pull/100)
   Added benchmarks for regridding with lazy data.
   [@stephenworsley](https://github.com/stephenworsley)
  
 ### Fixed
-- [PR#92](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/92)
+- [PR#92](https://github.com/SciTools/iris-esmf-regrid/pull/92)
   Fixed an issue with directory naming. [@lbdreyer](https://github.com/lbdreyer)
-- [PR#83](https://github.com/SciTools-incubator/iris-esmf-regrid/pull/83)
+- [PR#83](https://github.com/SciTools/iris-esmf-regrid/pull/83)
   Added missing docstrings. [@stephenworsley](https://github.com/stephenworsley)
