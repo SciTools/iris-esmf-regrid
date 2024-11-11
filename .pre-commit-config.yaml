@@ -3,6 +3,24 @@
 # See https://pre-commit.ci/#configuration
 # See https://github.com/scientific-python/cookie#sp-repo-review
 
+ci:
+  autofix_prs: false
+  autoupdate_commit_msg: "chore: update pre-commit hooks"
+
+
+# Alphabetised, for lack of a better order.
+files: |
+    (?x)(
+        benchmarks\/.+\.py|
+        docs\/.+\.py|
+        esmf_regrid\/.+\.py|
+        noxfile\.py|
+        pyproject\.toml|
+        setup\.py|
+        src\/.+\.py
+    )
+minimum_pre_commit_version: 1.21.0
+
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 'v5.0.0'
