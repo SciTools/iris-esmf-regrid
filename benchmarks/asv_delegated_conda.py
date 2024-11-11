@@ -36,8 +36,7 @@ class CondaDelegated(Conda):
         requirements: dict,
         tagged_env_vars: dict,
     ) -> None:
-        """
-        Create the instance.
+        """Create the instance.
 
         Parameters
         ----------

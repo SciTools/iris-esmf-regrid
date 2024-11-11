@@ -148,6 +148,12 @@ ignore = [
     # https://docs.astral.sh/ruff/rules/single-line-implicit-string-concatenation/
     # NOTE: This rule may cause conflicts when used with "ruff format".
     "ISC001",  # Implicitly concatenate string literals on one line.
+
+    "PR01",
+    "PR07",
+    "PR09",
+    "RT01",
+    "GL08",
     ]
     preview = false
     select = [
