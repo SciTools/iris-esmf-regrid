@@ -2,17 +2,18 @@
 
 from iris.coords import AuxCoord
 from iris.cube import Cube
-from iris.experimental.ugrid import Connectivity
 import numpy as np
 from numpy import ma
 import scipy.sparse
 
 try:
     from iris.mesh import MeshXY
+    from iris.mesh import Connectivity
 except ImportError as exc:
     # Prior to v3.10.0, `MeshXY` could was named `Mesh`.
     try:
         from iris.experimental.ugrid import Mesh as MeshXY
+        from iris.experimental.ugrid import Connectivity
     except ImportError:
         raise exc
 
