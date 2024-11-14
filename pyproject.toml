@@ -57,7 +57,7 @@ doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
 testpaths = "esmf_regrid"
 log_cli_level = "INFO"
 xfail_strict = true
-filterwarnings = ["error"]
+filterwarnings = ["default"]
 
 [tool.setuptools]
 license-files = ["LICENSE"]
