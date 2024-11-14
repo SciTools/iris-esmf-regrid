@@ -81,6 +81,7 @@ ignore = [
     "PC170",  # PyGrep hooks
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
+    "PY005",  # Test folder location
     "GH104",  # Unique names for upload artifact
     "GH212",  # Require GHA update grouping
 ]
