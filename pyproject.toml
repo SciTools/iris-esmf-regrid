@@ -80,6 +80,7 @@ ignore = [
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
     "PC170",
+    "PY005",
     "GH104",
     "GH212",
     "RF003",

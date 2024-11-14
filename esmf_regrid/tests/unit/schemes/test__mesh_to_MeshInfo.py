@@ -7,13 +7,12 @@ from numpy import ma
 import scipy.sparse
 
 try:
-    from iris.mesh import MeshXY
-    from iris.mesh import Connectivity
+    from iris.mesh import Connectivity, MeshXY
 except ImportError as exc:
     # Prior to v3.10.0, `MeshXY` could was named `Mesh`.
     try:
-        from iris.experimental.ugrid import Mesh as MeshXY
         from iris.experimental.ugrid import Connectivity
+        from iris.experimental.ugrid import Mesh as MeshXY
     except ImportError:
         raise exc
 
