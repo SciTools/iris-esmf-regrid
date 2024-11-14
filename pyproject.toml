@@ -77,13 +77,12 @@ include = ["esmf_regrid*"]
 
 [tool.repo-review]
 ignore = [
+    # https://learn.scientific-python.org/development/guides/style/#PC170
+    "PC170",  # PyGrep hooks
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
-    "PC170",
-    "PY005",
-    "GH104",
-    "GH212",
-    "RF003",
+    "GH104",  # Unique names for upload artifact
+    "GH212",  # Require GHA update grouping
 ]
 
 [tool.mypy]
@@ -135,19 +134,19 @@ checks = [
     # Record temporarily ignored checks below; will be reviewed at a later date:
 
     # TODO: annotate and determine if these ought to be temporary or permanent
-    "PR01",
-    "PR02",
-    "PR04",
-    "PR05",
-    "PR07",
-    "PR09",
-    "PR10",
-    "RT01",
-    "RT03",
-    "RT05",
-    "GL08",
-    "SS02",
-    "SS05",
+    "PR01",  # Undocumented parameters
+    "PR02",  # Unknown parameters
+    "PR04",  # Untyped parameters
+    "PR05",  # Improper "."
+    "PR07",  # Undescribed parameter
+    "PR09",  # Missing "."
+    "PR10",  # Missing space before colon
+    "RT01",  # Missing returns section
+    "RT03",  # Undescribed return section
+    "RT05",  # Missing "."
+    "GL08",  # Missing docstring
+    "SS02",  # Missing capitalisation
+    "SS05",  # Third person grammar
 
 ]
 exclude = [
