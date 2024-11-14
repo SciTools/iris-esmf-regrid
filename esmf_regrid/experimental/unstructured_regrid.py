@@ -7,8 +7,7 @@ from .._esmf_sdo import SDO
 
 
 class MeshInfo(SDO):
-    """
-    Class for handling unstructured meshes.
+    """Class for handling unstructured meshes.
 
     This class holds information about Meshes in a form similar to UGRID.
     It contains methods for translating this information into :mod:`esmpy` objects.
@@ -30,8 +29,7 @@ class MeshInfo(SDO):
         elem_coords=None,
         location="face",
     ):
-        """
-        Create a :class:`MeshInfo` object describing a UGRID-like mesh.
+        """Create a :class:`MeshInfo` object describing a UGRID-like mesh.
 
         Parameters
         ----------

@@ -20,8 +20,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 
 
 def test_real_data():
-    """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    """Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
     Tests with cubes derived from realistic data.
     """

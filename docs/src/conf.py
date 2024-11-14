@@ -1,5 +1,4 @@
-"""
-Configuration file for the Sphinx documentation builder.
+"""Configuration file for the Sphinx documentation builder.
 
 Created originally using sphinx-quickstart on 2022-02-21.
 """
@@ -80,18 +79,18 @@ def _dotv(version):
 
 
 # Automate the discovery of the python versions tested with CI.
-python_support = sorted(
-    [fname.stem for fname in Path(".").glob("../../requirements/py*.yml")]
+python_support_list = sorted(
+    [fname.stem for fname in Path().glob("../../requirements/py*.yml")]
 )
 
 
-if not python_support:
+if not python_support_list:
     python_support = "unknown Python versions"
-elif len(python_support) == 1:
-    python_support = f"Python {_dotv(python_support[0])}"
+elif len(python_support_list) == 1:
+    python_support = f"Python {_dotv(python_support_list[0])}"
 else:
-    rest = ", ".join([_dotv(v) for v in python_support[:-1]])
-    last = _dotv(python_support[-1])
+    rest = ", ".join([_dotv(v) for v in python_support_list[:-1]])
+    last = _dotv(python_support_list[-1])
     python_support = f"Python {rest} and {last}"
 
 rst_epilog = f"""

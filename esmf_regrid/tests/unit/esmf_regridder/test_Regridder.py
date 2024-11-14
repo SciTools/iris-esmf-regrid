@@ -155,8 +155,7 @@ def test_Regridder_regrid():
 
 
 def test_Regridder_init_small():
-    """
-    Simplified test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
+    """Simplified test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
 
     This test is designed to be simple enough to generate predictable weights.
     With predictable weights it is easier to check that the weights are
@@ -229,8 +228,7 @@ def test_Regridder_init_small():
 
 
 def test_Regridder_dtype_handling():
-    """
-    Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
+    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.regrid`.
 
     Tests that dtype is handled as expected.
     """

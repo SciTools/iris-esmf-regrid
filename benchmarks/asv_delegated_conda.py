@@ -14,8 +14,7 @@ from asv.repo import Repo
 
 
 class CondaDelegated(Conda):
-    """
-    Manage a Conda environment using custom user scripts, run at each commit.
+    """Manage a Conda environment using custom user scripts, run at each commit.
 
     Ignores user input variations - ``matrix`` / ``pythons`` /
     ``conda_environment_file``, since environment is being managed outside ASV.

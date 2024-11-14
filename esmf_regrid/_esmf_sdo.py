@@ -10,8 +10,7 @@ from . import esmpy
 
 
 class SDO(ABC):
-    """
-    Abstract base class for handling spatial discretisation objects.
+    """Abstract base class for handling spatial discretisation objects.
 
     This contains shared things for representing the three spatial discretisation
     objects supported by ESMPy, Grids, Meshes, and LocStreams.
@@ -74,8 +73,7 @@ class SDO(ABC):
         return self._mask
 
     def _array_to_matrix(self, array):
-        """
-        Reshape data to a form that is compatible with weight matrices.
+        """Reshape data to a form that is compatible with weight matrices.
 
         The data should be presented in the form of a matrix (i.e. 2D) in order
         to be compatible with the weight matrix.
@@ -87,8 +85,7 @@ class SDO(ABC):
         return array.T.reshape((self.size, -1))
 
     def _matrix_to_array(self, array, extra_dims):
-        """
-        Reshape data to restore original dimensions.
+        """Reshape data to restore original dimensions.
 
         This is the inverse operation of `_array_to_matrix`.
         """
@@ -96,8 +93,7 @@ class SDO(ABC):
 
 
 class GridInfo(SDO):
-    """
-    Class for handling structured grids.
+    """Class for handling structured grids.
 
     This class holds information about lat-lon type grids. That is, grids
     defined by lists of latitude and longitude values for points/bounds
@@ -125,8 +121,7 @@ class GridInfo(SDO):
         mask=None,
         center=False,
     ):
-        """
-        Create a :class:`GridInfo` object describing the grid.
+        """Create a :class:`GridInfo` object describing the grid.
 
         Parameters
         ----------
@@ -327,8 +322,7 @@ class GridInfo(SDO):
 
 
 class RefinedGridInfo(GridInfo):
-    """
-    Class for handling structured grids represented in :mod:`esmpy` in higher resolution.
+    """Class for handling structured grids represented in :mod:`esmpy` in higher resolution.
 
     A specialised version of :class:`GridInfo`. Designed to provide higher
     accuracy conservative regridding for rectilinear grids, especially those with
@@ -349,8 +343,7 @@ class RefinedGridInfo(GridInfo):
         crs=None,
         mask=None,
     ):
-        """
-        Create a :class:`RefinedGridInfo` object describing the grid.
+        """Create a :class:`RefinedGridInfo` object describing the grid.
 
         Parameters
         ----------
@@ -436,8 +429,7 @@ class RefinedGridInfo(GridInfo):
         return new_mask
 
     def _collapse_weights(self, is_tgt):
-        """
-        Return a matrix to collapse the weight matrix.
+        """Return a matrix to collapse the weight matrix.
 
         The refined grid may contain more cells than the represented grid. When this is
         the case, the generated weight matrix will refer to too many points and will have

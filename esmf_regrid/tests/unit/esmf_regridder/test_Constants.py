@@ -2,7 +2,7 @@
 
 import pytest
 
-from esmf_regrid import check_method, check_norm, Constants
+from esmf_regrid import Constants, check_method, check_norm
 
 
 @pytest.mark.parametrize(
