@@ -178,7 +178,8 @@ ignore = [
 
 
     # TODO: annotate and determine if these ought to be temporary or permanent
-    "A001",
+
+    # Missing type annotations
     "ANN001",
     "ANN002",
     "ANN003",
@@ -186,47 +187,56 @@ ignore = [
     "ANN201",
     "ANN202",
     "ANN204",
-    "ARG001",
-    "ARG002",
-    "B018",
-    "B028",
-    "B904",
-    "C408",
+
+    "B904",  # Try except handling
+    "C408",  # Unnecessary `dict` call
+
+    # McCabe complexity https://docs.astral.sh/ruff/rules/complex-structure/
     "C901",
-    "D104",
-    "E501",
+
+    "D104",  # Misssing docstring
+    "E501",  # Line too long
+
+    # Exceptions using string literals
     "EM101",
     "EM102",
-    "ERA001",
+
+    "ERA001",  # Commented out code
+
+    # imports not used, consider adding to __all__
     "F401",
     "F403",
-    "FBT002",
-    "FIX002",
-    "FLY002",
-    "INP001",
+
+    "FBT002",  # Boolean default positional argument in function definition
+    "FIX002",  # Line contains TODO
+    "FLY002",  # Replace join with f-string
+    "INP001",  # Missing __init__
+
+    # Upper case names
     "N802",
     "N806",
-    "PERF401",
+
+    "PERF401",  # Use a list comprehension to create a transformed list
+
+    # Too many branches, arguments, statements
     "PLR0912",
     "PLR0913",
     "PLR0915",
-    "PLR2004",
-    "PLW2901",
-    "PTH107",
-    "PTH110",
-    "PYI024",
-    "RET503",
-    "RET504",
-    "RUF005",
-    "RUF012",
-    "S101",
-    "S603",
-    "SIM108",
-    "SLF001",
+
+    "PLR2004",  # Magic value used in comparison
+    "PLW2901",  # `for` loop target overwritten by assignment target
+    "PYI024",  # Use `typing.NamedTuple` instead of `collections.namedtuple`
+    "RET504",  # Unnecessary assignment before `return`
+    "S101",  # Use of `assert`
+    "SIM108",  # Use ternary operator instead of `if`-`else`-block
+    "SLF001",  # Private member accessed
+
+    # Incomplete TODOs
     "TD002",
     "TD003",
-    "TID252",
-    "TRY003",
+
+    "TID252",  # Prefer absolute imports over relative imports from parent modules
+    "TRY003",  # Avoid specifying long messages outside the exception class
 
     ]
     preview = false
@@ -248,36 +258,68 @@ known-first-party = ["iris-esmf-regrid"]
 "esmf_regrid/tests/*.py" = [
     # https://docs.astral.sh/ruff/rules/undocumented-public-module/
     "B006",
-    "N999",
+
+    "N999",  # Invalid module name
+
+    # Wrong types passed to `@pytest.mark.parametrize`
     "PT006",
     "PT007",
-    "PT011",
+
+    "PT011",  # `pytest.raises(ValueError)` is too broad
+
+    # Replace `os` with `Path`
     "PTH118",
     "PTH123",
+
+    "S101",  # Use of `assert`
 ]
 "benchmarks/*.py" = [
-    "ANN205",
+    "ANN205",  # Missing type annotations
+
+    # Unused arguments
+    "ARG001",
+    "ARG002",
+
+    "B018",  # Found useless expression
+    "B028",  # No explicit `stacklevel` keyword argument found
+
+    # Missing docstring
     "D102",
     "D103",
-    "DTZ005",
-    "PLW1510",
+
+    "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
+    "PLW1510",  # `subprocess.run` without explicit `check` argument
+
+    # Replace `os` with `Path`
+    "PTH107",
+    "PTH110",
+
+    "RET503",  # Missing explicit `return` at the end of function able to return non-`None` value
+    "RUF005",  # Consider replacing concatenation
+    "RUF012",  # Mutable class attributes should be annotated with `typing.ClassVar`
+    "S101",  # Use of `assert`
+
+    # Untrusted subprocess call
+    "S603",
     "S607",
-    "TRY002",
+
+    "TRY002",  # Create your own exception
 ]
 "docs/src/conf.py" = [
-    "E402",
-    "DTZ005",
+    "A001",  # shadowing python builtin
+    "E402",  # Module level import not at top of file
+    "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
 ]
 "noxfile.py" = [
-    "FBT001",
-    "PIE810",
-    "S310",
-    "S506",
-    "SIM105",
-    "T201",
+    "FBT001",  # Boolean-typed positional argument in function definition
+    "PIE810",  # Call `startswith`/`endswith` once with a `tuple`
+    "S310",  # Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
+    "S506",  # Consider `yaml.safe_load`
+    "SIM105",  # Use `contextlib.suppress(FileExistsError)` instead of `try`-`except`-`pass`
+    "T201",  # `print` found
 ]
 "setup.py" = [
-    "EXE001",
+    "EXE001",  # Shebang is present but file is not executable
 ]
 
 [tool.ruff.lint.pydocstyle]

@@ -225,14 +225,14 @@ class GridInfo(SDO):
             centerlons, centerlats = np.meshgrid(self.lons, self.lats)
         elif londims == 2:
             if self.circular:
-                slice = np.s_[:, :-1]
+                np_slice = np.s_[:, :-1]
             else:
-                slice = np.s_[:]
+                np_slice = np.s_[:]
             centerlons = self.lons[:]
             centerlats = self.lats[:]
             if self._refined_lonbounds is not None:
-                cornerlons = self._refined_lonbounds[slice]
-                cornerlats = self._refined_latbounds[slice]
+                cornerlons = self._refined_lonbounds[np_slice]
+                cornerlats = self._refined_latbounds[np_slice]
 
         truecenters = ccrs.Geodetic().transform_points(self.crs, centerlons, centerlats)
         if self._refined_lonbounds is not None:
