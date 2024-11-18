@@ -17,7 +17,6 @@ files: |
         noxfile\.py|
         pyproject\.toml|
         setup\.py|
-        src\/.+\.py
     )
 minimum_pre_commit_version: 1.21.0
 
