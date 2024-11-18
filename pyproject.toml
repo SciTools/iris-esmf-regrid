@@ -251,8 +251,7 @@ known-first-party = ["iris-esmf-regrid"]
 # TODO: determine if these ought to be temporary or permanent
 
 "esmf_regrid/tests/*.py" = [
-    # https://docs.astral.sh/ruff/rules/undocumented-public-module/
-    "B006",
+    "B006",  # Do not use mutable data structures for argument defaults
 
     "N999",  # Invalid module name
 
