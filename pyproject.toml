@@ -42,11 +42,6 @@ Code = "https://github.com/SciTools/iris-esmf-regrid"
 Docs = "https://iris-esmf-regrid.readthedocs.io/en/stable"
 Issues = "https://github.com/SciTools/iris-esmf-regrid/issues"
 
-[tool.black]
-line-length = 88
-target-version = ['py310', 'py311', 'py312']
-include = '\.pyi?$'
-
 [tool.codespell]
 ignore-words-list = "discontiguities"
 
@@ -134,7 +129,7 @@ checks = [
 
     # Record temporarily ignored checks below; will be reviewed at a later date:
 
-    # TODO: annotate and determine if these ought to be temporary or permanent
+    # TODO: determine if these ought to be temporary or permanent
     "PR01",  # Undocumented parameters
     "PR02",  # Unknown parameters
     "PR04",  # Untyped parameters
@@ -177,7 +172,7 @@ ignore = [
     "ISC001",  # Implicitly concatenate string literals on one line.
 
 
-    # TODO: annotate and determine if these ought to be temporary or permanent
+    # TODO: determine if these ought to be temporary or permanent
 
     # Missing type annotations
     "ANN001",
@@ -253,7 +248,7 @@ known-first-party = ["iris-esmf-regrid"]
 [tool.ruff.lint.per-file-ignores]
 # All test scripts
 
-# TODO: annotate and determine if these ought to be temporary or permanent
+# TODO: determine if these ought to be temporary or permanent
 
 "esmf_regrid/tests/*.py" = [
     # https://docs.astral.sh/ruff/rules/undocumented-public-module/
