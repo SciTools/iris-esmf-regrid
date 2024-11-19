@@ -1,5 +1,4 @@
-"""
-Perform test automation with nox.
+"""Perform test automation with nox.
 
 For further details, see https://nox.thea.codes/en/stable/#
 
@@ -15,7 +14,6 @@ from urllib.request import urlopen
 import nox
 from nox.logger import logger
 import yaml
-
 
 #: Default to reusing any pre-existing nox environments.
 nox.options.reuse_existing_virtualenvs = False
@@ -41,8 +39,7 @@ ESMFMKFILE = "ESMFMKFILE"
 
 
 def _lockfile_path(py_string: str, platform_placeholder: bool = False) -> Path:
-    """
-    Return a constructed lockfile path for the relevant python string e.g ``py38``.
+    """Return a constructed lockfile path for the relevant python string e.g ``py38``.
 
     Optionally retain the ``{platform}`` placeholder to support conda-lock's
     ``--filename-template``.
@@ -91,8 +88,7 @@ def _venv_changed(session: nox.sessions.Session) -> bool:
 
 
 def _install_and_cache_venv(session: nox.sessions.Session) -> None:
-    """
-    Cache the nox session environment.
+    """Cache the nox session environment.
 
     This consists of saving a hexdigest (sha256) of the associated
     Conda lock file.
@@ -110,8 +106,7 @@ def _install_and_cache_venv(session: nox.sessions.Session) -> None:
 
 
 def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
-    """
-    Determine whether an Iris source artifact from GitHub is required.
+    """Determine whether an Iris source artifact from GitHub is required.
 
     This can be an Iris branch name, commit sha or tag name.
 
@@ -205,8 +200,7 @@ def _prepare_env(session: nox.sessions.Session) -> None:
 
 @nox.session
 def update_lockfiles(session: nox.sessions.Session):
-    """
-    Re-resolve env specs and store as lockfiles (``requirements/locks/``).
+    """Re-resolve env specs and store as lockfiles (``requirements/locks/``).
 
     Original Conda environment specifications are at:
     ``requirements/py**.yml``. The output lock files denote the dependencies
@@ -290,8 +284,7 @@ def update_lockfiles(session: nox.sessions.Session):
 
 @nox.session(python=PY_VER, venv_backend="conda")
 def tests(session: nox.sessions.Session):
-    """
-    Perform esmf-regrid integration and unit tests.
+    """Perform esmf-regrid integration and unit tests.
 
     Parameters
     ----------
@@ -313,8 +306,7 @@ def tests(session: nox.sessions.Session):
 
 @nox.session(python=PY_VER, venv_backend="conda")
 def wheel(session: nox.sessions.Session):
-    """
-    Perform iris-esmf-regrid local wheel install and import test.
+    """Perform iris-esmf-regrid local wheel install and import test.
 
     Parameters
     ----------
@@ -324,7 +316,7 @@ def wheel(session: nox.sessions.Session):
     """
     _prepare_env(session)
     session.cd("dist")
-    fname = list(Path(".").glob("esmf_regrid-*.whl"))
+    fname = list(Path().glob("esmf_regrid-*.whl"))
     if len(fname) == 0:
         raise ValueError("Cannot find wheel to install.")
     if len(fname) > 1:

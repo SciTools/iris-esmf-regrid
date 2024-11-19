@@ -12,8 +12,7 @@ from esmf_regrid.tests.unit.experimental.unstructured_regrid.test_MeshInfo impor
 
 
 def test_expanded_lons_with_mesh():
-    """
-    Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.RefinedGridInfo.make_esmf_field`.
+    """Basic test for regridding with :meth:`~esmf_regrid.esmf_regridder.RefinedGridInfo.make_esmf_field`.
 
     Mirrors the tests in :func:`~esmf_regrid.tests.unit.experimental.unstructured_regrid.test_MeshInfo.test_regrid_with_mesh`
     but with slightly different expected values due to increased accuracy.

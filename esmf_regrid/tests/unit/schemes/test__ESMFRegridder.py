@@ -9,8 +9,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 
 
 def test_invalid_method():
-    """
-    Test initialisation of :class:`esmf_regrid.schemes._ESMFRegridder`.
+    """Test initialisation of :class:`esmf_regrid.schemes._ESMFRegridder`.
 
     Checks that an error is raised when the method is invalid.
     """

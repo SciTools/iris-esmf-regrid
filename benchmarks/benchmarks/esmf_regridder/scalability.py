@@ -14,6 +14,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
     MeshToGridESMFRegridder,
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
+
 from .. import on_demand_benchmark, skip_benchmark
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
@@ -64,7 +65,7 @@ class PrepareScalabilityGridToGrid(PrepareScalabilityMixin):
 class PrepareScalabilityMeshToGrid(PrepareScalabilityMixin):
     """Benchmarks for the prepare step of :class:`~esmf_regrid.esmf_regrid.schemes.MeshToGridESMFRegridder`."""
 
-    regridder = MeshToGridESMFRegridder
+    regridder = MeshToGridESMFRegridder  # type: ignore[assignment]
 
     def src_cube(self, n):
         """Cube to regrid from."""
@@ -114,7 +115,7 @@ class PrepareScalabilityMeshToGrid(PrepareScalabilityMixin):
 class PrepareScalabilityGridToMesh(PrepareScalabilityMixin):
     """Benchmarks for the prepare step of :class:`~esmf_regrid.esmf_regrid.schemes.GridToMeshESMFRegridder`."""
 
-    regridder = GridToMeshESMFRegridder
+    regridder = GridToMeshESMFRegridder  # type: ignore[assignment]
 
     def tgt_cube(self, n):
         """Cube containing the regridding target grid."""
@@ -257,7 +258,7 @@ class PerformScalabilityGridToGrid(PerformScalabilityMixin):
 class PerformScalabilityMeshToGrid(PerformScalabilityMixin):
     """Benchmarks for the perform step of :class:`~esmf_regrid.esmf_regrid.schemes.MeshToGridESMFRegridder`."""
 
-    regridder = MeshToGridESMFRegridder
+    regridder = MeshToGridESMFRegridder  # type: ignore[assignment]
     chunk_size = [PerformScalabilityMixin.grid_size ^ 2, 10]
     file_name = "chunked_cube_1d.nc"
 
@@ -298,7 +299,7 @@ class PerformScalabilityMeshToGrid(PerformScalabilityMixin):
 class PerformScalabilityGridToMesh(PerformScalabilityMixin):
     """Benchmarks for the perform step of :class:`~esmf_regrid.esmf_regrid.schemes.GridToMeshESMFRegridder`."""
 
-    regridder = GridToMeshESMFRegridder
+    regridder = GridToMeshESMFRegridder  # type: ignore[assignment]
 
     def setup_cache(self):
         """ASV setup_cache method."""

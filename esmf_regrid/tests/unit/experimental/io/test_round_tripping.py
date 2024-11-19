@@ -179,7 +179,7 @@ def test_grid_to_mesh_round_trip(tmp_path, method, regridder):
     original_matrix = original_rg.regridder.weight_matrix
     loaded_matrix = loaded_rg.regridder.weight_matrix
     # Ensure the original and loaded weight matrix have identical type.
-    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert type(original_matrix) is type(loaded_matrix)  # E721
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
@@ -293,7 +293,7 @@ def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker, regridder):
     original_matrix = original_rg.regridder.weight_matrix
     loaded_matrix = loaded_rg.regridder.weight_matrix
     # Ensure the original and loaded weight matrix have identical type.
-    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert type(original_matrix) is type(loaded_matrix)  # E721
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Ensure the masks are preserved
@@ -337,7 +337,7 @@ def test_mesh_to_grid_round_trip(tmp_path, method, regridder):
     original_matrix = original_rg.regridder.weight_matrix
     loaded_matrix = loaded_rg.regridder.weight_matrix
     # Ensure the original and loaded weight matrix have identical type.
-    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert type(original_matrix) is type(loaded_matrix)  # E721
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.

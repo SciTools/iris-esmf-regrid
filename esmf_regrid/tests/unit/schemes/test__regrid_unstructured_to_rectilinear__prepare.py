@@ -4,7 +4,6 @@ from iris.coords import AuxCoord
 from iris.cube import Cube
 import numpy as np
 
-
 from esmf_regrid import Constants
 from esmf_regrid.esmf_regridder import GridInfo
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
@@ -33,8 +32,7 @@ def _full_mesh():
 
 
 def _flat_mesh_cube():
-    """
-    Return a 1D cube with a mesh attached.
+    """Return a 1D cube with a mesh attached.
 
     Returned cube has no metadata except for the mesh and two MeshCoords.
     Returned cube has data consisting of an array of ones.
@@ -50,8 +48,7 @@ def _flat_mesh_cube():
 
 
 def test_flat_cubes():
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._regrid_unstructured_to_rectilinear__prepare`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme._regrid_unstructured_to_rectilinear__prepare`.
 
     Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
     """

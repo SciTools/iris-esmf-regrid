@@ -36,7 +36,7 @@ norm_dict = {
 
 def check_method(method):
     """Check that method is a member of the `Constants.Method` enum or raise an error."""
-    if method in method_dict.keys():
+    if method in method_dict:
         result = method_dict[method]
     elif method in method_dict.values():
         result = method
@@ -49,7 +49,7 @@ def check_method(method):
 
 def check_norm(norm):
     """Check that normtype is a member of the `Constants.NormType` enum or raise an error."""
-    if norm in norm_dict.keys():
+    if norm in norm_dict:
         result = norm_dict[norm]
     elif norm in norm_dict.values():
         result = norm

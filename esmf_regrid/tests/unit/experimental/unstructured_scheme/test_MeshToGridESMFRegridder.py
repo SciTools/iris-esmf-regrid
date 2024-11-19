@@ -37,8 +37,7 @@ def _add_metadata(cube):
 
 
 def test_flat_cubes():
-    """
-    Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
     """
@@ -74,8 +73,7 @@ def test_flat_cubes():
     "method", [Constants.Method.BILINEAR, Constants.Method.NEAREST]
 )
 def test_node_friendly_methods(method, nsi):
-    """
-    Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Basic test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Tests with method=Constants.Method.BILINEAR and method=Constants.Method.NEAREST.
     """
@@ -95,7 +93,6 @@ def test_node_friendly_methods(method, nsi):
     face_regridder = MeshToGridESMFRegridder(face_src, tgt, method=method)
     node_regridder = MeshToGridESMFRegridder(node_src, tgt, method=method)
 
-    print(node_regridder.regridder.method)
     assert face_regridder.regridder.method == method
     assert node_regridder.regridder.method == method
 
@@ -114,8 +111,7 @@ def test_node_friendly_methods(method, nsi):
 
 
 def test_multidim_cubes():
-    """
-    Test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Tests with multidimensional cubes. The source cube contains
     coordinates on the dimensions before and after the mesh dimension.
@@ -165,8 +161,7 @@ def test_multidim_cubes():
 
 
 def test_invalid_mdtol():
-    """
-    Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Checks that an error is raised when mdtol is out of range.
     """
@@ -185,8 +180,7 @@ def test_invalid_mdtol():
 
 
 def test_invalid_method():
-    """
-    Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Checks that an error is raised when method is invalid.
     """
@@ -225,8 +219,7 @@ def test_invalid_method():
 
 
 def test_invalid_resolution():
-    """
-    Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Checks that an error is raised when the resolution is invalid.
     """
@@ -253,8 +246,7 @@ def test_invalid_resolution():
 
 
 def test_default_mdtol():
-    """
-    Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Checks that default mdtol values are as expected.
     """
@@ -271,10 +263,9 @@ def test_default_mdtol():
     assert rg_bi.mdtol == 0
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail()
 def test_mistmatched_mesh():
-    """
-    Test the calling of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test the calling of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Checks that an error is raised when the regridder is called with a cube
     whose mesh does not match the one used for initialisation.
@@ -343,8 +334,7 @@ def test_laziness():
 
 
 def test_resolution():
-    """
-    Test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Tests for the tgt_resolution keyword.
     """
@@ -371,8 +361,7 @@ def test_resolution():
 
 
 def test_curvilinear():
-    """
-    Test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test for :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Tests with curvilinear source cube.
     """
@@ -427,8 +416,7 @@ def test_curvilinear():
     "resolution", (None, 2), ids=("no resolution", "with resolution")
 )
 def test_masks(resolution):
-    """
-    Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
+    """Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
     Checks that the `use_src_mask` and `use_tgt_mask` keywords work properly.
     """

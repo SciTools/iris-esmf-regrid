@@ -29,8 +29,7 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     ],
 )
 def test_cube_regrid(src_type, tgt_type):
-    """
-    Test that ESMFNearest can be passed to a cubes regrid method.
+    """Test that ESMFNearest can be passed to a cubes regrid method.
 
     Checks that regridding occurs.
     """
@@ -86,8 +85,7 @@ def test_cube_regrid(src_type, tgt_type):
 
 @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
 def test_mask_from_init(mask_keyword):
-    """
-    Test initialisation of :class:`esmf_regrid.schemes.ESMFNearest`.
+    """Test initialisation of :class:`esmf_regrid.schemes.ESMFNearest`.
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
@@ -96,8 +94,7 @@ def test_mask_from_init(mask_keyword):
 
 @pytest.mark.parametrize("mask_keyword", ["use_src_mask", "use_tgt_mask"])
 def test_mask_from_regridder(mask_keyword):
-    """
-    Test regridder method of :class:`esmf_regrid.schemes.ESMFNearest`.
+    """Test regridder method of :class:`esmf_regrid.schemes.ESMFNearest`.
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """

@@ -34,8 +34,7 @@ def _add_metadata(cube):
 
 
 def test_flat_cubes():
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
     Tests with flat cubes as input (a 1D mesh cube and a 2D grid cube).
     """
@@ -69,8 +68,7 @@ def test_flat_cubes():
     "method", (Constants.Method.BILINEAR, Constants.Method.NEAREST)
 )
 def test_node_friendly_methods(method):
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
     Tests with the bilinear and nearest method.
     """
@@ -100,8 +98,7 @@ def test_node_friendly_methods(method):
 
 
 def test_invalid_args():
-    """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    """Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
     Tests that an appropriate error is raised when arguments are invalid.
     """
@@ -150,8 +147,7 @@ def test_invalid_args():
 
 
 def test_multidim_cubes():
-    """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    """Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
     Tests with multidimensional cubes. The source cube contains
     coordinates on the dimensions before and after the mesh dimension.
@@ -198,8 +194,7 @@ def test_multidim_cubes():
 
 
 def test_resolution():
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear`.
 
     Tests the tgt_resolution keyword with grids that would otherwise not work.
     """

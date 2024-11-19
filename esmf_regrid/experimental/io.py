@@ -9,8 +9,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import _load_context
-from esmf_regrid import check_method, Constants
+from esmf_regrid import Constants, _load_context, check_method
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -22,7 +21,6 @@ from esmf_regrid.schemes import (
     GridRecord,
     MeshRecord,
 )
-
 
 SUPPORTED_REGRIDDERS = [
     ESMFAreaWeightedRegridder,
@@ -81,9 +79,9 @@ def _managed_var_name(src_cube, tgt_cube):
             coord.var_name = "_".join([TARGET_NAME, "mesh", coord.name()])
         yield None
     finally:
-        for coord, var_name in zip(src_mesh_coords, src_coord_names):
+        for coord, var_name in zip(src_mesh_coords, src_coord_names, strict=False):
             coord.var_name = var_name
-        for coord, var_name in zip(tgt_mesh_coords, tgt_coord_names):
+        for coord, var_name in zip(tgt_mesh_coords, tgt_coord_names, strict=False):
             coord.var_name = var_name
 
 
@@ -100,8 +98,7 @@ def _clean_var_names(cube):
 
 
 def save_regridder(rg, filename):
-    """
-    Save a regridder scheme instance.
+    """Save a regridder scheme instance.
 
     Saves any of the regridder classes, i.e.
     :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`,
@@ -271,8 +268,7 @@ def save_regridder(rg, filename):
 
 
 def load_regridder(filename):
-    """
-    Load a regridder scheme instance.
+    """Load a regridder scheme instance.
 
     Loads any of the regridder classes, i.e.
     :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`,
@@ -303,7 +299,7 @@ def load_regridder(filename):
 
     # Determine the regridder type.
     regridder_type = weights_cube.attributes[REGRIDDER_TYPE]
-    assert regridder_type in REGRIDDER_NAME_MAP.keys()
+    assert regridder_type in REGRIDDER_NAME_MAP
     scheme = REGRIDDER_NAME_MAP[regridder_type]
 
     # Determine the regridding method, allowing for files created when

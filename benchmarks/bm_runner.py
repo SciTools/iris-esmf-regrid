@@ -11,7 +11,6 @@ import re
 import shlex
 import subprocess
 from tempfile import NamedTemporaryFile
-from typing import Literal
 
 # The threshold beyond which shifts are 'notable'. See `asv compare`` docs
 #  for more.
@@ -29,7 +28,7 @@ ASV_HARNESS = "run {posargs} --attribute rounds=4 --interleave-rounds --show-std
 def _echo(echo_string: str):
     # Use subprocess for printing to reduce chance of printing out of sequence
     #  with the subsequent calls.
-    subprocess.run(["echo", f"BM_RUNNER DEBUG: {echo_string}"])
+    subprocess.run(["echo", f"BM_RUNNER DEBUG: {echo_string}"], check=False)
 
 
 def _subprocess_runner(args, asv=False, **kwargs):
@@ -103,10 +102,10 @@ def _setup_common() -> None:
 
 def _asv_compare(*commits: str) -> None:
     """Run through a list of commits comparing each one to the next."""
-    commits = [commit[:8] for commit in commits]
-    for i in range(len(commits) - 1):
-        before = commits[i]
-        after = commits[i + 1]
+    _commits = [commit[:8] for commit in commits]
+    for i in range(len(_commits) - 1):
+        before = _commits[i]
+        after = _commits[i + 1]
         asv_command = shlex.split(
             f"compare {before} {after} --factor={COMPARE_FACTOR} --split"
         )
@@ -124,7 +123,7 @@ class _SubParserGenerator(ABC):
     description: str = NotImplemented
     epilog: str = NotImplemented
 
-    def __init__(self, subparsers: ArgumentParser.add_subparsers) -> None:
+    def __init__(self, subparsers: argparse._SubParsersAction) -> None:
         self.subparser: ArgumentParser = subparsers.add_parser(
             self.name,
             description=self.description,
@@ -249,9 +248,9 @@ class SPerf(_SubParserGenerator):
         )
 
         # Only do a single round.
-        asv_command = shlex.split(re.sub(r"rounds=\d", "rounds=1", asv_command))
+        _asv_command = shlex.split(re.sub(r"rounds=\d", "rounds=1", asv_command))
         try:
-            _subprocess_runner([*asv_command, *args.asv_args], asv=True)
+            _subprocess_runner([*_asv_command, *args.asv_args], asv=True)
         except subprocess.CalledProcessError as err:
             # C/SPerf benchmarks are much bigger than the CI ones:
             # Don't fail the whole run if memory blows on 1 benchmark.
@@ -259,8 +258,10 @@ class SPerf(_SubParserGenerator):
             if err.returncode != 2:
                 raise
 
-        asv_command = shlex.split(f"publish {commit_range} --html-dir={publish_subdir}")
-        _subprocess_runner(asv_command, asv=True)
+        _asv_command = shlex.split(
+            f"publish {commit_range} --html-dir={publish_subdir}"
+        )
+        _subprocess_runner(_asv_command, asv=True)
 
         # Print completion message.
         location = BENCHMARKS_DIR / ".asv"

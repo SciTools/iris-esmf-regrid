@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
+from esmf_regrid import tests
 from esmf_regrid._esmf_sdo import GridInfo
-import esmf_regrid.tests as tests
 
 
 def _make_small_grid_args():
@@ -39,8 +39,7 @@ def test_make_grid():
 
 
 def test_GridInfo_init_fail():
-    """
-    Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`.
+    """Basic test for :meth:`~esmf_regrid.esmf_regridder.Regridder.__init__`.
 
     Tests that appropriate errors are raised for invalid data.
     """
