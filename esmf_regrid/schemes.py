@@ -472,9 +472,16 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
     return new_cube
 
 
-RegridInfo = NamedTuple("RegridInfo", ["dims", "target", "regridder"])
-GridRecord = NamedTuple("GridRecord", ["grid_x", "grid_y"])
-MeshRecord = NamedTuple("MeshRecord", ["mesh", "location"])
+class RegridInfo(NamedTuple):
+    dims: int
+    target: any
+    regridder: any
+class GridRecord(NamedTuple):
+    grid_x: any
+    grid_y: any
+class MeshRecord(NamedTuple):
+    mesh: any
+    location: str
 
 
 def _make_gridinfo(cube, method, resolution, mask):
