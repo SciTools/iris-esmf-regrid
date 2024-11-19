@@ -88,7 +88,8 @@ def regrid_unstructured_to_rectilinear(
 
     """
     if src_cube.mesh is None:
-        raise ValueError("src_cube has no mesh.")
+        e_msg = "src_cube has no mesh."
+        raise ValueError(e_msg)
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(grid_cube, use_tgt_mask)
     method = check_method(method)
@@ -165,7 +166,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
 
         """
         if src.mesh is None:
-            raise ValueError("src has no mesh.")
+            e_msg = "src has no mesh."
+            raise ValueError(e_msg)
         super().__init__(
             src,
             tgt,
@@ -252,7 +254,8 @@ def regrid_rectilinear_to_unstructured(
 
     """
     if mesh_cube.mesh is None:
-        raise ValueError("mesh_cube has no mesh.")
+        e_msg = "mesh_cube has no mesh."
+        raise ValueError(e_msg)
     src_mask = _get_mask(src_cube, use_src_mask)
     tgt_mask = _get_mask(mesh_cube, use_tgt_mask)
     method = check_method(method)
@@ -333,7 +336,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
 
         """
         if not isinstance(tgt, MeshXY) and tgt.mesh is None:
-            raise ValueError("tgt has no mesh.")
+            e_msg = "tgt has no mesh."
+            raise ValueError(e_msg)
         super().__init__(
             src,
             tgt,
@@ -404,7 +408,8 @@ def regrid_unstructured_to_unstructured(
     """
     method = check_method(method)
     if tgt_mesh_cube.mesh is None:
-        raise ValueError("mesh_cube has no mesh.")
+        e_msg = "mesh_cube has no mesh."
+        raise ValueError(e_msg)
     src_mask = _get_mask(src_mesh_cube, use_src_mask)
     tgt_mask = _get_mask(tgt_mesh_cube, use_tgt_mask)
 

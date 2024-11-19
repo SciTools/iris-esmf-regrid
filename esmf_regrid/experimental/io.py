@@ -62,21 +62,19 @@ def _managed_var_name(src_cube, tgt_cube):
     if src_cube.mesh is not None:
         src_mesh = src_cube.mesh
         src_mesh_coords = src_mesh.coords()
-        for coord in src_mesh_coords:
-            src_coord_names.append(coord.var_name)
+        src_coord_names = [coord.var_name for coord in src_mesh_coords]
     tgt_coord_names = []
     tgt_mesh_coords = []
     if tgt_cube.mesh is not None:
         tgt_mesh = tgt_cube.mesh
         tgt_mesh_coords = tgt_mesh.coords()
-        for coord in tgt_mesh_coords:
-            tgt_coord_names.append(coord.var_name)
+        tgt_coord_names = [coord.var_name for coord in tgt_mesh_coords]
 
     try:
         for coord in src_mesh_coords:
-            coord.var_name = "_".join([SOURCE_NAME, "mesh", coord.name()])
+            coord.var_name = f"{SOURCE_NAME}_mesh_{coord.name()}"
         for coord in tgt_mesh_coords:
-            coord.var_name = "_".join([TARGET_NAME, "mesh", coord.name()])
+            coord.var_name = f"{TARGET_NAME}_mesh_{coord.name()}"
         yield None
     finally:
         for coord, var_name in zip(src_mesh_coords, src_coord_names, strict=False):
@@ -154,7 +152,8 @@ def save_regridder(rg, filename):
             src_mesh, src_location = src_grid
             src_cube = _standard_mesh_cube(src_mesh, src_location, SOURCE_NAME)
         else:
-            raise ValueError("Improper type for `rg._src`.")
+            e_msg = "Improper type for `rg._src`."
+            raise ValueError(e_msg)
         _add_mask_to_cube(rg.src_mask, src_cube, SOURCE_MASK_NAME)
 
         tgt_grid = rg._tgt
@@ -166,7 +165,8 @@ def save_regridder(rg, filename):
             tgt_mesh, tgt_location = tgt_grid
             tgt_cube = _standard_mesh_cube(tgt_mesh, tgt_location, TARGET_NAME)
         else:
-            raise ValueError("Improper type for `rg._tgt`.")
+            e_msg = "Improper type for `rg._tgt`."
+            raise ValueError(e_msg)
         _add_mask_to_cube(rg.tgt_mask, tgt_cube, TARGET_MASK_NAME)
     elif regridder_type == "GridToMeshESMFRegridder":
         src_grid = (rg.grid_y, rg.grid_x)

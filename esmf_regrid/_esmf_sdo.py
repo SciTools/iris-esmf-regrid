@@ -147,7 +147,7 @@ class GridInfo(SDO):
             Array describing the areas associated with
             each face. If ``None``, then :mod:`esmpy` will use its own
             calculated areas.
-        mask: :obj:`~numpy.typing.ArrayLike`, optional
+        mask : :obj:`~numpy.typing.ArrayLike`, optional
             Array describing which elements :mod:`esmpy` will ignore.
         center : bool, default=False
             Describes if the center points of the grid cells are used in regridding
@@ -370,9 +370,11 @@ class RefinedGridInfo(GridInfo):
 
         # Ensure bounds are strictly increasing.
         if not np.all(lonbounds[:-1] < lonbounds[1:]):
-            raise ValueError("The longitude bounds must be strictly increasing.")
+            e_msg = "The longitude bounds must be strictly increasing."
+            raise ValueError(e_msg)
         if not np.all(latbounds[:-1] < latbounds[1:]):
-            raise ValueError("The latitude bounds must be strictly increasing.")
+            e_msg = "The latitude bounds must be strictly increasing."
+            raise ValueError(e_msg)
 
         self.resolution = resolution
         self.n_lons_orig = len(lonbounds) - 1

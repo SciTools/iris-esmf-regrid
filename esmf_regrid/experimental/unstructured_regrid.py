@@ -33,29 +33,29 @@ class MeshInfo(SDO):
 
         Parameters
         ----------
-        node_coords: :obj:`~numpy.typing.ArrayLike`
+        node_coords : :obj:`~numpy.typing.ArrayLike`
             An ``Nx2`` array describing the location of the nodes of the mesh.
             ``node_coords[:,0]`` describes the longitudes in degrees and
             ``node_coords[:,1]`` describes the latitudes in degrees.
-        face_node_connectivity: :obj:`~numpy.typing.ArrayLike`
+        face_node_connectivity : :obj:`~numpy.typing.ArrayLike`
             A masked array describing the face node connectivity of the
             mesh. The unmasked points of ``face_node_connectivity[i]`` describe
             which nodes are connected to the ``i``'th face.
-        node_start_index: int
+        node_start_index : int
             A value which, appearing in the ``face_node_connectivity``
             array, indicates the first node in the ``node_coords`` array.
             UGRID supports both ``0`` based and ``1`` based indexing, so both must be
             accounted for here:
-            https://ugrid-conventions.github.io/ugrid-conventions/#zero-or-one
-        elem_start_index: int, default=0
+            https://ugrid-conventions.github.io/ugrid-conventions/#zero-or-one .
+        elem_start_index : int, default=0
             Describes what index should be considered by :mod:`esmpy` to be
             the start index for describing its elements. This makes no
             difference to the regridding calculation and will only affect the
             intermediate :mod:`esmpy` objects, should the user need access to them.
-        areas: :obj:`~numpy.typing.ArrayLike`, optional
+        areas : :obj:`~numpy.typing.ArrayLike`, optional
             Array describing the areas associated with
             each face. If ``None``, then :mod:`esmpy` will use its own calculated areas.
-        mask: :obj:`~numpy.typing.ArrayLike`, optional
+        mask : :obj:`~numpy.typing.ArrayLike`, optional
             Array describing which elements :mod:`esmpy` will ignore.
         elem_coords : :obj:`~numpy.typing.ArrayLike`, optional
             An ``Nx2`` array describing the location of the face centers of the mesh.
@@ -77,10 +77,11 @@ class MeshInfo(SDO):
             field_kwargs = {"meshloc": esmpy.MeshLoc.NODE}
             shape = (len(node_coords),)
         else:
-            raise ValueError(
+            e_msg = (
                 f"The mesh location '{location}' is not supported, only "
                 f"'face' and 'node' are supported."
             )
+            raise ValueError(e_msg)
         super().__init__(
             shape=shape,
             index_offset=1,
