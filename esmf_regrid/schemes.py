@@ -1,7 +1,7 @@
 """Provides an iris interface for regridding."""
 
 import copy
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from cf_units import Unit
 import dask.array as da
@@ -440,7 +440,9 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         grid_y_dim = src_dims[0]
         grid_x_dim = grid_y_dim + 1
     else:
-        e_msg = f"Source grid must be described by 1 or 2 dimensions, got {len(src_dims)}"
+        e_msg = (
+            f"Source grid must be described by 1 or 2 dimensions, got {len(src_dims)}"
+        )
         raise ValueError(e_msg)
     if num_tgt_dims == 1:
         grid_y_dim = grid_x_dim = min(src_dims)
@@ -474,13 +476,17 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
 
 class RegridInfo(NamedTuple):
     dims: int
-    target: any
-    regridder: any
+    target: Any
+    regridder: Any
+
+
 class GridRecord(NamedTuple):
-    grid_x: any
-    grid_y: any
+    grid_x: Any
+    grid_y: Any
+
+
 class MeshRecord(NamedTuple):
-    mesh: any
+    mesh: Any
     location: str
 
 
@@ -769,7 +775,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     elif location == "node":
         chunk_shape = mesh.node_coords[0].shape
     else:
-        e_msg =f"Unrecognised location {location}."
+        e_msg = f"Unrecognised location {location}."
         raise NotImplementedError(e_msg)
 
     out_dtype = regridder._out_dtype(src_cube.dtype)
