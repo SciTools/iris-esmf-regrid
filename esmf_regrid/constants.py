@@ -41,7 +41,9 @@ def check_method(method):
     elif method in method_dict.values():
         result = method
     else:
-        e_msg = f"Method must be a member of `Constants.Method` enum, instead got {method}"
+        e_msg = (
+            f"Method must be a member of `Constants.Method` enum, instead got {method}"
+        )
         raise ValueError(e_msg)
     return result
 
