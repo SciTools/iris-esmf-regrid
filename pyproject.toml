@@ -76,8 +76,10 @@ ignore = [
     "PC170",  # PyGrep hooks
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
+    # https://learn.scientific-python.org/development/guides/packaging-simple/#PY005
     "PY005",  # Test folder location
     "GH104",  # Unique names for upload artifact
+    # https://learn.scientific-python.org/development/guides/gha-basic/#GH212
     "GH212",  # Require GHA update grouping
 ]
 
