@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from .. import esmpy
-from .._esmf_sdo import SDO
+from esmf_regrid import esmpy
+from esmf_regrid._esmf_sdo import SDO
 
 
 class MeshInfo(SDO):

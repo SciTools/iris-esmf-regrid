@@ -204,7 +204,6 @@ ignore = [
     "TD002",
     "TD003",
 
-    "TID252",  # Prefer absolute imports over relative imports from parent modules
     "TRY003",  # Avoid specifying long messages outside the exception class
 
     ]
@@ -231,10 +230,6 @@ max-complexity = 19
 "esmf_regrid/tests/*.py" = [
     "B006",  # Do not use mutable data structures for argument defaults
     "N999",  # Invalid module name
-
-    # Wrong types passed to `@pytest.mark.parametrize`
-    "PT006",
-    "PT007",
 
     "PT011",  # `pytest.raises(ValueError)` is too broad
 
@@ -274,6 +269,7 @@ max-complexity = 19
     "S603",
     "S607",
 
+    "TID252",  # Prefer absolute imports over relative imports from parent modules
     "TRY002",  # Create your own exception
 ]
 "docs/src/conf.py" = [

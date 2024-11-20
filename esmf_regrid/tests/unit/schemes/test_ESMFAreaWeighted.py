@@ -14,7 +14,7 @@ from esmf_regrid.tests.unit.schemes.__init__ import (
 
 
 @pytest.mark.parametrize(
-    "src_type,tgt_type",
+    ("src_type", "tgt_type"),
     [
         ("grid", "grid"),
         ("grid", "mesh"),
