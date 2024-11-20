@@ -178,10 +178,6 @@ ignore = [
     "ANN204",
 
     "B904",  # Try except handling
-
-    # McCabe complexity https://docs.astral.sh/ruff/rules/complex-structure/
-    "C901",
-
     "D104",  # Misssing docstring
     "E501",  # Line too long
     "ERA001",  # Commented out code
@@ -197,11 +193,6 @@ ignore = [
     # Upper case names
     "N802",
     "N806",
-
-    # Too many branches, arguments, statements
-    "PLR0912",
-    "PLR0913",
-    "PLR0915",
 
     "PLR2004",  # Magic value used in comparison
     "RET504",  # Unnecessary assignment before `return`
@@ -227,6 +218,10 @@ ignore = [
 [tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = ["iris-esmf-regrid"]
+
+[tool.ruff.lint.mccabe]
+# TODO: refactor to reduce complexity, if possible
+max-complexity = 19
 
 [tool.ruff.lint.per-file-ignores]
 # All test scripts
@@ -300,3 +295,9 @@ known-first-party = ["iris-esmf-regrid"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.ruff.lint.pylint]
+# TODO: refactor to reduce complexity, if possible
+max-args = 10
+max-branches = 17
+max-statements = 101
