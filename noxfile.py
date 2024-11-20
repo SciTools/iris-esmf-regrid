@@ -135,11 +135,11 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
         result = None
         if len(parts) == 2:
             repo, artifact = parts
-            if repo.startswith("'", '"'):
+            if repo.startswith(("'", '"')):
                 repo = repo[1:]
             if repo.lower() == "github":
                 result = artifact
-                if result.endswith("'", '"'):
+                if result.endswith(("'", '"')):
                     result = result[:-1]
     return result
 

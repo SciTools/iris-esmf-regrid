@@ -279,6 +279,7 @@ max-complexity = 19
 ]
 "noxfile.py" = [
     "FBT001",  # Boolean-typed positional argument in function definition
+    "S310",  # Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
     "S506",  # Consider `yaml.safe_load`
     "SIM105",  # Use `contextlib.suppress(FileExistsError)` instead of `try`-`except`-`pass`
     "T201",  # `print` found
