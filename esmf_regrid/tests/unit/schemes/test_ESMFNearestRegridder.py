@@ -69,7 +69,7 @@ def test_differing_grids():
         _ = regridder(src_dif_circ)
 
 
-@pytest.mark.parametrize("with_bounds", (False, True))
+@pytest.mark.parametrize("with_bounds", [False, True])
 def test_curvilinear_equivalence(with_bounds):
     """Test initialisation of :class:`esmf_regrid.schemes.ESMFNearestRegridder`.
 
@@ -267,7 +267,7 @@ def test_masks():
 
 
 @pytest.mark.parametrize(
-    "src_type,tgt_type",
+    ("src_type", "tgt_type"),
     [
         ("grid", "grid"),
         ("grid", "mesh"),

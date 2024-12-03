@@ -154,8 +154,8 @@ def test_extra_dims():
     assert expected_cube == result
 
 
-@pytest.mark.parametrize("src_transposed", (False, True))
-@pytest.mark.parametrize("tgt_transposed", (False, True))
+@pytest.mark.parametrize("src_transposed", [False, True])
+@pytest.mark.parametrize("tgt_transposed", [False, True])
 def test_laziness(src_transposed, tgt_transposed):
     """Test that regridding is lazy when source data is lazy."""
     n_lons = 12
@@ -190,8 +190,8 @@ def test_laziness(src_transposed, tgt_transposed):
     assert np.allclose(result.data, src_data)
 
 
-@pytest.mark.parametrize("src_transposed", (False, True))
-@pytest.mark.parametrize("tgt_transposed", (False, True))
+@pytest.mark.parametrize("src_transposed", [False, True])
+@pytest.mark.parametrize("tgt_transposed", [False, True])
 def test_laziness_curvilinear(src_transposed, tgt_transposed):
     """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 

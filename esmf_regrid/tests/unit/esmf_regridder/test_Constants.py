@@ -14,7 +14,7 @@ from esmf_regrid import Constants, check_method, check_norm
     ],
 )
 def test_check_method_validates(method):
-    """Tests that `check_method()` converts strings to enum."""
+    """Test that `check_method()` converts strings to enum."""
     # with original text-input behaviour
     assert check_method(method[0]) == method[1]
     # with updated enum-input behaviour
@@ -22,7 +22,7 @@ def test_check_method_validates(method):
 
 
 def test_invalid_method():
-    """Ensures invalid methods raise an appropriate error, via string and enum."""
+    """Ensure invalid methods raise an appropriate error, via string and enum."""
     with pytest.raises(ValueError):
         _ = check_method("other")
     with pytest.raises(AttributeError):
@@ -37,7 +37,7 @@ def test_invalid_method():
     ],
 )
 def test_check_norm_validates(norm):
-    """Tests that `check_norm()` converts strings to enum."""
+    """Test that `check_norm()` converts strings to enum."""
     # with original text-input behaviour
     assert check_norm(norm[0]) == norm[1]
     # with updated enum-input behaviour
@@ -45,7 +45,7 @@ def test_check_norm_validates(norm):
 
 
 def test_invalid_norm():
-    """Ensures invalid norms raise an appropriate error, via string and enum."""
+    """Ensure invalid norms raise an appropriate error, via string and enum."""
     with pytest.raises(ValueError):
         _ = check_norm("other")
     with pytest.raises(AttributeError):

@@ -9,14 +9,14 @@ class Constants:
     """Encompassing class for best practice import."""
 
     class Method(Enum):
-        """holds enums for Method values."""
+        """Holds enums for Method values."""
 
         CONSERVATIVE = esmpy.RegridMethod.CONSERVE
         BILINEAR = esmpy.RegridMethod.BILINEAR
         NEAREST = esmpy.RegridMethod.NEAREST_STOD
 
     class NormType(Enum):
-        """holds enums for norm types."""
+        """Holds enums for norm types."""
 
         FRACAREA = esmpy.api.constants.NormType.FRACAREA
         DSTAREA = esmpy.api.constants.NormType.DSTAREA
@@ -41,9 +41,10 @@ def check_method(method):
     elif method in method_dict.values():
         result = method
     else:
-        raise ValueError(
+        e_msg = (
             f"Method must be a member of `Constants.Method` enum, instead got {method}"
         )
+        raise ValueError(e_msg)
     return result
 
 
@@ -54,7 +55,6 @@ def check_norm(norm):
     elif norm in norm_dict.values():
         result = norm
     else:
-        raise ValueError(
-            f"NormType must be a member of `Constants.NormType` enum, instead got {norm}"
-        )
+        e_msg = f"NormType must be a member of `Constants.NormType` enum, instead got {norm}"
+        raise ValueError(e_msg)
     return result
