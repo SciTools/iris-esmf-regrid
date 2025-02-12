@@ -19,7 +19,7 @@ except ImportError as exc:
     except ImportError:
         raise exc
 
-from esmf_regrid import check_method, Constants, esmpy
+from esmf_regrid import Constants, check_method, esmpy
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
