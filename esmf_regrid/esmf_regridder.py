@@ -5,7 +5,8 @@ from numpy import ma
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import check_method, check_norm, Constants
+from esmf_regrid import Constants, check_method, check_norm
+
 from . import esmpy
 from ._esmf_sdo import GridInfo, RefinedGridInfo
 
@@ -41,7 +42,7 @@ def _get_regrid_weights_dict(src_field, tgt_field, regrid_method, esmf_args=None
         **esmf_args,
     )
     # Without specifying deep_copy=true, the information in weights_dict
-    # would be corrupted when the ESMF regridder is destoyed.
+    # would be corrupted when the ESMF regridder is destroyed.
     weights_dict = regridder.get_weights_dict(deep_copy=True)
     # The weights_dict contains all the information needed for regridding,
     # the ESMF objects can be safely removed.
@@ -74,8 +75,7 @@ class Regridder:
         esmf_args=None,
         precomputed_weights=None,
     ):
-        """
-        Create a regridder from descriptions of horizontal grids/meshes.
+        """Create a regridder from descriptions of horizontal grids/meshes.
 
         Weights will be calculated using :mod:`esmpy` and stored as a
         :class:`scipy.sparse.csr_matrix`
@@ -122,14 +122,14 @@ class Regridder:
             )
             if isinstance(tgt, RefinedGridInfo):
                 # At this point, the weight matrix represents more target points than
-                # tgt respresents. In order to collapse these points, we collapse the
+                # tgt represents. In order to collapse these points, we collapse the
                 # weights matrix by the appropriate matrix multiplication.
                 self.weight_matrix = (
                     tgt._collapse_weights(is_tgt=True) @ self.weight_matrix
                 )
             if isinstance(src, RefinedGridInfo):
                 # At this point, the weight matrix represents more source points than
-                # src respresents. In order to collapse these points, we collapse the
+                # src represents. In order to collapse these points, we collapse the
                 # weights matrix by the appropriate matrix multiplication.
                 self.weight_matrix = self.weight_matrix @ src._collapse_weights(
                     is_tgt=False
@@ -157,8 +157,7 @@ class Regridder:
         return out_dtype
 
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
-        """
-        Perform regridding on an array of data.
+        """Perform regridding on an array of data.
 
         Parameters
         ----------

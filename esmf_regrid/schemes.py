@@ -91,8 +91,7 @@ def _get_mask(cube_or_mesh, use_mask=True):
 
 
 def _contiguous_masked(bounds, mask):
-    """
-    Return the (N+1, M+1) vertices for 2D coordinate bounds of shape (N, M, 4).
+    """Return the (N+1, M+1) vertices for 2D coordinate bounds of shape (N, M, 4).
 
     Assumes the bounds are contiguous outside of the mask. As long as the only
     discontiguities are associated with masked points, the returned vertices will
@@ -262,8 +261,7 @@ def _mesh_to_MeshInfo(mesh, location, mask=None):
 
 
 def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
-    """
-    Perform regridding on data over specific dimensions.
+    """Perform regridding on data over specific dimensions.
 
     Parameters
     ----------
@@ -337,8 +335,7 @@ def _check_esmf_args(kwargs):
 def _map_complete_blocks(
     src, func, active_dims, out_sizes, *args, dtype=None, **kwargs
 ):
-    """
-    Apply a function to complete blocks.
+    """Apply a function to complete blocks.
 
     Based on :func:`iris._lazy_data.map_complete_blocks`.
     By "complete blocks" we mean that certain dimensions are enforced to be
@@ -391,7 +388,7 @@ def _map_complete_blocks(
     if num_out == 1:
         out_chunks[sorted_dims[0]] = out_sizes[0]
     else:
-        for dim, size in zip(active_dims, out_sizes):
+        for dim, size in zip(active_dims, out_sizes, strict=False):
             # Note: when mapping 2D to 2D, this will be the only alteration to
             # out_chunks, the same as iris._lazy_data.map_complete_blocks
             out_chunks[dim] = size
@@ -444,8 +441,7 @@ def _map_complete_blocks(
 
 
 def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
-    r"""
-    Return a new cube for the result of regridding.
+    r"""Return a new cube for the result of regridding.
 
     Returned cube represents the result of regridding the source cube
     onto the new grid/mesh.
@@ -490,7 +486,7 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         )
     if num_tgt_dims == 1:
         grid_y_dim = grid_x_dim = min(src_dims)
-    for tgt_coord, dim in zip(tgt_coords, (grid_x_dim, grid_y_dim)):
+    for tgt_coord, dim in zip(tgt_coords, (grid_x_dim, grid_y_dim), strict=False):
         if len(tgt_coord.shape) == 1:
             if isinstance(tgt_coord, iris.coords.DimCoord):
                 new_cube.add_dim_coord(tgt_coord, dim)
@@ -578,8 +574,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     tgt_mask=None,
     esmf_args=None,
 ):
-    """
-    First (setup) part of 'regrid_rectilinear_to_rectilinear'.
+    """First (setup) part of 'regrid_rectilinear_to_rectilinear'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
     The 'regrid info' returned can be re-used over many 2d slices.
@@ -619,8 +614,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(
 
 
 def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
-    """
-    Second (regrid) part of 'regrid_rectilinear_to_rectilinear'.
+    """Second (regrid) part of 'regrid_rectilinear_to_rectilinear'.
 
     Perform the prepared regrid calculation on a single cube.
 
@@ -671,8 +665,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     tgt_mask=None,
     esmf_args=None,
 ):
-    """
-    First (setup) part of 'regrid_unstructured_to_rectilinear'.
+    """First (setup) part of 'regrid_unstructured_to_rectilinear'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
     The 'regrid info' returned can be re-used over many 2d slices.
@@ -708,8 +701,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
 
 
 def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
-    """
-    Second (regrid) part of 'regrid_unstructured_to_rectilinear'.
+    """Second (regrid) part of 'regrid_unstructured_to_rectilinear'.
 
     Perform the prepared regrid calculation on a single cube.
 
@@ -764,8 +756,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     tgt_location=None,
     esmf_args=None,
 ):
-    """
-    First (setup) part of 'regrid_rectilinear_to_unstructured'.
+    """First (setup) part of 'regrid_rectilinear_to_unstructured'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
     The 'regrid info' returned can be re-used over many 2d slices.
@@ -811,8 +802,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
 
 
 def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
-    """
-    Second (regrid) part of 'regrid_rectilinear_to_unstructured'.
+    """Second (regrid) part of 'regrid_rectilinear_to_unstructured'.
 
     Perform the prepared regrid calculation on a single cube.
 
@@ -869,8 +859,7 @@ def _regrid_unstructured_to_unstructured__prepare(
     tgt_location=None,
     esmf_args=None,
 ):
-    """
-    First (setup) part of 'regrid_unstructured_to_unstructured'.
+    """First (setup) part of 'regrid_unstructured_to_unstructured'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
     The 'regrid info' returned can be re-used over many 2d slices.
@@ -910,8 +899,7 @@ def _regrid_unstructured_to_unstructured__prepare(
 
 
 def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
-    """
-    Second (regrid) part of 'regrid_unstructured_to_unstructured'.
+    """Second (regrid) part of 'regrid_unstructured_to_unstructured'.
 
     Perform the prepared regrid calculation on a single cube.
 
@@ -961,8 +949,7 @@ def regrid_rectilinear_to_rectilinear(
     src_resolution=None,
     tgt_resolution=None,
 ):
-    r"""
-    Regrid rectilinear :class:`~iris.cube.Cube` onto another rectilinear grid.
+    r"""Regrid rectilinear :class:`~iris.cube.Cube` onto another rectilinear grid.
 
     Return a new :class:`~iris.cube.Cube` with :attr:`~iris.cube.Cube.data`
     values calculated using the area weighted
@@ -1010,8 +997,7 @@ def regrid_rectilinear_to_rectilinear(
 
 
 class ESMFAreaWeighted:
-    """
-    A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
+    """A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
 
     This class describes an area-weighted regridding scheme for regridding
     between horizontal grids/meshes. It uses :mod:`esmpy` to handle
@@ -1027,8 +1013,7 @@ class ESMFAreaWeighted:
         tgt_location="face",
         esmf_args={},
     ):
-        """
-        Area-weighted scheme for regridding between rectilinear grids.
+        """Area-weighted scheme for regridding between rectilinear grids.
 
         Parameters
         ----------
@@ -1090,8 +1075,7 @@ class ESMFAreaWeighted:
         tgt_location="face",
         esmf_args=None,
     ):
-        """
-        Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
+        """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
         Parameters
         ----------
@@ -1161,8 +1145,7 @@ class ESMFAreaWeighted:
 
 
 class ESMFBilinear:
-    """
-    A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
+    """A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
 
     This class describes a bilinear regridding scheme for regridding
     between horizontal grids/meshes. It uses :mod:`esmpy` to handle
@@ -1178,8 +1161,7 @@ class ESMFBilinear:
         extrapolate_gaps=False,
         esmf_args={},
     ):
-        """
-        Area-weighted scheme for regridding between rectilinear grids.
+        """Area-weighted scheme for regridding between rectilinear grids.
 
         Parameters
         ----------
@@ -1238,8 +1220,7 @@ class ESMFBilinear:
         extrapolate_gaps=False,
         esmf_args=None,
     ):
-        """
-        Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
+        """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
         Parameters
         ----------
@@ -1300,8 +1281,7 @@ class ESMFBilinear:
 
 
 class ESMFNearest:
-    """
-    A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
+    """A scheme which can be recognised by :meth:`iris.cube.Cube.regrid`.
 
     This class describes a nearest neighbour regridding scheme for regridding
     between horizontal grids/meshes. It uses :mod:`esmpy` to handle
@@ -1328,8 +1308,7 @@ class ESMFNearest:
     def __init__(
         self, use_src_mask=False, use_tgt_mask=False, tgt_location=None, esmf_args={}
     ):
-        """
-        Nearest neighbour scheme for regridding between rectilinear grids.
+        """Nearest neighbour scheme for regridding between rectilinear grids.
 
         Parameters
         ----------
@@ -1371,8 +1350,7 @@ class ESMFNearest:
         tgt_location=None,
         esmf_args=None,
     ):
-        """
-        Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
+        """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
         Parameters
         ----------
@@ -1440,8 +1418,7 @@ class _ESMFRegridder:
         esmf_args={},
         **kwargs,
     ):
-        """
-        Create regridder for conversions between ``src`` and ``tgt``.
+        """Create regridder for conversions between ``src`` and ``tgt``.
 
         Parameters
         ----------
@@ -1502,12 +1479,11 @@ class _ESMFRegridder:
                 kwargs["tgt_location"] = tgt_location
             else:
                 prepare_func = _regrid_unstructured_to_rectilinear__prepare
+        elif tgt_is_mesh:
+            prepare_func = _regrid_rectilinear_to_unstructured__prepare
+            kwargs["tgt_location"] = tgt_location
         else:
-            if tgt_is_mesh:
-                prepare_func = _regrid_rectilinear_to_unstructured__prepare
-                kwargs["tgt_location"] = tgt_location
-            else:
-                prepare_func = _regrid_rectilinear_to_rectilinear__prepare
+            prepare_func = _regrid_rectilinear_to_rectilinear__prepare
         regrid_info = prepare_func(src, tgt, method, **kwargs)
 
         # Store regrid info.
@@ -1521,8 +1497,7 @@ class _ESMFRegridder:
             self._src = GridRecord(_get_coord(src, "x"), _get_coord(src, "y"))
 
     def __call__(self, cube):
-        """
-        Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
+        """Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
 
         The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
         :class:`~iris.cube.Cube` used to create this :class:`_ESMFRegridder` instance.
@@ -1566,7 +1541,9 @@ class _ESMFRegridder:
             new_src_x, new_src_y = (_get_coord(cube, "x"), _get_coord(cube, "y"))
 
             # Check the source grid matches that used in initialisation
-            for saved_coord, new_coord in zip(self._src, (new_src_x, new_src_y)):
+            for saved_coord, new_coord in zip(
+                self._src, (new_src_x, new_src_y), strict=False
+            ):
                 # Ignore differences in var_name that might be caused by saving.
                 saved_coord = copy.deepcopy(saved_coord)
                 saved_coord.var_name = new_coord.var_name
@@ -1595,11 +1572,10 @@ class _ESMFRegridder:
                 perform_func = _regrid_unstructured_to_unstructured__perform
             else:
                 perform_func = _regrid_unstructured_to_rectilinear__perform
+        elif tgt_is_mesh:
+            perform_func = _regrid_rectilinear_to_unstructured__perform
         else:
-            if tgt_is_mesh:
-                perform_func = _regrid_rectilinear_to_unstructured__perform
-            else:
-                perform_func = _regrid_rectilinear_to_rectilinear__perform
+            perform_func = _regrid_rectilinear_to_rectilinear__perform
         result = perform_func(cube, regrid_info, self.mdtol)
 
         return result
@@ -1621,8 +1597,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         tgt_location="face",
         esmf_args={},
     ):
-        """
-        Create regridder for conversions between ``src`` and ``tgt``.
+        """Create regridder for conversions between ``src`` and ``tgt``.
 
         Parameters
         ----------
@@ -1708,8 +1683,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         extrapolate_gaps=False,
         esmf_args={},
     ):
-        """
-        Create regridder for conversions between ``src`` and ``tgt``.
+        """Create regridder for conversions between ``src`` and ``tgt``.
 
         Parameters
         ----------
@@ -1777,8 +1751,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         tgt_location=None,
         esmf_args={},
     ):
-        """
-        Create regridder for conversions between ``src`` and ``tgt``.
+        """Create regridder for conversions between ``src`` and ``tgt``.
 
         Parameters
         ----------

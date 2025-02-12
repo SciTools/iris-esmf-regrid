@@ -4,8 +4,7 @@ from os import environ
 
 
 def disable_repeat_between_setup(benchmark_object):
-    """
-    Decorate benchmarks where object persistence would be inappropriate.
+    """Decorate benchmarks where object persistence would be inappropriate.
 
     E.g:
         * Data is realised during testing.
@@ -30,8 +29,7 @@ def disable_repeat_between_setup(benchmark_object):
 
 
 def skip_benchmark(benchmark_object):
-    """
-    Decorate benchmarks to be skipped.
+    """Decorate benchmarks to be skipped.
 
     Simply doesn't return the object.
 
@@ -43,12 +41,10 @@ def skip_benchmark(benchmark_object):
     (e.g. ``def time_something(self):`` ).
 
     """
-    pass
 
 
 def on_demand_benchmark(benchmark_object):
-    """
-    Decorate benchmark(s) that are disabled unless ON_DEMAND_BENCHARKS env var is set.
+    """Decorate benchmark(s) that are disabled unless ON_DEMAND_BENCHARKS env var is set.
 
     For benchmarks that, for whatever reason, should not be run by default.
     E.g:

@@ -2,8 +2,6 @@
 
 """iris-esmf-regrid setuptools packaging."""
 
-
 from setuptools import setup
-
 
 setup()

@@ -4,14 +4,12 @@ import pathlib
 
 import numpy as np
 
-
 # Base directory of the test results.
 _RESULT_PATH = pathlib.Path(__file__).parent.resolve() / "results"
 
 
 def get_result_path(relative_path, unit=True):
-    """
-    Form the absolute path to the results test file.
+    """Form the absolute path to the results test file.
 
     Parameters
     ----------
@@ -42,8 +40,7 @@ def get_result_path(relative_path, unit=True):
 
 
 def make_grid_args(nx, ny):
-    """
-    Return arguments for a small grid.
+    """Return arguments for a small grid.
 
     Parameters
     ----------

@@ -16,8 +16,7 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 
 
 def _test_cube_regrid(scheme, src_type, tgt_type):
-    """
-    Test that `scheme` can be passed to a cubes regrid method.
+    """Test that `scheme` can be passed to a cubes regrid method.
 
     Checks that regridding occurs and that mdtol is used correctly.
     """
@@ -83,8 +82,7 @@ def _test_cube_regrid(scheme, src_type, tgt_type):
 
 
 def _test_invalid_mdtol(scheme):
-    """
-    Test initialisation of the scheme.
+    """Test initialisation of the scheme.
 
     Checks that an error is raised when mdtol is out of range.
     """
@@ -96,8 +94,7 @@ def _test_invalid_mdtol(scheme):
 
 
 def _test_mask_from_init(scheme, mask_keyword):
-    """
-    Test initialisation of scheme.
+    """Test initialisation of scheme.
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """
@@ -132,8 +129,7 @@ def _test_mask_from_init(scheme, mask_keyword):
 
 
 def _test_mask_from_regridder(scheme, mask_keyword):
-    """
-    Test regridder method of the scheme.
+    """Test regridder method of the scheme.
 
     Checks that use_src_mask and use_tgt_mask are passed down correctly.
     """

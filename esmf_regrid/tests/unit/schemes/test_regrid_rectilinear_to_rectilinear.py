@@ -16,8 +16,7 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 
 
 def test_rotated_regridding():
-    """
-    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
     Test the regriding of a rotated pole coordinate system. The test is
     designed to that it should be possible to verify the result by
@@ -70,8 +69,7 @@ def test_rotated_regridding():
 
 
 def test_extra_dims():
-    """
-    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
@@ -195,8 +193,7 @@ def test_laziness(src_transposed, tgt_transposed):
 @pytest.mark.parametrize("src_transposed", (False, True))
 @pytest.mark.parametrize("tgt_transposed", (False, True))
 def test_laziness_curvilinear(src_transposed, tgt_transposed):
-    """
-    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
     Tests the handling of lazy data. Ensures that handling is the same
     for non-lazy data.
@@ -264,8 +261,7 @@ def test_laziness_curvilinear(src_transposed, tgt_transposed):
 
 
 def test_extra_dims_curvilinear():
-    """
-    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
@@ -351,8 +347,7 @@ def test_extra_dims_curvilinear():
 
 
 def test_extra_dims_curvilinear_to_rectilinear():
-    """
-    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
@@ -438,8 +433,7 @@ def test_extra_dims_curvilinear_to_rectilinear():
 
 
 def test_extra_dims_rectilinear_to_curvilinear():
-    """
-    Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
 
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.

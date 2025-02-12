@@ -34,8 +34,7 @@ def _add_metadata(cube):
 
 
 def test_flat_cubes():
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
     Tests with flat cubes as input (a 2D grid cube and a 1D mesh cube).
     """
@@ -75,8 +74,7 @@ def test_flat_cubes():
     "method", (Constants.Method.BILINEAR, Constants.Method.NEAREST)
 )
 def test_node_friendly_methods(method):
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
     Tests with the bilinear and nearest method.
     """
@@ -106,8 +104,7 @@ def test_node_friendly_methods(method):
 
 
 def test_invalid_args():
-    """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
     Tests that an appropriate error is raised when arguments are invalid.
     """
@@ -156,8 +153,7 @@ def test_invalid_args():
 
 
 def test_multidim_cubes():
-    """
-    Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """Test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
     Tests with multidimensional cubes. The source cube contains
     coordinates on the dimensions before and after the grid dimensions.
@@ -222,8 +218,7 @@ def test_multidim_cubes():
 
 
 def test_mask_handling():
-    """
-    Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """Test masked data handling for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
     Tests masked data handling for multiple valid values for mdtol.
     """
@@ -255,8 +250,7 @@ def test_mask_handling():
 
 
 def test_resolution():
-    """
-    Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
+    """Basic test for :func:`esmf_regrid.experimental.unstructured_scheme.regrid_rectilinear_to_unstructured`.
 
     Tests the src_resolution keyword with grids that would otherwise not work.
     """

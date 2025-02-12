@@ -1,5 +1,4 @@
-"""
-Scripts for generating supporting data for benchmarking.
+"""Scripts for generating supporting data for benchmarking.
 
 Data generated using iris-esmf-regrid should use
 :func:`run_function_elsewhere`, which means that data is generated using a
@@ -43,7 +42,7 @@ except (CalledProcessError, FileNotFoundError, PermissionError):
 default_data_dir = (Path(__file__).parent.parent / ".data").resolve()
 # Optionally override the default data location with environment variable.
 BENCHMARK_DATA = Path(environ.get("BENCHMARK_DATA", default_data_dir))
-if BENCHMARK_DATA == default_data_dir:
+if default_data_dir == BENCHMARK_DATA:
     BENCHMARK_DATA.mkdir(exist_ok=True)
     message = (
         f"No BENCHMARK_DATA env var, defaulting to {BENCHMARK_DATA}. "
@@ -62,8 +61,7 @@ ESMFMKFILE = "ESMFMKFILE"
 
 
 def run_function_elsewhere(func_to_run, *args, **kwargs):
-    """
-    Run a given function using the :const:`DATA_GEN_PYTHON` executable.
+    """Run a given function using the :const:`DATA_GEN_PYTHON` executable.
 
     This structure allows the function to be written natively.
 
@@ -90,7 +88,7 @@ def run_function_elsewhere(func_to_run, *args, **kwargs):
     func_string = dedent(getsource(func_to_run))
     func_string = func_string.replace("@staticmethod\n", "")
     func_call_term_strings = [repr(arg) for arg in args]
-    func_call_term_strings += [f"{name}={repr(val)}" for name, val in kwargs.items()]
+    func_call_term_strings += [f"{name}={val!r}" for name, val in kwargs.items()]
     func_call_string = (
         f"{func_to_run.__name__}(" + ",".join(func_call_term_strings) + ")"
     )
@@ -115,8 +113,7 @@ def _grid_cube(
     """Call _grid_cube via :func:`run_function_elsewhere`."""
 
     def external(*args, **kwargs):
-        """
-        Prep and call _grid_cube, saving to a NetCDF file.
+        """Prep and call _grid_cube, saving to a NetCDF file.
 
         Saving to a file allows the original python executable to pick back up.
 
@@ -178,8 +175,7 @@ def _curvilinear_cube(
     """Call _curvilinear_cube via :func:`run_function_elsewhere`."""
 
     def external(*args, **kwargs):
-        """
-        Prep and call _curvilinear_cube, saving to a NetCDF file.
+        """Prep and call _curvilinear_cube, saving to a NetCDF file.
 
         Saving to a file allows the original python executable to pick back up.
 
@@ -227,8 +223,7 @@ def _gridlike_mesh_cube(n_lons, n_lats):
     """Call _gridlike_mesh via :func:`run_function_elsewhere`."""
 
     def external(*args, **kwargs):
-        """
-        Prep and call _gridlike_mesh, saving to a NetCDF file.
+        """Prep and call _gridlike_mesh, saving to a NetCDF file.
 
         Saving to a file allows the original python executable to pick back up.
 
