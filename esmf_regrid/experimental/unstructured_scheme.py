@@ -118,6 +118,7 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
         tgt_resolution=None,
         use_src_mask=False,
         use_tgt_mask=False,
+        esmf_args=None,
     ):
         """Create regridder for conversions between source mesh and target grid.
 
@@ -155,6 +156,8 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             a boolean value. If True, this array is taken from the mask on the data
             in ``tgt``. If False, no mask will be taken and all points
             will be used in weights calculation.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Raises
         ------
@@ -175,6 +178,7 @@ class MeshToGridESMFRegridder(_ESMFRegridder):
             tgt_resolution=tgt_resolution,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
+            esmf_args=esmf_args,
         )
         self.resolution = tgt_resolution
         self.mesh, self.location = self._src
@@ -283,6 +287,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
+        esmf_args=None,
     ):
         """Create regridder for conversions between source grid and target mesh.
 
@@ -324,6 +329,8 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
         tgt_location : str or None, default=None
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
 
         Raises
         ------
@@ -344,6 +351,7 @@ class GridToMeshESMFRegridder(_ESMFRegridder):
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
+            esmf_args=esmf_args,
         )
         self.resolution = src_resolution
         self.mesh, self.location = self._tgt
