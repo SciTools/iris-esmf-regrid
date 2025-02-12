@@ -323,7 +323,7 @@ def _check_esmf_args(kwargs):
             "ignore_degenerate",
             "large_file",
         ]
-        for kwarg in kwargs.keys():
+        for kwarg in kwargs:
             if kwarg in invalid_kwargs:
                 msg = f"`esmpy.Regrid` argument `{kwarg}` cannot be controlled by `esmf_args`."
                 raise ValueError(msg)
@@ -1011,7 +1011,7 @@ class ESMFAreaWeighted:
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location="face",
-        esmf_args={},
+        esmf_args=None,
     ):
         """Area-weighted scheme for regridding between rectilinear grids.
 
@@ -1049,6 +1049,8 @@ class ESMFAreaWeighted:
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = "face"
+        if esmf_args is None:
+            esmf_args = {}
         _check_esmf_args(esmf_args)
         self.esmf_args = esmf_args
 
@@ -1159,7 +1161,7 @@ class ESMFBilinear:
         use_tgt_mask=False,
         tgt_location=None,
         extrapolate_gaps=False,
-        esmf_args={},
+        esmf_args=None,
     ):
         """Area-weighted scheme for regridding between rectilinear grids.
 
@@ -1195,6 +1197,8 @@ class ESMFBilinear:
         self.tgt_location = tgt_location
         if extrapolate_gaps:
             esmf_args = STANDAR_BILINEAR_EXTAP_ARGS
+        if esmf_args is None:
+            esmf_args = {}
         _check_esmf_args(esmf_args)
         self.esmf_args = esmf_args
 
@@ -1415,7 +1419,7 @@ class _ESMFRegridder:
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
-        esmf_args={},
+        esmf_args=None,
         **kwargs,
     ):
         """Create regridder for conversions between ``src`` and ``tgt``.
@@ -1463,6 +1467,8 @@ class _ESMFRegridder:
         self.mdtol = mdtol
         self.method = method
 
+        if esmf_args is None:
+            esmf_args = {}
         self.esmf_args = esmf_args
         kwargs["esmf_args"] = self.esmf_args
 
@@ -1595,7 +1601,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location="face",
-        esmf_args={},
+        esmf_args=None,
     ):
         """Create regridder for conversions between ``src`` and ``tgt``.
 
@@ -1681,7 +1687,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         use_tgt_mask=False,
         tgt_location=None,
         extrapolate_gaps=False,
-        esmf_args={},
+        esmf_args=None,
     ):
         """Create regridder for conversions between ``src`` and ``tgt``.
 
@@ -1749,7 +1755,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
         use_src_mask=False,
         use_tgt_mask=False,
         tgt_location=None,
-        esmf_args={},
+        esmf_args=None,
     ):
         """Create regridder for conversions between ``src`` and ``tgt``.
 

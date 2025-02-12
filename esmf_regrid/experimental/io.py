@@ -9,7 +9,7 @@ import numpy as np
 import scipy.sparse
 
 import esmf_regrid
-from esmf_regrid import _load_context, Constants, check_method, esmpy
+from esmf_regrid import Constants, _load_context, check_method, esmpy
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
@@ -277,7 +277,7 @@ def save_regridder(rg, filename):
     esmf_args = rg.esmf_args
     if esmf_args is None:
         esmf_args = {}
-    for arg in esmf_args.keys():
+    for arg in esmf_args:
         if arg not in VALID_ESMF_KWARGS:
             raise KeyError(f"{arg} is not considered a valid argument to pass to ESMF.")
     esmf_arg_attributes = {
@@ -377,9 +377,9 @@ def load_regridder(filename):
         use_tgt_mask = False
 
     esmf_args = weights_cube.coord(ESMF_ARGS).attributes
-    for arg, dict in ESMF_ENUM_ARGS.items():
+    for arg, arg_dict in ESMF_ENUM_ARGS.items():
         if arg in esmf_args:
-            esmf_args[arg] = dict[esmf_args[arg]]
+            esmf_args[arg] = arg_dict[esmf_args[arg]]
 
     if scheme is GridToMeshESMFRegridder:
         resolution_keyword = SOURCE_RESOLUTION
