@@ -1310,7 +1310,7 @@ class ESMFNearest:
     """
 
     def __init__(
-        self, use_src_mask=False, use_tgt_mask=False, tgt_location=None, esmf_args={}
+        self, use_src_mask=False, use_tgt_mask=False, tgt_location=None, esmf_args=None,
     ):
         """Nearest neighbour scheme for regridding between rectilinear grids.
 
@@ -1331,6 +1331,8 @@ class ESMFNearest:
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = tgt_location
+        if esmf_args is None:
+            esmf_args = {}
         _check_esmf_args(esmf_args)
         self.esmf_args = esmf_args
 
