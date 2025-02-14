@@ -439,7 +439,11 @@ def test_mesh_to_grid_curvilinear_round_trip(tmp_path, regridder):
     [ESMFAreaWeighted, ESMFBilinear, ESMFNearest],
     ids=["conservative", "linear", "nearest"],
 )
-def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
+@pytest.mark.parametrize(
+    "precomputed",
+    [True, False],
+)
+def test_generic_regridder(tmp_path, src_type, tgt_type, scheme, precomputed):
     """Test save/load round tripping for regridders in `esmf_regrid.schemes`."""
     n_lons_src = 6
     n_lons_tgt = 3
@@ -457,6 +461,9 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
         tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
 
     original_rg = scheme().regridder(src, tgt)
+    if precomputed:
+        weights = original_rg.regridder.weight_matrix
+        original_rg = scheme().regridder(src, tgt, precomputed_weights=weights)
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
@@ -469,6 +476,7 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
         assert original_rg.src_resolution == loaded_rg.src_resolution
         assert original_rg.tgt_resolution == loaded_rg.tgt_resolution
     assert original_rg.mdtol == loaded_rg.mdtol
+    assert original_rg.regridder.esmf_version == original_rg.regridder.esmf_version
 
 
 @pytest.mark.parametrize(
