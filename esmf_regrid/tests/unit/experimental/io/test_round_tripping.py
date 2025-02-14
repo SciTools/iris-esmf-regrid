@@ -549,7 +549,7 @@ def test_generic_regridder_resolution(tmp_path, scheme):
     assert loaded_rg.tgt_resolution == tgt_resolution
     assert loaded_rg.regridder.tgt.resolution == tgt_resolution
 
-def test_precomputed():
+def test_precomputed(tmp_path):
     """Test save/load round tripping for regridders made with precomputed weights."""
     original_rg, src = _make_grid_to_mesh_regridder(
         method=None, regridder=ESMFAreaWeightedRegridder
