@@ -367,6 +367,8 @@ def load_regridder(filename):
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]
+    if esmf_version == "None":
+        esmf_version = None
     regridder.regridder.esmf_version = esmf_version
     esmf_regrid_version = weights_cube.attributes[VERSION_INITIAL]
     regridder.regridder.esmf_regrid_version = esmf_regrid_version
