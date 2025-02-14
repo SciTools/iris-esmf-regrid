@@ -119,9 +119,9 @@ class Regridder:
                     is_tgt=False
                 )
         else:
-            if not scipy.sparse.isspmatrix(precomputed_weights):
+            if not scipy.sparse.issparse(precomputed_weights):
                 raise ValueError(
-                    "Precomputed weights must be given as a sparse matrix."
+                    "Precomputed weights must be given as a sparse array or matrix."
                 )
             if precomputed_weights.shape != (self.tgt.size, self.src.size):
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
