@@ -6,6 +6,7 @@ import numpy as np
 from numpy import ma
 import pytest
 
+from esmf_regrid import esmpy
 from esmf_regrid.schemes import ESMFAreaWeighted, ESMFBilinear, ESMFNearest
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import _grid_cube
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
@@ -248,3 +249,51 @@ def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
 
     assert result.lazy_data().dtype == expected_dtype
     assert result.data.dtype == expected_dtype
+
+
+def _test_esmf_args(scheme):
+    """Test regridding scheme handles esmf_args as expected."""
+    n_lons_src = 6
+    n_lons_tgt = 3
+    n_lats_src = 4
+    n_lats_tgt = 2
+    lon_bounds = (-180, 180)
+    lat_bounds = (-90, 90)
+
+    src = _grid_cube(n_lons_src, n_lats_src, lon_bounds, lat_bounds, circular=True)
+    tgt = _grid_cube(n_lons_tgt, n_lats_tgt, lon_bounds, lat_bounds, circular=True)
+
+    valid_esmf_args = {
+        "unmapped_action": esmpy.UnmappedAction.ERROR,
+        "ignore_degenerate": False,
+        "line_type": esmpy.LineType.CART,
+        "large_file": True,
+    }
+
+    rg_1 = scheme(esmf_args=valid_esmf_args).regridder(src, tgt)
+    rg_2 = scheme().regridder(src, tgt, esmf_args=valid_esmf_args)
+
+    assert rg_1.esmf_args == valid_esmf_args
+    assert rg_2.esmf_args == valid_esmf_args
+
+    invalid_esmf_args_duplicate = {"regrid_method": None}
+    invalid_esmf_args_incorrect = {"invalid_arg": None}
+    invalid_esmf_args_type = "invalid_arg"
+
+    match_duplicate = "cannot be controlled by `esmf_args`"
+    with pytest.raises(ValueError, match=match_duplicate):
+        _ = scheme(esmf_args=invalid_esmf_args_duplicate)
+    with pytest.raises(ValueError, match=match_duplicate):
+        _ = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_duplicate)
+
+    match_incorrect = "is not a valid argument for"
+    with pytest.raises(ValueError, match=match_incorrect):
+        _ = scheme(esmf_args=invalid_esmf_args_incorrect)
+    with pytest.raises(ValueError, match=match_incorrect):
+        _ = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_incorrect)
+
+    match_type = "Expected `esmf_args` to be a dict, got a "
+    with pytest.raises(TypeError, match=match_type):
+        _ = scheme(esmf_args=invalid_esmf_args_type)
+    with pytest.raises(TypeError, match=match_type):
+        _ = scheme().regridder(src, tgt, esmf_args=invalid_esmf_args_type)
