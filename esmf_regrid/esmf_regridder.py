@@ -17,6 +17,8 @@ __all__ = [
 ]
 
 
+ESMF_NO_VERSION = "N/A"
+
 def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
     # The value, in array form, that ESMF should treat as an affirmative mask.
     expected_mask = np.array([True])
@@ -131,7 +133,7 @@ class Regridder:
                         precomputed_weights.shape,
                     )
                 )
-            self.esmf_version = None
+            self.esmf_version = ESMF_NO_VERSION
             self.weight_matrix = precomputed_weights
 
     def _out_dtype(self, in_dtype):

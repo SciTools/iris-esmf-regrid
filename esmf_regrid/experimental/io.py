@@ -217,8 +217,6 @@ def save_regridder(rg, filename):
     weight_shape = reformatted_weight_matrix.shape
 
     esmf_version = rg.regridder.esmf_version
-    if esmf_version is None:
-        esmf_version = "None"
     esmf_regrid_version = rg.regridder.esmf_regrid_version
     save_version = esmf_regrid.__version__
 
@@ -367,8 +365,6 @@ def load_regridder(filename):
     )
 
     esmf_version = weights_cube.attributes[VERSION_ESMF]
-    if esmf_version == "None":
-        esmf_version = None
     regridder.regridder.esmf_version = esmf_version
     esmf_regrid_version = weights_cube.attributes[VERSION_INITIAL]
     regridder.regridder.esmf_regrid_version = esmf_regrid_version

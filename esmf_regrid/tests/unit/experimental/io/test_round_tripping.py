@@ -558,6 +558,7 @@ def test_precomputed(tmp_path):
     tgt = original_rg._tgt
     weights = original_rg.regridder.weight_matrix
     original_rg = ESMFAreaWeightedRegridder(src, tgt, precomputed_weights=weights)
+    assert original_rg.regridder.esmf_version == "N/A"
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
