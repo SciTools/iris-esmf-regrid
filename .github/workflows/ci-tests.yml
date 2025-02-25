@@ -68,7 +68,7 @@ jobs:
           path: |
             .nox
             $CONDA/pkgs
-          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}-${{ matrix.python-version }}
+          key: ${{ runner.os }}-${{ hashFiles('requirements/*') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}-${{ matrix.python-version }}
 
       - name: Cache test data directory
         id: cache-test-data
