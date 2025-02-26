@@ -68,7 +68,7 @@ jobs:
             .nox
             benchmarks/.asv/env
             $CONDA/pkgs
-          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}
+          key: ${{ runner.os }}-${{ hashFiles('requirements/locks/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}
 
       - name: Benchmark script
         run: |
