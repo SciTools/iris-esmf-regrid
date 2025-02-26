@@ -11,6 +11,7 @@ from esmf_regrid import (
     ESMFBilinear,
     ESMFNearest,
 )
+from esmf_regrid.esmf_regridder import ESMF_NO_VERSION
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -558,7 +559,7 @@ def test_precomputed(tmp_path):
     tgt = original_rg._tgt
     weights = original_rg.regridder.weight_matrix
     original_rg = ESMFAreaWeightedRegridder(src, tgt, precomputed_weights=weights)
-    assert original_rg.regridder.esmf_version == "N/A"
+    assert original_rg.regridder.esmf_version == ESMF_NO_VERSION
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
