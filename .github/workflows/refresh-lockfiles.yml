@@ -42,7 +42,7 @@ jobs:
           private_key: ${{ secrets.AUTH_APP_PRIVATE_KEY }}
 
       - name: create pull request
-        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e
         with:
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: Updated environment lockfiles

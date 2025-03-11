@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
+## [Unreleased]
+
+### Fixed
+
+- [PR#462](https://github.com/SciTools/iris-esmf-regrid/pull/462)
+  Fixed bug when saving regridders made with precomputed weights.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+### Added
+
+- [PR#464](https://github.com/SciTools/iris-esmf-regrid/pull/464)
+  Add support for Python 3.13.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+### Removed
+
+- [PR#464](https://github.com/SciTools/iris-esmf-regrid/pull/464)
+  Remove support for Python 3.10.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.11] - 2024-07-31
 
 ### Fixed
