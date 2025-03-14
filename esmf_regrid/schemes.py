@@ -1037,7 +1037,9 @@ class ESMFAreaWeighted:
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         """
         if not (0 <= mdtol <= 1):
@@ -1106,7 +1108,9 @@ class ESMFAreaWeighted:
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
 
         Returns
@@ -1188,7 +1192,9 @@ class ESMFBilinear:
             to ``esmf_args`` for the keywords "extrap_method", "extrap_num_src_pnts"
             or "extrap_dist_exponent".
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         """
         if not (0 <= mdtol <= 1):
@@ -1251,7 +1257,9 @@ class ESMFBilinear:
             to ``esmf_args`` for the keywords "extrap_method", "extrap_num_src_pnts"
             or "extrap_dist_exponent".
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         Returns
         -------
@@ -1334,7 +1342,9 @@ class ESMFNearest:
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
         """
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
@@ -1382,7 +1392,9 @@ class ESMFNearest:
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         Returns
         -------
@@ -1649,7 +1661,9 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         Raises
         ------
@@ -1658,7 +1672,7 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
             or ``tgt`` respectively are not constant over non-horizontal dimensions or
             if tgt_location is not "face".
         """
-        kwargs = dict()
+        kwargs = {}
         self.src_resolution = src_resolution
         if src_resolution is not None:
             kwargs["src_resolution"] = src_resolution
@@ -1732,7 +1746,9 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             to ``esmf_args`` for the keywords "extrap_method", "extrap_num_src_pnts"
             or "extrap_dist_exponent".
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         Raises
         ------
@@ -1792,7 +1808,9 @@ class ESMFNearestRegridder(_ESMFRegridder):
             Either "face" or "node". Describes the location for data on the mesh
             if the target is not a :class:`~iris.cube.Cube`.
         esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
+            A dictionary of arguments to pass to ESMF. For the sake of reference, These
+            arguments are recorded as a property of this regridder and are stored when
+            the regridder is saved .
 
         Raises
         ------
