@@ -33,7 +33,7 @@ __all__ = [
     "regrid_rectilinear_to_rectilinear",
 ]
 
-STANDARD_BILINEAR_EXTAP_ARGS = {
+STANDARD_BILINEAR_EXTRAP_ARGS = {
     "extrap_method": esmpy.ExtrapMethod.NEAREST_IDAVG,
     "extrap_num_src_pnts": 2,
     "extrap_dist_exponent": 1,
@@ -1207,7 +1207,7 @@ class ESMFBilinear:
         if esmf_args is None:
             esmf_args = {}
         if extrapolate_gaps:
-            esmf_args.update(STANDARD_BILINEAR_EXTAP_ARGS)
+            esmf_args.update(STANDARD_BILINEAR_EXTRAP_ARGS)
         _check_esmf_args(esmf_args)
         self.esmf_args = esmf_args
 
@@ -1284,7 +1284,7 @@ class ESMFBilinear:
         if esmf_args is None:
             esmf_args = self.esmf_args
         if extrapolate_gaps:
-            esmf_args = STANDARD_BILINEAR_EXTAP_ARGS
+            esmf_args = STANDARD_BILINEAR_EXTRAP_ARGS
         return ESMFBilinearRegridder(
             src_grid,
             tgt_grid,
@@ -1759,7 +1759,7 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         if esmf_args is None:
             esmf_args = {}
         if extrapolate_gaps:
-            esmf_args.update(STANDARD_BILINEAR_EXTAP_ARGS)
+            esmf_args.update(STANDARD_BILINEAR_EXTRAP_ARGS)
         super().__init__(
             src,
             tgt,
