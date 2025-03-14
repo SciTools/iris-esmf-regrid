@@ -376,7 +376,12 @@ def load_regridder(filename):
     else:
         use_tgt_mask = False
 
-    esmf_args = weights_cube.coord(ESMF_ARGS).attributes
+    # Allow for this coord not to exist for the sake of backwards compatibility.
+    esmf_args_coords = weights_cube.coords(ESMF_ARGS)
+    if len(esmf_args_coords) == 0:
+        esmf_args = {}
+    else:
+        esmf_args = esmf_args_coords[0].attributes
     for arg, arg_dict in ESMF_ENUM_ARGS.items():
         if arg in esmf_args:
             esmf_args[arg] = arg_dict[esmf_args[arg]]
