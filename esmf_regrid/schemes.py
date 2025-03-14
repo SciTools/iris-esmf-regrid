@@ -1058,11 +1058,10 @@ class ESMFAreaWeighted:
         """Return a representation of the class."""
         result = (
             f"ESMFAreaWeighted("
-            f"    mdtol={self.mdtol},"
-            f"    use_src_mask={self.use_src_mask},"
-            f"    use_tgt_mask={self.use_tgt_mask},"
-            f"    esmf_args={self.esmf_args},"
-            f")"
+            f"mdtol={self.mdtol}, "
+            f"use_src_mask={self.use_src_mask}, "
+            f"use_tgt_mask={self.use_tgt_mask}, "
+            f"esmf_args={self.esmf_args})"
         )
         return result
 
@@ -1183,7 +1182,9 @@ class ESMFBilinear:
         extrapolate_gaps : bool, default=False
             Use a standard set of ESMF arguments for extrapolation which achieves
             continuity with bilinear regridding. Useful for situations where gaps
-            between cells would be masked.
+            between cells would be masked. Note: this overwrites any arguments passed
+            to ``esmf_args`` for the keywords "extrap_method", "extrap_num_src_pnts"
+            or "extrap_dist_exponent".
         esmf_args : dict, optional
             A dictionary of arguments to pass to ESMF.
 
@@ -1195,10 +1196,10 @@ class ESMFBilinear:
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = tgt_location
-        if extrapolate_gaps:
-            esmf_args = STANDAR_BILINEAR_EXTAP_ARGS
         if esmf_args is None:
             esmf_args = {}
+        if extrapolate_gaps:
+            esmf_args.update(STANDAR_BILINEAR_EXTAP_ARGS)
         _check_esmf_args(esmf_args)
         self.esmf_args = esmf_args
 
@@ -1206,11 +1207,10 @@ class ESMFBilinear:
         """Return a representation of the class."""
         result = (
             f"ESMFBilinear("
-            f"    mdtol={self.mdtol},"
-            f"    use_src_mask={self.use_src_mask},"
-            f"    use_tgt_mask={self.use_tgt_mask},"
-            f"    esmf_args={self.esmf_args},"
-            f")"
+            f"mdtol={self.mdtol}, "
+            f"use_src_mask={self.use_src_mask}, "
+            f"use_tgt_mask={self.use_tgt_mask}, "
+            f"esmf_args={self.esmf_args})"
         )
         return result
 
@@ -1245,7 +1245,9 @@ class ESMFBilinear:
         extrapolate_gaps : bool, default=False
             Use a standard set of ESMF arguments for extrapolation which achieves
             continuity with bilinear regridding. Useful for situations where gaps
-            between cells would be masked.
+            between cells would be masked. Note: this overwrites any arguments passed
+            to ``esmf_args`` for the keywords "extrap_method", "extrap_num_src_pnts"
+            or "extrap_dist_exponent".
         esmf_args : dict, optional
             A dictionary of arguments to pass to ESMF.
 
@@ -1344,10 +1346,9 @@ class ESMFNearest:
         """Return a representation of the class."""
         result = (
             f"ESMFNearest("
-            f"    use_src_mask={self.use_src_mask},"
-            f"    use_tgt_mask={self.use_tgt_mask},"
-            f"    esmf_args={self.esmf_args},"
-            f")"
+            f"use_src_mask={self.use_src_mask}, "
+            f"use_tgt_mask={self.use_tgt_mask}, "
+            f"esmf_args={self.esmf_args})"
         )
         return result
 
@@ -1725,7 +1726,9 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         extrapolate_gaps : bool, default=False
             Use a standard set of ESMF arguments for extrapolation which achieves
             continuity with bilinear regridding. Useful for situations where gaps
-            between cells would be masked.
+            between cells would be masked. Note: this overwrites any arguments passed
+            to ``esmf_args`` for the keywords "extrap_method", "extrap_num_src_pnts"
+            or "extrap_dist_exponent".
         esmf_args : dict, optional
             A dictionary of arguments to pass to ESMF.
 
@@ -1735,8 +1738,10 @@ class ESMFBilinearRegridder(_ESMFRegridder):
             If ``use_src_mask`` or ``use_tgt_mask`` are True while the masks on ``src``
             or ``tgt`` respectively are not constant over non-horizontal dimensions.
         """
+        if esmf_args is None:
+            esmf_args = {}
         if extrapolate_gaps:
-            esmf_args = STANDAR_BILINEAR_EXTAP_ARGS
+            esmf_args.update(STANDAR_BILINEAR_EXTAP_ARGS)
         super().__init__(
             src,
             tgt,
