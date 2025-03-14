@@ -10,6 +10,7 @@ from esmf_regrid import (
     ESMFAreaWeightedRegridder,
     ESMFBilinear,
     ESMFNearest,
+    esmpy,
 )
 from esmf_regrid.esmf_regridder import ESMF_NO_VERSION
 from esmf_regrid.experimental.io import load_regridder, save_regridder
@@ -457,7 +458,14 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
     elif tgt_type == "mesh":
         tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
 
-    original_rg = scheme().regridder(src, tgt)
+    esmf_args = {
+        "unmapped_action": esmpy.UnmappedAction.ERROR,
+        "ignore_degenerate": False,
+        "line_type": esmpy.LineType.CART,
+        "large_file": True,
+    }
+
+    original_rg = scheme().regridder(src, tgt, esmf_args=esmf_args)
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
@@ -470,6 +478,7 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
         assert original_rg.src_resolution == loaded_rg.src_resolution
         assert original_rg.tgt_resolution == loaded_rg.tgt_resolution
     assert original_rg.mdtol == loaded_rg.mdtol
+    assert original_rg.esmf_args == loaded_rg.esmf_args
 
 
 @pytest.mark.parametrize(
