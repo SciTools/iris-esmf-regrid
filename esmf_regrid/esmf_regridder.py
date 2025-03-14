@@ -75,8 +75,8 @@ class Regridder:
         src,
         tgt,
         method=Constants.Method.CONSERVATIVE,
-        esmf_args=None,
         precomputed_weights=None,
+        esmf_args=None,
     ):
         """Create a regridder from descriptions of horizontal grids/meshes.
 
@@ -97,12 +97,12 @@ class Regridder:
             shape is compatible with ``tgt``.
         method : :class:`Constants.Method`
             The method to be used to calculate weights.
-        esmf_args : dict, optional
-            A dictionary of arguments to pass to ESMF.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
         """
         self.src = src
         self.tgt = tgt
