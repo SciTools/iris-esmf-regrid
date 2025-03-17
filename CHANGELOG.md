@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
-## [Unreleased]
+## [0.12] - 2025-03-17
 
 ### Fixed
 
@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - [PR#464](https://github.com/SciTools/iris-esmf-regrid/pull/464)
   Add support for Python 3.13.
+  [@stephenworsley](https://github.com/stephenworsley)
+- [PR#396](https://github.com/SciTools/iris-esmf-regrid/pull/396)
+  Added controls for passing arguments to ESMF.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ### Removed
