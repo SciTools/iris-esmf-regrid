@@ -289,8 +289,7 @@ def test_mistmatched_mesh():
     with pytest.raises(ValueError) as excinfo:
         _ = rg(other_loc)
     expected_message = (
-        "The given cube is not defined on a the same "
-        "mesh location as this regridder."
+        "The given cube is not defined on a the same mesh location as this regridder."
     )
     assert expected_message in str(excinfo.value)
     with pytest.raises(ValueError) as excinfo:

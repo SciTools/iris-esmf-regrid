@@ -5,14 +5,20 @@ from esmf_regrid.experimental.unstructured_scheme import GridToMeshESMFRegridder
 import numpy as np
 from numpy import ma
 
-from .test_round_tripping import _make_grid_to_mesh_regridder, _compare_ignoring_var_names
+from .test_round_tripping import (
+    _make_grid_to_mesh_regridder,
+    _compare_ignoring_var_names,
+)
 
 
-def test_load_v09():
-    filename = "v0.9_regridder.nc"
+def test_load_v09(request):
+    """Test the loading of a file saved in version 0.9.0"""
+    filename = request.path.parent / "v0.9_regridder.nc"
     method = "conservative"
     regridder = GridToMeshESMFRegridder
-    equivalent_rg, src = _make_grid_to_mesh_regridder(method=method, regridder=regridder, circular=True)
+    equivalent_rg, src = _make_grid_to_mesh_regridder(
+        method=method, regridder=regridder, circular=True
+    )
     loaded_rg = load_regridder(str(filename))
 
     assert equivalent_rg.location == loaded_rg.location
@@ -25,7 +31,7 @@ def test_load_v09():
     original_matrix = equivalent_rg.regridder.weight_matrix
     loaded_matrix = loaded_rg.regridder.weight_matrix
     # Ensure the original and loaded weight matrix have identical type.
-    assert type(original_matrix) is type(loaded_matrix)  # noqa E721
+    assert type(original_matrix) is type(loaded_matrix)  # E721
     assert np.array_equal(original_matrix.todense(), loaded_matrix.todense())
 
     # Demonstrate regridding still gives the same results.
@@ -42,6 +48,4 @@ def test_load_v09():
     expected_esmf_version = "8.4.2"
     expected_save_version = "0.9.0"
     assert expected_esmf_version == loaded_rg.regridder.esmf_version
-    assert (
-        expected_save_version == loaded_rg.regridder.esmf_regrid_version
-    )
+    assert expected_save_version == loaded_rg.regridder.esmf_regrid_version
