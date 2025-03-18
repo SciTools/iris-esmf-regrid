@@ -11,5 +11,6 @@ prune benchmarks
 exclude codecov.yml
 prune docs
 recursive-include esmf_regrid *.py *.txt
+recursive-exclude esmf_regrid *.nc
 exclude noxfile.py
 prune requirements
