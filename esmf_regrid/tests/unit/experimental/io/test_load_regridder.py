@@ -6,13 +6,13 @@ import numpy as np
 from numpy import ma
 
 from .test_round_tripping import (
-    _make_grid_to_mesh_regridder,
     _compare_ignoring_var_names,
+    _make_grid_to_mesh_regridder,
 )
 
 
 def test_load_v09(request):
-    """Test the loading of a file saved in version 0.9.0"""
+    """Test the loading of a file saved in version 0.9.0."""
     filename = request.path.parent / "v0.9_regridder.nc"
     method = "conservative"
     regridder = GridToMeshESMFRegridder
