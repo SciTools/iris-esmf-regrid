@@ -1,11 +1,11 @@
 """Unit tests for :mod:`esmf_regrid.experimental.io.save_regridder`."""
 
-from esmf_regrid.experimental.io import load_regridder
-from esmf_regrid.experimental.unstructured_scheme import GridToMeshESMFRegridder
 import numpy as np
 from numpy import ma
 
-from .test_round_tripping import (
+from esmf_regrid.experimental.io import load_regridder
+from esmf_regrid.experimental.unstructured_scheme import GridToMeshESMFRegridder
+from esmf_regrid.tests.unit.experimental.io.test_round_tripping import (
     _compare_ignoring_var_names,
     _make_grid_to_mesh_regridder,
 )
