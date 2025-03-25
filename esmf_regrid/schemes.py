@@ -312,7 +312,7 @@ def _check_esmf_args(kwargs):
             "dst_frac_field",
         ]
         valid_kwargs = [
-            "pole method",
+            "pole_method",
             "regrid_pole_npoints",
             "line_type",
             "extrap_method",
