@@ -1,4 +1,4 @@
-"""Unit tests for :mod:`esmf_regrid.experimental.io.save_regridder`."""
+"""Unit tests for :mod:`esmf_regrid.experimental.io.load_regridder`."""
 
 import numpy as np
 from numpy import ma
