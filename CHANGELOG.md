@@ -14,10 +14,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   Fixed bug causing the esmf argument `pole_method` to be rejected.
   [@stephenworsley](https://github.com/stephenworsley)
 
-## [Unreleased]
-
-### Fixed
-
 - [PR#479](https://github.com/SciTools/iris-esmf-regrid/pull/479)
   Fixed bug which caused loading to be backwards incompatible.
   [@stephenworsley](https://github.com/stephenworsley)
