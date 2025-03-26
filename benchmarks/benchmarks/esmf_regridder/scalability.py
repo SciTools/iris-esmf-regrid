@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 
+from asv_runner.benchmarks.mark import skip_benchmark
 import dask.array as da
 import iris
 from iris.cube import Cube
@@ -15,7 +16,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 )
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 
-from .. import on_demand_benchmark, skip_benchmark
+from .. import on_demand_benchmark
 from ..generate_data import _grid_cube, _gridlike_mesh_cube
 
 
