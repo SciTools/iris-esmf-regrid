@@ -9,10 +9,10 @@ Uses a modified version of the repeat logic in
 :class:`asv_runner.benchmarks.time.TimeBenchmark`.
 """
 
+from collections.abc import Callable
 import re
 from timeit import Timer
 import tracemalloc
-from typing import Callable
 
 from asv_runner.benchmarks.time import TimeBenchmark, wall_timer
 
