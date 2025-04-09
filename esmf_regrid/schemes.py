@@ -577,7 +577,7 @@ def _regrid_rectilinear_to_rectilinear__prepare(
     """First (setup) part of 'regrid_rectilinear_to_rectilinear'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
-    The 'regrid info' returned can be re-used over many 2d slices.
+    The 'regrid info' returned can be reused over many 2d slices.
 
     """
     tgt_x = _get_coord(tgt_grid_cube, "x")
@@ -668,7 +668,7 @@ def _regrid_unstructured_to_rectilinear__prepare(
     """First (setup) part of 'regrid_unstructured_to_rectilinear'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
-    The 'regrid info' returned can be re-used over many 2d slices.
+    The 'regrid info' returned can be reused over many 2d slices.
 
     """
     grid_x = _get_coord(target_grid_cube, "x")
@@ -759,7 +759,7 @@ def _regrid_rectilinear_to_unstructured__prepare(
     """First (setup) part of 'regrid_rectilinear_to_unstructured'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
-    The 'regrid info' returned can be re-used over many 2d slices.
+    The 'regrid info' returned can be reused over many 2d slices.
 
     """
     grid_x = _get_coord(src_grid_cube, "x")
@@ -862,7 +862,7 @@ def _regrid_unstructured_to_unstructured__prepare(
     """First (setup) part of 'regrid_unstructured_to_unstructured'.
 
     Check inputs and calculate the sparse regrid matrix and related info.
-    The 'regrid info' returned can be re-used over many 2d slices.
+    The 'regrid info' returned can be reused over many 2d slices.
 
     """
     if isinstance(tgt_cube_or_mesh, MeshXY):

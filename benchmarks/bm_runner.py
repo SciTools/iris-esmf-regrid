@@ -279,7 +279,7 @@ class Custom(_SubParserGenerator):
     description = (
         "Run ASV with the input **ASV sub-command**, without any preset "
         "arguments - must all be supplied by the user. So just like running "
-        "ASV manually, with the convenience of re-using the runner's "
+        "ASV manually, with the convenience of reusing the runner's "
         "scripted setup steps."
     )
     epilog = "e.g. python bm_runner.py custom continuous a1b23d4 HEAD --quick"

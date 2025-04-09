@@ -263,7 +263,7 @@ def test_default_mdtol():
     assert rg_bi.mdtol == 0
 
 
-@pytest.mark.xfail()
+@pytest.mark.xfail
 def test_mistmatched_mesh():
     """Test the calling of :class:`esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`.
 
