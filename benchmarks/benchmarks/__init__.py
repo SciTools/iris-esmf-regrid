@@ -28,21 +28,6 @@ def disable_repeat_between_setup(benchmark_object):
     return benchmark_object
 
 
-def skip_benchmark(benchmark_object):
-    """Decorate benchmarks to be skipped.
-
-    Simply doesn't return the object.
-
-    Warnings
-    --------
-    ASV's architecture means decorated classes cannot be sub-classed. Code for
-    inheritance should be in a mixin class that doesn't include any methods
-    which ASV will recognise as benchmarks
-    (e.g. ``def time_something(self):`` ).
-
-    """
-
-
 def on_demand_benchmark(benchmark_object):
     """Decorate benchmark(s) that are disabled unless ON_DEMAND_BENCHARKS env var is set.
 
