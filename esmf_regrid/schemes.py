@@ -300,7 +300,8 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
 def _check_esmf_args(kwargs):
     if kwargs is not None:
         if not isinstance(kwargs, dict):
-            raise TypeError(f"Expected `esmf_args` to be a dict, got a {type(kwargs)}.")
+            msg = f"Expected `esmf_args` to be a dict, got a {type(kwargs)}."
+            raise TypeError(msg)
         invalid_kwargs = [
             "filename",
             "norm_type",

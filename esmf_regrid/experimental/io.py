@@ -211,11 +211,11 @@ def save_regridder(rg, filename):
         tgt_cube = _standard_grid_cube(tgt_grid, _TARGET_NAME)
         _add_mask_to_cube(rg.tgt_mask, tgt_cube, _TARGET_MASK_NAME)
     else:
-        msg = (
+        e_msg = (
             f"Expected a regridder of type `GridToMeshESMFRegridder` or "
             f"`MeshToGridESMFRegridder`, got type {regridder_type}."
         )
-        raise TypeError(msg)
+        raise TypeError(e_msg)
 
     method = str(check_method(rg.method).name)
 
@@ -279,7 +279,8 @@ def save_regridder(rg, filename):
         esmf_args = {}
     for arg in esmf_args:
         if arg not in _VALID_ESMF_KWARGS:
-            raise KeyError(f"{arg} is not considered a valid argument to pass to ESMF.")
+            e_msg = f"{arg} is not considered a valid argument to pass to ESMF."
+            raise KeyError(e_msg)
     esmf_arg_attributes = {
         k: v.name if hasattr(v, "name") else int(v) if isinstance(v, bool) else v
         for k, v in esmf_args.items()
