@@ -296,4 +296,4 @@ convention = "numpy"
 # TODO: refactor to reduce complexity, if possible
 max-args = 10
 max-branches = 20
-max-statements = 109
+max-statements = 110
