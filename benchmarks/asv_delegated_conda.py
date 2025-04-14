@@ -22,7 +22,7 @@ class CondaDelegated(Conda):
     Original environment creation behaviour is inherited, but upon checking out
     a commit the custom script(s) are run and the original environment is
     replaced with a symlink to the custom environment. This arrangement is then
-    re-used in subsequent runs.
+    reused in subsequent runs.
 
     """
 

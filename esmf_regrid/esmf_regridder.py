@@ -17,21 +17,32 @@ __all__ = [
 ]
 
 
-def _get_regrid_weights_dict(src_field, tgt_field, regrid_method):
+ESMF_NO_VERSION = "N/A"
+
+
+def _get_regrid_weights_dict(src_field, tgt_field, regrid_method, esmf_args=None):
+    if esmf_args is None:
+        esmf_args = {}
+    else:
+        esmf_args = esmf_args.copy()
+    # Provide default values
+    if "ignore_degenerate" not in esmf_args:
+        esmf_args["ignore_degenerate"] = True
+    if "unmapped_action" not in esmf_args:
+        esmf_args["unmapped_action"] = esmpy.UnmappedAction.IGNORE
     # The value, in array form, that ESMF should treat as an affirmative mask.
     expected_mask = np.array([True])
     regridder = esmpy.Regrid(
         src_field,
         tgt_field,
-        ignore_degenerate=True,
         regrid_method=regrid_method,
-        unmapped_action=esmpy.UnmappedAction.IGNORE,
         # Choosing the norm_type DSTAREA allows for mdtol type operations
         # to be performed using the weights information later on.
         norm_type=esmpy.NormType.DSTAREA,
         src_mask_values=expected_mask,
         dst_mask_values=expected_mask,
         factors=True,
+        **esmf_args,
     )
     # Without specifying deep_copy=true, the information in weights_dict
     # would be corrupted when the ESMF regridder is destroyed.
@@ -60,7 +71,12 @@ class Regridder:
     """Regridder for directly interfacing with :mod:`esmpy`."""
 
     def __init__(
-        self, src, tgt, method=Constants.Method.CONSERVATIVE, precomputed_weights=None
+        self,
+        src,
+        tgt,
+        method=Constants.Method.CONSERVATIVE,
+        precomputed_weights=None,
+        esmf_args=None,
     ):
         """Create a regridder from descriptions of horizontal grids/meshes.
 
@@ -85,6 +101,8 @@ class Regridder:
             If ``None``, :mod:`esmpy` will be used to
             calculate regridding weights. Otherwise, :mod:`esmpy` will be bypassed
             and ``precomputed_weights`` will be used as the regridding weights.
+        esmf_args : dict, optional
+            A dictionary of arguments to pass to ESMF.
         """
         self.src = src
         self.tgt = tgt
@@ -98,6 +116,7 @@ class Regridder:
                 src.make_esmf_field(),
                 tgt.make_esmf_field(),
                 regrid_method=method.value,
+                esmf_args=esmf_args,
             )
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
@@ -119,7 +138,7 @@ class Regridder:
                     is_tgt=False
                 )
         else:
-            if not scipy.sparse.isspmatrix(precomputed_weights):
+            if not scipy.sparse.issparse(precomputed_weights):
                 e_msg = "Precomputed weights must be given as a sparse matrix."
                 raise ValueError(e_msg)
             if precomputed_weights.shape != (self.tgt.size, self.src.size):
@@ -130,7 +149,7 @@ class Regridder:
                         precomputed_weights.shape,
                     )
                 )
-            self.esmf_version = None
+            self.esmf_version = ESMF_NO_VERSION
             self.weight_matrix = precomputed_weights
 
     def _out_dtype(self, in_dtype):

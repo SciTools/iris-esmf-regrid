@@ -48,7 +48,7 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13"]
         include:
           - python-version: "3.11"
             coverage: true
@@ -68,7 +68,7 @@ jobs:
           path: |
             .nox
             $CONDA/pkgs
-          key: ${{ runner.os }}-${{ hashFiles('requirements/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}-${{ matrix.python-version }}
+          key: ${{ runner.os }}-${{ hashFiles('requirements/locks/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}-${{ matrix.python-version }}
 
       - name: Cache test data directory
         id: cache-test-data
@@ -99,7 +99,7 @@ jobs:
           nox --session tests -- --verbose
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         if: ${{ matrix.coverage }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
