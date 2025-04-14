@@ -9,6 +9,13 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every weekday
       interval: "daily"
+    groups:
+      gha:
+        patterns:
+          - "*"
     labels:
       - "New: Pull Request"
       - "Bot"
+    commit-message:
+      prefix: "chore: "
+      include: "scope"
