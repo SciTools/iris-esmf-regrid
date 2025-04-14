@@ -51,7 +51,7 @@ ignore-words-list = "discontiguities"
 addopts = ["-ra", "-v", "--doctest-modules", "--strict-config", "--strict-markers"]
 minversion = "6.0"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
-testpaths = "esmf_regrid"
+testpaths = "src/esmf_regrid"
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = ["default"]
@@ -71,13 +71,12 @@ docs = {file = ["requirements/optional-docs.txt"]}
 
 [tool.setuptools.packages.find]
 include = ["esmf_regrid*"]
+where = ["src"]
 
 [tool.repo-review]
 ignore = [
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
-    # https://learn.scientific-python.org/development/guides/packaging-simple/#PY005
-    "PY005",  # Test folder location
     "GH104",  # Unique names for upload artifact
     # https://learn.scientific-python.org/development/guides/gha-basic/#GH212
     "GH212",  # Require GHA update grouping
@@ -85,17 +84,17 @@ ignore = [
 
 [tool.mypy]
 # See https://mypy.readthedocs.io/en/stable/config_file.html
-ignore_missing_imports = true
-warn_unused_configs = true
-warn_unreachable = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 exclude = [
     'noxfile\.py',
     'docs/src/conf\.py',
     '^benchmarks',
 ]
+files = ["src/esmf_regrid"]
+ignore_missing_imports = true
 strict = false  # Default value, make true when introducing type hinting.
-no_namespace_packages = true
+warn_unused_configs = true
+warn_unreachable = true
 
 [tool.numpydoc_validation]
 checks = [
@@ -149,6 +148,7 @@ exclude = [
 
 [tool.ruff]
 line-length = 88
+src = ["benchmarks", "docs/src", "src"]
 
 [tool.ruff.format]
 preview = false
@@ -226,7 +226,7 @@ max-complexity = 22
 
 # TODO: determine if these ought to be temporary or permanent
 
-"esmf_regrid/tests/*.py" = [
+"src/esmf_regrid/tests/*.py" = [
     "B006",  # Do not use mutable data structures for argument defaults
     "N999",  # Invalid module name
 
