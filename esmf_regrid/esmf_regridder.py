@@ -139,9 +139,8 @@ class Regridder:
                 )
         else:
             if not scipy.sparse.issparse(precomputed_weights):
-                raise ValueError(
-                    "Precomputed weights must be given as a sparse array or matrix."
-                )
+                e_msg = "Precomputed weights must be given as a sparse matrix."
+                raise ValueError(e_msg)
             if precomputed_weights.shape != (self.tgt.size, self.src.size):
                 msg = "Expected precomputed weights to have shape {}, got shape {} instead."
                 raise ValueError(
@@ -165,7 +164,7 @@ class Regridder:
         Parameters
         ----------
         src_array : :obj:`~numpy.typing.ArrayLike`
-            Array whose shape is compatible with ``self.src``
+            Array whose shape is compatible with ``self.src``.
         norm_type : :class:`Constants.NormType`
             Either ``Constants.NormType.FRACAREA`` or ``Constants.NormType.DSTAREA``.
             Determines the type of normalisation applied to the weights.
@@ -191,10 +190,11 @@ class Regridder:
         array_shape = src_array.shape
         main_shape = array_shape[-self.src.dims :]
         if main_shape != self.src.shape:
-            raise ValueError(
+            e_msg = (
                 f"Expected an array whose shape ends in {self.src.shape}, "
                 f"got an array with shape ending in {main_shape}."
             )
+            raise ValueError(e_msg)
         extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))

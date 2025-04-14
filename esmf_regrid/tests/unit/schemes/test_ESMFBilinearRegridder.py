@@ -86,7 +86,7 @@ def test_invalid_mdtol():
         _ = ESMFBilinearRegridder(src, tgt, mdtol=-1)
 
 
-@pytest.mark.parametrize("with_bounds", (False, True))
+@pytest.mark.parametrize("with_bounds", [False, True])
 def test_curvilinear_equivalence(with_bounds):
     """Test initialisation of :class:`esmf_regrid.schemes.ESMFBilinearRegridder`.
 

@@ -147,7 +147,7 @@ def _compare_ignoring_var_names(x, y):
 
 
 @pytest.mark.parametrize(
-    "method,regridder",
+    ("method", "regridder"),
     [
         (Constants.Method.CONSERVATIVE, GridToMeshESMFRegridder),
         (Constants.Method.BILINEAR, GridToMeshESMFRegridder),
@@ -304,7 +304,7 @@ def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker, regridder):
 
 
 @pytest.mark.parametrize(
-    "method,regridder",
+    ("method", "regridder"),
     [
         (Constants.Method.CONSERVATIVE, MeshToGridESMFRegridder),
         (Constants.Method.BILINEAR, MeshToGridESMFRegridder),
@@ -428,7 +428,7 @@ def test_mesh_to_grid_curvilinear_round_trip(tmp_path, regridder):
 
 
 @pytest.mark.parametrize(
-    "src_type,tgt_type",
+    ("src_type", "tgt_type"),
     [
         ("grid", "grid"),
         ("grid", "mesh"),
@@ -482,7 +482,7 @@ def test_generic_regridder(tmp_path, src_type, tgt_type, scheme):
 
 
 @pytest.mark.parametrize(
-    "src_type,tgt_type",
+    ("src_type", "tgt_type"),
     [
         ("grid", "grid"),
         ("grid", "mesh"),

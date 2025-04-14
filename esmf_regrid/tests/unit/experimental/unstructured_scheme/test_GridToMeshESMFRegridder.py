@@ -463,7 +463,7 @@ def test_mesh_target():
 
 
 @pytest.mark.parametrize(
-    "resolution", (None, 2), ids=("no resolution", "with resolution")
+    "resolution", [None, 2], ids=("no resolution", "with resolution")
 )
 def test_masks(resolution):
     """Test initialisation of :class:`esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.

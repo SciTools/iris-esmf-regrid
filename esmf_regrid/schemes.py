@@ -1,7 +1,7 @@
 """Provides an iris interface for regridding."""
 
-from collections import namedtuple
 import copy
+from typing import Any, NamedTuple
 
 from cf_units import Unit
 import dask.array as da
@@ -74,10 +74,11 @@ def _get_mask(cube_or_mesh, use_mask=True):
                     da.all(full_mask, axis=other_dims).compute(),
                     da.any(full_mask, axis=other_dims).compute(),
                 ):
-                    raise ValueError(
+                    e_msg = (
                         "The mask derived from the cube is not constant over non-horizontal dimensions."
                         "Consider passing in an explicit mask instead."
                     )
+                    raise ValueError(e_msg)
                 mask = np.ma.getmaskarray(data)
                 # Due to structural reasons, the mask should be transposed for curvilinear grids.
                 if cube.coord_dims(src_x) != cube.coord_dims(src_y):
@@ -299,7 +300,8 @@ def _regrid_along_dims(data, regridder, dims, num_out_dims, mdtol):
 def _check_esmf_args(kwargs):
     if kwargs is not None:
         if not isinstance(kwargs, dict):
-            raise TypeError(f"Expected `esmf_args` to be a dict, got a {type(kwargs)}.")
+            msg = f"Expected `esmf_args` to be a dict, got a {type(kwargs)}."
+            raise TypeError(msg)
         invalid_kwargs = [
             "filename",
             "norm_type",
@@ -481,9 +483,10 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
         grid_y_dim = src_dims[0]
         grid_x_dim = grid_y_dim + 1
     else:
-        raise ValueError(
+        e_msg = (
             f"Source grid must be described by 1 or 2 dimensions, got {len(src_dims)}"
         )
+        raise ValueError(e_msg)
     if num_tgt_dims == 1:
         grid_y_dim = grid_x_dim = min(src_dims)
     for tgt_coord, dim in zip(tgt_coords, (grid_x_dim, grid_y_dim), strict=False):
@@ -514,18 +517,31 @@ def _create_cube(data, src_cube, src_dims, tgt_coords, num_tgt_dims):
     return new_cube
 
 
-RegridInfo = namedtuple("RegridInfo", ["dims", "target", "regridder"])
-GridRecord = namedtuple("GridRecord", ["grid_x", "grid_y"])
-MeshRecord = namedtuple("MeshRecord", ["mesh", "location"])
+class RegridInfo(NamedTuple):
+    dims: int
+    target: Any
+    regridder: Any
+
+
+class GridRecord(NamedTuple):
+    grid_x: Any
+    grid_y: Any
+
+
+class MeshRecord(NamedTuple):
+    mesh: Any
+    location: str
 
 
 def _make_gridinfo(cube, method, resolution, mask):
     method = check_method(method)
     if resolution is not None:
         if not (isinstance(resolution, int) and resolution > 0):
-            raise ValueError("resolution must be a positive integer.")
+            e_msg = "resolution must be a positive integer."
+            raise ValueError(e_msg)
         if method != Constants.Method.CONSERVATIVE:
-            raise ValueError("resolution can only be set for conservative regridding.")
+            e_msg = "resolution can only be set for conservative regridding."
+            raise ValueError(e_msg)
     if method == Constants.Method.CONSERVATIVE:
         center = False
     elif method in (Constants.Method.NEAREST, Constants.Method.BILINEAR):
@@ -541,24 +557,28 @@ def _make_meshinfo(cube_or_mesh, method, mask, src_or_tgt, location=None):
         mesh = cube_or_mesh.mesh
         location = cube_or_mesh.location
     if mesh is None:
-        raise ValueError(f"The {src_or_tgt} cube is not defined on a mesh.")
+        e_msg = f"The {src_or_tgt} cube is not defined on a mesh."
+        raise ValueError(e_msg)
     if method == Constants.Method.CONSERVATIVE:
         if location != "face":
-            raise ValueError(
+            e_msg = (
                 f"{method.name.lower()} regridding requires a {src_or_tgt} cube located on "
                 f"the face of a cube, target cube had the {location} location."
             )
+            raise ValueError(e_msg)
     elif method in (Constants.Method.NEAREST, Constants.Method.BILINEAR):
         if location not in ["face", "node"]:
-            raise ValueError(
+            e_msg = (
                 f"{method.name.lower()} regridding requires a {src_or_tgt} cube with a node "
                 f"or face location, target cube had the {location} location."
             )
+            raise ValueError(e_msg)
         if location == "face" and None in mesh.face_coords:
-            raise ValueError(
+            e_msg = (
                 f"{method.name.lower()} regridding requires a {src_or_tgt} cube on a face"
                 f"location to have a face center."
             )
+            raise ValueError(e_msg)
 
     return _mesh_to_MeshInfo(mesh, location, mask=mask)
 
@@ -819,7 +839,8 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     elif location == "node":
         chunk_shape = mesh.node_coords[0].shape
     else:
-        raise NotImplementedError(f"Unrecognised location {location}.")
+        e_msg = f"Unrecognised location {location}."
+        raise NotImplementedError(e_msg)
 
     out_dtype = regridder._out_dtype(src_cube.dtype)
 
@@ -918,7 +939,8 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
     elif location == "node":
         chunk_shape = mesh.node_coords[0].shape
     else:
-        raise NotImplementedError(f"Unrecognised location {location}.")
+        e_msg = f"Unrecognised location {location}."
+        raise NotImplementedError(e_msg)
 
     new_data = _map_complete_blocks(
         src_cube,
@@ -975,7 +997,7 @@ def regrid_rectilinear_to_rectilinear(
         target cell. ``mdtol=0`` means no missing data is tolerated while ``mdtol=1``
         will mean the resulting element will be masked if and only if all the
         overlapping cells of ``src_cube`` are masked.
-    method : :class:`Constants.Method`, , default=Constants.Method.CONSERVATIVE.
+    method : :class:`Constants.Method`, , default=Constants.Method.CONSERVATIVE
             The method to be used to calculate weights.
     src_resolution, tgt_resolution : int, optional
         If present, represents the amount of latitude slices per source/target cell
@@ -1046,9 +1068,8 @@ class ESMFAreaWeighted:
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
         if tgt_location is not None and tgt_location != "face":
-            raise ValueError(
-                "For area weighted regridding, target location must be 'face'."
-            )
+            e_msg = "For area weighted regridding, target location must be 'face'."
+            raise ValueError(e_msg)
         self.mdtol = mdtol
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
@@ -1135,9 +1156,8 @@ class ESMFAreaWeighted:
             esmf_args = self.esmf_args
 
         if tgt_location is not None and tgt_location != "face":
-            raise ValueError(
-                "For area weighted regridding, target location must be 'face'."
-            )
+            e_msg = "For area weighted regridding, target location must be 'face'."
+            raise ValueError(e_msg)
         return ESMFAreaWeightedRegridder(
             src_grid,
             tgt_grid,
@@ -1572,13 +1592,14 @@ class _ESMFRegridder:
                 self._src, (new_src_x, new_src_y), strict=False
             ):
                 # Ignore differences in var_name that might be caused by saving.
-                saved_coord = copy.deepcopy(saved_coord)
-                saved_coord.var_name = new_coord.var_name
-                if saved_coord != new_coord:
-                    raise ValueError(
+                _saved_coord = copy.deepcopy(saved_coord)
+                _saved_coord.var_name = new_coord.var_name
+                if _saved_coord != new_coord:
+                    e_msg = (
                         "The given cube is not defined on the same "
                         "source grid as this regridder."
                     )
+                    raise ValueError(e_msg)
 
             if len(new_src_x.shape) == 1:
                 dims = [cube.coord_dims(new_src_x)[0], cube.coord_dims(new_src_y)[0]]
@@ -1680,9 +1701,8 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         if tgt_resolution is not None:
             kwargs["tgt_resolution"] = tgt_resolution
         if tgt_location is not None and tgt_location != "face":
-            raise ValueError(
-                "For area weighted regridding, target location must be 'face'."
-            )
+            e_msg = "For area weighted regridding, target location must be 'face'."
+            raise ValueError(e_msg)
         kwargs["use_src_mask"] = use_src_mask
         kwargs["use_tgt_mask"] = use_tgt_mask
         super().__init__(

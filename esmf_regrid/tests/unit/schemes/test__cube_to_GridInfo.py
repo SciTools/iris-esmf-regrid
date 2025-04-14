@@ -251,7 +251,7 @@ def test_center(curvilinear):
     assert np.allclose(expected_weights.todense(), rg_circular.weight_matrix.todense())
 
 
-@pytest.mark.parametrize("masked", (True, False), ids=("masked", "unmasked"))
+@pytest.mark.parametrize("masked", [True, False], ids=("masked", "unmasked"))
 def test__contiguous_bounds(masked):
     """Test generation of contiguous bounds."""
     # Generate a CF style bounds array with unique values for each bound.

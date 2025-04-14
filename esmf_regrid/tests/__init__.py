@@ -47,13 +47,13 @@ def make_grid_args(nx, ny):
     nx : int
         The number of cells spanned by the longitude.
     ny : int
-        The number of cells spanned by the latutude
+        The number of cells spanned by the latutude.
 
     Returns
     -------
     Tuple
         Arguments which can be passed to
-        :class:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`
+        :class:`~esmf_regrid.esmf_regridder.GridInfo.make_esmf_field`.
     """
     small_grid_lon = np.array(range(nx)) * 10 / nx
     small_grid_lat = np.array(range(ny)) * 10 / ny

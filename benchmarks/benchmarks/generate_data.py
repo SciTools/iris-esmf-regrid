@@ -92,7 +92,7 @@ def run_function_elsewhere(func_to_run, *args, **kwargs):
     func_call_string = (
         f"{func_to_run.__name__}(" + ",".join(func_call_term_strings) + ")"
     )
-    python_string = "\n".join([func_string, func_call_string])
+    python_string = f"{func_string}\n{func_call_string}"
     old_esmf_mk_file = environ.get(ESMFMKFILE, None)
     environ[ESMFMKFILE] = str(Path(sys.executable).parents[1] / "lib" / "esmf.mk")
     result = run(
