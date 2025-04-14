@@ -150,6 +150,7 @@ exclude = [
 
 [tool.ruff]
 line-length = 88
+src = ["esmf_regrid"]
 
 [tool.ruff.format]
 preview = false
