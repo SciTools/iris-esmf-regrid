@@ -97,7 +97,6 @@ exclude = [
     '^benchmarks',
 ]
 strict = false  # Default value, make true when introducing type hinting.
-no_namespace_packages = true
 
 [tool.numpydoc_validation]
 checks = [

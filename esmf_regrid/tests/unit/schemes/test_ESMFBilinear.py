@@ -3,7 +3,7 @@
 import pytest
 
 from esmf_regrid.schemes import ESMFBilinear
-from esmf_regrid.tests.unit.schemes.__init__ import (
+from esmf_regrid.tests.unit.schemes import (
     _test_cube_regrid,
     _test_dtype_handling,
     _test_esmf_args,
