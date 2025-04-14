@@ -14,7 +14,7 @@ files: |
     (?x)(
         benchmarks\/.+\.py|
         docs\/.+\.py|
-        esmf_regrid\/.+\.py|
+        src\/.+\.py|
         noxfile\.py|
         pyproject\.toml|
         setup\.py
