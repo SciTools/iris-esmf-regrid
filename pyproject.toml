@@ -75,8 +75,6 @@ where = ["src"]
 
 [tool.repo-review]
 ignore = [
-    # https://learn.scientific-python.org/development/guides/style/#PC170
-    "PC170",  # PyGrep hooks
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
     "GH104",  # Unique names for upload artifact

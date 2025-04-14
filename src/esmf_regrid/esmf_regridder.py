@@ -106,7 +106,7 @@ class Regridder:
         """
         self.src = src
         self.tgt = tgt
-        # type checks method
+        # check method is correct type
         self.method = check_method(method)
 
         self.esmf_regrid_version = esmf_regrid.__version__
