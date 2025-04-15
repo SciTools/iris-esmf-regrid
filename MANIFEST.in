@@ -10,6 +10,7 @@ include CITATION.cff
 prune benchmarks
 exclude codecov.yml
 prune docs
-recursive-include esmf_regrid *.py *.txt
+recursive-include src *.py *.txt
+recursive-exclude src *.nc
 exclude noxfile.py
 prune requirements

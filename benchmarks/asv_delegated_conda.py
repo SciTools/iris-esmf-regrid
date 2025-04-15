@@ -22,7 +22,7 @@ class CondaDelegated(Conda):
     Original environment creation behaviour is inherited, but upon checking out
     a commit the custom script(s) are run and the original environment is
     replaced with a symlink to the custom environment. This arrangement is then
-    re-used in subsequent runs.
+    reused in subsequent runs.
 
     """
 
@@ -49,7 +49,7 @@ class CondaDelegated(Conda):
             identifier string.
 
         tagged_env_vars : dict
-            Environment variables, tagged for build vs. non-build
+            Environment variables, tagged for build vs. non-build.
 
         """
         ignored = ["`python`"]
@@ -150,11 +150,11 @@ class CondaDelegated(Conda):
                 local_envs = dict(environ)
                 local_envs.update(env)
                 if cwd is None:
-                    cwd = str(build_dir)
+                    _cwd = str(build_dir)
                 _ = asv_util.check_output(
                     command,
                     timeout=self._install_timeout,
-                    cwd=cwd,
+                    cwd=_cwd,
                     env=local_envs,
                     valid_return_codes=return_codes,
                 )

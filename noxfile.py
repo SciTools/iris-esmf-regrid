@@ -21,11 +21,14 @@ nox.options.reuse_existing_virtualenvs = False
 #: Name of the package to test.
 PACKAGE = "esmf_regrid"
 
-#: GHA-CI environment variable hook.
-PY_VER = os.environ.get("PY_VER", ["3.11", "3.12", "3.13"])
+#: Python versions we can run sessions under
+_PY_VERSIONS_ALL = ["3.11", "3.12", "3.13"]
 
 #: GHA-CI environment variable hook.
-COVERAGE = os.environ.get("COVERAGE", False)
+PY_VER = os.environ.get("PY_VER", _PY_VERSIONS_ALL)
+
+#: GHA-CI environment variable hook.
+COVERAGE = os.environ.get("COVERAGE", "")
 
 #: GHA-CI environment variable hook.
 #: If you change the IRIS_SOURCE here you will also need to change it in
@@ -95,7 +98,7 @@ def _install_and_cache_venv(session: nox.sessions.Session) -> None:
 
     Parameters
     ----------
-    session: object
+    session : object
         A `nox.sessions.Session` object.
 
     """
@@ -112,7 +115,7 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
 
     Parameters
     ----------
-    session: object
+    session : object
         A `nox.sessions.Session` object.
 
     Returns
@@ -135,11 +138,11 @@ def _get_iris_github_artifact(session: nox.sessions.Session) -> str:
         result = None
         if len(parts) == 2:
             repo, artifact = parts
-            if repo.startswith("'") or repo.startswith('"'):
+            if repo.startswith(("'", '"')):
                 repo = repo[1:]
             if repo.lower() == "github":
                 result = artifact
-                if result.endswith("'") or result.endswith('"'):
+                if result.endswith(("'", '"')):
                     result = result[:-1]
     return result
 
@@ -208,7 +211,7 @@ def update_lockfiles(session: nox.sessions.Session):
 
     Parameters
     ----------
-    session: object
+    session : object
         A `nox.sessions.Session` object.
 
     """
@@ -288,7 +291,7 @@ def tests(session: nox.sessions.Session):
 
     Parameters
     ----------
-    session: object
+    session : object
         A `nox.sessions.Session` object.
 
     """
@@ -310,7 +313,7 @@ def wheel(session: nox.sessions.Session):
 
     Parameters
     ----------
-    session: object
+    session : object
         A `nox.sessions.Session` object.
 
     """
@@ -318,7 +321,8 @@ def wheel(session: nox.sessions.Session):
     session.cd("dist")
     fname = list(Path().glob("esmf_regrid-*.whl"))
     if len(fname) == 0:
-        raise ValueError("Cannot find wheel to install.")
+        e_msg = "Cannot find wheel to install."
+        raise ValueError(e_msg)
     if len(fname) > 1:
         emsg = f"Expected to find 1 wheel to install, found {len(fname)} instead."
         raise ValueError(emsg)

@@ -1,3 +1,5 @@
+# See https://github.com/SciTools/.github/wiki/Linting for common linter rules
+
 [build-system]
 # Defined by PEP 518
 requires = [
@@ -11,7 +13,7 @@ authors = [
     {name = "ESMF Regrid Contributors", email = "scitools.pub@gmail.com"},
 ]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
@@ -49,7 +51,7 @@ ignore-words-list = "discontiguities"
 addopts = ["-ra", "-v", "--doctest-modules", "--strict-config", "--strict-markers"]
 minversion = "6.0"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
-testpaths = "esmf_regrid"
+testpaths = "src/esmf_regrid"
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = ["default"]
@@ -69,31 +71,27 @@ docs = {file = ["requirements/optional-docs.txt"]}
 
 [tool.setuptools.packages.find]
 include = ["esmf_regrid*"]
+where = ["src"]
 
 [tool.repo-review]
 ignore = [
-    # https://learn.scientific-python.org/development/guides/style/#PC170
-    "PC170",  # PyGrep hooks
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
-    "PY005",  # Test folder location
-    "GH104",  # Unique names for upload artifact
-    "GH212",  # Require GHA update grouping
 ]
 
 [tool.mypy]
 # See https://mypy.readthedocs.io/en/stable/config_file.html
-ignore_missing_imports = true
-warn_unused_configs = true
-warn_unreachable = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 exclude = [
     'noxfile\.py',
     'docs/src/conf\.py',
     '^benchmarks',
 ]
+files = ["src/esmf_regrid"]
+ignore_missing_imports = true
 strict = false  # Default value, make true when introducing type hinting.
-no_namespace_packages = true
+warn_unused_configs = true
+warn_unreachable = true
 
 [tool.numpydoc_validation]
 checks = [
@@ -133,16 +131,10 @@ checks = [
     "PR01",  # Undocumented parameters
     "PR02",  # Unknown parameters
     "PR04",  # Untyped parameters
-    "PR05",  # Improper "."
     "PR07",  # Undescribed parameter
-    "PR09",  # Missing "."
-    "PR10",  # Missing space before colon
     "RT01",  # Missing returns section
     "RT03",  # Undescribed return section
-    "RT05",  # Missing "."
     "GL08",  # Missing docstring
-    "SS02",  # Missing capitalisation
-    "SS05",  # Third person grammar
 
 ]
 exclude = [
@@ -153,6 +145,7 @@ exclude = [
 
 [tool.ruff]
 line-length = 88
+src = ["benchmarks", "docs/src", "src"]
 
 [tool.ruff.format]
 preview = false
@@ -176,24 +169,13 @@ ignore = [
     "ANN001",
     "ANN002",
     "ANN003",
-    "ANN101",
     "ANN201",
     "ANN202",
     "ANN204",
 
     "B904",  # Try except handling
-    "C408",  # Unnecessary `dict` call
-
-    # McCabe complexity https://docs.astral.sh/ruff/rules/complex-structure/
-    "C901",
-
     "D104",  # Misssing docstring
     "E501",  # Line too long
-
-    # Exceptions using string literals
-    "EM101",
-    "EM102",
-
     "ERA001",  # Commented out code
 
     # imports not used, consider adding to __all__
@@ -202,23 +184,13 @@ ignore = [
 
     "FBT002",  # Boolean default positional argument in function definition
     "FIX002",  # Line contains TODO
-    "FLY002",  # Replace join with f-string
     "INP001",  # Missing __init__
 
     # Upper case names
     "N802",
     "N806",
 
-    "PERF401",  # Use a list comprehension to create a transformed list
-
-    # Too many branches, arguments, statements
-    "PLR0912",
-    "PLR0913",
-    "PLR0915",
-
     "PLR2004",  # Magic value used in comparison
-    "PLW2901",  # `for` loop target overwritten by assignment target
-    "PYI024",  # Use `typing.NamedTuple` instead of `collections.namedtuple`
     "RET504",  # Unnecessary assignment before `return`
     "S101",  # Use of `assert`
     "SIM108",  # Use ternary operator instead of `if`-`else`-block
@@ -228,7 +200,6 @@ ignore = [
     "TD002",
     "TD003",
 
-    "TID252",  # Prefer absolute imports over relative imports from parent modules
     "TRY003",  # Avoid specifying long messages outside the exception class
 
     ]
@@ -243,18 +214,18 @@ ignore = [
 force-sort-within-sections = true
 known-first-party = ["iris-esmf-regrid"]
 
+[tool.ruff.lint.mccabe]
+# TODO: refactor to reduce complexity, if possible
+max-complexity = 22
+
 [tool.ruff.lint.per-file-ignores]
 # All test scripts
 
 # TODO: determine if these ought to be temporary or permanent
 
-"esmf_regrid/tests/*.py" = [
+"src/esmf_regrid/tests/*.py" = [
     "B006",  # Do not use mutable data structures for argument defaults
     "N999",  # Invalid module name
-
-    # Wrong types passed to `@pytest.mark.parametrize`
-    "PT006",
-    "PT007",
 
     "PT011",  # `pytest.raises(ValueError)` is too broad
 
@@ -294,6 +265,7 @@ known-first-party = ["iris-esmf-regrid"]
     "S603",
     "S607",
 
+    "TID252",  # Prefer absolute imports over relative imports from parent modules
     "TRY002",  # Create your own exception
 ]
 "docs/src/conf.py" = [
@@ -303,7 +275,6 @@ known-first-party = ["iris-esmf-regrid"]
 ]
 "noxfile.py" = [
     "FBT001",  # Boolean-typed positional argument in function definition
-    "PIE810",  # Call `startswith`/`endswith` once with a `tuple`
     "S310",  # Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
     "S506",  # Consider `yaml.safe_load`
     "SIM105",  # Use `contextlib.suppress(FileExistsError)` instead of `try`-`except`-`pass`
@@ -315,3 +286,9 @@ known-first-party = ["iris-esmf-regrid"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.ruff.lint.pylint]
+# TODO: refactor to reduce complexity, if possible
+max-args = 10
+max-branches = 20
+max-statements = 110

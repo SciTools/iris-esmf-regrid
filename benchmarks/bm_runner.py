@@ -100,7 +100,7 @@ def _setup_common() -> None:
     _echo("Setup complete.")
 
 
-def _asv_compare(*commits: str) -> None:
+def _asv_compare(*commits: str, fail: bool = False) -> None:
     """Run through a list of commits comparing each one to the next."""
     _commits = [commit[:8] for commit in commits]
     for i in range(len(_commits) - 1):
@@ -114,6 +114,11 @@ def _asv_compare(*commits: str) -> None:
         _echo(comparison)
         shifts = _subprocess_runner_capture([*asv_command, "--only-changed"], asv=True)
         _echo(shifts)
+        if fail and shifts:
+            message = (
+                f"Performance shifts detected between commits {before} and {after}.\n"
+            )
+            raise RuntimeError(message)
 
 
 class _SubParserGenerator(ABC):
@@ -199,7 +204,7 @@ class Branch(_SubParserGenerator):
             asv_command = shlex.split(ASV_HARNESS.format(posargs=commit_range))
             _subprocess_runner([*asv_command, *args.asv_args], asv=True)
 
-        _asv_compare(merge_base, head_sha)
+        _asv_compare(merge_base, head_sha, fail=True)
 
 
 class SPerf(_SubParserGenerator):
@@ -279,7 +284,7 @@ class Custom(_SubParserGenerator):
     description = (
         "Run ASV with the input **ASV sub-command**, without any preset "
         "arguments - must all be supplied by the user. So just like running "
-        "ASV manually, with the convenience of re-using the runner's "
+        "ASV manually, with the convenience of reusing the runner's "
         "scripted setup steps."
     )
     epilog = "e.g. python bm_runner.py custom continuous a1b23d4 HEAD --quick"
