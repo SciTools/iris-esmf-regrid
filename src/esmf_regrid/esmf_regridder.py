@@ -1,7 +1,5 @@
 """Provides ESMF representations of grids/UGRID meshes and a modified regridder."""
 
-from time import sleep
-
 import numpy as np
 from numpy import ma
 import scipy.sparse
@@ -187,8 +185,6 @@ class Regridder:
 
         """
         # Sets default value, as this can't be done with class attributes within method call
-        sleep(10)
-
         norm_type = check_norm(norm_type)
 
         array_shape = src_array.shape
