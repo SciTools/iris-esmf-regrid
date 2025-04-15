@@ -260,7 +260,9 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
 def _mesh_to_MeshInfo(mesh, location, mask=None):
     # Returns a MeshInfo object describing the mesh of the cube.
     if mesh.topology_dimension != 2:
-        msg = f"Mesh topology_dimesnion expected to be 2, got {mesh.topology_dimension}."
+        msg = (
+            f"Mesh topology_dimesnion expected to be 2, got {mesh.topology_dimension}."
+        )
         raise ValueError(msg)
     if None in mesh.face_coords:
         elem_coords = None
@@ -418,8 +420,10 @@ def _map_complete_blocks(
     # Since these cases are out of our own scope, we explicitly ignore them
     # for the time being.
     if num_dims > 1 and num_out > 1 and num_dims != num_out:
-        msg = ("If the length of active_dims and out_sizes is different, they"
-               " can't both be > 1.")
+        msg = (
+            "If the length of active_dims and out_sizes is different, they"
+            " can't both be > 1."
+        )
         raise ValueError(msg)
 
     if num_out > num_dims:
