@@ -7,7 +7,7 @@ except ImportError as exc:
     try:
         from iris.experimental.ugrid import Mesh as MeshXY
     except ImportError:
-        raise exc
+        raise exc from None
 from esmf_regrid import Constants, check_method
 from esmf_regrid.schemes import (
     _ESMFRegridder,

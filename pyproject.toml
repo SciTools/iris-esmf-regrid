@@ -173,7 +173,6 @@ ignore = [
     "ANN202",
     "ANN204",
 
-    "B904",  # Try except handling
     "D104",  # Misssing docstring
     "E501",  # Line too long
     "ERA001",  # Commented out code
