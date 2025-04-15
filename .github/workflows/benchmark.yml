@@ -78,6 +78,6 @@ jobs:
       - name: Archive ASV results
         uses: actions/upload-artifact@v4
         with:
-          name: asv-report
+          name: asv-report-${{ github.job }}-${{ strategy.job-index }}
           path: |
             benchmarks/.asv/results

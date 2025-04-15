@@ -77,7 +77,6 @@ where = ["src"]
 ignore = [
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
-    "GH104",  # Unique names for upload artifact
     # https://learn.scientific-python.org/development/guides/gha-basic/#GH212
     "GH212",  # Require GHA update grouping
 ]
