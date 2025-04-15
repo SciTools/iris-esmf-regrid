@@ -5,7 +5,7 @@ from numpy import ma
 import pytest
 
 from esmf_regrid.schemes import ESMFNearest
-from esmf_regrid.tests.unit.schemes.__init__ import (
+from esmf_regrid.tests.unit.schemes import (
     _test_dtype_handling,
     _test_esmf_args,
     _test_mask_from_init,
