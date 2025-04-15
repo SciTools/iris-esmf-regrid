@@ -77,8 +77,6 @@ where = ["src"]
 ignore = [
     # https://learn.scientific-python.org/development/guides/style/#PC180
     "PC180",  # Uses prettier
-    # https://learn.scientific-python.org/development/guides/gha-basic/#GH212
-    "GH212",  # Require GHA update grouping
 ]
 
 [tool.mypy]
