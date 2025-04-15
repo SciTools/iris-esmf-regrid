@@ -444,7 +444,7 @@ def _map_complete_blocks(
         # we expect to handle at most 2D grids.
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
-        if num_out != 2:
+        if num_dims != 2:
             msg = "If the length of active_dims is greater than out_sizes, it must be 2"
             raise ValueError(msg)
         dropped_dims = sorted_dims[num_out:]
