@@ -61,13 +61,13 @@ license-files = ["LICENSE"]
 zip-safe = false
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements/core.txt"]}
+dependencies = {file = ["requirements/pypi-core.txt"]}
 readme = {file = "README.md", content-type = "text/markdown"}
 version = {attr = "esmf_regrid.__version__"}
 
 [tool.setuptools.dynamic.optional-dependencies]
-dev = {file = ["requirements/optional-dev.txt"]}
-docs = {file = ["requirements/optional-docs.txt"]}
+dev = {file = ["requirements/pypi-optional-dev.txt"]}
+docs = {file = ["requirements/pypi-optional-docs.txt"]}
 
 [tool.setuptools.packages.find]
 include = ["esmf_regrid*"]

@@ -1,6 +1,0 @@
-asv
-codecov
-nox
-pre-commit
-pytest
-pytest-cov

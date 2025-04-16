@@ -2,8 +2,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
  
-The format is based on [Keep a Changelog](http://keepachangelog.com/)
-and this project adheres to [Semantic Versioning](http://semver.org/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/)
+and this project adheres to [Semantic Versioning](https://semver.org/).
+
+
+## [Unreleased]
+
+### Added
+
+- [PR#506](https://github.com/SciTools/iris-esmf-regrid/pull/506)
+  Introduced explicit capping pins for ``pip`` packages which will be
+  automatically updated by ``dependabot``.
+  [@bjlittle](https://github.com/bjlittle)
 
 
 ## [0.12.1] - 2025-04-09
