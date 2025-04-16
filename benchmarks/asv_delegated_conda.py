@@ -176,10 +176,10 @@ class CondaDelegated(Conda):
             # Check that environment exists.
             try:
                 env_path.resolve(strict=True)
-            except FileNotFoundError:
+            except FileNotFoundError as err:
                 message = f"Path does not resolve to environment: {env_path}"
                 log.error(message)
-                raise RuntimeError(message)
+                raise RuntimeError(message) from err
 
             # Restore ASV's files from the cache (if necessary).
             copy_asv_files(asv_cache_path, env_path.resolve())

@@ -14,7 +14,7 @@ except ImportError as exc:
         from iris.experimental.ugrid import Connectivity
         from iris.experimental.ugrid import Mesh as MeshXY
     except ImportError:
-        raise exc
+        raise exc from None
 
 from esmf_regrid.esmf_regridder import Regridder
 from esmf_regrid.schemes import _mesh_to_MeshInfo

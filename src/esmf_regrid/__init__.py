@@ -5,7 +5,7 @@ except ImportError as exc:
     try:
         import ESMF as esmpy  # noqa: N811
     except ImportError:
-        raise exc
+        raise exc from None
 
 try:
     import iris.mesh as _imesh
@@ -13,7 +13,7 @@ except ImportError as exc:
     try:
         import iris.experimental.ugrid as _imesh
     except ImportError:
-        raise exc
+        raise exc from None
 
 if hasattr(_imesh, "PARSE_UGRID_ON_LOAD"):
     _load_context = _imesh.PARSE_UGRID_ON_LOAD.context
