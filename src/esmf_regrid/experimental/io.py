@@ -338,7 +338,9 @@ def load_regridder(filename):
 
     # Determine the regridder type.
     regridder_type = weights_cube.attributes[_REGRIDDER_TYPE]
-    assert regridder_type in _REGRIDDER_NAME_MAP
+    if regridder_type not in _REGRIDDER_NAME_MAP:
+        e_msg = f"Unrecognised regridder type {regridder_type}."
+        raise TypeError(e_msg)
     scheme = _REGRIDDER_NAME_MAP[regridder_type]
 
     # Determine the regridding method, allowing for files created when

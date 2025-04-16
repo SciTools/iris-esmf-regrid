@@ -183,22 +183,36 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
     else:
         crs = cube.coord_system().as_cartopy_crs()
     londim, latdim = len(lon.shape), len(lat.shape)
-    assert londim == latdim
-    assert londim in (1, 2)
+    if londim != latdim:
+        msg = "X and Y coordinates must have the same dimensionality."
+        raise ValueError(msg)
+    if londim not in (1, 2):
+        msg = f"X and Y coordinates must be 1D or 2D, got {londim} dimensions."
+        raise ValueError(msg)
     if not center:
         if londim == 1:
             # Ensure coords come from a proper grid.
-            assert isinstance(lon, iris.coords.DimCoord)
-            assert isinstance(lat, iris.coords.DimCoord)
+            if not isinstance(lon, iris.coords.DimCoord):
+                msg = "1D X coordinate must be a DimCoord."
+                raise TypeError(msg)
+            if not isinstance(lat, iris.coords.DimCoord):
+                msg = "1D Y coordinate must be a DimCoord."
+                raise TypeError(msg)
             circular = lon.circular
             lon_bound_array = lon.contiguous_bounds()
             lat_bound_array = lat.contiguous_bounds()
             # TODO: perform checks on lat/lon.
         elif londim == 2:
-            assert cube.coord_dims(lon) == cube.coord_dims(lat)
+            if cube.coord_dims(lon) != cube.coord_dims(lat):
+                msg = "2D X and Y coordinates must describe the same cube dimensions."
+                raise ValueError(msg)
             if not np.any(mask):
-                assert lon.is_contiguous()
-                assert lat.is_contiguous()
+                if not lon.is_contiguous():
+                    msg = "X coordinate must be contiguous"
+                    raise ValueError(msg)
+                if not lat.is_contiguous():
+                    msg = "Y coordinate must be contiguous"
+                    raise ValueError(msg)
                 lon_bound_array = lon.contiguous_bounds()
                 lat_bound_array = lat.contiguous_bounds()
             else:
@@ -245,7 +259,11 @@ def _cube_to_GridInfo(cube, center=False, resolution=None, mask=None):
 
 def _mesh_to_MeshInfo(mesh, location, mask=None):
     # Returns a MeshInfo object describing the mesh of the cube.
-    assert mesh.topology_dimension == 2
+    if mesh.topology_dimension != 2:
+        msg = (
+            f"Mesh topology_dimesnion expected to be 2, got {mesh.topology_dimension}."
+        )
+        raise ValueError(msg)
     if None in mesh.face_coords:
         elem_coords = None
     else:
@@ -397,33 +415,38 @@ def _map_complete_blocks(
 
     dropped_dims = []
     new_axis = None
+    # While this code should be robust for cases where num_out > 1, num_dims > 1,
+    # there is some ambiguity as to what their behaviour ought to be.
+    # Since these cases are out of our own scope, we explicitly ignore them
+    # for the time being.
+    if num_dims > 1 and num_out > 1 and num_dims != num_out:
+        msg = (
+            "If the length of active_dims and out_sizes is different, they"
+            " can't both be > 1."
+        )
+        raise ValueError(msg)
+
     if num_out > num_dims:
-        # While this code should be robust for cases where num_out > num_dims > 1,
-        # there is some ambiguity as to what their behaviour ought to be.
-        # Since these cases are out of our own scope, we explicitly ignore them
-        # for the time being.
-        assert num_dims == 1
         # While this code should be robust for cases where num_out > 2,
         # we expect to handle at most 2D grids.
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
-        assert num_out == 2
+        if num_out != 2:
+            msg = "If the length of out_sizes is greater than active_dims, it must be 2"
+            raise ValueError(msg)
         slice_index = sorted_dims[-1]
         # Insert the remaining contents of out_sizes in the position immediately
         # after the last dimension.
         out_chunks[slice_index:slice_index] = out_sizes[num_dims:]
         new_axis = range(slice_index, slice_index + num_out - num_dims)
     elif num_dims > num_out:
-        # While this code should be robust for cases where num_dims > num_out > 1,
-        # there is some ambiguity as to what their behaviour ought to be.
-        # Since these cases are out of our own scope, we explicitly ignore them
-        # for the time being.
-        assert num_out == 1
         # While this code should be robust for cases where num_dims > 2,
         # we expect to handle at most 2D grids.
         # Since these cases are out of our own scope, we explicitly ignore them
         # for the time being.
-        assert num_dims == 2
+        if num_dims != 2:
+            msg = "If the length of active_dims is greater than out_sizes, it must be 2"
+            raise ValueError(msg)
         dropped_dims = sorted_dims[num_out:]
         # Remove the remaining dimensions from the expected output shape.
         for dim in dropped_dims[::-1]:
