@@ -31,12 +31,12 @@ from esmf_regrid import _load_context
 try:
     DATA_GEN_PYTHON = environ["DATA_GEN_PYTHON"]
     _ = check_output([DATA_GEN_PYTHON, "-c", "a = True"])
-except KeyError:
+except KeyError as err:
     error = "Env variable DATA_GEN_PYTHON not defined."
-    raise KeyError(error)
-except (CalledProcessError, FileNotFoundError, PermissionError):
+    raise KeyError(error) from err
+except (CalledProcessError, FileNotFoundError, PermissionError) as err:
     error = "Env variable DATA_GEN_PYTHON not a runnable python executable path."
-    raise ValueError(error)
+    raise ValueError(error) from err
 
 # The default location of data files used in benchmarks. Used by CI.
 default_data_dir = (Path(__file__).parent.parent / ".data").resolve()
@@ -92,7 +92,7 @@ def run_function_elsewhere(func_to_run, *args, **kwargs):
     func_call_string = (
         f"{func_to_run.__name__}(" + ",".join(func_call_term_strings) + ")"
     )
-    python_string = "\n".join([func_string, func_call_string])
+    python_string = f"{func_string}\n{func_call_string}"
     old_esmf_mk_file = environ.get(ESMFMKFILE, None)
     environ[ESMFMKFILE] = str(Path(sys.executable).parents[1] / "lib" / "esmf.mk")
     result = run(

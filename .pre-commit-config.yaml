@@ -2,6 +2,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 # See https://pre-commit.ci/#configuration
 # See https://github.com/scientific-python/cookie#sp-repo-review
+# See https://github.com/SciTools/.github/wiki/Linting for common linter rules
 
 ci:
   autofix_prs: false
@@ -13,7 +14,7 @@ files: |
     (?x)(
         benchmarks\/.+\.py|
         docs\/.+\.py|
-        esmf_regrid\/.+\.py|
+        src\/.+\.py|
         noxfile\.py|
         pyproject\.toml|
         setup\.py
@@ -50,7 +51,7 @@ repos:
     -   id: trailing-whitespace
 
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.11.4"
+    rev: "v0.11.5"
     hooks:
     -   id: ruff
         types: [file, python]
@@ -101,3 +102,28 @@ repos:
     hooks:
       - id: numpydoc-validation
         types: [file, python]
+
+- repo: https://github.com/pre-commit/pygrep-hooks
+  rev: v1.10.0
+  hooks:
+    - id: python-check-blanket-noqa
+      # Enforce that all noqa annotations always occur with specific codes.
+    - id: python-check-blanket-type-ignore
+      # Enforce that "# type: ignore" annotations always occur with specific codes.
+    - id: python-check-mock-methods
+      # Prevent common mistakes of assert mck.not_called(), assert
+      # mck.called_once_with(...) and mck.assert_called.
+    - id: python-no-eval
+      # A quick check for the eval() built-in function
+    - id: python-no-log-warn
+      # A quick check for the deprecated .warn() method of python loggers
+    - id: python-use-type-annotations
+      # Enforce that python3.6+ type annotations are used instead of type comments
+    - id: rst-backticks
+      # Detect common mistake of using single backticks when writing rst.
+    - id: rst-directive-colons
+      # Detect mistake of rst directive not ending with double colon.
+    - id: rst-inline-touching-normal
+      # Detect mistake of inline code touching normal text in rst.
+    - id: text-unicode-replacement-char
+      # Forbid files which have a UTF-8 Unicode replacement character.

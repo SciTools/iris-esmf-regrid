@@ -49,7 +49,7 @@ class CondaDelegated(Conda):
             identifier string.
 
         tagged_env_vars : dict
-            Environment variables, tagged for build vs. non-build
+            Environment variables, tagged for build vs. non-build.
 
         """
         ignored = ["`python`"]
@@ -150,11 +150,11 @@ class CondaDelegated(Conda):
                 local_envs = dict(environ)
                 local_envs.update(env)
                 if cwd is None:
-                    cwd = str(build_dir)
+                    _cwd = str(build_dir)
                 _ = asv_util.check_output(
                     command,
                     timeout=self._install_timeout,
-                    cwd=cwd,
+                    cwd=_cwd,
                     env=local_envs,
                     valid_return_codes=return_codes,
                 )
@@ -176,10 +176,10 @@ class CondaDelegated(Conda):
             # Check that environment exists.
             try:
                 env_path.resolve(strict=True)
-            except FileNotFoundError:
+            except FileNotFoundError as err:
                 message = f"Path does not resolve to environment: {env_path}"
                 log.error(message)
-                raise RuntimeError(message)
+                raise RuntimeError(message) from err
 
             # Restore ASV's files from the cache (if necessary).
             copy_asv_files(asv_cache_path, env_path.resolve())
