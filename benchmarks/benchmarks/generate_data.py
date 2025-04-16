@@ -31,12 +31,12 @@ from esmf_regrid import _load_context
 try:
     DATA_GEN_PYTHON = environ["DATA_GEN_PYTHON"]
     _ = check_output([DATA_GEN_PYTHON, "-c", "a = True"])
-except KeyError:
+except KeyError as err:
     error = "Env variable DATA_GEN_PYTHON not defined."
-    raise KeyError(error)
-except (CalledProcessError, FileNotFoundError, PermissionError):
+    raise KeyError(error) from err
+except (CalledProcessError, FileNotFoundError, PermissionError) as err:
     error = "Env variable DATA_GEN_PYTHON not a runnable python executable path."
-    raise ValueError(error)
+    raise ValueError(error) from err
 
 # The default location of data files used in benchmarks. Used by CI.
 default_data_dir = (Path(__file__).parent.parent / ".data").resolve()
