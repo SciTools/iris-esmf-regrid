@@ -3,30 +3,25 @@
     "project": "esmf_regrid",
     "project_url": "https://github.com/SciTools/iris-esmf-regrid",
     "repo": "..",
-    "environment_type": "conda-delegated",
+    "environment_type": "delegated",
     "show_commit_url": "https://github.com/SciTools/iris-esmf-regrid/commit/",
     "branches": ["upstream/main"],
-    "build_command": [
-        "python setup.py build",
-        "python -mpip wheel --no-deps -w {build_cache_dir} {build_dir}",
-        "python {conf_dir}/custom_bms/install.py"
-    ],
 
     "benchmark_dir": "./benchmarks",
     "env_dir": ".asv/env",
     "results_dir": ".asv/results",
     "html_dir": ".asv/html",
-    "plugins": [".asv_delegated_conda"],
+    "plugins": [".asv_delegated"],
 
-    // The command(s) that create/update an environment correctly for the
-    //  checked-out commit.
-    // Interpreted the same as build_command, with following exceptions:
-    //  * No build-time environment variables.
-    //  * Is run in the same environment as the ASV install itself.
-    "delegated_env_commands": [
-        "PY_VER=3.12 nox --envdir={conf_dir}/.asv/env/nox01 --session=tests --install-only --no-error-on-external-run --verbose"
+    "command_comment": [
+        "Can get some speedup by skipping project build, install and ",
+        "uninstall IF POSSIBLE. See Iris' asv.conf.json for a working example.",
+
+        "We do however need to install the custom benchmarks for them to be",
+        "usable."
     ],
-    // The parent directory of the above environment.
-    //  The most recently modified environment in the directory will be used.
-    "delegated_env_parent": "{conf_dir}/.asv/env/nox01"
+    "install_command": [],
+    "uninstall_command": [],
+    "build_command": ["python {conf_dir}/custom_bms/install.py"]
 }
+
