@@ -100,7 +100,10 @@ def run_function_elsewhere(func_to_run, *args, **kwargs):
     result = run(
         [DATA_GEN_PYTHON, "-c", python_string], capture_output=True, check=True
     )
-    environ[ESMFMKFILE] = old_esmf_mk_file
+    if old_esmf_mk_file is None:
+        del environ[ESMFMKFILE]
+    else:
+        environ[ESMFMKFILE] = old_esmf_mk_file
     return result.stdout
 
 
