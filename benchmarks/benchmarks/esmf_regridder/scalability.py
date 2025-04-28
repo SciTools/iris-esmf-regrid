@@ -17,7 +17,7 @@ from esmf_regrid.experimental.unstructured_scheme import (
 from esmf_regrid.schemes import ESMFAreaWeightedRegridder
 
 from .. import on_demand_benchmark
-from ..generate_data import _grid_cube, _gridlike_mesh_cube
+from ..generate_data.cubes import _grid_cube, _gridlike_mesh_cube
 
 
 class PrepareScalabilityMixin:

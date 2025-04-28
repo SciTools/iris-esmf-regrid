@@ -1,8 +1,12 @@
+#!/usr/bin/env python3
+# Copyright SciTools contributors
+#
+# This file is part of SciTools and is released under the BSD license.
+# See LICENSE in the root of the repository for full licensing details.
 """Argparse conveniences for executing common types of benchmark runs."""
 
 from abc import ABC, abstractmethod
 import argparse
-from argparse import ArgumentParser
 from datetime import datetime
 from importlib import import_module
 from os import environ
@@ -11,6 +15,7 @@ import re
 import shlex
 import subprocess
 from tempfile import NamedTemporaryFile
+from typing import Protocol
 
 # The threshold beyond which shifts are 'notable'. See `asv compare`` docs
 #  for more.
@@ -22,13 +27,13 @@ ROOT_DIR = BENCHMARKS_DIR.parent
 GH_REPORT_DIR = ROOT_DIR.joinpath(".github", "workflows", "benchmark_reports")
 
 # Common ASV arguments for all run_types except `custom`.
-ASV_HARNESS = "run {posargs} --attribute rounds=4 --interleave-rounds --show-stderr"
+ASV_HARNESS = "run {posargs} --attribute rounds=3 --interleave-rounds --show-stderr"
 
 
-def _echo(echo_string: str):
+def echo(echo_string: str):
     # Use subprocess for printing to reduce chance of printing out of sequence
     #  with the subsequent calls.
-    subprocess.run(["echo", f"BM_RUNNER DEBUG: {echo_string}"], check=False)
+    subprocess.run(["echo", f"BM_RUNNER DEBUG: {echo_string}"])
 
 
 def _subprocess_runner(args, asv=False, **kwargs):
@@ -38,7 +43,7 @@ def _subprocess_runner(args, asv=False, **kwargs):
     if asv:
         args.insert(0, "asv")
         kwargs["cwd"] = BENCHMARKS_DIR
-    _echo(" ".join(args))
+    echo(" ".join(args))
     kwargs.setdefault("check", True)
     return subprocess.run(args, **kwargs)
 
@@ -64,28 +69,26 @@ def _prep_data_gen_env() -> None:
     python_version = "3.12"
     data_gen_var = "DATA_GEN_PYTHON"
     if data_gen_var in environ:
-        _echo("Using existing data generation environment.")
+        echo("Using existing data generation environment.")
     else:
-        _echo("Setting up the data generation environment ...")
+        echo("Setting up the data generation environment ...")
         # Get Nox to build an environment for the `tests` session, but don't
         #  run the session. Will reuse a cached environment if appropriate.
-        _subprocess_runner(
-            [
-                "nox",
-                f"--noxfile={ROOT_DIR / 'noxfile.py'}",
-                "--session=tests",
-                "--install-only",
-                f"--python={python_version}",
-            ]
-        )
+        env_setup_commands: list[str] = [
+            "nox",
+            f"--noxfile={ROOT_DIR / 'noxfile.py'}",
+            "--session=tests",
+            "--install-only",
+            f"--python={python_version}",
+        ]
+        _subprocess_runner(env_setup_commands)
         # Find the environment built above, set it to be the data generation
         #  environment.
-        data_gen_python = next(
-            (ROOT_DIR / ".nox").rglob(f"tests*/bin/python{python_version}")
-        ).resolve()
+        env_directory: Path = next((ROOT_DIR / ".nox").rglob("tests*"))
+        data_gen_python = (env_directory / "bin" / "python").resolve()
         environ[data_gen_var] = str(data_gen_python)
 
-        _echo("Data generation environment ready.")
+        echo("Data generation environment ready.")
 
 
 def _setup_common() -> None:
@@ -94,27 +97,31 @@ def _setup_common() -> None:
 
     _prep_data_gen_env()
 
-    _echo("Setting up ASV ...")
+    echo("Setting up ASV ...")
     _subprocess_runner(["machine", "--yes"], asv=True)
 
-    _echo("Setup complete.")
+    echo("Setup complete.")
 
 
-def _asv_compare(*commits: str, fail: bool = False) -> None:
+def _asv_compare(
+    *commits: str,
+    fail_on_regression: bool = False,
+) -> None:
     """Run through a list of commits comparing each one to the next."""
-    _commits = [commit[:8] for commit in commits]
-    for i in range(len(_commits) - 1):
-        before = _commits[i]
-        after = _commits[i + 1]
+    commits = tuple(commit[:8] for commit in commits)
+    for i in range(len(commits) - 1):
+        before = commits[i]
+        after = commits[i + 1]
         asv_command = shlex.split(
             f"compare {before} {after} --factor={COMPARE_FACTOR} --split"
         )
 
         comparison = _subprocess_runner_capture(asv_command, asv=True)
-        _echo(comparison)
+        echo(comparison)
         shifts = _subprocess_runner_capture([*asv_command, "--only-changed"], asv=True)
-        _echo(shifts)
-        if fail and shifts:
+        echo(shifts)
+        if shifts and fail_on_regression:
+            # fail_on_regression supports setups that expect CI failures.
             message = (
                 f"Performance shifts detected between commits {before} and {after}.\n"
             )
@@ -128,8 +135,13 @@ class _SubParserGenerator(ABC):
     description: str = NotImplemented
     epilog: str = NotImplemented
 
-    def __init__(self, subparsers: argparse._SubParsersAction) -> None:
-        self.subparser: ArgumentParser = subparsers.add_parser(
+    class _SubParsersType(Protocol):
+        """Duck typing since argparse._SubParsersAction is private."""
+
+        def add_parser(self, name, **kwargs) -> argparse.ArgumentParser: ...
+
+    def __init__(self, subparsers: _SubParsersType) -> None:
+        self.subparser = subparsers.add_parser(
             self.name,
             description=self.description,
             epilog=self.epilog,
@@ -168,8 +180,10 @@ class Branch(_SubParserGenerator):
 
     name = "branch"
     description = (
-        "Benchmarks the two commits,``HEAD``, and ``HEAD``'s merge-base with the "
-        "input **base_branch**. If running on GitHub Actions: HEAD will be "
+        "Benchmarks two "
+        "commits only - ``HEAD``, and ``HEAD``'s merge-base with the input "
+        "**base_branch**.\n"
+        "If running on GitHub Actions: HEAD will be "
         "GitHub's merge commit and merge-base will be the merge target. Performance "
         "comparisons will be posted in the CI run which will fail if regressions "
         "exceed the tolerance.\n"
@@ -204,7 +218,7 @@ class Branch(_SubParserGenerator):
             asv_command = shlex.split(ASV_HARNESS.format(posargs=commit_range))
             _subprocess_runner([*asv_command, *args.asv_args], asv=True)
 
-        _asv_compare(merge_base, head_sha, fail=True)
+        _asv_compare(merge_base, head_sha, fail_on_regression=True)
 
 
 class SPerf(_SubParserGenerator):
@@ -248,14 +262,14 @@ class SPerf(_SubParserGenerator):
         environ["ON_DEMAND_BENCHMARKS"] = "True"
         commit_range = "upstream/main^!"
 
-        asv_command = (
+        asv_command_str = (
             ASV_HARNESS.format(posargs=commit_range) + " --bench=.*Scalability.*"
         )
 
         # Only do a single round.
-        _asv_command = shlex.split(re.sub(r"rounds=\d", "rounds=1", asv_command))
+        asv_command = shlex.split(re.sub(r"rounds=\d", "rounds=1", asv_command_str))
         try:
-            _subprocess_runner([*_asv_command, *args.asv_args], asv=True)
+            _subprocess_runner([*asv_command, *args.asv_args], asv=True)
         except subprocess.CalledProcessError as err:
             # C/SPerf benchmarks are much bigger than the CI ones:
             # Don't fail the whole run if memory blows on 1 benchmark.
@@ -263,14 +277,12 @@ class SPerf(_SubParserGenerator):
             if err.returncode != 2:
                 raise
 
-        _asv_command = shlex.split(
-            f"publish {commit_range} --html-dir={publish_subdir}"
-        )
-        _subprocess_runner(_asv_command, asv=True)
+        asv_command = shlex.split(f"publish {commit_range} --html-dir={publish_subdir}")
+        _subprocess_runner(asv_command, asv=True)
 
         # Print completion message.
         location = BENCHMARKS_DIR / ".asv"
-        _echo(
+        echo(
             f'New ASV results for "sperf".\n'
             f'See "{publish_subdir}",'
             f'\n  or JSON files under "{location / "results"}".'
@@ -303,13 +315,31 @@ class Custom(_SubParserGenerator):
 
 
 def main():
-    parser = ArgumentParser(
-        description="Run the Iris performance benchmarks (using Airspeed Velocity).",
-        epilog="More help is available within each sub-command.",
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run the repository performance benchmarks (using Airspeed Velocity)."
+        ),
+        epilog=(
+            "More help is available within each sub-command."
+            "\n\nNOTE(1): a separate python environment is created to "
+            "construct test files.\n   Set $DATA_GEN_PYTHON to avoid the cost "
+            "of this."
+            "\nNOTE(2): test data is cached within the "
+            "benchmarks code directory, and uses a lot of disk space "
+            "of disk space (Gb).\n   Set $BENCHMARK_DATA to specify where this "
+            "space can be safely allocated."
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     subparsers = parser.add_subparsers(required=True)
 
-    for gen in (Branch, SPerf, Custom):
+    parser_generators: tuple[type(_SubParserGenerator), ...] = (
+        Branch,
+        SPerf,
+        Custom,
+    )
+
+    for gen in parser_generators:
         _ = gen(subparsers).subparser
 
     parsed = parser.parse_args()

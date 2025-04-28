@@ -1,13 +1,19 @@
-"""Benchmark tests for iris-esmf-regrid."""
+# Copyright SciTools contributors
+#
+# This file is part of SciTools and is released under the BSD license.
+# See LICENSE in the root of the repository for full licensing details.
+"""Common code for benchmarks."""
 
 from os import environ
 
 
 def disable_repeat_between_setup(benchmark_object):
-    """Decorate benchmarks where object persistence would be inappropriate.
+    """Benchmark where object persistence would be inappropriate (decorator).
 
     E.g:
-        * Data is realised during testing.
+
+    * Benchmarking data realisation
+    * Benchmarking Cube coord addition
 
     Can be applied to benchmark classes/methods/functions.
 
@@ -29,12 +35,15 @@ def disable_repeat_between_setup(benchmark_object):
 
 
 def on_demand_benchmark(benchmark_object):
-    """Decorate benchmark(s) that are disabled unless ON_DEMAND_BENCHARKS env var is set.
+    """Disable these benchmark(s) unless ON_DEMAND_BENCHARKS env var is set.
+
+    This is a decorator.
 
     For benchmarks that, for whatever reason, should not be run by default.
     E.g:
-        * Require a local file
-        * Used for scalability analysis instead of commit monitoring.
+
+    * Require a local file
+    * Used for scalability analysis instead of commit monitoring.
 
     Can be applied to benchmark classes/methods/functions.
 
