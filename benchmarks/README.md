@@ -1,7 +1,6 @@
-# iris-esmf-regrid Performance Benchmarking
+# SciTools Performance Benchmarking
 
-iris-esmf-regrid uses an
-[Airspeed Velocity](https://github.com/airspeed-velocity/asv)
+SciTools uses an [Airspeed Velocity](https://github.com/airspeed-velocity/asv)
 (ASV) setup to benchmark performance. This is primarily designed to check for
 performance shifts between commits using statistical analysis, but can also
 be easily repurposed for manual comparative and scalability analyses.
@@ -12,24 +11,30 @@ raising a ❌ failure.
 
 ## Running benchmarks
 
-`asv ...` commands must be run from this directory. You will need to have ASV
-installed, as well as Nox (see
-[Benchmark environments](#benchmark-environments)).
+As mentioned, benchmarks are always run on GitHub as part of the CI.
+To run locally: the **benchmark runner** provides conveniences for
+common benchmark setup and run tasks, including replicating the benchmarking
+performed by GitHub Actions workflows. This can be accessed by:
 
-The benchmark runner ([bm_runner.py](./bm_runner.py)) provides conveniences for
-common benchmark setup and run tasks, including replicating the automated 
-overnight run locally. See `python bm_runner.py --help` for detail.
+- `benchmarks/bm_runner.py` (use the `--help` argument for details).
+- Directly running `asv` commands from the `benchmarks/` directory (check
+  whether environment setup has any extra dependencies - see 
+  [Benchmark environments](#benchmark-environments)).
+
+### Reducing run time
 
 A significant portion of benchmark run time is environment management. Run-time
-can be reduced by placing the benchmark environment on the same file system as
-your
-[Conda package cache](https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#specify-pkg-directories),
-if it is not already. You can achieve this by either:
+can be reduced by co-locating the benchmark environment and your 
+[Conda package cache](https://docs.conda.io/projects/conda/en/latest/user-guide/configuration/custom-env-and-pkg-locations.html) 
+on the same [file system](https://en.wikipedia.org/wiki/File_system), if they 
+are not already. This can be done in several ways:
 
-- Temporarily reconfiguring `delegated_env_commands` and `delegated_env_parent` 
-  in [asv.conf.json](asv.conf.json) to reference a location on the same file
-  system as the Conda package cache.
-- Moving your Iris repo to the same file system as the Conda package cache.
+- Temporarily reconfiguring `env_parent` in
+  [`_asv_delegated_abc`](_asv_delegated_abc.py) to reference a location on the same 
+  file system as the Conda package cache.
+- Using an alternative Conda package cache location during the benchmark run,
+  e.g. via the `$CONDA_PKGS_DIRS` environment variable.
+- Moving your repo checkout to the same file system as the Conda package cache.
 
 ### Environment variables
 
@@ -46,39 +51,50 @@ plan accordingly.
 decorated with `@on_demand_benchmark` are included in the ASV run. Usually
 coupled with the ASV `--bench` argument to only run the benchmark(s) of
 interest. Is set during the benchmark runner `sperf` sub-commands.
-
-### Reducing run time
-
-Before benchmarks are run on a commit, the benchmark environment is
-automatically aligned with the lock-file for that commit. You can significantly
-speed up any environment updates by co-locating the benchmark environment and your
-[Conda package cache](https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#specify-package-directories-pkgs-dirs)
-on the same [file system](https://en.wikipedia.org/wiki/File_system). This can
-be done in several ways:
-
-* Move your iris-esmf-regrid checkout, this being the default location for the
-  benchmark environment.
-* Move your package cache by editing
-  [`pkgs_dirs` in Conda config](https://conda.io/projects/conda/en/latest/user-guide/configuration/use-condarc.html#specify-package-directories-pkgs-dirs).
-* Move the benchmark environment by **locally** editing the environment path of
-  `delegated_env_commands` and `delegated_env_parent` in
-  [asv.conf.json](asv.conf.json).
+* `ASV_COMMIT_ENVS` - optional - instruct the 
+[delegated environment management](#benchmark-environments) to create a
+dedicated environment for each commit being benchmarked when set (to any 
+value). This means that benchmarking commits with different environment 
+requirements will not be delayed by repeated environment setup - especially 
+relevant given the [benchmark runner](bm_runner.py)'s use of
+[--interleave-rounds](https://asv.readthedocs.io/en/stable/commands.html?highlight=interleave-rounds#asv-run),
+or any time you know you will repeatedly benchmark the same commit. **NOTE:**
+SciTools environments tend to large so this option can consume a lot of disk 
+space.
 
 ## Writing benchmarks
 
 [See the ASV docs](https://asv.readthedocs.io/) for full detail.
 
+### What benchmarks to write
+
+It is not possible to maintain a full suite of 'unit style' benchmarks:
+
+* Benchmarks take longer to run than tests.
+* Small benchmarks are more vulnerable to noise - they report a lot of false
+positive regressions.
+
+We therefore recommend writing benchmarks representing scripts or single
+operations that are likely to be run at the user level.
+
+The drawback of this approach: a reported regression is less likely to reveal
+the root cause (e.g. if a commit caused a regression in coordinate-creation 
+time, but the only benchmark covering this was for file-loading). Be prepared
+for manual investigations; and consider committing any useful benchmarks as 
+[on-demand benchmarks](#on-demand-benchmarks) for future developers to use.
+
 ### Data generation
+
 **Important:** be sure not to use the benchmarking environment to generate any
 test objects/files, as this environment changes with each commit being
 benchmarked, creating inconsistent benchmark 'conditions'. The
-[generate_data](./benchmarks/generate_data.py) module offers a
+[generate_data](./benchmarks/generate_data/__init__.py) module offers a
 solution; read more detail there.
 
 ### ASV re-run behaviour
 
 Note that ASV re-runs a benchmark multiple times between its `setup()` routine.
-This is a problem for benchmarking certain Iris operations such as data
+This is a problem for benchmarking certain SciTools operations such as data
 realisation, since the data will no longer be lazy after the first run.
 Consider writing extra steps to restore objects' original state _within_ the
 benchmark itself.
@@ -88,17 +104,28 @@ can be disabled by setting an attribute on the benchmark: `number = 1`. To
 maintain result accuracy this should be accompanied by increasing the number of
 repeats _between_ `setup()` calls using the `repeat` attribute.
 `warmup_time = 0` is also advisable since ASV performs independent re-runs to
-estimate run-time, and these will still be subject to the original problem. A
-decorator is available for this - `@disable_repeat_between_setup` in
-[benchmarks init](./benchmarks/__init__.py).
+estimate run-time, and these will still be subject to the original problem.
+The `@disable_repeat_between_setup` decorator in 
+[`benchmarks/__init__.py`](benchmarks/__init__.py) offers a convenience for 
+all this.
+
+### Custom benchmarks
+
+SciTools benchmarking implements custom benchmark types, such as a `tracemalloc`
+benchmark to measure memory growth. See [custom_bms/](./custom_bms) for more
+detail.
 
 ### Scaling / non-Scaling Performance Differences
 
+**(We no longer advocate the below for benchmarks run during CI, given the
+limited available runtime and risk of false-positives. It remains useful for
+manual investigations).**
+
 When comparing performance between commits/file-type/whatever it can be helpful
-to know if the differences exist in scaling or non-scaling parts of the Iris
-functionality in question. This can be done using a size parameter, setting
-one value to be as small as possible (e.g. a scalar `Cube`), and the other to
-be significantly larger (e.g. a 1000x1000 `Cube`). Performance differences
+to know if the differences exist in scaling or non-scaling parts of the 
+operation under test. This can be done using a size parameter, setting
+one value to be as small as possible (e.g. a scalar value), and the other to
+be significantly larger (e.g. a 1000x1000 array). Performance differences
 might only be seen for the larger value, or the smaller, or both, getting you
 closer to the root cause.
 
@@ -115,13 +142,15 @@ suite for the UK Met Office NG-VAT project.
 ## Benchmark environments
 
 We have disabled ASV's standard environment management, instead using an
-environment built using the same Nox scripts as Iris' test environments. This
-is done using ASV's plugin architecture - see
-[asv_delegated_conda.py](asv_delegated_conda.py) and the extra config items in
-[asv.conf.json](asv.conf.json).
+environment built using the same scripts that set up the package test 
+environments. 
+This is done using ASV's plugin architecture - see
+[`asv_delegated.py`](asv_delegated.py) and associated 
+references in [`asv.conf.json`](asv.conf.json) (`environment_type` and 
+`plugins`).
 
 (ASV is written to control the environment(s) that benchmarks are run in -
 minimising external factors and also allowing it to compare between a matrix
 of dependencies (each in a separate environment). We have chosen to sacrifice
 these features in favour of testing each commit with its intended dependencies,
-controlled by Nox + lock-files).
+controlled by the test environment setup script(s)).
