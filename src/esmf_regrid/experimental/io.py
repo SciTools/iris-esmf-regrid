@@ -360,7 +360,9 @@ def load_regridder(filename, allow_partial=False):
 
     # Determine the regridder type.
     regridder_type = weights_cube.attributes[_REGRIDDER_TYPE]
-    assert regridder_type in _REGRIDDER_NAME_MAP
+    if regridder_type not in _REGRIDDER_NAME_MAP:
+        e_msg = f"Unrecognised regridder type {regridder_type}."
+        raise TypeError(e_msg)
     scheme = _REGRIDDER_NAME_MAP[regridder_type]
 
     if regridder_type == "PartialRegridder" and not allow_partial:
