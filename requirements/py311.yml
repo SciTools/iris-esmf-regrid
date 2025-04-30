@@ -7,7 +7,7 @@ dependencies:
   - python=3.11
 
 # Setup dependencies.
-  - setuptools>=40.8.0
+  - setuptools>=77.0.3
 
 # Core dependencies.
   - cartopy>=0.18
