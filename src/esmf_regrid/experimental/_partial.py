@@ -1,35 +1,53 @@
-"""Provides a """
+"""Provides a regridder class compatible with Partition"""
 
-import numpy as np
+from esmf_regrid.schemes import (
+    _ESMFRegridder,
+    # ESMFAreaWeighted,
+    # ESMFAreaWeightedRegridder,
+    # ESMFBilinear,
+)
 
-from esmf_regrid.schemes import _ESMFRegridder
 class PartialRegridder(_ESMFRegridder):
     def __init__(self, src, tgt, src_slice, tgt_slice, weights, scheme, **kwargs):
         self.src_slice = src_slice  # this will be tuple-like
-        self.tgt_slice = tgt_slice  # this will be a boolean array
+        self.tgt_slice = tgt_slice
         self.scheme = scheme
 
-        super().__init__(
+        # kwargs = {
+        #     "use_src_mask": scheme.use_src_mask,
+        #     "use_tgt_mask": scheme.use_tgt_mask,
+        #     "tgt_location": scheme.tgt_location,
+        #     "esmf_args": scheme.esmf_args,
+        # }
+        # if isinstance(scheme, (ESMFAreaWeighted, ESMFBilinear)):
+        #     kwargs["mdtol"] = scheme.mdtol
+
+
+        # super().__init__(
+        # ESMFAreaWeightedRegridder.__init__(
+        #     src,
+        #     tgt,
+        #     scheme._method,
+        #     precomputed_weights=weights,
+        #     **kwargs,
+        # )
+        self._regridder = scheme.regridder(
             src,
             tgt,
-            scheme.method,
             precomputed_weights=weights,
-            **kwargs,
+            # TODO: turn this back on
+            # **kwargs,
         )
+        self.__dict__.update(self._regridder.__dict__)
 
     def __call__(self, cube):
         result = super().__call__(cube)
 
-        # set everything outside the extent to 0
-        inverse_slice = np.ones_like(result.data, dtype=bool)
-        inverse_slice[self.tgt_slice] = 0
-        # TODO: make sure this works with lazy data
-        dims = self._get_cube_dims(cube)
-        slice_slice = [np.newaxis] * result.ndim
-        for dim in dims:
-            slice_slice[dim] = np.s_[:]
-        broadcast_slice = np.broadcast_to(inverse_slice[*slice_slice], result.shape)
-        result.data[broadcast_slice] = 0
+        blank_cube = cube.copy()
+        blank_cube.data[:] = 0
+        result_mask = super().__call__(blank_cube).data.mask
+        result.data[result_mask] = 0
+
         return result
 
     def _get_src_slice(self, cube):

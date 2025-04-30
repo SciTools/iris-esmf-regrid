@@ -6,47 +6,18 @@ from scipy import sparse
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental._partial import PartialRegridder
 
-# from esmf_regrid.schemes import _ESMFRegridder
-#
-# class PartialRegridder(_ESMFRegridder):
-#     def __init__(self, src, tgt, src_slice, tgt_slice, weights, scheme, **kwargs):
-#         self.src_slice = src_slice
-#         self.tgt_slice = tgt_slice
-#         self.scheme = scheme
-#
-#         super().__init__(
-#             src,
-#             tgt,
-#             scheme.method,
-#             precomputed_weights=weights,
-#             **kwargs,
-#         )
-#
-#     def __call__(self, cube):
-#         result = super().__call__(cube)
-#
-#         # set everything outside the extent to 0
-#         inverse_slice = np.ones_like(result.data, dtype=bool)
-#         inverse_slice[self.tgt_slice] = 0
-#         # TODO: make sure this works with lazy data
-#         dims = self._get_cube_dims(cube)
-#         slice_slice = [np.newaxis] * result.ndim
-#         for dim in dims:
-#             slice_slice[dim] = np.s_[:]
-#         broadcast_slice = np.broadcast_to(inverse_slice[*slice_slice], result.shape)
-#         result.data[broadcast_slice] = 0
-#         return result
-#
-#     def _get_src_slice(self, cube):
-#         # TODO: write a method to handle cubes of different dimensionalities
-#         return self.src_slice
-#
-#     ## keep track of source indices and target indices
-#     ## share reference to full source and target
-#
-#     ## works the same except everything out of bounds is 0 rather than masked
+
+def _interpret_slice(sl):
+    # return [slice(s) for s in sl]
+    return np.s_[sl[0][0]:sl[0][1], sl[1][0]:sl[1][1]]
+
+# TODO: consider if nearest is appropriate with this way of doing things
+
 
 class Partition:
+
+    # TODO: add a way to save the Partition object.
+    # TODO: make a way to find out which files have been saved from the last session.
 
     ## hold a list of files
     ## hold a collection of source indices
@@ -87,6 +58,9 @@ class Partition:
             assert isinstance(files_to_generate, int)
             files = (self.partially_saved_files + self.unsaved_files)[:files_to_generate]
 
+        # sort files
+        files = [file for file in self.file_names if file in files]
+
         # Do this to ensure the last regridder is saved
         files.append(None)
 
@@ -94,11 +68,13 @@ class Partition:
         previous_files = []
         for file in files:
             if file in self.partially_saved_files:
-                next_regridder = load_regridder(file)
+                next_regridder = load_regridder(file, allow_partial=True)
             elif file is None:
                 next_regridder = None
             else:
-                src = self.file_chunk_dict[file]
+                src_chunk = self.file_chunk_dict[file]
+                # src = self.src[src_chunk[0][0]:src_chunk[0][1], src_chunk[1][0]:src_chunk[1][1]]
+                src = self.src[*_interpret_slice(src_chunk)]
                 tgt = self.tgt
                 next_regridder = self.scheme.regridder(src, tgt)
             previous_regridders, next_regridder = self._combine_regridders(previous_regridders, next_regridder, previous_files, file)
@@ -110,7 +86,7 @@ class Partition:
                     for neighbour in neighbours:
                         if neighbour in self.unsaved_files:
                             file_complete = False
-                    save_regridder(regridder, pre_file)
+                    save_regridder(regridder, pre_file, allow_partial=True)
                     if file_complete:
                         self.saved_files.append(pre_file)
                         # self._src_slice_indices.append(regridder.src_slice)
@@ -122,17 +98,22 @@ class Partition:
             previous_files = [file]
 
 
-    def apply_regridders(self, cube):
+    def apply_regridders(self, cube, allow_incomplete=False):
         # for each target chunk, iterate through each associated regridder
         # for now, assume one target chunk
-        assert len(self.unsaved_files) == 0
+        # TODO: figure out how to mask parts of the target not covered by any source (e.g. start out with full mask)
+        if not allow_incomplete:
+            assert len(self.unsaved_files) == 0
         # TODO: this may work better as a cube of the correct shape for more complex cases
         current_result = None
-        for file in self.saved_files:
+        # files = self.saved_files
+        files = self.file_names
+
+        for file in files:
             # TODO: make sure this works well with dask
-            next_regridder = load_regridder(file)
+            next_regridder = load_regridder(file, allow_partial=True)
             cube_slice = next_regridder._get_src_slice(cube)
-            next_result = next_regridder(cube[*cube_slice])
+            next_result = next_regridder(cube[*_interpret_slice(cube_slice)])
             current_result = self._combine_results(current_result, next_result)
         return current_result
 
@@ -141,19 +122,26 @@ class Partition:
         # for the simplest case, neighbours will be next to each other in the list
         files = self.file_names
         neighbours = {file_1: (file_0, file_2) for file_0, file_1, file_2 in zip(files[:-2], files[1:-1], files[2:])}
-        neighbours.update({files[0]: (files[1]), files[-1]: (files[-2])})
+        neighbours.update({files[0]: (files[1],), files[-1]: (files[-2],)})
         return neighbours
 
     def _combine_regridders(self, existing, current_regridder, pre_files, file):
         # For now, combine 2, in future, more regridders may be combined
 
         if len(existing) == 0:
-            # TODO: turn these into partial regridders.
             if not isinstance(current_regridder, PartialRegridder):
-                src_slice = self.file_chunk_dict
-                current_regridder = PartialRegridder()
+                src_slice = self.file_chunk_dict[file]
+                src_cube = self.src[*_interpret_slice(src_slice)]
+                weights = current_regridder.regridder.weight_matrix
+                current_regridder = PartialRegridder(src_cube, self.tgt, src_slice, None, weights, self.scheme)
         elif current_regridder is None:
-            existing = [PartialRegridder()]
+            previous_regridder, = existing
+            if not isinstance(previous_regridder, PartialRegridder):
+                src_slice = self.file_chunk_dict[pre_files[0]]
+                src_cube = self.src[*_interpret_slice(src_slice)]
+                weights = previous_regridder.regridder.weight_matrix
+                previous_regridder = PartialRegridder(src_cube, self.tgt, src_slice, None, weights, self.scheme)
+                existing = [previous_regridder]
         else:
             (previous_regridder,) = existing
             current_range = current_regridder.regridder.weight_matrix.max(axis=1).nonzero()[0]
@@ -164,22 +152,25 @@ class Partition:
 
                 # Calculate a slice of the current chunk which contains all the overlapping source cells.
                 overlaps_next = current_regridder.regridder.weight_matrix[mutual_overlaps].nonzero()[1]
-                h_len = current_regridder._src["grid_x"].shape[0]
-                v_len = current_regridder._src["grid_y"].shape[-1]
+                # h_len = current_regridder._src["grid_x"].shape[0]
+                h_len = current_regridder._src[0].shape[0]
+                # v_len = current_regridder._src["grid_y"].shape[-1]
+                v_len = current_regridder._src[1].shape[-1]
                 # TODO: make this more rigorous
-                tgt_size = self.tgt.size
-                buffer = (overlaps_next % h_len).max() + 1
+                # tgt_size = self.tgt.size
+                tgt_size = np.prod(self.tgt.shape)
+                buffer = (overlaps_next % v_len).max() + 1
+                # buffer = (overlaps_next % h_len).max() + 1
 
                 # Add this slice to the previous chunk.
-                # TODO: make this refer to slices
                 # new_src_cube = iris.cube.CubeList([previous_cube, cube[:buffer]]).concatenate_cube()
                 # new_cubes.append(new_src_cube)
                 pre_file, = pre_files
                 src_slice = self.file_chunk_dict[pre_file]
                 # assumes slice has form [[x_start, x_stop], [y_start, y_stop]]
+                # TODO: consider how this affects file_chunk_dict
                 src_slice[0][1] += buffer
-                # TODO: make this work
-                new_src_cube = self.src[src_slice]
+                new_src_cube = self.src[*_interpret_slice(src_slice)]
                 tgt_slice = None  # should describe all valid target indices
 
                 # Create weights for new regridder
@@ -200,10 +191,21 @@ class Partition:
                 #                                                precomputed_weights=new_weight_matrix)
                 # previous_regridder.regridder.esmf_version = 0  # Must be set to allow regridder to load/save
                 previous_regridder = PartialRegridder(new_src_cube, self.tgt, src_slice, tgt_slice, new_weight_matrix, self.scheme)
+                existing = [previous_regridder]
             else:
-                # TODO: make this work
-                current_regridder = PartialRegridder()
-            # add combine code here
+                if not isinstance(current_regridder, PartialRegridder):
+                    src_slice = self.file_chunk_dict[file]
+                    src_cube = self.src[*_interpret_slice(src_slice)]
+                    weights = current_regridder.regridder.weight_matrix
+                    current_regridder = PartialRegridder(src_cube, self.tgt, src_slice, None, weights, self.scheme)
+                previous_regridder, = existing
+                if not isinstance(previous_regridder, PartialRegridder):
+                    src_slice = self.file_chunk_dict[pre_files[0]]
+                    src_cube = self.src[*_interpret_slice(src_slice)]
+                    weights = previous_regridder.regridder.weight_matrix
+                    previous_regridder = PartialRegridder(src_cube, self.tgt, src_slice, None, weights, self.scheme)
+                    existing = [previous_regridder]
+
         return existing, current_regridder
 
     def _combine_results(self, existing_results, next_result):

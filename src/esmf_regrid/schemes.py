@@ -1124,6 +1124,7 @@ class ESMFAreaWeighted:
         use_tgt_mask=None,
         tgt_location="face",
         esmf_args=None,
+        precomputed_weights=None,
     ):
         """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1276,6 +1277,7 @@ class ESMFBilinear:
         tgt_location=None,
         extrapolate_gaps=False,
         esmf_args=None,
+        precomputed_weights=None,
     ):
         """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1418,6 +1420,7 @@ class ESMFNearest:
         use_tgt_mask=None,
         tgt_location=None,
         esmf_args=None,
+        precomputed_weights=None,
     ):
         """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
