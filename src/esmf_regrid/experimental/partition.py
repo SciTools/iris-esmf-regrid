@@ -4,41 +4,47 @@ import numpy as np
 from scipy import sparse
 
 from esmf_regrid.experimental.io import load_regridder, save_regridder
-from esmf_regrid.schemes import _ESMFRegridder
+from esmf_regrid.experimental._partial import PartialRegridder
 
-class PartialRegridder(_ESMFRegridder):
-    def __init__(self, src, tgt, src_slice, tgt_slice, weights, scheme, **kwargs):
-        self.src_slice = src_slice
-        self.tgt_slice = tgt_slice
-        self.scheme = scheme
-
-        super().__init__(
-            src,
-            tgt,
-            scheme.method,
-            precomputed_weights=weights,
-            **kwargs,
-        )
-
-    def __call__(self, cube):
-        result = super().__call__(cube)
-
-        # set everything outside the extent to 0
-        inverse_slice = np.ones_like(result.data, dtype=bool)
-        inverse_slice[self.tgt_slice] = 0
-        # TODO: make sure this works with lazy data
-        dims = self._get_cube_dims(cube)
-        slice_slice = [np.newaxis] * result.ndim
-        for dim in dims:
-            slice_slice[dim] = np.s_[:]
-        broadcast_slice = np.broadcast_to(inverse_slice[*slice_slice], result.shape)
-        result.data[broadcast_slice] = 0
-        return result
-
-    ## keep track of source indices and target indices
-    ## share reference to full source and target
-
-    ## works the same except everything out of bounds is 0 rather than masked
+# from esmf_regrid.schemes import _ESMFRegridder
+#
+# class PartialRegridder(_ESMFRegridder):
+#     def __init__(self, src, tgt, src_slice, tgt_slice, weights, scheme, **kwargs):
+#         self.src_slice = src_slice
+#         self.tgt_slice = tgt_slice
+#         self.scheme = scheme
+#
+#         super().__init__(
+#             src,
+#             tgt,
+#             scheme.method,
+#             precomputed_weights=weights,
+#             **kwargs,
+#         )
+#
+#     def __call__(self, cube):
+#         result = super().__call__(cube)
+#
+#         # set everything outside the extent to 0
+#         inverse_slice = np.ones_like(result.data, dtype=bool)
+#         inverse_slice[self.tgt_slice] = 0
+#         # TODO: make sure this works with lazy data
+#         dims = self._get_cube_dims(cube)
+#         slice_slice = [np.newaxis] * result.ndim
+#         for dim in dims:
+#             slice_slice[dim] = np.s_[:]
+#         broadcast_slice = np.broadcast_to(inverse_slice[*slice_slice], result.shape)
+#         result.data[broadcast_slice] = 0
+#         return result
+#
+#     def _get_src_slice(self, cube):
+#         # TODO: write a method to handle cubes of different dimensionalities
+#         return self.src_slice
+#
+#     ## keep track of source indices and target indices
+#     ## share reference to full source and target
+#
+#     ## works the same except everything out of bounds is 0 rather than masked
 
 class Partition:
 
@@ -50,12 +56,13 @@ class Partition:
         self.src = src
         self.tgt = tgt
         self.scheme = scheme
+        # TODO: consider abstracting away the idea of files
         self.file_names = file_names
         # TODO: consider deriving this from self.src.lazy_data()
         self.src_chunks = src_chunks
         assert len(src_chunks) == len(file_names)
         self.tgt_chunks = tgt_chunks
-        assert tgt_chunks == None # We don't handle big targets currently
+        assert tgt_chunks is None  # We don't handle big targets currently
 
         # Note: this may need to become more sophisticated when both src and tgt are large
         self.file_chunk_dict = {file: chunk for file, chunk in zip(self.file_names, self.src_chunks)}
@@ -94,11 +101,12 @@ class Partition:
                 src = self.file_chunk_dict[file]
                 tgt = self.tgt
                 next_regridder = self.scheme.regridder(src, tgt)
-            previous_regridders, next_regridder = self._combine_regridders(previous_regridders, previous_files, next_regridder)
+            previous_regridders, next_regridder = self._combine_regridders(previous_regridders, next_regridder, previous_files, file)
             if previous_regridders:
                 for regridder, pre_file in zip(previous_regridders, previous_files):
                     neighbours = self.neighbouring_files[pre_file]
                     file_complete = True
+                    # TODO: consider any
                     for neighbour in neighbours:
                         if neighbour in self.unsaved_files:
                             file_complete = False
@@ -118,18 +126,16 @@ class Partition:
         # for each target chunk, iterate through each associated regridder
         # for now, assume one target chunk
         assert len(self.unsaved_files) == 0
-        current_result = self.tgt.copy()
+        # TODO: this may work better as a cube of the correct shape for more complex cases
+        current_result = None
         for file in self.saved_files:
+            # TODO: make sure this works well with dask
             next_regridder = load_regridder(file)
-            cube_slice = next_regridder.src_slice
-            next_result = next_regridder(cube[cube_slice])
+            cube_slice = next_regridder._get_src_slice(cube)
+            next_result = next_regridder(cube[*cube_slice])
             current_result = self._combine_results(current_result, next_result)
         return current_result
 
-
-    # def _src_slices(self):
-    #     for indices in self._src_slice_indices:
-    #         yield self.src[indices]
 
     def _find_neighbours(self):
         # for the simplest case, neighbours will be next to each other in the list
@@ -138,18 +144,16 @@ class Partition:
         neighbours.update({files[0]: (files[1]), files[-1]: (files[-2])})
         return neighbours
 
-    # def _determine_mask(self):
-    #     assert len(self.unsaved_files) == 0
-    #     # TODO: firgure out a way to do this when the target is big
-    #     tgt_mask = np.ma.zeros_like(self.tgt.data)
-    #     # TODO: calculate this mask
-    #     return tgt_mask
-
-    def _combine_regridders(self, existing, pre_files, current_regridder):
+    def _combine_regridders(self, existing, current_regridder, pre_files, file):
         # For now, combine 2, in future, more regridders may be combined
-        if len(existing) == 0 or current_regridder is None:
+
+        if len(existing) == 0:
             # TODO: turn these into partial regridders.
-            return existing, current_regridder
+            if not isinstance(current_regridder, PartialRegridder):
+                src_slice = self.file_chunk_dict
+                current_regridder = PartialRegridder()
+        elif current_regridder is None:
+            existing = [PartialRegridder()]
         else:
             (previous_regridder,) = existing
             current_range = current_regridder.regridder.weight_matrix.max(axis=1).nonzero()[0]
@@ -176,7 +180,7 @@ class Partition:
                 src_slice[0][1] += buffer
                 # TODO: make this work
                 new_src_cube = self.src[src_slice]
-                tgt_slice = None
+                tgt_slice = None  # should describe all valid target indices
 
                 # Create weights for new regridder
                 previous_wm = previous_regridder.regridder.weight_matrix
@@ -197,14 +201,19 @@ class Partition:
                 # previous_regridder.regridder.esmf_version = 0  # Must be set to allow regridder to load/save
                 previous_regridder = PartialRegridder(new_src_cube, self.tgt, src_slice, tgt_slice, new_weight_matrix, self.scheme)
             else:
+                # TODO: make this work
                 current_regridder = PartialRegridder()
             # add combine code here
-            pass
+        return existing, current_regridder
 
     def _combine_results(self, existing_results, next_result):
         # iterate through for each target chunk
         # for now, assume one target chunk
-        return existing_results + next_result
+        if existing_results is None:
+            combined_result = next_result
+        else:
+            combined_result = existing_results + next_result
+        return combined_result
 
 
 def _combine_sparse(left, right, w, a, b, t):

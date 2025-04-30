@@ -14,9 +14,13 @@ from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
+from esmf_regrid.experimental._partial import PartialRegridder
 from esmf_regrid.schemes import (
+    ESMFAreaWeighted,
     ESMFAreaWeightedRegridder,
+    ESMFBilinear,
     ESMFBilinearRegridder,
+    ESMFNearest,
     ESMFNearestRegridder,
     GridRecord,
     MeshRecord,
@@ -28,6 +32,7 @@ SUPPORTED_REGRIDDERS = [
     ESMFNearestRegridder,
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
+    PartialRegridder,
 ]
 _REGRIDDER_NAME_MAP = {rg_class.__name__: rg_class for rg_class in SUPPORTED_REGRIDDERS}
 _SOURCE_NAME = "regridder_source_field"
@@ -47,6 +52,8 @@ _RESOLUTION = "resolution"
 _SOURCE_RESOLUTION = "src_resolution"
 _TARGET_RESOLUTION = "tgt_resolution"
 _ESMF_ARGS = "esmf_args"
+_SRC_SLICE_NAME = "src_slice"
+_TGT_SLICE_NAME = "tgt_slice"
 _VALID_ESMF_KWARGS = [
     "pole_method",
     "regrid_pole_npoints",
@@ -118,54 +125,39 @@ def _clean_var_names(cube):
             con.var_name = None
 
 
-def save_regridder(rg, filename):
-    """Save a regridder scheme instance.
+def _standard_grid_cube(grid, name):
+    if grid[0].ndim == 1:
+        shape = [coord.points.size for coord in grid]
+    else:
+        shape = grid[0].shape
+    data = np.zeros(shape)
+    cube = Cube(data, var_name=name, long_name=name)
+    if grid[0].ndim == 1:
+        cube.add_dim_coord(grid[0], 0)
+        cube.add_dim_coord(grid[1], 1)
+    else:
+        cube.add_aux_coord(grid[0], [0, 1])
+        cube.add_aux_coord(grid[1], [0, 1])
+    return cube
 
-    Saves any of the regridder classes, i.e.
-    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`,
-    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`,
-    :class:`~esmf_regrid.schemes.ESMFAreaWeightedRegridder`,
-    :class:`~esmf_regrid.schemes.ESMFBilinearRegridder` or
-    :class:`~esmf_regrid.schemes.ESMFNearestRegridder`.
-    .
+def _standard_mesh_cube(mesh, location, name):
+    mesh_coords = mesh.to_MeshCoords(location)
+    data = np.zeros(mesh_coords[0].points.shape[0])
+    cube = Cube(data, var_name=name, long_name=name)
+    for coord in mesh_coords:
+        cube.add_aux_coord(coord, 0)
+    return cube
 
-    Parameters
-    ----------
-    rg : :class:`~esmf_regrid.schemes._ESMFRegridder`
-        The regridder instance to save.
-    filename : str
-        The file name to save to.
-    """
-    regridder_type = rg.__class__.__name__
-
-    def _standard_grid_cube(grid, name):
-        if grid[0].ndim == 1:
-            shape = [coord.points.size for coord in grid]
-        else:
-            shape = grid[0].shape
-        data = np.zeros(shape)
-        cube = Cube(data, var_name=name, long_name=name)
-        if grid[0].ndim == 1:
-            cube.add_dim_coord(grid[0], 0)
-            cube.add_dim_coord(grid[1], 1)
-        else:
-            cube.add_aux_coord(grid[0], [0, 1])
-            cube.add_aux_coord(grid[1], [0, 1])
-        return cube
-
-    def _standard_mesh_cube(mesh, location, name):
-        mesh_coords = mesh.to_MeshCoords(location)
-        data = np.zeros(mesh_coords[0].points.shape[0])
-        cube = Cube(data, var_name=name, long_name=name)
-        for coord in mesh_coords:
-            cube.add_aux_coord(coord, 0)
-        return cube
-
+def _generate_src_tgt(regridder_type, rg, allow_partial):
     if regridder_type in [
         "ESMFAreaWeightedRegridder",
         "ESMFBilinearRegridder",
         "ESMFNearestRegridder",
+        "PartialRegridder",
     ]:
+        if regridder_type == "PartialRegridder" and not allow_partial:
+            e_msg = "To save a PartialRegridder, `allow_partial=True` must be set."
+            raise ValueError(e_msg)
         src_grid = rg._src
         if isinstance(src_grid, GridRecord):
             src_cube = _standard_grid_cube(
@@ -210,12 +202,38 @@ def save_regridder(rg, filename):
         tgt_grid = (rg.grid_y, rg.grid_x)
         tgt_cube = _standard_grid_cube(tgt_grid, _TARGET_NAME)
         _add_mask_to_cube(rg.tgt_mask, tgt_cube, _TARGET_MASK_NAME)
+
     else:
         e_msg = (
-            f"Expected a regridder of type `GridToMeshESMFRegridder` or "
-            f"`MeshToGridESMFRegridder`, got type {regridder_type}."
+            f"Unexpected regridder type {regridder_type}."
         )
         raise TypeError(e_msg)
+    return src_cube, tgt_cube
+
+
+
+
+def save_regridder(rg, filename, allow_patrial=False):
+    """Save a regridder scheme instance.
+
+    Saves any of the regridder classes, i.e.
+    :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`,
+    :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder`,
+    :class:`~esmf_regrid.schemes.ESMFAreaWeightedRegridder`,
+    :class:`~esmf_regrid.schemes.ESMFBilinearRegridder` or
+    :class:`~esmf_regrid.schemes.ESMFNearestRegridder`.
+    .
+
+    Parameters
+    ----------
+    rg : :class:`~esmf_regrid.schemes._ESMFRegridder`
+        The regridder instance to save.
+    filename : str
+        The file name to save to.
+    """
+    regridder_type = rg.__class__.__name__
+
+    src_cube, tgt_cube = _generate_src_tgt(regridder_type, rg, allow_patrial)
 
     method = str(check_method(rg.method).name)
 
@@ -223,7 +241,7 @@ def save_regridder(rg, filename):
         resolution = rg.resolution
         src_resolution = None
         tgt_resolution = None
-    elif regridder_type == "ESMFAreaWeightedRegridder":
+    elif method == "CONSERVATIVE":
         resolution = None
         src_resolution = rg.src_resolution
         tgt_resolution = rg.tgt_resolution
@@ -263,6 +281,10 @@ def save_regridder(rg, filename):
         attributes[_SOURCE_RESOLUTION] = src_resolution
     if tgt_resolution is not None:
         attributes[_TARGET_RESOLUTION] = tgt_resolution
+
+    if regridder_type == "PartialRegridder":
+        attributes[_SRC_SLICE_NAME] = rg.src_slice  # this slice is described by a tuple
+        _add_mask_to_cube(rg.tgt_mask, tgt_cube, _TGT_SLICE_NAME)  # this slice is described by a boolean array
 
     weights_cube = Cube(weight_data, var_name=_WEIGHTS_NAME, long_name=_WEIGHTS_NAME)
     row_coord = AuxCoord(
@@ -306,7 +328,7 @@ def save_regridder(rg, filename):
         iris.fileformats.netcdf.save(cube_list, filename)
 
 
-def load_regridder(filename):
+def load_regridder(filename, allow_partial=False):
     """Load a regridder scheme instance.
 
     Loads any of the regridder classes, i.e.
@@ -340,6 +362,10 @@ def load_regridder(filename):
     regridder_type = weights_cube.attributes[_REGRIDDER_TYPE]
     assert regridder_type in _REGRIDDER_NAME_MAP
     scheme = _REGRIDDER_NAME_MAP[regridder_type]
+
+    if regridder_type == "PartialRegridder" and not allow_partial:
+        e_msg = "PartialRegridder cannot be loaded without setting `allow_partial=True`."
+        raise ValueError(e_msg)
 
     # Determine the regridding method, allowing for files created when
     # conservative regridding was the only method.
@@ -394,26 +420,46 @@ def load_regridder(filename):
     elif scheme is MeshToGridESMFRegridder:
         resolution_keyword = _TARGET_RESOLUTION
         kwargs = {resolution_keyword: resolution, "method": method, "mdtol": mdtol}
-    elif scheme is ESMFAreaWeightedRegridder:
+    # elif scheme is ESMFAreaWeightedRegridder:
+    elif method is Constants.Method.CONSERVATIVE:
         kwargs = {
             _SOURCE_RESOLUTION: src_resolution,
             _TARGET_RESOLUTION: tgt_resolution,
             "mdtol": mdtol,
         }
-    elif scheme is ESMFBilinearRegridder:
+    # elif scheme is ESMFBilinearRegridder:
+    elif method is  Constants.Method.BILINEAR:
         kwargs = {"mdtol": mdtol}
     else:
         kwargs = {}
 
-    regridder = scheme(
-        src_cube,
-        tgt_cube,
-        precomputed_weights=weight_matrix,
-        use_src_mask=use_src_mask,
-        use_tgt_mask=use_tgt_mask,
-        esmf_args=esmf_args,
-        **kwargs,
-    )
+    if scheme is PartialRegridder:
+        src_slice = src_cube.attributes[_SRC_SLICE_NAME]
+        tgt_slice = tgt_cube.coord(_TGT_SLICE_NAME).points
+        sub_scheme = {
+            Constants.Method.CONSERVATIVE: ESMFAreaWeighted,
+            Constants.Method.BILINEAR: ESMFBilinear,
+            Constants.Method.NEAREST: ESMFNearest,
+        }[method]
+        regridder = scheme(
+            src_cube,
+            tgt_cube,
+            src_slice,
+            tgt_slice,
+            weight_matrix,
+            sub_scheme,
+            **kwargs,
+        )
+    else:
+        regridder = scheme(
+            src_cube,
+            tgt_cube,
+            precomputed_weights=weight_matrix,
+            use_src_mask=use_src_mask,
+            use_tgt_mask=use_tgt_mask,
+            esmf_args=esmf_args,
+            **kwargs,
+        )
 
     esmf_version = weights_cube.attributes[_VERSION_ESMF]
     regridder.regridder.esmf_version = esmf_version
