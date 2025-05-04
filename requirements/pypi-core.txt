@@ -3,4 +3,4 @@ cf-units <3.3.1
 # esmpy>=7.0
 numpy>=1.19,<2.2.6
 scipy <1.15.3
-scitools-iris <3.12.1
+scitools-iris <3.12.2
