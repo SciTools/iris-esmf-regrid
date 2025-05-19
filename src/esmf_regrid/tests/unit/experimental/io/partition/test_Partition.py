@@ -19,6 +19,10 @@ def test_Partition(tmp_path):
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
     chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    # TODO: consider different ways we could specify this in the API:
+    # chunks = 5
+    # chunks = (5, None)
+    # chunks = None  # (use dask chunks)
 
     partition = Partition(src, tgt, scheme, files, chunks)
 

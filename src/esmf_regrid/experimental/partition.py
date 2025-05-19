@@ -23,7 +23,7 @@ class Partition:
     ## hold a collection of source indices
     ## alternately hold a collection of chunk indices
     ## note which indices are fully loaded
-    def __init__(self, src, tgt, scheme, file_names, src_chunks, tgt_chunks=None, auto_generate=False):
+    def __init__(self, src, tgt, scheme, file_names, src_chunks, tgt_chunks=None, auto_generate=False, saved_files=None, partially_saved=None):
         self.src = src
         self.tgt = tgt
         self.scheme = scheme
@@ -39,16 +39,21 @@ class Partition:
         self.file_chunk_dict = {file: chunk for file, chunk in zip(self.file_names, self.src_chunks)}
 
         self.neighbouring_files = self._find_neighbours()
-
-        self.saved_files = []
-        self.partially_saved_files = []
-        # self._src_slice_indices = []
+        if saved_files is None:
+            self.saved_files = []
+        else:
+            self.saved_files = saved_files
+        if partially_saved is None:
+            self.partially_saved_files = []
+        else:
+            self.partially_saved_files = partially_saved
         if auto_generate:
             self.generate_files(self.file_names)
 
     @property
     def unsaved_files(self):
-        return list(set(self.file_names) - set(self.saved_files) - set(self.partially_saved_files))
+        files = list(set(self.file_names) - set(self.saved_files) - set(self.partially_saved_files))
+        return [file for file in self.file_names if file in files]
 
     def generate_files(self, files_to_generate=None):
         if files_to_generate is None:
@@ -73,7 +78,6 @@ class Partition:
                 next_regridder = None
             else:
                 src_chunk = self.file_chunk_dict[file]
-                # src = self.src[src_chunk[0][0]:src_chunk[0][1], src_chunk[1][0]:src_chunk[1][1]]
                 src = self.src[*_interpret_slice(src_chunk)]
                 tgt = self.tgt
                 next_regridder = self.scheme.regridder(src, tgt)
@@ -89,7 +93,6 @@ class Partition:
                     save_regridder(regridder, pre_file, allow_partial=True)
                     if file_complete:
                         self.saved_files.append(pre_file)
-                        # self._src_slice_indices.append(regridder.src_slice)
                     else:
                         self.partially_saved_files.append(pre_file)
 
@@ -106,8 +109,7 @@ class Partition:
             assert len(self.unsaved_files) == 0
         # TODO: this may work better as a cube of the correct shape for more complex cases
         current_result = None
-        # files = self.saved_files
-        files = self.file_names
+        files = self.saved_files
 
         for file in files:
             # TODO: make sure this works well with dask
@@ -152,19 +154,13 @@ class Partition:
 
                 # Calculate a slice of the current chunk which contains all the overlapping source cells.
                 overlaps_next = current_regridder.regridder.weight_matrix[mutual_overlaps].nonzero()[1]
-                # h_len = current_regridder._src["grid_x"].shape[0]
                 h_len = current_regridder._src[0].shape[0]
-                # v_len = current_regridder._src["grid_y"].shape[-1]
                 v_len = current_regridder._src[1].shape[-1]
                 # TODO: make this more rigorous
-                # tgt_size = self.tgt.size
                 tgt_size = np.prod(self.tgt.shape)
                 buffer = (overlaps_next % v_len).max() + 1
-                # buffer = (overlaps_next % h_len).max() + 1
 
                 # Add this slice to the previous chunk.
-                # new_src_cube = iris.cube.CubeList([previous_cube, cube[:buffer]]).concatenate_cube()
-                # new_cubes.append(new_src_cube)
                 pre_file, = pre_files
                 src_slice = self.file_chunk_dict[pre_file]
                 # assumes slice has form [[x_start, x_stop], [y_start, y_stop]]
@@ -187,9 +183,6 @@ class Partition:
                 current_regridder.regridder.weight_matrix[mutual_overlaps] = 0
 
                 # Construct replacement for previous regridder with new weights and source cube.
-                # previous_regridder = ESMFAreaWeightedRegridder(new_src_cube, tgt_mesh,
-                #                                                precomputed_weights=new_weight_matrix)
-                # previous_regridder.regridder.esmf_version = 0  # Must be set to allow regridder to load/save
                 previous_regridder = PartialRegridder(new_src_cube, self.tgt, src_slice, tgt_slice, new_weight_matrix, self.scheme)
                 existing = [previous_regridder]
             else:
@@ -214,11 +207,16 @@ class Partition:
         if existing_results is None:
             combined_result = next_result
         else:
-            combined_result = existing_results + next_result
+            # combined_result = existing_results + next_result
+            combined_data = np.ma.filled(existing_results.data, 0) + np.ma.filled(next_result.data, 0)
+            combined_mask = np.ma.getmaskarray(existing_results.data) & np.ma.getmaskarray(next_result.data)
+            combined_result = existing_results.copy()
+            combined_result.data = np.ma.array(combined_data, mask=combined_mask)
         return combined_result
 
 
 def _combine_sparse(left, right, w, a, b, t):
+    # TODO: make this more clear
     result = sparse.csr_array((t, w * (a + b)))
     src_indices_left = (np.arange(a)[np.newaxis, :] + ((a + b) * np.arange(w)[:, np.newaxis])).flatten()
     left_im = sparse.csr_array((np.ones(a * w), (np.arange(a * w), src_indices_left)), shape=(a * w, w * (a + b)))
