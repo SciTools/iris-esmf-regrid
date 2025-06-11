@@ -2,6 +2,7 @@ name: esmf-regrid-dev
 
 channels:
   - conda-forge
+  - nodefaults
 
 dependencies:
   - python=3.13
