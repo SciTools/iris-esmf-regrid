@@ -6,6 +6,8 @@
 
 from os import environ
 
+from . import generate_data
+
 
 def disable_repeat_between_setup(benchmark_object):
     """Benchmark where object persistence would be inappropriate (decorator).
@@ -57,3 +59,24 @@ def on_demand_benchmark(benchmark_object):
     """
     if "ON_DEMAND_BENCHMARKS" in environ:
         return benchmark_object
+
+
+@on_demand_benchmark
+class ValidateSetup:
+    """Simple benchmarks that exercise all elements of our setup."""
+
+    file_path: str
+    params = [1, 2]
+
+    def setup(self, param):
+        generate_data.REUSE_DATA = False
+        # Generate some appropriate test data to exercise the setup.
+        self.file_path = f"file_{param}.nc"
+
+    def time_validate(self, param):
+        # Write an appropriate test to exercise the setup.
+        pass
+
+    def tracemalloc_validate(self, param):
+        # Write an appropriate test to exercise the setup.
+        pass
