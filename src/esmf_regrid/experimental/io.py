@@ -286,15 +286,11 @@ def save_regridder(rg, filename, allow_partial=False):
     if regridder_type == "PartialRegridder":
         src_slice = rg.src_slice  # this slice is described by a tuple
         if src_slice is None:
-            src_slice = "None"
-        # TODO: make this a cube
-        # attributes[_SRC_SLICE_NAME] = src_slice
+            src_slice = []
         src_slice_cube = Cube(src_slice, long_name=_SRC_SLICE_NAME, var_name=_SRC_SLICE_NAME)
         tgt_slice = rg.tgt_slice  # this slice is described by a tuple
         if tgt_slice is None:
-            tgt_slice = "None"
-        # TODO: make this a cube
-        # attributes[_TGT_SLICE_NAME] = tgt_slice
+            tgt_slice = []
         tgt_slice_cube = Cube(src_slice, long_name=_TGT_SLICE_NAME, var_name=_TGT_SLICE_NAME)
         extra_cubes = [src_slice_cube, tgt_slice_cube]
 
@@ -333,7 +329,7 @@ def save_regridder(rg, filename, allow_partial=False):
 
     # Save cubes while ensuring var_names do not conflict for the sake of consistency.
     with _managed_var_name(src_cube, tgt_cube):
-        cube_list = CubeList([src_cube, tgt_cube, weights_cube, weight_shape_cube] + extra_cubes)
+        cube_list = CubeList([src_cube, tgt_cube, weights_cube, weight_shape_cube, *extra_cubes])
 
         for cube in cube_list:
             cube.attributes = attributes
@@ -449,13 +445,11 @@ def load_regridder(filename, allow_partial=False):
         kwargs = {}
 
     if scheme is PartialRegridder:
-        # src_slice = src_cube.attributes[_SRC_SLICE_NAME]
         src_slice = cubes.extract_cube(_SRC_SLICE_NAME).data.tolist()
-        if src_slice == "None":
+        if src_slice == []:
             src_slice = None
-        # tgt_slice = tgt_cube.attributes[_TGT_SLICE_NAME]
         tgt_slice = cubes.extract_cube(_TGT_SLICE_NAME).data.tolist()
-        if tgt_slice == "None":
+        if tgt_slice == []:
             tgt_slice = None
         sub_scheme = {
             Constants.Method.CONSERVATIVE: ESMFAreaWeighted,
