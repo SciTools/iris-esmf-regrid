@@ -114,7 +114,7 @@ class Partition:
         for file in files:
             # TODO: make sure this works well with dask
             next_regridder = load_regridder(file, allow_partial=True)
-            cube_slice = next_regridder._get_src_slice(cube)
+            cube_slice = next_regridder.src_slice
             next_result = next_regridder(cube[*_interpret_slice(cube_slice)])
             current_result = self._combine_results(current_result, next_result)
         return current_result
