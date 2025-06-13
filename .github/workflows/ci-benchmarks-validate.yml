@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Nox
         run: |
-          pip install asv
+          pip install asv nox!=2025.05.01
       - name: Cache environment directories
         id: cache-env-dir
         uses: actions/cache@v4
