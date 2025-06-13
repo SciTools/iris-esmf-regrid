@@ -313,6 +313,7 @@ class Custom(_SubParserGenerator):
         _setup_common()
         _subprocess_runner([args.asv_sub_command, *args.asv_args], asv=True)
 
+
 class Validate(_SubParserGenerator):
     """Class for parsing and running the 'validate' argument."""
 
