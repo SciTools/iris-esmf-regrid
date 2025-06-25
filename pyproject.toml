@@ -247,6 +247,7 @@ max-complexity = 22
 
     "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
     "INP001",  # Missing __init__
+    "PLC0415",  # `import` should be at the top-level of a file
     "PLW1510",  # `subprocess.run` without explicit `check` argument
 
     # Replace `os` with `Path`
