@@ -3,7 +3,7 @@
 [build-system]
 # Defined by PEP 518
 requires = [
-    "setuptools>=61",
+    "setuptools>=77.0.3",
 ]
 # Defined by PEP 517
 build-backend = "setuptools.build_meta"
@@ -15,7 +15,6 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -35,7 +34,8 @@ keywords = [
     "esmf",
     "regrid",
 ]
-license = {text = "BSD-3-Clause"}
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
 name = "esmf_regrid"
 requires-python = ">=3.11"
 
@@ -57,7 +57,6 @@ xfail_strict = true
 filterwarnings = ["default"]
 
 [tool.setuptools]
-license-files = ["LICENSE"]
 zip-safe = false
 
 [tool.setuptools.dynamic]
@@ -248,6 +247,7 @@ max-complexity = 22
 
     "DTZ005",  # `datetime.datetime.now()` called without a `tz` argument
     "INP001",  # Missing __init__
+    "PLC0415",  # `import` should be at the top-level of a file
     "PLW1510",  # `subprocess.run` without explicit `check` argument
 
     # Replace `os` with `Path`
