@@ -65,8 +65,6 @@ ESMFMKFILE = "ESMFMKFILE"
 class DataGenerationError(Exception):
     """Exception raised for errors during data generation."""
 
-    pass
-
 
 def run_function_elsewhere(func_to_run, *args, **kwargs):
     """Run a given function using the :const:`DATA_GEN_PYTHON` executable.
