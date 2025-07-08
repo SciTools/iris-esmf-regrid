@@ -13,6 +13,7 @@ from esmf_regrid import (
     esmpy,
 )
 from esmf_regrid.esmf_regridder import ESMF_NO_VERSION
+from esmf_regrid.experimental._partial import PartialRegridder
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
@@ -77,7 +78,13 @@ def _make_grid_to_mesh_regridder(
     }
     if regridder == GridToMeshESMFRegridder:
         kwargs["method"] = method
-    rg = regridder(src, tgt, **kwargs)
+    if regridder == PartialRegridder:
+        pre_rg = ESMFAreaWeightedRegridder(src, tgt, **kwargs)
+        weights = pre_rg.regridder.weight_matrix
+        scheme = ESMFAreaWeighted()
+        rg = PartialRegridder(src, tgt, None, None, weights, scheme)
+    else:
+        rg = regridder(src, tgt, **kwargs)
     return rg, src
 
 
@@ -153,6 +160,7 @@ def _compare_ignoring_var_names(x, y):
         (Constants.Method.BILINEAR, GridToMeshESMFRegridder),
         (Constants.Method.NEAREST, GridToMeshESMFRegridder),
         (None, ESMFAreaWeightedRegridder),
+        (None, PartialRegridder),
     ],
 )
 def test_grid_to_mesh_round_trip(tmp_path, method, regridder):
@@ -161,8 +169,14 @@ def test_grid_to_mesh_round_trip(tmp_path, method, regridder):
         method=method, regridder=regridder, circular=True
     )
     filename = tmp_path / "regridder.nc"
-    save_regridder(original_rg, filename)
-    loaded_rg = load_regridder(str(filename))
+
+    if regridder == PartialRegridder:
+        allow_partial = True
+    else:
+        allow_partial = False
+
+    save_regridder(original_rg, filename, allow_partial=allow_partial)
+    loaded_rg = load_regridder(str(filename), allow_partial=allow_partial)
 
     if regridder == GridToMeshESMFRegridder:
         assert original_rg.location == loaded_rg.location
@@ -206,8 +220,8 @@ def test_grid_to_mesh_round_trip(tmp_path, method, regridder):
         assert original_rg.resolution == loaded_rg.resolution
         original_res_rg, _ = _make_grid_to_mesh_regridder(method=method, resolution=8)
         res_filename = tmp_path / "regridder_res.nc"
-        save_regridder(original_res_rg, res_filename)
-        loaded_res_rg = load_regridder(str(res_filename))
+        save_regridder(original_res_rg, res_filename, allow_partial=allow_partial)
+        loaded_res_rg = load_regridder(str(res_filename), allow_partial=allow_partial)
         assert original_res_rg.resolution == loaded_res_rg.resolution
         assert (
             original_res_rg.regridder.src.resolution
@@ -232,8 +246,8 @@ def test_grid_to_mesh_round_trip(tmp_path, method, regridder):
         method=method, regridder=regridder, circular=True
     )
     nc_filename = tmp_path / "non_circular_regridder.nc"
-    save_regridder(original_nc_rg, nc_filename)
-    loaded_nc_rg = load_regridder(str(nc_filename))
+    save_regridder(original_nc_rg, nc_filename, allow_partial=allow_partial)
+    loaded_nc_rg = load_regridder(str(nc_filename), allow_partial=allow_partial)
     if regridder == GridToMeshESMFRegridder:
         _compare_ignoring_var_names(original_nc_rg.grid_x, loaded_nc_rg.grid_x)
         _compare_ignoring_var_names(original_nc_rg.grid_y, loaded_nc_rg.grid_y)
