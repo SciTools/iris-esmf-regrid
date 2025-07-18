@@ -12,7 +12,7 @@
 #---------
 # SECTION: main code sources
 #
-recursive-include src *.py .nc .txt
+recursive-include src *.py *.nc *.txt
     # principles:
     #    - *no* "prune" command is used
     #    - use "include-recursive", by relevant file extensions
@@ -60,6 +60,7 @@ exclude .mailmap
 exclude .pre-commit-config.yaml
 exclude .readthedocs.yml
 exclude .ruff.toml
+include CHANGELOG.md
 exclude CHANGES
 include CITATION.cff
 exclude CODE_OF_CONDUCT.md
@@ -100,3 +101,10 @@ global-exclude __pycache__
     #        previous sections -- such as python compiler cache files
     #    - can include this section as **boilerplate** :
     #        - won't all exist in every repo, but including them all does no harm
+
+
+#
+#=================================
+# Local Iris-ESMF-Regrid-specific settings
+#
+prune benchmarks
