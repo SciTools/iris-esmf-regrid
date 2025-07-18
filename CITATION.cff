@@ -1,13 +1,15 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+message: "If iris-esmf-regrid played an important part in your research then please add us to your reference list by using the references below."
+title: "iris-esmf-regrid"
 authors:
 - family-names: "Worsley"
   given-names: "Stephen"
   orcid: "https://orcid.org/0009-0008-1704-8445"
-title: "iris-esmf-regrid"
+- name: "iris-esmf-regrid contributors"
 abstract: "A collection of structured and unstructured ESMF regridding schemes for Iris"
-repository-code: "https://github.com/SciTools/iris-esmf-regrid"
 license: "BSD-3-Clause"
 license-url: "https://spdx.org/licenses/BSD-3-Clause.html"
 doi: "10.5281/zenodo.11401116"
+url: "http://www.scitools.org.uk/"
+repository-code: "https://github.com/SciTools/iris-esmf-regrid"
 type: "software"
