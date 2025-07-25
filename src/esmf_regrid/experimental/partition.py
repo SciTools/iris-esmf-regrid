@@ -88,7 +88,7 @@ class Partition:
                     file_complete = True
                     # TODO: consider any
                     for neighbour in neighbours:
-                        if neighbour in self.unsaved_files:
+                        if neighbour in self.unsaved_files and neighbour != file:
                             file_complete = False
                     save_regridder(regridder, pre_file, allow_partial=True)
                     if file_complete:
@@ -230,3 +230,82 @@ def _combine_sparse(left, right, w, a, b, t):
     result += result_add_right
     return result
 
+class Partition2:
+    def __init__(self, src, tgt, scheme, file_names, src_chunks, tgt_chunks=None, auto_generate=False, saved_files=None,
+                 partially_saved=None):
+        self.src = src
+        self.tgt = tgt
+        self.scheme = scheme
+        # TODO: consider abstracting away the idea of files
+        self.file_names = file_names
+        # TODO: consider deriving this from self.src.lazy_data()
+        self.src_chunks = src_chunks
+        assert len(src_chunks) == len(file_names)
+        self.tgt_chunks = tgt_chunks
+        assert tgt_chunks is None  # We don't handle big targets currently
+
+        # Note: this may need to become more sophisticated when both src and tgt are large
+        self.file_chunk_dict = {file: chunk for file, chunk in zip(self.file_names, self.src_chunks)}
+
+        if saved_files is None:
+            self.saved_files = []
+        else:
+            self.saved_files = saved_files
+        if auto_generate:
+            self.generate_files(self.file_names)
+
+    @property
+    def unsaved_files(self):
+        files = set(self.file_names) - set(self.saved_files)
+        return [file for file in self.file_names if file in files]
+
+    def generate_files(self, files_to_generate=None):
+        if files_to_generate is None:
+            # TODO: consider adding logic to order the files more efficiently.
+            files = self.unsaved_files
+        else:
+            assert isinstance(files_to_generate, int)
+            files = self.unsaved_files[:files_to_generate]
+
+        for file in files:
+            src_chunk = self.file_chunk_dict[file]
+            src = self.src[*_interpret_slice(src_chunk)]
+            tgt = self.tgt
+            regridder = self.scheme.regridder(src, tgt)
+            src_slice = self.file_chunk_dict[file]
+            src_cube = self.src[*_interpret_slice(src_slice)]
+            print(src_cube)
+            weights = regridder.regridder.weight_matrix
+            regridder = PartialRegridder(src_cube, self.tgt, src_slice, None, weights, self.scheme)
+            # TODO: make partial?
+            save_regridder(regridder, file, allow_partial=True)
+            self.saved_files.append(file)
+
+    def apply_regridders(self, cube, allow_incomplete=False):
+        # for each target chunk, iterate through each associated regridder
+        # for now, assume one target chunk
+        # TODO: figure out how to mask parts of the target not covered by any source (e.g. start out with full mask)
+        if not allow_incomplete:
+            assert len(self.unsaved_files) == 0
+        # TODO: this may work better as a cube of the correct shape for more complex cases
+        current_result = None
+        current_weights = None
+        files = self.saved_files
+
+        for file, chunk in zip(self.file_names, self.src_chunks):
+            if file in files:
+                next_regridder = load_regridder(file, allow_partial=True)
+                cube_chunk = cube[*_interpret_slice(chunk)]
+                next_weights, next_result = next_regridder.partial_regrid(cube_chunk)
+                if current_weights is None:
+                    current_weights = next_weights
+                else:
+                    current_weights += next_weights
+                if current_result is None:
+                    current_result = next_result
+                else:
+                    current_result += next_result
+
+        non_zero_weights = current_weights > 0
+        current_result[non_zero_weights] /= current_weights[non_zero_weights]
+        return next_regridder.finish_regridding(cube_chunk, current_weights, current_result)

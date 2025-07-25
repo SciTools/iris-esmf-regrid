@@ -158,6 +158,35 @@ class Regridder:
         out_dtype = (np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)).dtype
         return out_dtype
 
+    def _gen_weights_and_data(self, src_array):
+        extra_shape = src_array.shape[: -self.src.dims]
+
+        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
+        flat_tgt = self.weight_matrix @ flat_src
+
+        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
+        weight_sums = self.weight_matrix @ src_inverted_mask
+
+        tgt_data = self.tgt._matrix_to_array(flat_tgt, extra_shape)
+        tgt_weights = self.tgt._matrix_to_array(weight_sums, extra_shape)
+        return tgt_weights, tgt_data
+
+    def _regrid_from_weights_and_data(self, tgt_weights, tgt_data, norm_type=Constants.NormType.FRACAREA, mdtol=1):
+        # Set the minimum mdtol to be slightly higher than 0 to account for rounding
+        # errors.
+        mdtol = max(mdtol, 1e-8)
+        tgt_mask = tgt_weights > 1 - mdtol
+        masked_weight_sums = tgt_weights * tgt_mask
+        normalisations = np.ones_like(tgt_data)
+        if norm_type == Constants.NormType.FRACAREA:
+            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
+        elif norm_type == Constants.NormType.DSTAREA:
+            pass
+        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
+
+        tgt_array = tgt_data * normalisations
+        return tgt_array
+
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """Perform regridding on an array of data.
 
@@ -195,25 +224,7 @@ class Regridder:
                 f"got an array with shape ending in {main_shape}."
             )
             raise ValueError(e_msg)
-        extra_shape = array_shape[: -self.src.dims]
-        extra_size = max(1, np.prod(extra_shape))
-        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
-        weight_sums = self.weight_matrix @ src_inverted_mask
-        out_dtype = self._out_dtype(src_array.dtype)
-        # Set the minimum mdtol to be slightly higher than 0 to account for rounding
-        # errors.
-        mdtol = max(mdtol, 1e-8)
-        tgt_mask = weight_sums > 1 - mdtol
-        masked_weight_sums = weight_sums * tgt_mask
-        normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
-        if norm_type == Constants.NormType.FRACAREA:
-            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
-        elif norm_type == Constants.NormType.DSTAREA:
-            pass
-        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
-        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
-        flat_tgt = self.weight_matrix @ flat_src
-        flat_tgt = flat_tgt * normalisations
-        tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
+        tgt_weights, tgt_data = self._gen_weights_and_data(src_array)
+        tgt_array = self._regrid_from_weights_and_data(tgt_weights, tgt_data, norm_type=norm_type, mdtol=mdtol)
         return tgt_array

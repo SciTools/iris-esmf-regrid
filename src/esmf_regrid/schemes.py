@@ -1193,6 +1193,7 @@ class ESMFAreaWeighted:
             use_tgt_mask=use_tgt_mask,
             tgt_location="face",
             esmf_args=esmf_args,
+            precomputed_weights=precomputed_weights,
         )
 
 
@@ -1340,6 +1341,7 @@ class ESMFBilinear:
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
             esmf_args=esmf_args,
+            precomputed_weights=precomputed_weights,
         )
 
 
@@ -1474,6 +1476,7 @@ class ESMFNearest:
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
             esmf_args=esmf_args,
+            precomputed_weights=precomputed_weights,
         )
 
 
