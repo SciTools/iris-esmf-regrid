@@ -1087,6 +1087,7 @@ class ESMFAreaWeighted:
             the regridder is saved .
 
         """
+        self._method = Constants.Method.CONSERVATIVE
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
@@ -1123,6 +1124,7 @@ class ESMFAreaWeighted:
         use_tgt_mask=None,
         tgt_location="face",
         esmf_args=None,
+        precomputed_weights=None,
     ):
         """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1191,6 +1193,7 @@ class ESMFAreaWeighted:
             use_tgt_mask=use_tgt_mask,
             tgt_location="face",
             esmf_args=esmf_args,
+            precomputed_weights=precomputed_weights,
         )
 
 
@@ -1240,6 +1243,7 @@ class ESMFBilinear:
             the regridder is saved .
 
         """
+        self._method = Constants.Method.BILINEAR
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
             raise ValueError(msg.format(mdtol))
@@ -1274,6 +1278,7 @@ class ESMFBilinear:
         tgt_location=None,
         extrapolate_gaps=False,
         esmf_args=None,
+        precomputed_weights=None,
     ):
         """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1336,6 +1341,7 @@ class ESMFBilinear:
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
             esmf_args=esmf_args,
+            precomputed_weights=precomputed_weights,
         )
 
 
@@ -1389,6 +1395,7 @@ class ESMFNearest:
             arguments are recorded as a property of this regridder and are stored when
             the regridder is saved .
         """
+        self._method = Constants.Method.NEAREST
         self.use_src_mask = use_src_mask
         self.use_tgt_mask = use_tgt_mask
         self.tgt_location = tgt_location
@@ -1415,6 +1422,7 @@ class ESMFNearest:
         use_tgt_mask=None,
         tgt_location=None,
         esmf_args=None,
+        precomputed_weights=None,
     ):
         """Create regridder to perform regridding from ``src_grid`` to ``tgt_grid``.
 
@@ -1468,6 +1476,7 @@ class ESMFNearest:
             use_tgt_mask=use_tgt_mask,
             tgt_location=tgt_location,
             esmf_args=esmf_args,
+            precomputed_weights=precomputed_weights,
         )
 
 
@@ -1566,26 +1575,7 @@ class _ESMFRegridder:
         else:
             self._src = GridRecord(_get_coord(src, "x"), _get_coord(src, "y"))
 
-    def __call__(self, cube):
-        """Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
-
-        The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
-        :class:`~iris.cube.Cube` used to create this :class:`_ESMFRegridder` instance.
-
-        Parameters
-        ----------
-        cube : :class:`iris.cube.Cube`
-            A :class:`~iris.cube.Cube` instance to be regridded.
-
-        Returns
-        -------
-        :class:`iris.cube.Cube`
-            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
-            and the other dimensions from this :class:`~iris.cube.Cube`. The data values of
-            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
-            regridding via :mod:`esmpy` generated weights.
-
-        """
+    def _get_cube_dims(self, cube):
         if cube.mesh is not None:
             # TODO: replace temporary hack when iris issues are sorted.
             # Ignore differences in var_name that might be caused by saving.
@@ -1629,6 +1619,29 @@ class _ESMFRegridder:
             else:
                 # Due to structural reasons, the order here must be reversed.
                 dims = cube.coord_dims(new_src_x)[::-1]
+        return dims
+
+    def __call__(self, cube):
+        """Regrid this :class:`~iris.cube.Cube` onto the target grid of this regridder instance.
+
+        The given :class:`~iris.cube.Cube` must be defined with the same grid as the source
+        :class:`~iris.cube.Cube` used to create this :class:`_ESMFRegridder` instance.
+
+        Parameters
+        ----------
+        cube : :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` instance to be regridded.
+
+        Returns
+        -------
+        :class:`iris.cube.Cube`
+            A :class:`~iris.cube.Cube` defined with the horizontal dimensions of the target
+            and the other dimensions from this :class:`~iris.cube.Cube`. The data values of
+            this :class:`~iris.cube.Cube` will be converted to values on the new grid using
+            regridding via :mod:`esmpy` generated weights.
+
+        """
+        dims = self._get_cube_dims(cube)
 
         regrid_info = RegridInfo(
             dims=dims,
