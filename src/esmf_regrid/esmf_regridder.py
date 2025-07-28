@@ -3,6 +3,7 @@
 import numpy as np
 from numpy import ma
 import scipy.sparse
+from scipy.sparse import safely_cast_index_arrays
 
 import esmf_regrid
 from esmf_regrid import Constants, check_method, check_norm
@@ -154,8 +155,12 @@ class Regridder:
 
     def _out_dtype(self, in_dtype):
         """Return the expected output dtype for a given input dtype."""
-        weight_dtype = self.weight_matrix.dtype
-        out_dtype = (np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)).dtype
+        if self.method == Constants.Method.NEAREST:
+            out_dtype = in_dtype
+        else:
+            weight_matrix = self.weight_matrix
+            weight_dtype = weight_matrix.dtype
+            out_dtype = (np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)).dtype
         return out_dtype
 
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
@@ -198,22 +203,27 @@ class Regridder:
         extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
-        weight_sums = self.weight_matrix @ src_inverted_mask
+        if self.method == Constants.Method.NEAREST:
+            weight_matrix = self.weight_matrix.astype(src_array.dtype)
+        else:
+            weight_matrix = self.weight_matrix
+        weight_sums = weight_matrix @ src_inverted_mask
         out_dtype = self._out_dtype(src_array.dtype)
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
-        masked_weight_sums = weight_sums * tgt_mask
         normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
-        if norm_type == Constants.NormType.FRACAREA:
-            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
-        elif norm_type == Constants.NormType.DSTAREA:
-            pass
-        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
+        if not self.method == Constants.Method.NEAREST:
+            masked_weight_sums = weight_sums * tgt_mask
+            if norm_type == Constants.NormType.FRACAREA:
+                normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
+            elif norm_type == Constants.NormType.DSTAREA:
+                pass
+            normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
-        flat_tgt = self.weight_matrix @ flat_src
+        flat_tgt = weight_matrix @ flat_src
         flat_tgt = flat_tgt * normalisations
         tgt_array = self.tgt._matrix_to_array(flat_tgt, extra_shape)
         return tgt_array
