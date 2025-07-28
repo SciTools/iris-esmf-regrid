@@ -160,7 +160,9 @@ class Regridder:
         else:
             weight_matrix = self.weight_matrix
             weight_dtype = weight_matrix.dtype
-            out_dtype = (np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)).dtype
+            out_dtype = (
+                np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)
+            ).dtype
         return out_dtype
 
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
