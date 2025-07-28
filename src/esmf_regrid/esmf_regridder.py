@@ -214,7 +214,7 @@ class Regridder:
         mdtol = max(mdtol, 1e-8)
         tgt_mask = weight_sums > 1 - mdtol
         normalisations = np.ones([self.tgt.size, extra_size], dtype=out_dtype)
-        if not self.method == Constants.Method.NEAREST:
+        if self.method != Constants.Method.NEAREST:
             masked_weight_sums = weight_sums * tgt_mask
             if norm_type == Constants.NormType.FRACAREA:
                 normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
