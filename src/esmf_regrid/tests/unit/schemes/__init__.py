@@ -223,8 +223,13 @@ def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
     n_lats_tgt = 2
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
+
+    expected_dtype = np.float64
+
     if in_dtype == "float32":
         dtype = np.float32
+        if scheme is ESMFNearest:
+            expected_dtype = np.float32
     elif in_dtype == "float64":
         dtype = np.float64
 
@@ -242,8 +247,6 @@ def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
         tgt = _gridlike_mesh_cube(n_lons_tgt, n_lats_tgt)
 
     result = src.regrid(tgt, scheme())
-
-    expected_dtype = np.float64
 
     assert result.has_lazy_data()
 

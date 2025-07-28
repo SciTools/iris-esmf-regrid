@@ -222,7 +222,7 @@ class Regridder:
                 normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
             elif norm_type == Constants.NormType.DSTAREA:
                 pass
-            normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
+        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
         flat_tgt = weight_matrix @ flat_src
