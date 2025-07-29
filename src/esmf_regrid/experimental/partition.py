@@ -306,6 +306,4 @@ class Partition2:
                 else:
                     current_result += next_result
 
-        non_zero_weights = current_weights > 0
-        current_result[non_zero_weights] /= current_weights[non_zero_weights]
         return next_regridder.finish_regridding(cube_chunk, current_weights, current_result)
