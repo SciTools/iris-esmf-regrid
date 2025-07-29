@@ -274,7 +274,6 @@ class Partition2:
             regridder = self.scheme.regridder(src, tgt)
             src_slice = self.file_chunk_dict[file]
             src_cube = self.src[*_interpret_slice(src_slice)]
-            print(src_cube)
             weights = regridder.regridder.weight_matrix
             regridder = PartialRegridder(src_cube, self.tgt, src_slice, None, weights, self.scheme)
             # TODO: make partial?
