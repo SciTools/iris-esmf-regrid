@@ -172,10 +172,10 @@ class Partition:
                 # Create weights for new regridder
                 previous_wm = previous_regridder.regridder.weight_matrix
                 current_wm = current_regridder.regridder.weight_matrix
-                right_wm = sparse.csr_array((tgt_size, buffer * v_len))
-                buffer_inds = sum(np.meshgrid(np.arange(buffer), np.arange(v_len) * h_len)).flatten()
+                right_wm = sparse.csr_array((tgt_size, buffer * h_len))
+                buffer_inds = sum(np.meshgrid(np.arange(buffer), np.arange(h_len) * v_len)).flatten()
                 right_wm[mutual_overlaps] = current_wm[mutual_overlaps][:, buffer_inds]
-                new_weight_matrix = _combine_sparse(previous_wm, right_wm, v_len, h_len, buffer, tgt_size)
+                new_weight_matrix = _combine_sparse(previous_wm, right_wm, h_len, v_len, buffer, tgt_size)
                 new_weight_matrix = sparse.csr_matrix(
                     new_weight_matrix)  # must be matrix for ier (likely to change in future)
 
