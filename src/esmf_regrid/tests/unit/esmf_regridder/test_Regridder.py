@@ -246,7 +246,20 @@ def test_Regridder_dtype_handling():
     src_32 = np.ones([3, 2], dtype=np.float32)
     src_64 = np.ones([3, 2], dtype=np.float64)
 
+    src_int_32 = np.ones([3, 2], dtype=np.int32)
+    src_int_64 = np.ones([3, 2], dtype=np.int64)
+
+    rg_nearest = Regridder(
+        src_grid,
+        tgt_grid,
+        method=Constants.Method.NEAREST,
+        precomputed_weights=_expected_weights(),
+    )
+
     assert rg_64.regrid(src_64).dtype == np.float64
     assert rg_64.regrid(src_32).dtype == np.float64
     assert rg_32.regrid(src_64).dtype == np.float64
     assert rg_32.regrid(src_32).dtype == np.float32
+
+    assert rg_nearest.regrid(src_int_32).dtype == np.int32
+    assert rg_nearest.regrid(src_int_64).dtype == np.int64
