@@ -205,10 +205,10 @@ class Regridder:
         extra_shape = array_shape[: -self.src.dims]
         extra_size = max(1, np.prod(extra_shape))
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
+        weight_matrix = self.weight_matrix
         if self.method == Constants.Method.NEAREST:
-            weight_matrix = self.weight_matrix.astype(src_array.dtype)
-        else:
-            weight_matrix = self.weight_matrix
+            # force out_dtype := in_dtype
+            weight_matrix = weight_matrix.astype(src_array.dtype)
         weight_sums = weight_matrix @ src_inverted_mask
         out_dtype = self._out_dtype(src_array.dtype)
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
