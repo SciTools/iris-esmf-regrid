@@ -153,7 +153,7 @@ extlinks = {
 # See https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
 intersphinx_mapping = {
     "iris": ("https://scitools-iris.readthedocs.io/en/latest/", None),
-    "cartopy": ("https://scitools.org.uk/cartopy/docs/latest/", None),
+    "cartopy": ("https://cartopy.readthedocs.io/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
