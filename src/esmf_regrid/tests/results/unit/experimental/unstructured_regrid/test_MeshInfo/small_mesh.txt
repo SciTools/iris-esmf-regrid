@@ -4,10 +4,10 @@ Field:
     rank = 1
     extra dimensions = 0
     staggerloc = 1
-    lower bounds = array([0], dtype=int32)
-    upper bounds = array([2], dtype=int32)
+    lower bounds = [array([0], dtype=int32)]
+    upper bounds = [array([2], dtype=int32)]
     extra bounds = None
-    data = array([0., 0.])
+    data = [array([0., 0.])]
     grid = 
 Mesh:
     rank = 1
