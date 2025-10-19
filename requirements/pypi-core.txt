@@ -1,6 +1,6 @@
 cartopy <0.25.1
 cf-units <3.3.1
 # esmpy>=7.0
-numpy>=1.19,<2.3.4
+numpy>=1.19,<2.3.5
 scipy <1.16.3
 scitools-iris <3.13.2
