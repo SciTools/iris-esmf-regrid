@@ -1,6 +1,6 @@
 asv <0.6.6
 codecov <2.1.14
-nox <2025.5.2
-pre-commit <4.3.1
-pytest <8.4.3
+nox <2025.11.13
+pre-commit <4.4.1
+pytest <9.0.2
 pytest-cov <7.0.1
