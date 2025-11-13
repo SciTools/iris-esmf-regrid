@@ -16,6 +16,9 @@ updates:
     labels:
       - "New: Pull Request"
       - "Bot"
+    commit-message:
+      prefix: "chore: "
+      include: "scope"
 
   - package-ecosystem: "pip"
     directory: "/"
