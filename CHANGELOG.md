@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- [PR#593](https://github.com/SciTools/iris-esmf-regrid/pull/593)
+  Freed up memory that was being held onto by esmpy when initialising
+  regridders.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ### Added
 
 - [PR#506](https://github.com/SciTools/iris-esmf-regrid/pull/506)
