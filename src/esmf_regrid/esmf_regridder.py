@@ -113,12 +113,20 @@ class Regridder:
         self.esmf_regrid_version = esmf_regrid.__version__
         if precomputed_weights is None:
             self.esmf_version = esmpy.__version__
+            src_field = src.make_esmf_field()
+            tgt_field = tgt.make_esmf_field()
             weights_dict = _get_regrid_weights_dict(
-                src.make_esmf_field(),
-                tgt.make_esmf_field(),
+                src_field,
+                tgt_field,
                 regrid_method=method.value,
                 esmf_args=esmf_args,
             )
+            src_sdo = src_field.grid
+            src_field.destroy()
+            src_sdo.destroy()
+            tgt_sdo = tgt_field.grid
+            tgt_field.destroy()
+            tgt_sdo.destroy()
             self.weight_matrix = _weights_dict_to_sparse_array(
                 weights_dict,
                 (self.tgt._refined_size, self.src._refined_size),
