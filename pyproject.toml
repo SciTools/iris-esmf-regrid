@@ -78,6 +78,12 @@ ignore = [
     "PC180",  # Uses prettier
     # https://learn.scientific-python.org/development/guides/packaging-simple#PP006
     "PP006",  # Uses dev dependency group
+    # https://learn.scientific-python.org/development/guides/tasks/#faster-with-uv
+    "NOX101",
+    "NOX102",
+    "NOX201",
+    "NOX202",
+    "NOX203",
 ]
 
 [tool.mypy]
