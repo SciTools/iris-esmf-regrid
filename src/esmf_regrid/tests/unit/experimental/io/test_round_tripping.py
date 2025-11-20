@@ -284,9 +284,9 @@ def test_grid_to_mesh_curvilinear_round_trip(tmp_path, regridder):
 def test_MeshESMFRegridder_masked_round_trip(tmp_path, rg_maker, regridder):
     """Test save/load round tripping for the Mesh regridder classes."""
     if regridder == "unstructured":
-        original_rg, src = rg_maker(masks=True)
+        original_rg, _src = rg_maker(masks=True)
     else:
-        original_rg, src = rg_maker(regridder=regridder, masks=True)
+        original_rg, _src = rg_maker(regridder=regridder, masks=True)
     filename = tmp_path / "regridder.nc"
     save_regridder(original_rg, filename)
     loaded_rg = load_regridder(str(filename))
