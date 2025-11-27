@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
-## [Unreleased]
+## [0.13.0] - 2025-11-27
 
 ### Fixed
 
@@ -14,6 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Freed up memory that was being held onto by esmpy when initialising
   regridders.
   [@stephenworsley](https://github.com/stephenworsley)
+- [PR#508](https://github.com/SciTools/iris-esmf-regrid/pull/508)
+  Replaced remaining assert calls with proper error messages.
+  [@stephenworsley](https://github.com/stephenworsley)
+- [PR#565](https://github.com/SciTools/iris-esmf-regrid/pull/565)
+  Fixed links to cartopy in documentation.
+  [@rcomer](https://github.com/rcomer)
+
+### Changed
+
+- [PR#558](https://github.com/SciTools/iris-esmf-regrid/pull/558)
+  Nearest neighbour regridding now preserves dtype.
+  [@HGWright](https://github.com/HGWright)
 
 ### Added
 
