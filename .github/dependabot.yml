@@ -20,18 +20,3 @@ updates:
       prefix: "chore: "
       include: "scope"
 
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "sunday"
-    groups:
-      pip:
-        patterns:
-          - "*"
-    labels:
-      - "New: Pull Request"
-      - "Bot"
-    commit-message:
-      prefix: "chore: "
-      include: "scope"
