@@ -175,6 +175,35 @@ class Regridder:
             ).dtype
         return out_dtype
 
+    def _gen_weights_and_data(self, src_array):
+        extra_shape = src_array.shape[: -self.src.dims]
+
+        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
+        flat_tgt = self.weight_matrix @ flat_src
+
+        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
+        weight_sums = self.weight_matrix @ src_inverted_mask
+
+        tgt_data = self.tgt._matrix_to_array(flat_tgt, extra_shape)
+        tgt_weights = self.tgt._matrix_to_array(weight_sums, extra_shape)
+        return tgt_weights, tgt_data
+
+    def _regrid_from_weights_and_data(self, tgt_weights, tgt_data, norm_type=Constants.NormType.FRACAREA, mdtol=1):
+        # Set the minimum mdtol to be slightly higher than 0 to account for rounding
+        # errors.
+        mdtol = max(mdtol, 1e-8)
+        tgt_mask = tgt_weights > 1 - mdtol
+        masked_weight_sums = tgt_weights * tgt_mask
+        normalisations = np.ones_like(tgt_data)
+        if norm_type == Constants.NormType.FRACAREA:
+            normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
+        elif norm_type == Constants.NormType.DSTAREA:
+            pass
+        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
+
+        tgt_array = tgt_data * normalisations
+        return tgt_array
+
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """Perform regridding on an array of data.
 
