@@ -4,11 +4,8 @@ import dask.array as da
 import numpy as np
 import pytest
 
-import esmf_regrid
-print(esmf_regrid.__file__)
 from esmf_regrid import ESMFAreaWeighted
 from esmf_regrid.experimental.partition import Partition
-
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _curvilinear_cube,
     _grid_cube,

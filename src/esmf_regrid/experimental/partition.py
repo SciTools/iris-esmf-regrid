@@ -45,7 +45,7 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
             if sum(chunk) != s:
                 msg = "Chunks must sum to the size of their respective dimension."
                 raise ValueError(msg)
-        bounds = [np.cumsum([0] + list(chunk)) for chunk in chunks]
+        bounds = [np.cumsum([0, *chunk]) for chunk in chunks]
         if len(bounds) == 1:
             explicit_chunks = [[[int(lower), int(upper)]] for lower, upper in zip(bounds[0][:-1], bounds[0][1:])]
         elif len(bounds) == 2:
@@ -121,7 +121,7 @@ class Partition:
         if src.mesh is not None:
             msg = "Partition does not yet support source meshes."
             raise NotImplementedError(msg)
-        # TODO Extract a slice of the cube.
+        # TODO: Extract a slice of the cube.
         self.src = src
         if src.mesh is None:
             grid_dims = _get_grid_dims(src)
@@ -144,7 +144,7 @@ class Partition:
         assert tgt_chunks is None  # We don't handle big targets currently
 
         # Note: this may need to become more sophisticated when both src and tgt are large
-        self.file_chunk_dict = {file: chunk for file, chunk in zip(self.file_names, self.src_chunks)}
+        self.file_chunk_dict = dict(zip(self.file_names, self.src_chunks))
 
         if saved_files is None:
             self.saved_files = []
