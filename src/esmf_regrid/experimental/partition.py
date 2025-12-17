@@ -13,22 +13,25 @@ def _get_chunk(cube, sl):
         grid_dims = _get_grid_dims(cube)
     else:
         grid_dims = (cube.mesh_dim(),)
-    slice = [np.s_[:]] * len(cube.shape)
+    full_slice = [np.s_[:]] * len(cube.shape)
     for s, d in zip(sl, grid_dims):
-        slice[d] = np.s_[s[0]:s[1]]
-    return cube[*slice]
+        full_slice[d] = np.s_[s[0]:s[1]]
+    return cube[*full_slice]
 
 def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
     which_inputs = (chunks is not None, num_chunks is not None, explicit_chunks is not None)
     if sum(which_inputs) == 0:
-        raise ValueError("Partition blocks must must be specified by either chunks, num_chunks, or explicit_chunks.")
+        msg = "Partition blocks must must be specified by either chunks, num_chunks, or explicit_chunks."
+        raise ValueError(msg)
     if sum(which_inputs) > 1:
-        raise ValueError("Potentially conflicting partition block definitions.")
+        msg = "Potentially conflicting partition block definitions."
+        raise ValueError(msg)
     if num_chunks is not None:
         chunks = [s//n for s, n in zip(shape, num_chunks)]
         for chunk in chunks:
             if chunk == 0:
-                raise ValueError("`num_chunks` cannot divide a dimension into more blocks than the size of that dimension.")
+                msg = "`num_chunks` cannot divide a dimension into more blocks than the size of that dimension."
+                raise ValueError(msg)
     if chunks is not None:
         if all(isinstance(x, int)for x in chunks):
             proper_chunks = []
@@ -40,7 +43,8 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
             chunks = proper_chunks
         for s, chunk in zip(shape, chunks):
             if sum(chunk) != s:
-                raise ValueError("Chunks must sum to the size of their respective dimension.")
+                msg = "Chunks must sum to the size of their respective dimension."
+                raise ValueError(msg)
         bounds = [np.cumsum([0] + list(chunk)) for chunk in chunks]
         if len(bounds) == 1:
             explicit_chunks = [[[int(lower), int(upper)]] for lower, upper in zip(bounds[0][:-1], bounds[0][1:])]
@@ -49,10 +53,12 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
                 [[int(ly), int(uy)], [int(lx), int(ux)]] for ly, uy in zip(bounds[0][:-1], bounds[0][1:]) for lx, ux in zip(bounds[1][:-1], bounds[1][1:])
             ]
         else:
-            raise ValueError(f"Chunks must not exceed two dimensions.")
+            msg = "Chunks must not exceed two dimensions."
+            raise ValueError(msg)
     return explicit_chunks
 
 class Partition:
+    """Class for breaking down regridding into manageable chunks."""
     def __init__(
             self,
             src,
@@ -110,9 +116,11 @@ class Partition:
             A list of paths to previously saved files.
         """
         if scheme._method == Constants.Method.NEAREST:
-            raise NotImplementedError("The `Nearest` method is not implemented.")
+            msg = "The `Nearest` method is not implemented."
+            raise NotImplementedError(msg)
         if src.mesh is not None:
-            raise NotImplementedError("Partition does not yet support source meshes.")
+            msg = "Partition does not yet support source meshes."
+            raise NotImplementedError(msg)
         # TODO Extract a slice of the cube.
         self.src = src
         if src.mesh is None:
