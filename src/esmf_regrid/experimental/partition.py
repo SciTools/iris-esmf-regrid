@@ -68,7 +68,7 @@ class Partition:
             use_dask_src_chunks=False,
             src_chunks=None,
             num_src_chunks=None,
-            explicit_src_chunks=None,
+            explicit_src_blocks=None,
             # tgt_chunks=None,
             # num_tgt_chunks=None,
             auto_generate=False,
@@ -94,17 +94,17 @@ class Partition:
         use_dask_src_chunks : bool, default=False
             If true, partition using the same chunks from the source cube.
         src_chunks : numpy array, tuple of int or str, default=None
-            Specify the size of blocks to use to divide up the cube. Demensions are specified
+            Specify the size of blocks to use to divide up the cube. Dimensions are specified
             in y,x axis order. If `src_chunks` is a tuple of int, each integer describes
             the maximum size of a block in that dimension. If `src_chunks` is a tuple of int,
             each tuple describes the size of each successive block in that dimension. These
             block sizes should add up to the total size of that dimension or else an error
             is raised.
         num_src_chunks : tuple of int
-            Specify the number of blocks to use to divide up the cube. Demensions are specified
+            Specify the number of blocks to use to divide up the cube. Dimensions are specified
             in y,x axis order. Each integer describes the number of blocks that dimension will
             be divided into.
-        explicit_src_chunks : arraylike NxMx2
+        explicit_src_blocks : arraylike NxMx2
             Explicitly specify the bounds of each block in the partition.
         # tgt_chunks : ???, default=None
         #     ???
@@ -133,18 +133,26 @@ class Partition:
         # TODO: consider abstracting away the idea of files
         self.file_names = file_names
         if use_dask_src_chunks:
-            assert num_src_chunks is None and src_chunks is None
-            assert src.has_lazy_data()
+            if src_chunks is not None:
+                msg = "Potentially conflicting partition block definitions."
+                raise ValueError(msg)
+            if not src.has_lazy_data():
+                msg = "If `use_dask_src_chunks=True`, the source cube must be lazy."
+                raise TypeError(msg)
             src_chunks = src.slices(grid_dims).next().lazy_data().chunks
-        self.src_chunks = _determine_blocks(shape, src_chunks, num_src_chunks, explicit_src_chunks)
-        assert len(self.src_chunks) == len(file_names)
+        self.src_blocks = _determine_blocks(shape, src_chunks, num_src_chunks, explicit_src_blocks)
+        if len(self.src_blocks) != len(file_names):
+            msg = "Number of source blocks does not match number of file names."
+            raise ValueError(msg)
         # This will be controllable in future
         tgt_chunks = None
         self.tgt_chunks = tgt_chunks
-        assert tgt_chunks is None  # We don't handle big targets currently
+        if tgt_chunks is not None:
+            msg = "Target chunking not yet implemented."
+            raise NotImplementedError(msg)
 
         # Note: this may need to become more sophisticated when both src and tgt are large
-        self.file_chunk_dict = dict(zip(self.file_names, self.src_chunks))
+        self.file_block_dict = dict(zip(self.file_names, self.src_blocks))
 
         if saved_files is None:
             self.saved_files = []
@@ -174,32 +182,34 @@ class Partition:
         if files_to_generate is None:
             files = self.unsaved_files
         else:
-            assert isinstance(files_to_generate, int)
+            if not isinstance(files_to_generate, int):
+                msg = "`files_to_generate` must be an integer."
+                raise ValueError(msg)
             files = self.unsaved_files[:files_to_generate]
 
         for file in files:
-            src_chunk = self.file_chunk_dict[file]
-            src = _get_chunk(self.src, src_chunk)
+            src_block = self.file_block_dict[file]
+            src = _get_chunk(self.src, src_block)
             tgt = self.tgt
             regridder = self.scheme.regridder(src, tgt)
             weights = regridder.regridder.weight_matrix
-            regridder = PartialRegridder(src, self.tgt, src_chunk, None, weights, self.scheme)
+            regridder = PartialRegridder(src, self.tgt, src_block, None, weights, self.scheme)
             save_regridder(regridder, file, allow_partial=True)
             self.saved_files.append(file)
 
     def apply_regridders(self, cube, allow_incomplete=False):
         # for each target chunk, iterate through each associated regridder
         # for now, assume one target chunk
-        if not allow_incomplete:
-            assert len(self.unsaved_files) == 0
+        if not allow_incomplete and len(self.unsaved_files) != 0:
+            msg = "Not all files have been constructed."
+            raise OSError(msg)
         current_result = None
         current_weights = None
         files = self.saved_files
 
-        for file, chunk in zip(self.file_names, self.src_chunks):
+        for file, chunk in zip(self.file_names, self.src_blocks):
             if file in files:
                 next_regridder = load_regridder(file, allow_partial=True)
-                # cube_chunk = cube[*_interpret_slice(chunk)]
                 cube_chunk = _get_chunk(cube, chunk)
                 next_weights, next_result = next_regridder.partial_regrid(cube_chunk)
                 if current_weights is None:

@@ -23,7 +23,7 @@ def test_Partition(tmp_path):
     scheme = ESMFAreaWeighted(mdtol=1)
     chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
 
-    partition = Partition(src, tgt, scheme, files, explicit_src_chunks=chunks)
+    partition = Partition(src, tgt, scheme, files, explicit_src_blocks=chunks)
 
     partition.generate_files()
 
@@ -43,26 +43,26 @@ def test_Partition_block_api(tmp_path):
     partition = Partition(src, tgt, scheme, files, num_src_chunks=num_src_chunks)
 
     expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
-    assert partition.src_chunks == expected_chunks
+    assert partition.src_blocks == expected_chunks
 
     src_chunks = (100, 150)
     partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
     expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
-    assert partition.src_chunks == expected_chunks
+    assert partition.src_blocks == expected_chunks
 
 
     src_chunks = ((100, 100, 100, 100, 100), (150,))
     partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
     expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
-    assert partition.src_chunks == expected_chunks
+    assert partition.src_blocks == expected_chunks
 
     src.data = da.from_array(src.data, chunks=src_chunks)
     partition = Partition(src, tgt, scheme, files, use_dask_src_chunks=True)
 
     expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
-    assert partition.src_chunks == expected_chunks
+    assert partition.src_blocks == expected_chunks
 
 def test_Partition_mesh_src(tmp_path):
     src = _gridlike_mesh_cube(150, 500)
@@ -74,11 +74,11 @@ def test_Partition_mesh_src(tmp_path):
 
     src_chunks = (15000,)
     with pytest.raises(NotImplementedError):
-        partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
+        _ = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
-    # TODO when mesh partitioning becomes possible, uncomment.
+    # TODO: when mesh partitioning becomes possible, uncomment.
     # expected_src_chunks = [[[0, 15000]], [[15000, 30000]], [[30000, 45000]], [[45000, 60000]], [[60000, 75000]]]
-    # assert partition.src_chunks == expected_src_chunks
+    # assert partition.src_blocks == expected_src_chunks
     #
     # partition.generate_files()
     #
@@ -99,7 +99,7 @@ def test_Partition_curv_src(tmp_path):
     partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
     expected_src_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
-    assert partition.src_chunks == expected_src_chunks
+    assert partition.src_blocks == expected_src_chunks
 
     partition.generate_files()
 
