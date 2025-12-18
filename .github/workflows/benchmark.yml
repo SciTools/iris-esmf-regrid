@@ -51,7 +51,7 @@ jobs:
 
       - name: Cache environment directories
         id: cache-env-dir
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .nox
@@ -67,7 +67,7 @@ jobs:
       - name: Archive asv results
         # Store the raw ASV database(s) to help manual investigations.
         if: ${{ always() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: asv-raw-results
           path: benchmarks/.asv/results
