@@ -16,13 +16,14 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 
 
 def test_Partition(tmp_path):
+    """Test basic implementation of Partition class."""
     src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
     src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
-    chunks = [
+    blocks = [
         [[0, 100], [0, 150]],
         [[100, 200], [0, 150]],
         [[200, 300], [0, 150]],
@@ -30,7 +31,7 @@ def test_Partition(tmp_path):
         [[400, 500], [0, 150]],
     ]
 
-    partition = Partition(src, tgt, scheme, files, explicit_src_blocks=chunks)
+    partition = Partition(src, tgt, scheme, files, explicit_src_blocks=blocks)
 
     partition.generate_files()
 
@@ -41,8 +42,8 @@ def test_Partition(tmp_path):
 
 
 def test_Partition_block_api(tmp_path):
+    """Test API for controlling block shape for Partition class."""
     src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
-    src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
@@ -97,6 +98,7 @@ def test_Partition_block_api(tmp_path):
 
 
 def test_Partition_mesh_src(tmp_path):
+    """Test Partition class when the source has a mesh."""
     src = _gridlike_mesh_cube(150, 500)
     src.data = np.arange(150 * 500)
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
@@ -121,6 +123,7 @@ def test_Partition_mesh_src(tmp_path):
 
 
 def test_Partition_curv_src(tmp_path):
+    """Test Partition class when the source has a curvilinear grid."""
     src = _curvilinear_cube(150, 500, (-180, 180), (-90, 90))
     src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
@@ -146,3 +149,37 @@ def test_Partition_curv_src(tmp_path):
     expected = src.regrid(tgt, scheme)
     assert np.allclose(result.data, expected.data)
     assert result == expected
+
+
+def test_conflicting_chunks(tmp_path):
+    """Test error handling of Partition class."""
+    src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
+    tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
+
+    files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
+    scheme = ESMFAreaWeighted(mdtol=1)
+    num_src_chunks = (5, 1)
+    src_chunks = (100, 150)
+    blocks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
+
+    with pytest.raises(ValueError):
+        _ = Partition(src, tgt, scheme, files, src_chunks=src_chunks, num_src_chunks=num_src_chunks)
+    with pytest.raises(ValueError):
+        _ = Partition(src, tgt, scheme, files, src_chunks=src_chunks, explicit_src_blocks=blocks)
+    with pytest.raises(ValueError):
+        _ = Partition(src, tgt, scheme, files)
+    with pytest.raises(TypeError):
+        _ = Partition(src, tgt, scheme, files, use_dask_src_chunks=True)
+    with pytest.raises(ValueError):
+        _ = Partition(src, tgt, scheme, files[:-1], src_chunks=src_chunks)
+
+def test_multidimensional_cube(tmp_path):
+    """Test Partition class when the source has a multidimensional cube."""
+    #TODO: add test.
+    pass
