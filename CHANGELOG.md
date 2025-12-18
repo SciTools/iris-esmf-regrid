@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
+## [0.13.1] - 2025-12-18
+
+### Changed
+
+- [PR#611](https://github.com/SciTools/iris-esmf-regrid/pull/611)
+  Drop pip pins, reverting PR#593.
+  [@bjlittle](https://github.com/bjlittle)
+
 ## [0.13.0] - 2025-11-27
 
 ### Fixed
