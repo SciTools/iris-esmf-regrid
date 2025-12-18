@@ -10,11 +10,11 @@ import scipy.sparse
 
 import esmf_regrid
 from esmf_regrid import Constants, _load_context, check_method, esmpy
+from esmf_regrid.experimental._partial import PartialRegridder
 from esmf_regrid.experimental.unstructured_scheme import (
     GridToMeshESMFRegridder,
     MeshToGridESMFRegridder,
 )
-from esmf_regrid.experimental._partial import PartialRegridder
 from esmf_regrid.schemes import (
     ESMFAreaWeightedRegridder,
     ESMFBilinearRegridder,
