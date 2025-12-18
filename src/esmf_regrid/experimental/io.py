@@ -140,6 +140,7 @@ def _standard_grid_cube(grid, name):
         cube.add_aux_coord(grid[1], [0, 1])
     return cube
 
+
 def _standard_mesh_cube(mesh, location, name):
     mesh_coords = mesh.to_MeshCoords(location)
     data = np.zeros(mesh_coords[0].points.shape[0])
@@ -147,6 +148,7 @@ def _standard_mesh_cube(mesh, location, name):
     for coord in mesh_coords:
         cube.add_aux_coord(coord, 0)
     return cube
+
 
 def _generate_src_tgt(regridder_type, rg, allow_partial):
     if regridder_type in [
@@ -204,13 +206,9 @@ def _generate_src_tgt(regridder_type, rg, allow_partial):
         _add_mask_to_cube(rg.tgt_mask, tgt_cube, _TARGET_MASK_NAME)
 
     else:
-        e_msg = (
-            f"Unexpected regridder type {regridder_type}."
-        )
+        e_msg = f"Unexpected regridder type {regridder_type}."
         raise TypeError(e_msg)
     return src_cube, tgt_cube
-
-
 
 
 def save_regridder(rg, filename, allow_partial=False):
@@ -287,13 +285,16 @@ def save_regridder(rg, filename, allow_partial=False):
         src_slice = rg.src_slice  # this slice is described by a tuple
         if src_slice is None:
             src_slice = []
-        src_slice_cube = Cube(src_slice, long_name=_SRC_SLICE_NAME, var_name=_SRC_SLICE_NAME)
+        src_slice_cube = Cube(
+            src_slice, long_name=_SRC_SLICE_NAME, var_name=_SRC_SLICE_NAME
+        )
         tgt_slice = rg.tgt_slice  # this slice is described by a tuple
         if tgt_slice is None:
             tgt_slice = []
-        tgt_slice_cube = Cube(src_slice, long_name=_TGT_SLICE_NAME, var_name=_TGT_SLICE_NAME)
+        tgt_slice_cube = Cube(
+            src_slice, long_name=_TGT_SLICE_NAME, var_name=_TGT_SLICE_NAME
+        )
         extra_cubes = [src_slice_cube, tgt_slice_cube]
-
 
     weights_cube = Cube(weight_data, var_name=_WEIGHTS_NAME, long_name=_WEIGHTS_NAME)
     row_coord = AuxCoord(
@@ -329,7 +330,9 @@ def save_regridder(rg, filename, allow_partial=False):
 
     # Save cubes while ensuring var_names do not conflict for the sake of consistency.
     with _managed_var_name(src_cube, tgt_cube):
-        cube_list = CubeList([src_cube, tgt_cube, weights_cube, weight_shape_cube, *extra_cubes])
+        cube_list = CubeList(
+            [src_cube, tgt_cube, weights_cube, weight_shape_cube, *extra_cubes]
+        )
 
         for cube in cube_list:
             cube.attributes = attributes
@@ -375,7 +378,9 @@ def load_regridder(filename, allow_partial=False):
     scheme = _REGRIDDER_NAME_MAP[regridder_type]
 
     if regridder_type == "PartialRegridder" and not allow_partial:
-        e_msg = "PartialRegridder cannot be loaded without setting `allow_partial=True`."
+        e_msg = (
+            "PartialRegridder cannot be loaded without setting `allow_partial=True`."
+        )
         raise ValueError(e_msg)
 
     # Determine the regridding method, allowing for files created when

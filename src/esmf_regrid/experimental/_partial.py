@@ -5,6 +5,7 @@ from esmf_regrid.schemes import (
     _create_cube,
 )
 
+
 class PartialRegridder(_ESMFRegridder):
     def __init__(self, src, tgt, src_slice, tgt_slice, weights, scheme, **kwargs):
         self.src_slice = src_slice  # this will be tuple-like
@@ -32,10 +33,6 @@ class PartialRegridder(_ESMFRegridder):
 
         result_data = self.regridder._regrid_from_weights_and_data(weights, data)
         result_cube = _create_cube(
-            result_data,
-            src_cube,
-            dims,
-            self._tgt,
-            len(self._tgt)
+            result_data, src_cube, dims, self._tgt, len(self._tgt)
         )
         return result_cube

@@ -188,7 +188,9 @@ class Regridder:
         tgt_weights = self.tgt._matrix_to_array(weight_sums, extra_shape)
         return tgt_weights, tgt_data
 
-    def _regrid_from_weights_and_data(self, tgt_weights, tgt_data, norm_type=Constants.NormType.FRACAREA, mdtol=1):
+    def _regrid_from_weights_and_data(
+        self, tgt_weights, tgt_data, norm_type=Constants.NormType.FRACAREA, mdtol=1
+    ):
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
         mdtol = max(mdtol, 1e-8)

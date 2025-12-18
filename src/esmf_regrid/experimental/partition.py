@@ -15,11 +15,16 @@ def _get_chunk(cube, sl):
         grid_dims = (cube.mesh_dim(),)
     full_slice = [np.s_[:]] * len(cube.shape)
     for s, d in zip(sl, grid_dims):
-        full_slice[d] = np.s_[s[0]:s[1]]
+        full_slice[d] = np.s_[s[0] : s[1]]
     return cube[*full_slice]
 
+
 def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
-    which_inputs = (chunks is not None, num_chunks is not None, explicit_chunks is not None)
+    which_inputs = (
+        chunks is not None,
+        num_chunks is not None,
+        explicit_chunks is not None,
+    )
     if sum(which_inputs) == 0:
         msg = "Partition blocks must must be specified by either chunks, num_chunks, or explicit_chunks."
         raise ValueError(msg)
@@ -27,18 +32,18 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
         msg = "Potentially conflicting partition block definitions."
         raise ValueError(msg)
     if num_chunks is not None:
-        chunks = [s//n for s, n in zip(shape, num_chunks)]
+        chunks = [s // n for s, n in zip(shape, num_chunks)]
         for chunk in chunks:
             if chunk == 0:
                 msg = "`num_chunks` cannot divide a dimension into more blocks than the size of that dimension."
                 raise ValueError(msg)
     if chunks is not None:
-        if all(isinstance(x, int)for x in chunks):
+        if all(isinstance(x, int) for x in chunks):
             proper_chunks = []
             for s, c in zip(shape, chunks):
-                proper_chunk = [c] * (s//c)
-                if s%c != 0:
-                    proper_chunk += [s%c]
+                proper_chunk = [c] * (s // c)
+                if s % c != 0:
+                    proper_chunk += [s % c]
                 proper_chunks.append(proper_chunk)
             chunks = proper_chunks
         for s, chunk in zip(shape, chunks):
@@ -47,32 +52,39 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
                 raise ValueError(msg)
         bounds = [np.cumsum([0, *chunk]) for chunk in chunks]
         if len(bounds) == 1:
-            explicit_chunks = [[[int(lower), int(upper)]] for lower, upper in zip(bounds[0][:-1], bounds[0][1:])]
+            explicit_chunks = [
+                [[int(lower), int(upper)]]
+                for lower, upper in zip(bounds[0][:-1], bounds[0][1:])
+            ]
         elif len(bounds) == 2:
             explicit_chunks = [
-                [[int(ly), int(uy)], [int(lx), int(ux)]] for ly, uy in zip(bounds[0][:-1], bounds[0][1:]) for lx, ux in zip(bounds[1][:-1], bounds[1][1:])
+                [[int(ly), int(uy)], [int(lx), int(ux)]]
+                for ly, uy in zip(bounds[0][:-1], bounds[0][1:])
+                for lx, ux in zip(bounds[1][:-1], bounds[1][1:])
             ]
         else:
             msg = "Chunks must not exceed two dimensions."
             raise ValueError(msg)
     return explicit_chunks
 
+
 class Partition:
     """Class for breaking down regridding into manageable chunks."""
+
     def __init__(
-            self,
-            src,
-            tgt,
-            scheme,
-            file_names,
-            use_dask_src_chunks=False,
-            src_chunks=None,
-            num_src_chunks=None,
-            explicit_src_blocks=None,
-            # tgt_chunks=None,
-            # num_tgt_chunks=None,
-            auto_generate=False,
-            saved_files=None,
+        self,
+        src,
+        tgt,
+        scheme,
+        file_names,
+        use_dask_src_chunks=False,
+        src_chunks=None,
+        num_src_chunks=None,
+        explicit_src_blocks=None,
+        # tgt_chunks=None,
+        # num_tgt_chunks=None,
+        auto_generate=False,
+        saved_files=None,
     ):
         """Class for breaking down regridding into manageable chunks.
 
@@ -87,8 +99,8 @@ class Partition:
             Source cube.
         tgt : cube
             Target cube.
-        scheme :
-            scheme
+        scheme : regridding scheme
+            Regridding scheme to generate regridders, either ESMFAreaWeighted or ESMFBilinear.
         file_names : iterable of str
             A list of file names to save/load parts of the regridder to/from.
         use_dask_src_chunks : bool, default=False
@@ -140,7 +152,9 @@ class Partition:
                 msg = "If `use_dask_src_chunks=True`, the source cube must be lazy."
                 raise TypeError(msg)
             src_chunks = src.slices(grid_dims).next().lazy_data().chunks
-        self.src_blocks = _determine_blocks(shape, src_chunks, num_src_chunks, explicit_src_blocks)
+        self.src_blocks = _determine_blocks(
+            shape, src_chunks, num_src_chunks, explicit_src_blocks
+        )
         if len(self.src_blocks) != len(file_names):
             msg = "Number of source blocks does not match number of file names."
             raise ValueError(msg)
@@ -175,10 +189,12 @@ class Partition:
 
     @property
     def unsaved_files(self):
+        """List of files not yet generated."""
         files = set(self.file_names) - set(self.saved_files)
         return [file for file in self.file_names if file in files]
 
     def generate_files(self, files_to_generate=None):
+        """Generate files with regridding information."""
         if files_to_generate is None:
             files = self.unsaved_files
         else:
@@ -193,11 +209,14 @@ class Partition:
             tgt = self.tgt
             regridder = self.scheme.regridder(src, tgt)
             weights = regridder.regridder.weight_matrix
-            regridder = PartialRegridder(src, self.tgt, src_block, None, weights, self.scheme)
+            regridder = PartialRegridder(
+                src, self.tgt, src_block, None, weights, self.scheme
+            )
             save_regridder(regridder, file, allow_partial=True)
             self.saved_files.append(file)
 
     def apply_regridders(self, cube, allow_incomplete=False):
+        """Apply the saved regridders to a cube."""
         # for each target chunk, iterate through each associated regridder
         # for now, assume one target chunk
         if not allow_incomplete and len(self.unsaved_files) != 0:
@@ -221,4 +240,6 @@ class Partition:
                 else:
                     current_result += next_result
 
-        return next_regridder.finish_regridding(cube_chunk, current_weights, current_result)
+        return next_regridder.finish_regridding(
+            cube_chunk, current_weights, current_result
+        )

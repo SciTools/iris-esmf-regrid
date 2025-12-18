@@ -14,14 +14,21 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
 
+
 def test_Partition(tmp_path):
     src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
-    src.data = np.arange(150*500).reshape([500, 150])
+    src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
-    chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
 
     partition = Partition(src, tgt, scheme, files, explicit_src_blocks=chunks)
 
@@ -32,9 +39,10 @@ def test_Partition(tmp_path):
     assert np.allclose(result.data, expected.data)
     assert result == expected
 
+
 def test_Partition_block_api(tmp_path):
     src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
-    src.data = np.arange(150*500).reshape([500, 150])
+    src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
@@ -42,31 +50,55 @@ def test_Partition_block_api(tmp_path):
     num_src_chunks = (5, 1)
     partition = Partition(src, tgt, scheme, files, num_src_chunks=num_src_chunks)
 
-    expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    expected_chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
     assert partition.src_blocks == expected_chunks
 
     src_chunks = (100, 150)
     partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
-    expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    expected_chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
     assert partition.src_blocks == expected_chunks
-
 
     src_chunks = ((100, 100, 100, 100, 100), (150,))
     partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
-    expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    expected_chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
     assert partition.src_blocks == expected_chunks
 
     src.data = da.from_array(src.data, chunks=src_chunks)
     partition = Partition(src, tgt, scheme, files, use_dask_src_chunks=True)
 
-    expected_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    expected_chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
     assert partition.src_blocks == expected_chunks
+
 
 def test_Partition_mesh_src(tmp_path):
     src = _gridlike_mesh_cube(150, 500)
-    src.data = np.arange(150*500)
+    src.data = np.arange(150 * 500)
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
@@ -87,9 +119,10 @@ def test_Partition_mesh_src(tmp_path):
     # assert np.allclose(result.data, expected.data)
     # assert result == expected
 
+
 def test_Partition_curv_src(tmp_path):
     src = _curvilinear_cube(150, 500, (-180, 180), (-90, 90))
-    src.data = np.arange(150*500).reshape([500, 150])
+    src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
@@ -98,7 +131,13 @@ def test_Partition_curv_src(tmp_path):
     src_chunks = (100, 150)
     partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
-    expected_src_chunks = [[[0, 100], [0, 150]], [[100, 200], [0, 150]], [[200, 300], [0, 150]], [[300, 400], [0, 150]], [[400, 500], [0, 150]]]
+    expected_src_chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
     assert partition.src_blocks == expected_src_chunks
 
     partition.generate_files()
