@@ -97,7 +97,7 @@ def _make_full_cubes(src_rectilinear=True, tgt_rectilinear=True):
     if src_rectilinear:
         src_func = partial(_grid_cube, circular=True)
     else:
-        src_func = _curvilinear_cube
+        tgt_func = _curvilinear_cube
     if tgt_rectilinear:
         src_func = partial(_grid_cube, circular=True)
     else:
