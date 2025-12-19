@@ -1,5 +1,7 @@
 """Unit tests for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`."""
 
+from functools import partial
+
 import dask.array as da
 from iris.coord_systems import RotatedGeogCS
 from iris.coords import AuxCoord, DimCoord
@@ -93,11 +95,11 @@ def _make_full_cubes(src_rectilinear=True, tgt_rectilinear=True):
     lat_bounds = (-90, 90)
 
     if src_rectilinear:
-        src_func = _grid_cube
+        src_func = partial(_grid_cube, circular=True)
     else:
         src_func = _curvilinear_cube
     if tgt_rectilinear:
-        tgt_func = _grid_cube
+        src_func = partial(_grid_cube, circular=True)
     else:
         tgt_func = _curvilinear_cube
     src_grid = src_func(
