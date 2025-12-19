@@ -26,4 +26,4 @@ else:
 from .constants import Constants, check_method, check_norm
 from .schemes import *
 
-__version__ = "0.13.1"
+__version__ = "0.14.dev0"
