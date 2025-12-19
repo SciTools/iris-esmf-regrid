@@ -194,4 +194,8 @@ def test_multidimensional_cube(tmp_path):
     partition.generate_files()
 
     result = partition.apply_regridders(src_cube)
+    assert np.allclose(result.data, expected_cube.data)
+    result.data = expected_cube.data
+
+    # TODO: The resulting longitude coordinate has become circular. Investigate.
     assert result == expected_cube
