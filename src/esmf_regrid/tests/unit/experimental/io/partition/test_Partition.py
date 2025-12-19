@@ -13,6 +13,9 @@ from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
 from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
     _gridlike_mesh_cube,
 )
+from esmf_regrid.tests.unit.schemes.test_regrid_rectilinear_to_rectilinear import (
+    _make_full_cubes,
+)
 
 
 def test_Partition(tmp_path):
@@ -181,5 +184,14 @@ def test_conflicting_chunks(tmp_path):
 
 def test_multidimensional_cube(tmp_path):
     """Test Partition class when the source has a multidimensional cube."""
-    #TODO: add test.
-    pass
+    src_cube, tgt_grid, expected_cube = _make_full_cubes()
+    files = [tmp_path / f"partial_{x}.nc" for x in range(4)]
+    scheme = ESMFAreaWeighted(mdtol=1)
+    chunks = (2,3)
+
+    partition = Partition(src_cube, tgt_grid, scheme, files, src_chunks=chunks)
+
+    partition.generate_files()
+
+    result = partition.apply_regridders(src_cube)
+    assert result == expected_cube
