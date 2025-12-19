@@ -180,6 +180,7 @@ ignore = [
     "ANN202",
     "ANN204",
 
+    "B905",  # Zip strictness should be explicit
     "D104",  # Misssing docstring
     "E501",  # Line too long
     "ERA001",  # Commented out code
@@ -297,5 +298,5 @@ convention = "numpy"
 [tool.ruff.lint.pylint]
 # TODO: refactor to reduce complexity, if possible
 max-args = 10
-max-branches = 21
+max-branches = 22
 max-statements = 110
