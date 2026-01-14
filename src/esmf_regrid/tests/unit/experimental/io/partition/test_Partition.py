@@ -26,6 +26,7 @@ def test_Partition(tmp_path):
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
+
     blocks = [
         [[0, 100], [0, 150]],
         [[100, 200], [0, 150]],
@@ -33,7 +34,6 @@ def test_Partition(tmp_path):
         [[300, 400], [0, 150]],
         [[400, 500], [0, 150]],
     ]
-
     partition = Partition(src, tgt, scheme, files, explicit_src_blocks=blocks)
 
     partition.generate_files()
@@ -51,6 +51,7 @@ def test_Partition_block_api(tmp_path):
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
+
     num_src_chunks = (5, 1)
     partition = Partition(src, tgt, scheme, files, num_src_chunks=num_src_chunks)
 
@@ -201,3 +202,42 @@ def test_multidimensional_cube(tmp_path):
     # Check metadata and coords.
     result.data = expected_cube.data
     assert result == expected_cube
+
+def test_save_incomplete(tmp_path):
+    """Test Partition class when a limited number of files are saved."""
+    src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
+    tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
+
+    files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
+    src_chunks = (100, 150)
+    scheme = ESMFAreaWeighted(mdtol=1)
+    num_initial_chunks = 3
+    expected_files = files[:num_initial_chunks]
+
+    partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
+    with pytest.raises(OSError):
+        _ = partition.apply_regridders(src, allow_incomplete=True)
+
+    partition.generate_files(files_to_generate=num_initial_chunks)
+    assert partition.saved_files == expected_files
+
+    expected_array_partial = np.ma.zeros([36, 16])
+    expected_array_partial[22:] = np.ma.masked
+
+    with pytest.raises(OSError):
+        _ = partition.apply_regridders(src)
+    partial_result = partition.apply_regridders(src, allow_incomplete=True)
+    assert np.ma.allclose(partial_result.data, expected_array_partial)
+
+    loaded_partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks, saved_files=expected_files)
+
+    with pytest.raises(OSError):
+        _ = loaded_partition.apply_regridders(src)
+    partial_result_2 = partition.apply_regridders(src, allow_incomplete=True)
+    assert np.ma.allclose(partial_result_2.data, expected_array_partial)
+
+    loaded_partition.generate_files()
+
+    result = loaded_partition.apply_regridders(src)
+    expected_array = np.ma.zeros([36, 16])
+    assert np.ma.allclose(result.data, expected_array)

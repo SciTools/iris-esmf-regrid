@@ -105,11 +105,11 @@ class Partition:
             A list of file names to save/load parts of the regridder to/from.
         use_dask_src_chunks : bool, default=False
             If true, partition using the same chunks from the source cube.
-        src_chunks : numpy array, tuple of int or str, default=None
+        src_chunks : numpy array, tuple of int or tuple of tuple of int, default=None
             Specify the size of blocks to use to divide up the cube. Dimensions are specified
             in y,x axis order. If `src_chunks` is a tuple of int, each integer describes
-            the maximum size of a block in that dimension. If `src_chunks` is a tuple of int,
-            each tuple describes the size of each successive block in that dimension. These
+            the maximum size of a block in that dimension. If `src_chunks` is a tuple of tuples,
+            each sub-tuple describes the size of each successive block in that dimension. These
             block sizes should add up to the total size of that dimension or else an error
             is raised.
         num_src_chunks : tuple of int
@@ -118,10 +118,6 @@ class Partition:
             be divided into.
         explicit_src_blocks : arraylike NxMx2
             Explicitly specify the bounds of each block in the partition.
-        # tgt_chunks : ???, default=None
-        #     ???
-        # num_tgt_chunks : tuple of int
-        #     ???
         auto_generate : bool, default=False
             When true, start generating files on initialisation.
         saved_files : iterable of str
@@ -194,7 +190,13 @@ class Partition:
         return [file for file in self.file_names if file in files]
 
     def generate_files(self, files_to_generate=None):
-        """Generate files with regridding information."""
+        """Generate files with regridding information.
+
+        Parameters
+        ----------
+        files_to_generate : int, default=None
+            Specify the number of files to generate, default behaviour is to generate all files.
+        """
         if files_to_generate is None:
             files = self.unsaved_files
         else:
@@ -216,11 +218,21 @@ class Partition:
             self.saved_files.append(file)
 
     def apply_regridders(self, cube, allow_incomplete=False):
-        """Apply the saved regridders to a cube."""
+        """Apply the saved regridders to a cube.
+
+        Parameters
+        ----------
+        allow_incomplete : bool, default=False
+            If False, raise an error if not all files have been generated. If True, perform
+            regridding using the files which have been generated.
+        """
         # for each target chunk, iterate through each associated regridder
         # for now, assume one target chunk
+        if len(self.unsaved_files) == 0:
+            msg = "No files have been generated."
+            raise OSError(msg)
         if not allow_incomplete and len(self.unsaved_files) != 0:
-            msg = "Not all files have been constructed."
+            msg = "Not all files have been generated."
             raise OSError(msg)
         current_result = None
         current_weights = None
