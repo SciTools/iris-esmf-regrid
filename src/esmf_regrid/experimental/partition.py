@@ -155,9 +155,9 @@ class Partition:
             msg = "Number of source blocks does not match number of file names."
             raise ValueError(msg)
         # This will be controllable in future
-        tgt_chunks = None
-        self.tgt_chunks = tgt_chunks
-        if tgt_chunks is not None:
+        tgt_blocks = None
+        self.tgt_blocks = tgt_blocks
+        if tgt_blocks is not None:
             msg = "Target chunking not yet implemented."
             raise NotImplementedError(msg)
 
@@ -228,7 +228,7 @@ class Partition:
         """
         # for each target chunk, iterate through each associated regridder
         # for now, assume one target chunk
-        if len(self.unsaved_files) == 0:
+        if len(self.saved_files) == 0:
             msg = "No files have been generated."
             raise OSError(msg)
         if not allow_incomplete and len(self.unsaved_files) != 0:
