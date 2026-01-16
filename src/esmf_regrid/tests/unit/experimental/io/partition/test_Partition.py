@@ -173,9 +173,18 @@ def test_conflicting_chunks(tmp_path):
     ]
 
     with pytest.raises(ValueError):
-        _ = Partition(src, tgt, scheme, files, src_chunks=src_chunks, num_src_chunks=num_src_chunks)
+        _ = Partition(
+            src,
+            tgt,
+            scheme,
+            files,
+            src_chunks=src_chunks,
+            num_src_chunks=num_src_chunks,
+        )
     with pytest.raises(ValueError):
-        _ = Partition(src, tgt, scheme, files, src_chunks=src_chunks, explicit_src_blocks=blocks)
+        _ = Partition(
+            src, tgt, scheme, files, src_chunks=src_chunks, explicit_src_blocks=blocks
+        )
     with pytest.raises(ValueError):
         _ = Partition(src, tgt, scheme, files)
     with pytest.raises(TypeError):
@@ -183,12 +192,13 @@ def test_conflicting_chunks(tmp_path):
     with pytest.raises(ValueError):
         _ = Partition(src, tgt, scheme, files[:-1], src_chunks=src_chunks)
 
+
 def test_multidimensional_cube(tmp_path):
     """Test Partition class when the source has a multidimensional cube."""
     src_cube, tgt_grid, expected_cube = _make_full_cubes()
     files = [tmp_path / f"partial_{x}.nc" for x in range(4)]
     scheme = ESMFAreaWeighted(mdtol=1)
-    chunks = (2,3)
+    chunks = (2, 3)
 
     partition = Partition(src_cube, tgt_grid, scheme, files, src_chunks=chunks)
 
@@ -202,6 +212,7 @@ def test_multidimensional_cube(tmp_path):
     # Check metadata and coords.
     result.data = expected_cube.data
     assert result == expected_cube
+
 
 def test_save_incomplete(tmp_path):
     """Test Partition class when a limited number of files are saved."""
@@ -229,7 +240,9 @@ def test_save_incomplete(tmp_path):
     partial_result = partition.apply_regridders(src, allow_incomplete=True)
     assert np.ma.allclose(partial_result.data, expected_array_partial)
 
-    loaded_partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks, saved_files=expected_files)
+    loaded_partition = Partition(
+        src, tgt, scheme, files, src_chunks=src_chunks, saved_files=expected_files
+    )
 
     with pytest.raises(OSError):
         _ = loaded_partition.apply_regridders(src)
@@ -242,12 +255,13 @@ def test_save_incomplete(tmp_path):
     expected_array = np.ma.zeros([36, 16])
     assert np.ma.allclose(result.data, expected_array)
 
+
 def test_nearest_invalid(tmp_path):
     """Test Partition class when initialised with an invalid scheme."""
-    src_cube, tgt_grid, expected_cube = _make_full_cubes()
+    src_cube, tgt_grid, _ = _make_full_cubes()
     files = [tmp_path / f"partial_{x}.nc" for x in range(4)]
     scheme = ESMFNearest()
-    chunks = (2,3)
+    chunks = (2, 3)
 
     with pytest.raises(NotImplementedError):
         _ = Partition(src_cube, tgt_grid, scheme, files, src_chunks=chunks)

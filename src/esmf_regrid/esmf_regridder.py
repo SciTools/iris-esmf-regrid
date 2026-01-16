@@ -250,5 +250,7 @@ class Regridder:
             )
             raise ValueError(e_msg)
         tgt_weights, tgt_data = self._gen_weights_and_data(src_array)
-        tgt_array = self._regrid_from_weights_and_data(tgt_weights, tgt_data, norm_type=norm_type, mdtol=mdtol)
+        tgt_array = self._regrid_from_weights_and_data(
+            tgt_weights, tgt_data, norm_type=norm_type, mdtol=mdtol
+        )
         return tgt_array

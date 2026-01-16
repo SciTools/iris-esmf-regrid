@@ -81,6 +81,7 @@ def _add_metadata(cube):
     result.add_aux_coord(scalar_time)
     return result
 
+
 def _make_full_cubes(src_rectilinear=True, tgt_rectilinear=True):
     h = 2
     t = 4
@@ -142,9 +143,8 @@ def _make_full_cubes(src_rectilinear=True, tgt_rectilinear=True):
 
     expected_data = np.empty([h, tgt_lats, t, tgt_lons, e])
     expected_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-                       :, np.newaxis, :, np.newaxis, :
-                       ]
-
+        :, np.newaxis, :, np.newaxis, :
+    ]
 
     expected_cube = Cube(expected_data)
     if tgt_rectilinear:
@@ -167,7 +167,9 @@ def test_extra_dims():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    src_cube, tgt_grid, expected_cube = _make_full_cubes(src_rectilinear=True, tgt_rectilinear=True)
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=True, tgt_rectilinear=True
+    )
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
@@ -291,7 +293,9 @@ def test_extra_dims_curvilinear():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    src_cube, tgt_grid, expected_cube = _make_full_cubes(src_rectilinear=False, tgt_rectilinear=False)
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=False, tgt_rectilinear=False
+    )
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
@@ -309,7 +313,9 @@ def test_extra_dims_curvilinear_to_rectilinear():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    src_cube, tgt_grid, expected_cube = _make_full_cubes(src_rectilinear=False, tgt_rectilinear=True)
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=False, tgt_rectilinear=True
+    )
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
@@ -327,7 +333,9 @@ def test_extra_dims_rectilinear_to_curvilinear():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    src_cube, tgt_grid, expected_cube = _make_full_cubes(src_rectilinear=True, tgt_rectilinear=False)
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=True, tgt_rectilinear=False
+    )
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
