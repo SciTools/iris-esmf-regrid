@@ -17,6 +17,8 @@ from esmf_regrid.tests.unit.schemes.test_regrid_rectilinear_to_rectilinear impor
     _make_full_cubes,
 )
 
+from src.esmf_regrid import ESMFNearest
+
 
 def test_Partition(tmp_path):
     """Test basic implementation of Partition class."""
@@ -241,3 +243,13 @@ def test_save_incomplete(tmp_path):
     result = loaded_partition.apply_regridders(src)
     expected_array = np.ma.zeros([36, 16])
     assert np.ma.allclose(result.data, expected_array)
+
+def test_nearest_invalid(tmp_path):
+    """Test Partition class when initialised with an invalid scheme."""
+    src_cube, tgt_grid, expected_cube = _make_full_cubes()
+    files = [tmp_path / f"partial_{x}.nc" for x in range(4)]
+    scheme = ESMFNearest()
+    chunks = (2,3)
+
+    with pytest.raises(NotImplementedError):
+        _ = Partition(src_cube, tgt_grid, scheme, files, src_chunks=chunks)
