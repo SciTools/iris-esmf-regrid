@@ -4,7 +4,7 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from esmf_regrid import ESMFAreaWeighted
+from esmf_regrid import ESMFAreaWeighted, ESMFNearest
 from esmf_regrid.experimental.partition import Partition
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _curvilinear_cube,
@@ -16,8 +16,6 @@ from esmf_regrid.tests.unit.schemes.test__mesh_to_MeshInfo import (
 from esmf_regrid.tests.unit.schemes.test_regrid_rectilinear_to_rectilinear import (
     _make_full_cubes,
 )
-
-from src.esmf_regrid import ESMFNearest
 
 
 def test_Partition(tmp_path):
