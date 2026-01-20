@@ -81,8 +81,6 @@ class Partition:
         src_chunks=None,
         num_src_chunks=None,
         explicit_src_blocks=None,
-        # tgt_chunks=None,
-        # num_tgt_chunks=None,
         auto_generate=False,
         saved_files=None,
     ):
