@@ -64,8 +64,8 @@ This is done using a `Partition` object.
 .. note:: Currently, it is only possible to partition regridding when the source is
           a large grid and the target is small enough to fit in memory.
 
-A `Partition` is made by specifying a source, a target a list of files to save
-the parts of the regridder and a way to divide the source grid into blocks::
+A `Partition` is made by specifying a source, a target, a list of files, and a way
+to divide the source grid into blocks whose regridders are saved to those files::
 
     from iris.util import make_gridcube
 
@@ -117,7 +117,7 @@ method.
 
 Once the files for a regridder have been generated, they can be used to reconstruct
 the partition object in a later session. This is done by passing in the list of
-files which have already been generated.::
+files which have already been generated::
 
     # Use the same arguments which constructed the original partition.
     source_cube = make_gridcube(nx=800, ny=800)
