@@ -173,8 +173,8 @@ class Partition:
         """Return a representation of the class."""
         result = (
             f"Partition("
-            f"src={repr(self.src)}, "
-            f"tgt={repr(self.tgt)}, "
+            f"src={self.src!r}, "
+            f"tgt={self.tgt!r}, "
             f"scheme={self.scheme}, "
             f"num file_names={len(self.file_names)},"
             f"num saved_files={len(self.saved_files)})"

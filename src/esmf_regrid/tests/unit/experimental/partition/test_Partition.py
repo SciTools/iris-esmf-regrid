@@ -266,6 +266,7 @@ def test_nearest_invalid(tmp_path):
     with pytest.raises(NotImplementedError):
         _ = Partition(src_cube, tgt_grid, scheme, files, src_chunks=chunks)
 
+
 def test_Partition_repr(tmp_path):
     """Test repr of Partition instance."""
     src_cube, tgt_grid, _ = _make_full_cubes()
@@ -275,9 +276,11 @@ def test_Partition_repr(tmp_path):
 
     partition = Partition(src_cube, tgt_grid, scheme, files, src_chunks=chunks)
 
-    expected_repr = ("Partition(src=<iris 'Cube' of air_temperature / (K) "
-                     "(height: 2; latitude: 3; time: 4; longitude: 5; -- : 6)>, "
-                     "tgt=<iris 'Cube' of unknown / (unknown) (latitude: 5; longitude: 3)>, "
-                     "scheme=ESMFAreaWeighted(mdtol=0, use_src_mask=False, use_tgt_mask=False, esmf_args={}), "
-                     "num file_names=4,num saved_files=0)")
+    expected_repr = (
+        "Partition(src=<iris 'Cube' of air_temperature / (K) "
+        "(height: 2; latitude: 3; time: 4; longitude: 5; -- : 6)>, "
+        "tgt=<iris 'Cube' of unknown / (unknown) (latitude: 5; longitude: 3)>, "
+        "scheme=ESMFAreaWeighted(mdtol=0, use_src_mask=False, use_tgt_mask=False, esmf_args={}), "
+        "num file_names=4,num saved_files=0)"
+    )
     assert repr(partition) == expected_repr
