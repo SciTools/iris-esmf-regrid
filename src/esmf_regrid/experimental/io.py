@@ -228,6 +228,8 @@ def save_regridder(rg, filename, allow_partial=False):
         The regridder instance to save.
     filename : str
         The file name to save to.
+    allow_partial : bool, default=False
+        If True, allow the saving of :class:`~esmf_regrid.experimental._partial.PartialRegridder` instances.
     """
     regridder_type = rg.__class__.__name__
 
@@ -354,6 +356,8 @@ def load_regridder(filename, allow_partial=False):
     ----------
     filename : str
         The file name to load from.
+    allow_partial : bool, default=False
+        If True, allow the loading of :class:`~esmf_regrid.experimental._partial.PartialRegridder` instances.
 
     Returns
     -------
