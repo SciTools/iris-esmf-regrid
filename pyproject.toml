@@ -52,6 +52,7 @@ addopts = ["-ra", "-v", "--doctest-modules", "--strict-config", "--strict-marker
 minversion = "6.0"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
 testpaths = "src/esmf_regrid"
+log_level = "INFO"
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = ["default"]
