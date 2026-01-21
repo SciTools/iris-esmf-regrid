@@ -106,7 +106,8 @@ method.
           needs to be split into very many files, it is possible to generate only
           a portion of those files within a given session by passing the number
           of files to generate as an argument to the regridder. It is possible to
-          generate the remaining files in a different python session.::
+          generate the remaining files in a different python session.
+::
 
     # Generate partial regridders and save them to the list of files.
     partition.generate_files()
