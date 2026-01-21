@@ -1500,9 +1500,9 @@ class _ESMFRegridder:
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source grid.
+            The :class:`~iris.cube.Cube` providing the source grid.
         tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
-            The rectilinear :class:`~iris.cube.Cube` providing the target grid.
+            The :class:`~iris.cube.Cube` providing the target grid.
         method : :class:`Constants.Method`
             The method to be used to calculate weights.
         mdtol : float, default=None
@@ -1686,11 +1686,11 @@ class ESMFAreaWeightedRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source.
+            The :class:`~iris.cube.Cube` providing the source.
             If this cube has a grid defined by latitude/longitude coordinates, those
             coordinates must have bounds.
         tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
-            The unstructured :class:`~iris.cube.Cube`or
+            The :class:`~iris.cube.Cube`or
             :class:`~iris.mesh.MeshXY` defining the target.
             If this cube has a grid defined by latitude/longitude coordinates, those
             coordinates must have bounds.
@@ -1773,9 +1773,9 @@ class ESMFBilinearRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source.
+            The :class:`~iris.cube.Cube` providing the source.
         tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
-            The unstructured :class:`~iris.cube.Cube`or
+            The :class:`~iris.cube.Cube`or
             :class:`~iris.mesh.MeshXY` defining the target.
         mdtol : float, default=0
             Tolerance of missing data. The value returned in each element of
@@ -1847,9 +1847,9 @@ class ESMFNearestRegridder(_ESMFRegridder):
         Parameters
         ----------
         src : :class:`iris.cube.Cube`
-            The rectilinear :class:`~iris.cube.Cube` providing the source.
+            The :class:`~iris.cube.Cube` providing the source.
         tgt : :class:`iris.cube.Cube` or :class:`iris.mesh.MeshXY`
-            The unstructured :class:`~iris.cube.Cube`or
+            The :class:`~iris.cube.Cube`or
             :class:`~iris.mesh.MeshXY` defining the target.
         precomputed_weights : :class:`scipy.sparse.spmatrix`, optional
             If ``None``, :mod:`esmpy` will be used to

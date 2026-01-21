@@ -210,7 +210,7 @@ class Partition:
             regridder = self.scheme.regridder(src, tgt)
             weights = regridder.regridder.weight_matrix
             regridder = PartialRegridder(
-                src, self.tgt, src_block, None, weights, self.scheme
+                src, tgt, src_block, None, weights, self.scheme
             )
             save_regridder(regridder, file, allow_partial=True)
             self.saved_files.append(file)
