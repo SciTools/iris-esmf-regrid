@@ -60,18 +60,10 @@ class PartialRegridder(_ESMFRegridder):
     def partial_regrid(self, src):
         """Perform the first half of regridding, generating weights and data."""
         dims = self._get_cube_dims(src)
-        num_out_dims = self.regridder.tgt.dims
         num_dims = len(dims)
         standard_in_dims = [-1, -2][:num_dims]
         data = np.moveaxis(src.data, dims, standard_in_dims)
         result = self.regridder._gen_weights_and_data(data)
-
-        # standard_out_dims = [-1, -2][:num_out_dims]
-        # if num_dims == 2 and num_out_dims == 1:
-        #     dims = [min(dims)]
-        # if num_dims == 1 and num_out_dims == 2:
-        #     dims = [dims[0] + 1, dims[0]]
-        # result = tuple(np.moveaxis(r, standard_out_dims, dims) for r in result)
         return result
 
     def finish_regridding(self, src_cube, weights, data, extra):

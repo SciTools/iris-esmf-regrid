@@ -188,9 +188,6 @@ class Regridder:
 
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = weight_matrix @ src_inverted_mask
-
-        # tgt_data = self.tgt._matrix_to_array(flat_tgt, extra_shape)
-        # tgt_weights = self.tgt._matrix_to_array(weight_sums, extra_shape)
         return weight_sums, flat_tgt, extra_shape
 
     def _regrid_from_weights_and_data(
