@@ -189,12 +189,12 @@ class Regridder:
         src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = weight_matrix @ src_inverted_mask
 
-        tgt_data = self.tgt._matrix_to_array(flat_tgt, extra_shape)
-        tgt_weights = self.tgt._matrix_to_array(weight_sums, extra_shape)
-        return tgt_weights, tgt_data
+        # tgt_data = self.tgt._matrix_to_array(flat_tgt, extra_shape)
+        # tgt_weights = self.tgt._matrix_to_array(weight_sums, extra_shape)
+        return weight_sums, flat_tgt, extra_shape
 
     def _regrid_from_weights_and_data(
-        self, tgt_weights, tgt_data, norm_type=Constants.NormType.FRACAREA, mdtol=1
+        self, tgt_weights, tgt_data, extra, norm_type=Constants.NormType.FRACAREA, mdtol=1
     ):
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
@@ -210,6 +210,7 @@ class Regridder:
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         tgt_array = tgt_data * normalisations
+        tgt_array = self.tgt._matrix_to_array(tgt_array, extra)
         return tgt_array
 
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
@@ -249,8 +250,8 @@ class Regridder:
                 f"got an array with shape ending in {main_shape}."
             )
             raise ValueError(e_msg)
-        tgt_weights, tgt_data = self._gen_weights_and_data(src_array)
+        tgt_weights, tgt_data, extra = self._gen_weights_and_data(src_array)
         tgt_array = self._regrid_from_weights_and_data(
-            tgt_weights, tgt_data, norm_type=norm_type, mdtol=mdtol
+            tgt_weights, tgt_data, extra, norm_type=norm_type, mdtol=mdtol
         )
         return tgt_array

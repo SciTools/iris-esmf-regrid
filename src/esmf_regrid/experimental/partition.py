@@ -240,7 +240,7 @@ class Partition:
             if file in files:
                 next_regridder = load_regridder(file, allow_partial=True)
                 cube_chunk = _get_chunk(cube, chunk)
-                next_weights, next_result = next_regridder.partial_regrid(cube_chunk)
+                next_weights, next_result, extra = next_regridder.partial_regrid(cube_chunk)
                 if current_weights is None:
                     current_weights = next_weights
                 else:
@@ -251,5 +251,5 @@ class Partition:
                     current_result += next_result
 
         return next_regridder.finish_regridding(
-            cube_chunk, current_weights, current_result
+            cube_chunk, current_weights, current_result, extra,
         )
