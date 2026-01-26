@@ -37,7 +37,7 @@ Reference
    installing
    userguide/index
    developers_guide/index
-   _api_generated/modules
+   API <_api_generated/modules>
    whatsnew/index
 
 .. _Iris: https://github.com/SciTools/iris
