@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
+## [Unreleased]
+
+### Added
+
+- [PR#622](https://github.com/SciTools/iris-esmf-regrid/pull/622)
+  Add support for Python 3.14.
+  [@trexfeathers](https://github.com/trexfeathers)
+
+### Removed
+
+- [PR#622](https://github.com/SciTools/iris-esmf-regrid/pull/622)
+  Remove support for Python 3.11.
+  [@trexfeathers](https://github.com/trexfeathers)
+
 ## [0.13.1] - 2025-12-19
 
 ### Changed
