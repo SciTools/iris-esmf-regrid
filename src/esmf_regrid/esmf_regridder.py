@@ -191,7 +191,12 @@ class Regridder:
         return weight_sums, flat_tgt, extra_shape
 
     def _regrid_from_weights_and_data(
-        self, tgt_weights, tgt_data, extra, norm_type=Constants.NormType.FRACAREA, mdtol=1
+        self,
+        tgt_weights,
+        tgt_data,
+        extra,
+        norm_type=Constants.NormType.FRACAREA,
+        mdtol=1,
     ):
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
