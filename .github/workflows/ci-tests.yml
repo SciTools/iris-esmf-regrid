@@ -48,9 +48,9 @@ jobs:
       fail-fast: false
       matrix:
         os: ["ubuntu-latest"]
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14"]
         include:
-          - python-version: "3.11"
+          - python-version: "3.12"
             coverage: true
 
     steps:
@@ -63,7 +63,7 @@ jobs:
 
       - name: Cache environment directories
         id: cache-env-dir
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .nox
@@ -72,7 +72,7 @@ jobs:
 
       - name: Cache test data directory
         id: cache-test-data
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ${{ env.IRIS_TEST_DATA_PATH }}

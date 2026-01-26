@@ -18,9 +18,9 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 description = "Iris regridding scheme using ESMF"
@@ -37,7 +37,7 @@ keywords = [
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 name = "esmf_regrid"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 [project.urls]
 Code = "https://github.com/SciTools/iris-esmf-regrid"
@@ -52,6 +52,7 @@ addopts = ["-ra", "-v", "--doctest-modules", "--strict-config", "--strict-marker
 minversion = "6.0"
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS NUMBER"
 testpaths = "src/esmf_regrid"
+log_level = "INFO"
 log_cli_level = "INFO"
 xfail_strict = true
 filterwarnings = ["default"]

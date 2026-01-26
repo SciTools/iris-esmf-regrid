@@ -22,7 +22,7 @@ nox.options.reuse_existing_virtualenvs = False
 PACKAGE = "esmf_regrid"
 
 #: Python versions we can run sessions under
-_PY_VERSIONS_ALL = ["3.11", "3.12", "3.13"]
+_PY_VERSIONS_ALL = ["3.12", "3.13", "3.14"]
 
 #: GHA-CI environment variable hook.
 PY_VER = os.environ.get("PY_VER", _PY_VERSIONS_ALL)
