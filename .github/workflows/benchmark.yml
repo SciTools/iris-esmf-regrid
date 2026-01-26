@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PY_VER: "3.12"
+      PY_VER: "3.14"
       IRIS_TEST_DATA_LOC_PATH: benchmarks
       IRIS_TEST_DATA_PATH: benchmarks/iris-test-data
       IRIS_TEST_DATA_VERSION: "2.19"
