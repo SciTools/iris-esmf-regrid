@@ -184,8 +184,7 @@ class Partition:
     @property
     def unsaved_files(self):
         """List of files not yet generated."""
-        files = set(self.file_names) - set(self.saved_files)
-        return [file for file in self.file_names if file in files]
+        return [file for file in self.file_names if file not in self.saved_files]
 
     def generate_files(self, files_to_generate=None):
         """Generate files with regridding information.
