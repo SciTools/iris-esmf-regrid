@@ -3,10 +3,10 @@
 import numpy as np
 
 from esmf_regrid.schemes import (
-    _create_cube,
-    _ESMFRegridder,
     GridRecord,
     MeshRecord,
+    _create_cube,
+    _ESMFRegridder,
 )
 
 
@@ -109,7 +109,7 @@ class PartialRegridder(_ESMFRegridder):
             out_dims = 1
         else:
             msg = "Unrecognised target information."
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         result_cube = _create_cube(
             result_data, src_cube, old_dims, tgt_coords, out_dims

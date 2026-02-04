@@ -14,7 +14,7 @@ def _get_chunk(cube, sl):
     else:
         grid_dims = (cube.mesh_dim(),)
     full_slice = [np.s_[:]] * len(cube.shape)
-    for s, d in zip(sl, grid_dims):
+    for s, d in zip(sl, grid_dims, strict=True):
         full_slice[d] = np.s_[s[0] : s[1]]
     return cube[*full_slice]
 
@@ -56,16 +56,16 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_blocks):
             raise ValueError(msg)
             # TODO: This is currently blocked by the fact that slicing an Iris cube on its mesh dimension
             #  does not currently yield another cube with a mesh. When this is fixed, the following
-            #  code can be uncommented.
+            #  code can be uncommented and the noqa on the following line can be removed.
             # explicit_blocks = [
             #     [[int(lower), int(upper)]]
-            #     for lower, upper in zip(bounds[0][:-1], bounds[0][1:])
+            #     for lower, upper in zip(bounds[0][:-1], bounds[0][1:], strict=True)
             # ]
-        elif len(bounds) == 2:
+        elif len(bounds) == 2:  # noqa: RET506
             explicit_blocks = [
                 [[int(ly), int(uy)], [int(lx), int(ux)]]
-                for ly, uy in zip(bounds[0][:-1], bounds[0][1:])
-                for lx, ux in zip(bounds[1][:-1], bounds[1][1:])
+                for ly, uy in zip(bounds[0][:-1], bounds[0][1:], strict=True)
+                for lx, ux in zip(bounds[1][:-1], bounds[1][1:], strict=True)
             ]
         else:
             msg = "Chunks must not exceed two dimensions."
@@ -170,7 +170,7 @@ class Partition:
             raise NotImplementedError(msg)
 
         # Note: this may need to become more sophisticated when both src and tgt are large
-        self.file_block_dict = dict(zip(self.file_names, self.src_blocks))
+        self.file_block_dict = dict(zip(self.file_names, self.src_blocks, strict=True))
 
         if saved_files is None:
             self.saved_files = []
