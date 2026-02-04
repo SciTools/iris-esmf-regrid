@@ -19,11 +19,11 @@ def _get_chunk(cube, sl):
     return cube[*full_slice]
 
 
-def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
+def _determine_blocks(shape, chunks, num_chunks, explicit_blocks):
     which_inputs = (
         chunks is not None,
         num_chunks is not None,
-        explicit_chunks is not None,
+        explicit_blocks is not None,
     )
     if sum(which_inputs) == 0:
         msg = "Partition blocks must must be specified by either chunks, num_chunks, or explicit_chunks."
@@ -32,7 +32,7 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
         msg = "Potentially conflicting partition block definitions."
         raise ValueError(msg)
     if num_chunks is not None:
-        chunks = [s // n for s, n in zip(shape, num_chunks)]
+        chunks = [s // n for s, n in zip(shape, num_chunks, strict=True)]
         for chunk in chunks:
             if chunk == 0:
                 msg = "`num_chunks` cannot divide a dimension into more blocks than the size of that dimension."
@@ -40,24 +40,29 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
     if chunks is not None:
         if all(isinstance(x, int) for x in chunks):
             proper_chunks = []
-            for s, c in zip(shape, chunks):
+            for s, c in zip(shape, chunks, strict=True):
                 proper_chunk = [c] * (s // c)
                 if s % c != 0:
                     proper_chunk += [s % c]
                 proper_chunks.append(proper_chunk)
             chunks = proper_chunks
-        for s, chunk in zip(shape, chunks):
+        for s, chunk in zip(shape, chunks, strict=True):
             if sum(chunk) != s:
                 msg = "Chunks must sum to the size of their respective dimension."
                 raise ValueError(msg)
         bounds = [np.cumsum([0, *chunk]) for chunk in chunks]
         if len(bounds) == 1:
-            explicit_chunks = [
-                [[int(lower), int(upper)]]
-                for lower, upper in zip(bounds[0][:-1], bounds[0][1:])
-            ]
+            msg = "Chunks must have exactly two dimensions."
+            raise ValueError(msg)
+            # TODO: This is currently blocked by the fact that slicing an Iris cube on its mesh dimension
+            #  does not currently yield another cube with a mesh. When this is fixed, the following
+            #  code can be uncommented.
+            # explicit_blocks = [
+            #     [[int(lower), int(upper)]]
+            #     for lower, upper in zip(bounds[0][:-1], bounds[0][1:])
+            # ]
         elif len(bounds) == 2:
-            explicit_chunks = [
+            explicit_blocks = [
                 [[int(ly), int(uy)], [int(lx), int(ux)]]
                 for ly, uy in zip(bounds[0][:-1], bounds[0][1:])
                 for lx, ux in zip(bounds[1][:-1], bounds[1][1:])
@@ -65,7 +70,10 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_chunks):
         else:
             msg = "Chunks must not exceed two dimensions."
             raise ValueError(msg)
-    return explicit_chunks
+    if len(explicit_blocks[0]) != len(shape):
+        msg = "Dimensionality of blocks does not match the number of dimensions."
+        raise ValueError(msg)
+    return explicit_blocks
 
 
 class Partition:
@@ -107,9 +115,9 @@ class Partition:
             Specify the size of blocks to use to divide up the cube. Dimensions are specified
             in y,x axis order. If `src_chunks` is a tuple of int, each integer describes
             the maximum size of a block in that dimension. If `src_chunks` is a tuple of tuples,
-            each sub-tuple describes the size of each successive block in that dimension. These
-            block sizes should add up to the total size of that dimension or else an error
-            is raised.
+            each sub-tuple describes the size of each successive block in that dimension. The sum
+            of these block sizes in each of the sub-tuples should add up to the total size of that
+            dimension or else an error is raised.
         num_src_chunks : tuple of int
             Specify the number of blocks to use to divide up the cube. Dimensions are specified
             in y,x axis order. Each integer describes the number of blocks that dimension will
@@ -124,15 +132,17 @@ class Partition:
         if scheme._method == Constants.Method.NEAREST:
             msg = "The `Nearest` method is not implemented."
             raise NotImplementedError(msg)
-        if src.mesh is not None:
-            msg = "Partition does not yet support source meshes."
-            raise NotImplementedError(msg)
         # TODO: Extract a slice of the cube.
         self.src = src
         if src.mesh is None:
             grid_dims = _get_grid_dims(src)
         else:
-            grid_dims = (src.mesh_dim(),)
+            msg = "Partition does not yet support source meshes."
+            raise NotImplementedError(msg)
+            # TODO: This is currently blocked by the fact that slicing an Iris cube on its mesh dimension
+            #  does not currently yield another cube with a mesh. When this is fixed, the following
+            #  code can be uncommented.
+            # grid_dims = (src.mesh_dim(),)
         shape = tuple(src.shape[i] for i in grid_dims)
         self.tgt = tgt
         self.scheme = scheme
@@ -235,7 +245,7 @@ class Partition:
         current_weights = None
         files = self.saved_files
 
-        for file, chunk in zip(self.file_names, self.src_blocks):
+        for file, chunk in zip(self.file_names, self.src_blocks, strict=True):
             if file in files:
                 next_regridder = load_regridder(file, allow_partial=True)
                 cube_chunk = _get_chunk(cube, chunk)
@@ -251,9 +261,13 @@ class Partition:
                 else:
                     current_result += next_result
 
+        # NOTE: the final "finish_regridding" operation could be performed using any one
+        #  of the partial regridders,but the correct "corresponding" slice of the source
+        #  must be passed.
+        #  See :meth:`~esmf_regrid.experimental._partial.PartialRegridder.finish_regridding`.
         return next_regridder.finish_regridding(
-            cube_chunk,
+            cube_chunk,  # matches *this* partial regridder
             current_weights,
             current_result,
-            extra,
+            extra,  # should be *the same* for all the partial results
         )

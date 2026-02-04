@@ -155,6 +155,26 @@ def test_Partition_curv_src(tmp_path):
     assert result == expected
 
 
+def test_Partition_mesh_tgt(tmp_path):
+    """Test Partition class when the target has a mesh."""
+    src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
+    src.data = np.arange(150 * 500).reshape([500, 150])
+    tgt = _gridlike_mesh_cube(16, 36)
+
+    files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
+    scheme = ESMFAreaWeighted(mdtol=1)
+
+    src_chunks = (100, 150)
+    partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
+
+    partition.generate_files()
+
+    result = partition.apply_regridders(src)
+    expected = src.regrid(tgt, scheme)
+    assert np.allclose(result.data, expected.data)
+    assert result == expected
+
+
 def test_conflicting_chunks(tmp_path):
     """Test error handling of Partition class."""
     src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
