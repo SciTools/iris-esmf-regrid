@@ -20,7 +20,6 @@ from esmf_regrid.schemes import (
     ESMFAreaWeightedRegridder,
     ESMFBilinear,
     ESMFBilinearRegridder,
-    ESMFNearest,
     ESMFNearestRegridder,
     GridRecord,
     MeshRecord,
@@ -76,6 +75,7 @@ _ESMF_ENUM_ARGS = {
     "extrap_method": _EXTRAP_METHOD_DICT,
     "unmapped_action": _UNMAPPED_ACTION_DICT,
 }
+_ESMF_BOOL_ARGS = ["ignore_degenerate", "large_file"]
 
 
 def _add_mask_to_cube(mask, cube, name):
@@ -294,7 +294,7 @@ def save_regridder(rg, filename, allow_partial=False):
         if tgt_slice is None:
             tgt_slice = []
         tgt_slice_cube = Cube(
-            src_slice, long_name=_TGT_SLICE_NAME, var_name=_TGT_SLICE_NAME
+            tgt_slice, long_name=_TGT_SLICE_NAME, var_name=_TGT_SLICE_NAME
         )
         extra_cubes = [src_slice_cube, tgt_slice_cube]
 
@@ -416,11 +416,11 @@ def load_regridder(filename, allow_partial=False):
     mdtol = weights_cube.attributes[_MDTOL]
 
     if src_cube.coords(_SOURCE_MASK_NAME):
-        use_src_mask = src_cube.coord(_SOURCE_MASK_NAME).points
+        use_src_mask = src_cube.coord(_SOURCE_MASK_NAME).points.astype(bool)
     else:
         use_src_mask = False
     if tgt_cube.coords(_TARGET_MASK_NAME):
-        use_tgt_mask = tgt_cube.coord(_TARGET_MASK_NAME).points
+        use_tgt_mask = tgt_cube.coord(_TARGET_MASK_NAME).points.astype(bool)
     else:
         use_tgt_mask = False
 
@@ -433,6 +433,9 @@ def load_regridder(filename, allow_partial=False):
     for arg, arg_dict in _ESMF_ENUM_ARGS.items():
         if arg in esmf_args:
             esmf_args[arg] = arg_dict[esmf_args[arg]]
+    for arg in _ESMF_BOOL_ARGS:
+        if arg in esmf_args:
+            esmf_args[arg] = bool(esmf_args[arg])
 
     if scheme is GridToMeshESMFRegridder:
         resolution_keyword = _SOURCE_RESOLUTION
@@ -463,16 +466,21 @@ def load_regridder(filename, allow_partial=False):
             Constants.Method.BILINEAR: ESMFBilinear,
         }[method]
         mdtol = kwargs.pop(_MDTOL, None)
-        mdtol_dict = {}
+        sub_kwargs = {}
         if mdtol is not None:
-            mdtol_dict[_MDTOL] = mdtol
+            sub_kwargs[_MDTOL] = mdtol
         regridder = scheme(
             src_cube,
             tgt_cube,
             src_slice,
             tgt_slice,
             weight_matrix,
-            sub_scheme(**mdtol_dict),
+            sub_scheme(
+                use_src_mask=use_src_mask,
+                use_tgt_mask=use_tgt_mask,
+                esmf_args=esmf_args,
+                **sub_kwargs,
+            ),
             **kwargs,
         )
     else:
