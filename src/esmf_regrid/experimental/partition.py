@@ -1,11 +1,12 @@
 """Provides an interface for splitting up a large regridding task."""
-
+import esmpy
 import numpy as np
 
 from esmf_regrid.constants import Constants
 from esmf_regrid.experimental._partial import PartialRegridder
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.schemes import _get_grid_dims
+from pyarrow import dictionary
 
 
 def _get_chunk(cube, sl):
@@ -132,6 +133,12 @@ class Partition:
         if scheme._method == Constants.Method.NEAREST:
             msg = "The `Nearest` method is not implemented."
             raise NotImplementedError(msg)
+        if scheme._method == Constants.Method.BILINEAR:
+            pole_method = scheme.esmf_args.get("pole_method")
+            if pole_method != esmpy.PoleMethod.NONE:
+                msg = ("Bilinear regridding must have a `pole_method` of `esmpy.PoleMethod.NONE` in "
+                       "the `esmf_args` in order for Partition to work.`")
+                raise ValueError(msg)
         # TODO: Extract a slice of the cube.
         self.src = src
         if src.mesh is None:

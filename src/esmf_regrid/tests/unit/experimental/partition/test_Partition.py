@@ -1,10 +1,11 @@
 """Unit tests for :mod:`esmf_regrid.experimental.partition`."""
 
 import dask.array as da
+import esmpy
 import numpy as np
 import pytest
 
-from esmf_regrid import ESMFAreaWeighted, ESMFNearest
+from esmf_regrid import ESMFAreaWeighted, ESMFBilinear, ESMFNearest
 from esmf_regrid.experimental.partition import Partition
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _curvilinear_cube,
@@ -146,6 +147,32 @@ def test_Partition_curv_src(tmp_path):
         [[400, 500], [0, 150]],
     ]
     assert partition.src_blocks == expected_src_chunks
+
+    partition.generate_files()
+
+    result = partition.apply_regridders(src)
+    expected = src.regrid(tgt, scheme)
+    assert np.allclose(result.data, expected.data)
+    assert result == expected
+
+
+def test_Partition_bilinear(tmp_path):
+    """Test Partition class for bilinear regridding."""
+    src = _grid_cube(150, 500, (-180, 180), (-90, 90), circular=True)
+    src.data = np.arange(150 * 500).reshape([500, 150])
+    tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
+
+    files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
+    src_chunks = (100, 150)
+
+    bad_scheme = ESMFBilinear()
+    with pytest.raises(ValueError):
+        _ = Partition(src, tgt, bad_scheme, files, src_chunks=src_chunks)
+
+    # The pole_method must be NONE for bilinear regridding partitions to work.
+    scheme = ESMFBilinear(esmf_args={"pole_method": esmpy.PoleMethod.NONE})
+
+    partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
     partition.generate_files()
 
