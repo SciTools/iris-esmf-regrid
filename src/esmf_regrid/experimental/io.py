@@ -462,13 +462,17 @@ def load_regridder(filename, allow_partial=False):
             Constants.Method.CONSERVATIVE: ESMFAreaWeighted,
             Constants.Method.BILINEAR: ESMFBilinear,
         }[method]
+        mdtol = kwargs.pop(_MDTOL, None)
+        mdtol_dict = {}
+        if mdtol is not None:
+            mdtol_dict[_MDTOL] = mdtol
         regridder = scheme(
             src_cube,
             tgt_cube,
             src_slice,
             tgt_slice,
             weight_matrix,
-            sub_scheme(),
+            sub_scheme(**mdtol_dict),
             **kwargs,
         )
     else:

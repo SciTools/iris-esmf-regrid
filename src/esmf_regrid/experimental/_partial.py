@@ -32,14 +32,12 @@ class PartialRegridder(_ESMFRegridder):
             The weights to use for regridding.
         scheme : :class:`~esmf_regrid.schemes.ESMFAreaWeighted` or :class:`~esmf_regrid.schemes.ESMFBilinear`
             The scheme used to construct the regridder.
+        kwargs : dict
+            Additional keyword arguments to pass to the `scheme`s regridder method.
         """
         self.src_slice = src_slice  # this will be tuple-like
         self.tgt_slice = tgt_slice
         self.scheme = scheme
-
-        # Pop duplicate kwargs.
-        for arg in set(kwargs.keys()).intersection(vars(self.scheme)):
-            kwargs.pop(arg)
 
         self._regridder = scheme.regridder(
             src,
