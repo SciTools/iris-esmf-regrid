@@ -1,4 +1,5 @@
 """Provides an interface for splitting up a large regridding task."""
+
 import esmpy
 import numpy as np
 
@@ -138,8 +139,10 @@ class Partition:
         if scheme._method == Constants.Method.BILINEAR:
             pole_method = scheme.esmf_args.get("pole_method")
             if pole_method != esmpy.PoleMethod.NONE:
-                msg = ("Bilinear regridding must have a `pole_method` of `esmpy.PoleMethod.NONE` in "
-                       "the `esmf_args` in order for Partition to work.`")
+                msg = (
+                    "Bilinear regridding must have a `pole_method` of `esmpy.PoleMethod.NONE` in "
+                    "the `esmf_args` in order for Partition to work.`"
+                )
                 raise ValueError(msg)
         # TODO: Extract a slice of the cube.
         self.src = src
@@ -159,8 +162,10 @@ class Partition:
         self.file_names = file_names
         if use_dask_src_chunks:
             if src_chunks is not None:
-                msg = ("`src_chunks` and `use_dask_src_chunks` may provide conflicting"
-                       "partition block definitions.")
+                msg = (
+                    "`src_chunks` and `use_dask_src_chunks` may provide conflicting"
+                    "partition block definitions."
+                )
                 raise ValueError(msg)
             if not src.has_lazy_data():
                 msg = "If `use_dask_src_chunks=True`, the source cube must be lazy."
