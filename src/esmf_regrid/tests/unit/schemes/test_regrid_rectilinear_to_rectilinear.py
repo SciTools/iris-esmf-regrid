@@ -1,5 +1,7 @@
 """Unit tests for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`."""
 
+from functools import partial
+
 import dask.array as da
 from iris.coord_systems import RotatedGeogCS
 from iris.coords import AuxCoord, DimCoord
@@ -68,12 +70,19 @@ def test_rotated_regridding():
     assert np.allclose(expected_data, full_mdtol_result.data)
 
 
-def test_extra_dims():
-    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+def _add_metadata(cube):
+    result = cube.copy()
+    result.units = "K"
+    result.attributes = {"a": 1}
+    result.standard_name = "air_temperature"
+    scalar_height = AuxCoord([5], units="m", standard_name="height")
+    scalar_time = DimCoord([10], units="s", standard_name="time")
+    result.add_aux_coord(scalar_height)
+    result.add_aux_coord(scalar_time)
+    return result
 
-    Tests the handling of extra dimensions and metadata. Ensures that proper
-    coordinates, attributes, names and units are copied over.
-    """
+
+def _make_full_cubes(src_rectilinear=True, tgt_rectilinear=True):
     h = 2
     t = 4
     e = 6
@@ -86,13 +95,22 @@ def test_extra_dims():
     lon_bounds = (-180, 180)
     lat_bounds = (-90, 90)
 
-    src_grid = _grid_cube(
+    if src_rectilinear:
+        src_func = partial(_grid_cube, circular=True)
+    else:
+        src_func = _curvilinear_cube
+    if tgt_rectilinear:
+        tgt_func = partial(_grid_cube, circular=True)
+    else:
+        tgt_func = _curvilinear_cube
+    src_grid = src_func(
         src_lons,
         src_lats,
         lon_bounds,
         lat_bounds,
     )
-    tgt_grid = _grid_cube(
+
+    tgt_grid = tgt_func(
         tgt_lons,
         tgt_lats,
         lon_bounds,
@@ -110,27 +128,18 @@ def test_extra_dims():
     ]
 
     src_cube = Cube(src_data)
+    if src_rectilinear:
+        src_cube.add_dim_coord(src_grid.coord("latitude"), 1)
+        src_cube.add_dim_coord(src_grid.coord("longitude"), 3)
+    else:
+        src_cube.add_aux_coord(src_grid.coord("latitude"), (1, 3))
+        src_cube.add_aux_coord(src_grid.coord("longitude"), (1, 3))
     src_cube.add_dim_coord(height, 0)
-    src_cube.add_dim_coord(src_grid.coord("latitude"), 1)
     src_cube.add_dim_coord(time, 2)
-    src_cube.add_dim_coord(src_grid.coord("longitude"), 3)
     src_cube.add_aux_coord(extra, 4)
     src_cube.add_aux_coord(spanning, [0, 2, 4])
 
-    def _add_metadata(cube):
-        result = cube.copy()
-        result.units = "K"
-        result.attributes = {"a": 1}
-        result.standard_name = "air_temperature"
-        scalar_height = AuxCoord([5], units="m", standard_name="height")
-        scalar_time = DimCoord([10], units="s", standard_name="time")
-        result.add_aux_coord(scalar_height)
-        result.add_aux_coord(scalar_time)
-        return result
-
     src_cube = _add_metadata(src_cube)
-
-    result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
     expected_data = np.empty([h, tgt_lats, t, tgt_lons, e])
     expected_data[:] = np.arange(t * h * e).reshape([h, t, e])[
@@ -138,19 +147,37 @@ def test_extra_dims():
     ]
 
     expected_cube = Cube(expected_data)
+    if tgt_rectilinear:
+        expected_cube.add_dim_coord(tgt_grid.coord("latitude"), 1)
+        expected_cube.add_dim_coord(tgt_grid.coord("longitude"), 3)
+    else:
+        expected_cube.add_aux_coord(tgt_grid.coord("latitude"), (1, 3))
+        expected_cube.add_aux_coord(tgt_grid.coord("longitude"), (1, 3))
     expected_cube.add_dim_coord(height, 0)
-    expected_cube.add_dim_coord(tgt_grid.coord("latitude"), 1)
     expected_cube.add_dim_coord(time, 2)
-    expected_cube.add_dim_coord(tgt_grid.coord("longitude"), 3)
     expected_cube.add_aux_coord(extra, 4)
     expected_cube.add_aux_coord(spanning, [0, 2, 4])
     expected_cube = _add_metadata(expected_cube)
+    return src_cube, tgt_grid, expected_cube
+
+
+def test_extra_dims():
+    """Test for :func:`esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`.
+
+    Tests the handling of extra dimensions and metadata. Ensures that proper
+    coordinates, attributes, names and units are copied over.
+    """
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=True, tgt_rectilinear=True
+    )
+
+    result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
     # Lenient check for data.
-    assert np.allclose(expected_data, result.data)
+    assert np.allclose(expected_cube.data, result.data)
 
     # Check metadata and coords.
-    result.data = expected_data
+    result.data = expected_cube.data
     assert expected_cube == result
 
 
@@ -266,83 +293,17 @@ def test_extra_dims_curvilinear():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    h = 2
-    t = 4
-    e = 6
-    src_lats = 3
-    src_lons = 5
-
-    tgt_lats = 5
-    tgt_lons = 3
-
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-
-    src_grid = _curvilinear_cube(
-        src_lons,
-        src_lats,
-        lon_bounds,
-        lat_bounds,
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=False, tgt_rectilinear=False
     )
-    tgt_grid = _curvilinear_cube(
-        tgt_lons,
-        tgt_lats,
-        lon_bounds,
-        lat_bounds,
-    )
-
-    height = DimCoord(np.arange(h), standard_name="height")
-    time = DimCoord(np.arange(t), standard_name="time")
-    extra = AuxCoord(np.arange(e), long_name="extra dim")
-    spanning = AuxCoord(np.ones([h, t, e]), long_name="spanning dim")
-
-    src_data = np.empty([h, src_lats, t, src_lons, e])
-    src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
-
-    src_cube = Cube(src_data)
-    src_cube.add_dim_coord(height, 0)
-    src_cube.add_aux_coord(src_grid.coord("latitude"), (1, 3))
-    src_cube.add_dim_coord(time, 2)
-    src_cube.add_aux_coord(src_grid.coord("longitude"), (1, 3))
-    src_cube.add_aux_coord(extra, 4)
-    src_cube.add_aux_coord(spanning, [0, 2, 4])
-
-    def _add_metadata(cube):
-        result = cube.copy()
-        result.units = "K"
-        result.attributes = {"a": 1}
-        result.standard_name = "air_temperature"
-        scalar_height = AuxCoord([5], units="m", standard_name="height")
-        scalar_time = DimCoord([10], units="s", standard_name="time")
-        result.add_aux_coord(scalar_height)
-        result.add_aux_coord(scalar_time)
-        return result
-
-    src_cube = _add_metadata(src_cube)
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
-    expected_data = np.empty([h, tgt_lats, t, tgt_lons, e])
-    expected_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
-
-    expected_cube = Cube(expected_data)
-    expected_cube.add_dim_coord(height, 0)
-    expected_cube.add_aux_coord(tgt_grid.coord("latitude"), (1, 3))
-    expected_cube.add_dim_coord(time, 2)
-    expected_cube.add_aux_coord(tgt_grid.coord("longitude"), (1, 3))
-    expected_cube.add_aux_coord(extra, 4)
-    expected_cube.add_aux_coord(spanning, [0, 2, 4])
-    expected_cube = _add_metadata(expected_cube)
-
     # Lenient check for data.
-    assert np.allclose(expected_data, result.data)
+    assert np.allclose(expected_cube.data, result.data)
 
     # Check metadata and coords.
-    result.data = expected_data
+    result.data = expected_cube.data
     assert expected_cube == result
 
 
@@ -352,83 +313,17 @@ def test_extra_dims_curvilinear_to_rectilinear():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    h = 2
-    t = 4
-    e = 6
-    src_lats = 3
-    src_lons = 5
-
-    tgt_lats = 5
-    tgt_lons = 3
-
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-
-    src_grid = _curvilinear_cube(
-        src_lons,
-        src_lats,
-        lon_bounds,
-        lat_bounds,
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=False, tgt_rectilinear=True
     )
-    tgt_grid = _grid_cube(
-        tgt_lons,
-        tgt_lats,
-        lon_bounds,
-        lat_bounds,
-    )
-
-    height = DimCoord(np.arange(h), standard_name="height")
-    time = DimCoord(np.arange(t), standard_name="time")
-    extra = AuxCoord(np.arange(e), long_name="extra dim")
-    spanning = AuxCoord(np.ones([h, t, e]), long_name="spanning dim")
-
-    src_data = np.empty([h, src_lats, t, src_lons, e])
-    src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
-
-    src_cube = Cube(src_data)
-    src_cube.add_dim_coord(height, 0)
-    src_cube.add_aux_coord(src_grid.coord("latitude"), (1, 3))
-    src_cube.add_dim_coord(time, 2)
-    src_cube.add_aux_coord(src_grid.coord("longitude"), (1, 3))
-    src_cube.add_aux_coord(extra, 4)
-    src_cube.add_aux_coord(spanning, [0, 2, 4])
-
-    def _add_metadata(cube):
-        result = cube.copy()
-        result.units = "K"
-        result.attributes = {"a": 1}
-        result.standard_name = "air_temperature"
-        scalar_height = AuxCoord([5], units="m", standard_name="height")
-        scalar_time = DimCoord([10], units="s", standard_name="time")
-        result.add_aux_coord(scalar_height)
-        result.add_aux_coord(scalar_time)
-        return result
-
-    src_cube = _add_metadata(src_cube)
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
-    expected_data = np.empty([h, tgt_lats, t, tgt_lons, e])
-    expected_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
-
-    expected_cube = Cube(expected_data)
-    expected_cube.add_dim_coord(height, 0)
-    expected_cube.add_dim_coord(tgt_grid.coord("latitude"), 1)
-    expected_cube.add_dim_coord(time, 2)
-    expected_cube.add_dim_coord(tgt_grid.coord("longitude"), 3)
-    expected_cube.add_aux_coord(extra, 4)
-    expected_cube.add_aux_coord(spanning, [0, 2, 4])
-    expected_cube = _add_metadata(expected_cube)
-
     # Lenient check for data.
-    assert np.allclose(expected_data, result.data)
+    assert np.allclose(expected_cube.data, result.data)
 
     # Check metadata and coords.
-    result.data = expected_data
+    result.data = expected_cube.data
     assert expected_cube == result
 
 
@@ -438,81 +333,15 @@ def test_extra_dims_rectilinear_to_curvilinear():
     Tests the handling of extra dimensions and metadata. Ensures that proper
     coordinates, attributes, names and units are copied over.
     """
-    h = 2
-    t = 4
-    e = 6
-    src_lats = 3
-    src_lons = 5
-
-    tgt_lats = 5
-    tgt_lons = 3
-
-    lon_bounds = (-180, 180)
-    lat_bounds = (-90, 90)
-
-    src_grid = _grid_cube(
-        src_lons,
-        src_lats,
-        lon_bounds,
-        lat_bounds,
+    src_cube, tgt_grid, expected_cube = _make_full_cubes(
+        src_rectilinear=True, tgt_rectilinear=False
     )
-    tgt_grid = _curvilinear_cube(
-        tgt_lons,
-        tgt_lats,
-        lon_bounds,
-        lat_bounds,
-    )
-
-    height = DimCoord(np.arange(h), standard_name="height")
-    time = DimCoord(np.arange(t), standard_name="time")
-    extra = AuxCoord(np.arange(e), long_name="extra dim")
-    spanning = AuxCoord(np.ones([h, t, e]), long_name="spanning dim")
-
-    src_data = np.empty([h, src_lats, t, src_lons, e])
-    src_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
-
-    src_cube = Cube(src_data)
-    src_cube.add_dim_coord(height, 0)
-    src_cube.add_dim_coord(src_grid.coord("latitude"), 1)
-    src_cube.add_dim_coord(time, 2)
-    src_cube.add_dim_coord(src_grid.coord("longitude"), 3)
-    src_cube.add_aux_coord(extra, 4)
-    src_cube.add_aux_coord(spanning, [0, 2, 4])
-
-    def _add_metadata(cube):
-        result = cube.copy()
-        result.units = "K"
-        result.attributes = {"a": 1}
-        result.standard_name = "air_temperature"
-        scalar_height = AuxCoord([5], units="m", standard_name="height")
-        scalar_time = DimCoord([10], units="s", standard_name="time")
-        result.add_aux_coord(scalar_height)
-        result.add_aux_coord(scalar_time)
-        return result
-
-    src_cube = _add_metadata(src_cube)
 
     result = regrid_rectilinear_to_rectilinear(src_cube, tgt_grid)
 
-    expected_data = np.empty([h, tgt_lats, t, tgt_lons, e])
-    expected_data[:] = np.arange(t * h * e).reshape([h, t, e])[
-        :, np.newaxis, :, np.newaxis, :
-    ]
-
-    expected_cube = Cube(expected_data)
-    expected_cube.add_dim_coord(height, 0)
-    expected_cube.add_aux_coord(tgt_grid.coord("latitude"), (1, 3))
-    expected_cube.add_dim_coord(time, 2)
-    expected_cube.add_aux_coord(tgt_grid.coord("longitude"), (1, 3))
-    expected_cube.add_aux_coord(extra, 4)
-    expected_cube.add_aux_coord(spanning, [0, 2, 4])
-    expected_cube = _add_metadata(expected_cube)
-
     # Lenient check for data.
-    assert np.allclose(expected_data, result.data)
+    assert np.allclose(expected_cube.data, result.data)
 
     # Check metadata and coords.
-    result.data = expected_data
+    result.data = expected_cube.data
     assert expected_cube == result
