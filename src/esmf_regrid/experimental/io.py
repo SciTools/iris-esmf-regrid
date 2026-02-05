@@ -461,7 +461,6 @@ def load_regridder(filename, allow_partial=False):
         sub_scheme = {
             Constants.Method.CONSERVATIVE: ESMFAreaWeighted,
             Constants.Method.BILINEAR: ESMFBilinear,
-            Constants.Method.NEAREST: ESMFNearest,
         }[method]
         regridder = scheme(
             src_cube,

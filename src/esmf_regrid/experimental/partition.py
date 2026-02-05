@@ -6,7 +6,6 @@ from esmf_regrid.constants import Constants
 from esmf_regrid.experimental._partial import PartialRegridder
 from esmf_regrid.experimental.io import load_regridder, save_regridder
 from esmf_regrid.schemes import _get_grid_dims
-from pyarrow import dictionary
 
 
 def _get_chunk(cube, sl):
@@ -124,7 +123,10 @@ class Partition:
             in y,x axis order. Each integer describes the number of blocks that dimension will
             be divided into.
         explicit_src_blocks : arraylike NxMx2
-            Explicitly specify the bounds of each block in the partition.
+            Explicitly specify the bounds of each block in the partition. Describes N blocks
+            along M dimensions with a pair of upper and lower bounds. The upper and lower bounds
+            describe a slice of an array, e.g. the bounds (3, 6) describe the indices 3, 4, 5 in
+            a particular dimension.
         auto_generate : bool, default=False
             When true, start generating files on initialisation.
         saved_files : iterable of str
@@ -157,7 +159,8 @@ class Partition:
         self.file_names = file_names
         if use_dask_src_chunks:
             if src_chunks is not None:
-                msg = "Potentially conflicting partition block definitions."
+                msg = ("`src_chunks` and `use_dask_src_chunks` may provide conflicting"
+                       "partition block definitions.")
                 raise ValueError(msg)
             if not src.has_lazy_data():
                 msg = "If `use_dask_src_chunks=True`, the source cube must be lazy."
