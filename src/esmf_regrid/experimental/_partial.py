@@ -24,10 +24,16 @@ class PartialRegridder(_ESMFRegridder):
             The :class:`~iris.cube.Cube` or :class:`~iris.mesh.MeshXY` providing the target.
         src_slice : tuple
             The upper and lower bounds of the block taken from the original source from which the
-            ``src`` was derived.
+            ``src`` was derived. In the form ((x_low, x_high), ...) where x_low and x_high are the
+            upper and lower bounds of the slice (in the x dimension) taken from the original source.
+            There are as many tuples of upper and lower bounds as there are horizontal dimensions in
+            the source cube (currently this is always 2 as Meshes are not yet supported for sources).
         tgt_slice : tuple
             The upper and lower bounds of the block taken from the original target from which the
-            ``tgt`` was derived.
+            ``tgt`` was derived. In the form ((x_low, x_high), ...) where x_low and x_high are the
+            upper and lower bounds of the slice (in the x dimension) taken from the original target.
+            There are as many tuples of upper and lower bounds as there are horizontal dimensions in
+            the target cube.
         weights : :class:`scipy.sparse.spmatrix`
             The weights to use for regridding.
         scheme : :class:`~esmf_regrid.schemes.ESMFAreaWeighted` or :class:`~esmf_regrid.schemes.ESMFBilinear`
@@ -51,6 +57,8 @@ class PartialRegridder(_ESMFRegridder):
         """Return a representation of the class."""
         result = (
             f"PartialRegridder("
+            f"src={self._src}, "
+            f"tgt_slice={self._tgt}, "
             f"src_slice={self.src_slice}, "
             f"tgt_slice={self.tgt_slice}, "
             f"scheme={self.scheme})"

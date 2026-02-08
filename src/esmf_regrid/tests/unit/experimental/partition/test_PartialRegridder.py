@@ -22,8 +22,13 @@ def test_PartialRegridder_repr():
     pr = PartialRegridder(src, tgt, src_slice, tgt_slice, weights, scheme)
 
     expected_repr = (
-        "PartialRegridder(src_slice=((10, 20), (15, 30)), tgt_slice=((0, 5), (0, 10)), "
-        "scheme=ESMFAreaWeighted(mdtol=0.5, use_src_mask=False, use_tgt_mask=False, esmf_args={}))"
+        "PartialRegridder(src=GridRecord("
+        "grid_x=<DimCoord: longitude / (degrees)  [-162., -126., ..., 126., 162.]+bounds  shape(10,)>, "
+        "grid_y=<DimCoord: latitude / (degrees)  [-84., -72., ..., 72., 84.]+bounds  shape(15,)>), "
+        "tgt_slice=GridRecord(grid_x=<DimCoord: longitude / (degrees)  [-144., -72., 0., 72., 144.]+bounds  shape(5,)>, "
+        "grid_y=<DimCoord: latitude / (degrees)  [-81., -63., ..., 63., 81.]+bounds  shape(10,)>), "
+        "src_slice=((10, 20), (15, 30)), tgt_slice=((0, 5), (0, 10)), scheme=ESMFAreaWeighted(mdtol=0.5, "
+        "use_src_mask=False, use_tgt_mask=False, esmf_args={}))"
     )
     assert repr(pr) == expected_repr
 
