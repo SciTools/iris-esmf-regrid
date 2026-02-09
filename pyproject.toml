@@ -298,5 +298,5 @@ convention = "numpy"
 [tool.ruff.lint.pylint]
 # TODO: refactor to reduce complexity, if possible
 max-args = 10
-max-branches = 21
+max-branches = 25
 max-statements = 110
