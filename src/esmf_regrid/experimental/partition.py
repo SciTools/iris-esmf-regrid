@@ -97,6 +97,10 @@ class Partition:
 
         Note
         ----
+        The source is partitioned into blocks using one of the four mutually exclusive arguments,
+        `use_dask_src_chunks`, `src_chunks`, `num_src_chunks`, or `explicit_src_blocks`. These
+        describe a partition into a numnber of blocks which must equal the number of `file_names`.
+
         Currently, it is only possible to divide the source grid into chunks.
         Meshes are not yet supported as a source.
 

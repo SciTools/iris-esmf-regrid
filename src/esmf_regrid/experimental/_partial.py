@@ -101,6 +101,7 @@ class PartialRegridder(_ESMFRegridder):
         if num_dims == 2 and num_out_dims == 1:
             new_dims = [min(old_dims)]
         elif num_dims == 1 and num_out_dims == 2:
+            # Note: this code is currently inaccessible since src_cube can't have a Mesh.
             new_dims = [old_dims[0] + 1, old_dims[0]]
         else:
             new_dims = old_dims
