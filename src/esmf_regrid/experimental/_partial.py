@@ -91,20 +91,20 @@ class PartialRegridder(_ESMFRegridder):
         of the 'src' reference cube provided in regridder creation (`self._src`).
         So, it must be the correct "corresponding slice" of the source cube.
         """
-        old_dims = self._get_cube_dims(src_cube)
+        src_dims = self._get_cube_dims(src_cube)
 
         result_data = self.regridder._regrid_from_weights_and_data(weights, data, extra)
 
         num_out_dims = self.regridder.tgt.dims
-        num_dims = len(old_dims)
+        num_dims = len(src_dims)
         standard_out_dims = [-1, -2][:num_out_dims]
         if num_dims == 2 and num_out_dims == 1:
-            new_dims = [min(old_dims)]
+            new_dims = [min(src_dims)]
         elif num_dims == 1 and num_out_dims == 2:
             # Note: this code is currently inaccessible since src_cube can't have a Mesh.
-            new_dims = [old_dims[0] + 1, old_dims[0]]
+            new_dims = [src_dims[0] + 1, src_dims[0]]
         else:
-            new_dims = old_dims
+            new_dims = src_dims
 
         result_data = np.moveaxis(result_data, standard_out_dims, new_dims)
 
@@ -119,6 +119,6 @@ class PartialRegridder(_ESMFRegridder):
             raise TypeError(msg)
 
         result_cube = _create_cube(
-            result_data, src_cube, old_dims, tgt_coords, out_dims
+            result_data, src_cube, src_dims, tgt_coords, out_dims
         )
         return result_cube

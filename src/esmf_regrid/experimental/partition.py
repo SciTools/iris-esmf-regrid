@@ -166,10 +166,7 @@ class Partition:
         self.file_names = file_names
         if use_dask_src_chunks:
             if src_chunks is not None:
-                msg = (
-                    "`src_chunks` and `use_dask_src_chunks` may provide conflicting"
-                    "partition block definitions."
-                )
+                msg = "`src_chunks` and `use_dask_src_chunks` cannot be used at the same time."
                 raise ValueError(msg)
             if not src.has_lazy_data():
                 msg = "If `use_dask_src_chunks=True`, the source cube must be lazy."
