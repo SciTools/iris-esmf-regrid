@@ -95,15 +95,6 @@ class Partition:
     ):
         """Class for breaking down regridding into manageable chunks.
 
-        Note
-        ----
-        The source is partitioned into blocks using one of the four mutually exclusive arguments,
-        `use_dask_src_chunks`, `src_chunks`, `num_src_chunks`, or `explicit_src_blocks`. These
-        describe a partition into a number of blocks which must equal the number of `file_names`.
-
-        Currently, it is only possible to divide the source grid into chunks.
-        Meshes are not yet supported as a source.
-
         Parameters
         ----------
         src : cube
@@ -136,6 +127,21 @@ class Partition:
             When true, start generating files on initialisation.
         saved_files : iterable of str
             A list of paths to previously saved files.
+
+        Warnings
+        --------
+        This class is still experimental. While we aim to maintain backwards compatibility where
+        possible, there is no guarantee that the structure of any generated files will remain
+        consistent and compatible with future versions.
+
+        Note
+        ----
+        The source is partitioned into blocks using one of the four mutually exclusive arguments,
+        `use_dask_src_chunks`, `src_chunks`, `num_src_chunks`, or `explicit_src_blocks`. These
+        describe a partition into a number of blocks which must equal the number of `file_names`.
+
+        Currently, it is only possible to divide the source grid into chunks.
+        Meshes are not yet supported as a source.
         """
         if scheme._method == Constants.Method.NEAREST:
             msg = "The `Nearest` method is not implemented."
