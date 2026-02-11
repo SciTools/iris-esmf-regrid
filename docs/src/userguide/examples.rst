@@ -57,6 +57,9 @@ certain regridders. We can do this as follows::
 Partitioning a Regridder
 ------------------------
 
+.. caution:: The `Partition` class is experimental and there is no guarantee that the
+             file structure will remain consistent and compatible in later versions.
+
 If a regridder would be too large to handle in memory, it can be broken down
 into smaller regridders which can collectively do the job of the larger regridder.
 This is done using a `Partition` object.
