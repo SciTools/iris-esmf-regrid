@@ -67,7 +67,7 @@ jobs:
       - name: Archive asv results
         # Store the raw ASV database(s) to help manual investigations.
         if: ${{ always() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: asv-raw-results
           path: benchmarks/.asv/results
