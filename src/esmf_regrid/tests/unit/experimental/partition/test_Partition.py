@@ -166,7 +166,6 @@ def test_Partition_different_coord_systems(tmp_path):
         coord.coord_system = RotatedGeogCS(20, 30)
     tgt.coord("latitude").standard_name = "grid_latitude"
     tgt.coord("longitude").standard_name = "grid_longitude"
-    print(tgt.coord_system())
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
