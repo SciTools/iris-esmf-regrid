@@ -17,7 +17,10 @@ def find_area(cube, radius=1):
         Radius of the sphere used to calculate area.
     """
     if cube.mesh is not None:
-        assert cube.location == "face"
+        if cube.location != "face":
+            msg = (f"Area can only be calculated on mesh faces. "
+                   f"Cube had location '{cube.location}'.")
+            raise ValueError(msg)
         sdo = _mesh_to_MeshInfo(cube.mesh, cube.location)
     else:
         sdo = _cube_to_GridInfo(cube)
