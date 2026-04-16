@@ -28,5 +28,5 @@ def find_area(cube, radius=1):
     field.get_area()
     areas = field.data.copy()
     field.destroy()
-    areas *= radius
+    areas *= radius ** 2
     return areas
