@@ -18,8 +18,10 @@ def find_area(cube, radius=1):
     """
     if cube.mesh is not None:
         if cube.location != "face":
-            msg = (f"Area can only be calculated on mesh faces. "
-                   f"Cube had location '{cube.location}'.")
+            msg = (
+                f"Area can only be calculated on mesh faces. "
+                f"Cube had location '{cube.location}'."
+            )
             raise ValueError(msg)
         sdo = _mesh_to_MeshInfo(cube.mesh, cube.location)
     else:
@@ -28,5 +30,5 @@ def find_area(cube, radius=1):
     field.get_area()
     areas = field.data.copy()
     field.destroy()
-    areas *= radius ** 2
+    areas *= radius**2
     return areas

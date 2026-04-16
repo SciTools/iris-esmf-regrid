@@ -41,4 +41,4 @@ def test_find_area_radius():
     cube = _gridlike_mesh_cube(5, 6)
     radius = 5000
     areas = find_area(cube, radius=radius)
-    assert np.allclose(areas.sum(), np.pi * 4 * (radius ** 2))
+    assert np.allclose(areas.sum(), np.pi * 4 * (radius**2))
