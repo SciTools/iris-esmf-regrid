@@ -2,6 +2,7 @@
 
 import dask.array as da
 import esmpy
+from iris.coord_systems import RotatedGeogCS
 import numpy as np
 import pytest
 
@@ -132,6 +133,39 @@ def test_Partition_curv_src(tmp_path):
     src = _curvilinear_cube(150, 500, (-180, 180), (-90, 90))
     src.data = np.arange(150 * 500).reshape([500, 150])
     tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
+
+    files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
+    scheme = ESMFAreaWeighted(mdtol=1)
+
+    src_chunks = (100, 150)
+    partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
+
+    expected_src_chunks = [
+        [[0, 100], [0, 150]],
+        [[100, 200], [0, 150]],
+        [[200, 300], [0, 150]],
+        [[300, 400], [0, 150]],
+        [[400, 500], [0, 150]],
+    ]
+    assert partition.src_blocks == expected_src_chunks
+
+    partition.generate_files()
+
+    result = partition.apply_regridders(src)
+    expected = src.regrid(tgt, scheme)
+    assert np.allclose(result.data, expected.data)
+    assert result == expected
+
+
+def test_Partition_different_coord_systems(tmp_path):
+    """Test Partition class when the source has a curvilinear grid."""
+    src = _curvilinear_cube(150, 500, (-180, 180), (-90, 90))
+    src.data = np.arange(150 * 500).reshape([500, 150])
+    tgt = _grid_cube(16, 36, (-180, 180), (-90, 90), circular=True)
+    for coord in tgt.coords():
+        coord.coord_system = RotatedGeogCS(20, 30)
+    tgt.coord("latitude").standard_name = "grid_latitude"
+    tgt.coord("longitude").standard_name = "grid_longitude"
 
     files = [tmp_path / f"partial_{x}.nc" for x in range(5)]
     scheme = ESMFAreaWeighted(mdtol=1)
