@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- [PR#649](https://github.com/SciTools/iris-esmf-regrid/pull/649)
+  Added a utility for finding areas of cells on a cube.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.14.0] - 2026-02-11
 
 ### Added
