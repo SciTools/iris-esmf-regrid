@@ -179,7 +179,9 @@ class Regridder:
         extra_shape = src_array.shape[: -self.src.dims]
 
         if self.method == Constants.Method.NEAREST:
+            # print(self.weight_matrix)
             weight_matrix = self.weight_matrix.astype(src_array.dtype)
+            # print(weight_matrix)
         else:
             weight_matrix = self.weight_matrix
 
@@ -200,8 +202,11 @@ class Regridder:
     ):
         # Set the minimum mdtol to be slightly higher than 0 to account for rounding
         # errors.
+        print(mdtol)
         mdtol = max(mdtol, 1e-8)
+        # mdtol = max(mdtol, 1e-7)
         tgt_mask = tgt_weights > 1 - mdtol
+        # tgt_mask = tgt_weights != 0
         normalisations = np.ones_like(tgt_data)
         if self.method != Constants.Method.NEAREST:
             masked_weight_sums = tgt_weights * tgt_mask

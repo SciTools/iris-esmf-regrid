@@ -249,6 +249,7 @@ def test_Regridder_dtype_handling():
     src_int_32 = np.ones([3, 2], dtype=np.int32)
     src_int_64 = np.ones([3, 2], dtype=np.int64)
 
+    # TODO: supply precomputed weights which make sense here.
     rg_nearest = Regridder(
         src_grid,
         tgt_grid,
