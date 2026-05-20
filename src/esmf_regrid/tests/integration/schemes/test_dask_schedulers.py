@@ -7,11 +7,11 @@ import dask.array as da
 import distributed
 from iris.cube import Cube
 import numpy as np
+
+from esmf_regrid.schemes import ESMFAreaWeighted
 from esmf_regrid.tests.unit.schemes.test__cube_to_GridInfo import (
     _grid_cube,
 )
-
-from esmf_regrid.schemes import ESMFAreaWeighted
 
 
 def _test_lazy_regridding():
@@ -40,22 +40,25 @@ def _test_lazy_regridding():
 
 
 @contextlib.contextmanager
-def distributed_context():
+def _distributed_context():
     _distributed_client = distributed.Client()
     yield
     _distributed_client.close()
 
 
 def test_distributed_scheduler():
-    with distributed_context():
+    """Test regridding works for distributed scheduler."""
+    with _distributed_context():
         _test_lazy_regridding()
 
 
 def test_processes_scheduler():
+    """Test regridding works for processes scheduler."""
     with dask.config.set(scheduler="processes"):
         _test_lazy_regridding()
 
 
 def test_threads_scheduler():
+    """Test regridding works for threads scheduler."""
     with dask.config.set(scheduler="threads"):
         _test_lazy_regridding()
