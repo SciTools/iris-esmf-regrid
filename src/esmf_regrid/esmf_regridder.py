@@ -167,58 +167,6 @@ class Regridder:
             self.src.shape, self.tgt.shape, method, self.weight_matrix
         )
 
-    def _out_dtype(self, in_dtype):
-        """Return the expected output dtype for a given input dtype."""
-        if self.method == Constants.Method.NEAREST:
-            out_dtype = in_dtype
-        else:
-            weight_matrix = self.weight_matrix
-            weight_dtype = weight_matrix.dtype
-            out_dtype = (
-                np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)
-            ).dtype
-        return out_dtype
-
-    def _gen_weights_and_data(self, src_array):
-        extra_shape = src_array.shape[: -self.src.dims]
-
-        if self.method == Constants.Method.NEAREST:
-            weight_matrix = self.weight_matrix.astype(src_array.dtype)
-        else:
-            weight_matrix = self.weight_matrix
-
-        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
-        flat_tgt = weight_matrix @ flat_src
-
-        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
-        weight_sums = weight_matrix @ src_inverted_mask
-        return weight_sums, flat_tgt, extra_shape
-
-    def _regrid_from_weights_and_data(
-        self,
-        tgt_weights,
-        tgt_data,
-        extra,
-        norm_type=Constants.NormType.FRACAREA,
-        mdtol=1,
-    ):
-        # Set the minimum mdtol to be slightly higher than 0 to account for rounding
-        # errors.
-        mdtol = max(mdtol, 1e-8)
-        tgt_mask = tgt_weights > 1 - mdtol
-        normalisations = np.ones_like(tgt_data)
-        if self.method != Constants.Method.NEAREST:
-            masked_weight_sums = tgt_weights * tgt_mask
-            if norm_type == Constants.NormType.FRACAREA:
-                normalisations[tgt_mask] /= masked_weight_sums[tgt_mask]
-            elif norm_type == Constants.NormType.DSTAREA:
-                pass
-        normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
-
-        tgt_array = tgt_data * normalisations
-        tgt_array = self.tgt._matrix_to_array(tgt_array, extra)
-        return tgt_array
-
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """Perform regridding on an array of data.
 
@@ -245,26 +193,29 @@ class Regridder:
             An array whose shape is compatible with ``self.tgt``.
 
         """
-        # Sets default value, as this can't be done with class attributes within method call
-        norm_type = check_norm(norm_type)
-
-        array_shape = src_array.shape
-        main_shape = array_shape[-self.src.dims :]
-        if main_shape != self.src.shape:
-            e_msg = (
-                f"Expected an array whose shape ends in {self.src.shape}, "
-                f"got an array with shape ending in {main_shape}."
-            )
-            raise ValueError(e_msg)
-        tgt_weights, tgt_data, extra = self._gen_weights_and_data(src_array)
-        tgt_array = self._regrid_from_weights_and_data(
-            tgt_weights, tgt_data, extra, norm_type=norm_type, mdtol=mdtol
+        return self.minimal_regridder.regrid(
+            src_array, norm_type=norm_type, mdtol=mdtol
         )
-        return tgt_array
 
 
 class MinimalRegridder:
     def __init__(self, src_shape, tgt_shape, method, weights):
+        """Create a minimal version of the regridder.
+
+        This regridder object contains only the information required to perform
+        regridding on numpy arrays.
+
+        Parameters
+        ----------
+        src_shape : tuple of int
+            Shape of the source array.
+        tgt_shape : tuple of int
+            Shape of the target array.
+        method : :class:`Constants.Method`
+            The method to be used to calculate weights.
+        weights : :class:`scipy.sparse.spmatrix`
+            The weights matrix to apply.
+        """
         self.src_shape = src_shape
         self.src_size = np.prod(src_shape)
         self.src_dims = len(src_shape)
@@ -331,6 +282,18 @@ class MinimalRegridder:
         tgt_array = self._matrix_to_array(tgt_array, extra)
         return tgt_array
 
+    def _out_dtype(self, in_dtype):
+        """Return the expected output dtype for a given input dtype."""
+        if self.method == Constants.Method.NEAREST:
+            out_dtype = in_dtype
+        else:
+            weight_matrix = self.weight_matrix
+            weight_dtype = weight_matrix.dtype
+            out_dtype = (
+                np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)
+            ).dtype
+        return out_dtype
+
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """Perform regridding on an array of data.
 
@@ -373,15 +336,3 @@ class MinimalRegridder:
             tgt_weights, tgt_data, extra, norm_type=norm_type, mdtol=mdtol
         )
         return tgt_array
-
-    def _out_dtype(self, in_dtype):
-        """Return the expected output dtype for a given input dtype."""
-        if self.method == Constants.Method.NEAREST:
-            out_dtype = in_dtype
-        else:
-            weight_matrix = self.weight_matrix
-            weight_dtype = weight_matrix.dtype
-            out_dtype = (
-                np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)
-            ).dtype
-        return out_dtype
