@@ -163,30 +163,97 @@ class Regridder:
             self.esmf_version = ESMF_NO_VERSION
             self.weight_matrix = precomputed_weights
 
-    def _out_dtype(self, in_dtype):
-        """Return the expected output dtype for a given input dtype."""
-        if self.method == Constants.Method.NEAREST:
-            out_dtype = in_dtype
-        else:
-            weight_matrix = self.weight_matrix
-            weight_dtype = weight_matrix.dtype
-            out_dtype = (
-                np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)
-            ).dtype
-        return out_dtype
+        self.minimal_regridder = MinimalRegridder(
+            self.src.shape, self.tgt.shape, method, self.weight_matrix
+        )
+
+    def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
+        """Perform regridding on an array of data.
+
+        Parameters
+        ----------
+        src_array : :obj:`~numpy.typing.ArrayLike`
+            Array whose shape is compatible with ``self.src``.
+        norm_type : :class:`Constants.NormType`
+            Either ``Constants.NormType.FRACAREA`` or ``Constants.NormType.DSTAREA``.
+            Determines the type of normalisation applied to the weights.
+        mdtol : float, default=1
+            A number between 0 and 1 describing the missing data tolerance.
+            Depending on the value of ``mdtol``, if a cell in the target grid is not
+            sufficiently covered by unmasked cells of the source grid, then it will
+            be masked. ``mdtol=1`` means that only target cells which are not
+            covered at all will be masked, ``mdtol=0`` means that all target
+            cells that are not entirely covered will be masked, and ``mdtol=0.5``
+            means that all target cells that are less than half covered will
+            be masked.
+
+        Returns
+        -------
+        :obj:`~numpy.typing.ArrayLike`
+            An array whose shape is compatible with ``self.tgt``.
+
+        """
+        return self.minimal_regridder.regrid(
+            src_array, norm_type=norm_type, mdtol=mdtol
+        )
+
+
+class MinimalRegridder:
+    def __init__(self, src_shape, tgt_shape, method, weights):
+        """Create a minimal version of the regridder.
+
+        This regridder object contains only the information required to perform
+        regridding on numpy arrays.
+
+        Parameters
+        ----------
+        src_shape : tuple of int
+            Shape of the source array.
+        tgt_shape : tuple of int
+            Shape of the target array.
+        method : :class:`Constants.Method`
+            The method to be used to calculate weights.
+        weights : :class:`scipy.sparse.spmatrix`
+            The weights matrix to apply.
+        """
+        self.src_shape = src_shape
+        self.src_size = np.prod(src_shape)
+        self.src_dims = len(src_shape)
+        self.tgt_shape = tgt_shape
+        self.method = method
+        self.weight_matrix = weights
+
+    def _array_to_matrix(self, array):
+        """Reshape data to a form that is compatible with weight matrices.
+
+        The data should be presented in the form of a matrix (i.e. 2D) in order
+        to be compatible with the weight matrix.
+        Weight matrices deriving from ESMF use fortran ordering when flattening
+        grids to determine cell indices so we use the same order for reshaping.
+        We then take the transpose so that matrix multiplication happens over
+        the appropriate axes.
+        """
+        return array.T.reshape((self.src_size, -1))
+
+    def _matrix_to_array(self, array, extra_dims):
+        """Reshape data to restore original dimensions.
+
+        This is the inverse operation of `_array_to_matrix`.
+        """
+        return array.reshape((extra_dims + self.tgt_shape)[::-1]).T
 
     def _gen_weights_and_data(self, src_array):
-        extra_shape = src_array.shape[: -self.src.dims]
+        extra_shape = src_array.shape[: -self.src_dims]
 
         if self.method == Constants.Method.NEAREST:
             weight_matrix = self.weight_matrix.astype(src_array.dtype)
         else:
             weight_matrix = self.weight_matrix
 
-        flat_src = self.src._array_to_matrix(ma.filled(src_array, 0.0))
+        flat_src = self._array_to_matrix(ma.filled(src_array, 0.0))
         flat_tgt = weight_matrix @ flat_src
 
-        src_inverted_mask = self.src._array_to_matrix(~ma.getmaskarray(src_array))
+        src_inverted_mask = self._array_to_matrix(~ma.getmaskarray(src_array))
         weight_sums = weight_matrix @ src_inverted_mask
         return weight_sums, flat_tgt, extra_shape
 
@@ -212,8 +279,20 @@ class Regridder:
         normalisations = ma.array(normalisations, mask=np.logical_not(tgt_mask))
 
         tgt_array = tgt_data * normalisations
-        tgt_array = self.tgt._matrix_to_array(tgt_array, extra)
+        tgt_array = self._matrix_to_array(tgt_array, extra)
         return tgt_array
+
+    def _out_dtype(self, in_dtype):
+        """Return the expected output dtype for a given input dtype."""
+        if self.method == Constants.Method.NEAREST:
+            out_dtype = in_dtype
+        else:
+            weight_matrix = self.weight_matrix
+            weight_dtype = weight_matrix.dtype
+            out_dtype = (
+                np.ones(1, dtype=in_dtype) * np.ones(1, dtype=weight_dtype)
+            ).dtype
+        return out_dtype
 
     def regrid(self, src_array, norm_type=Constants.NormType.FRACAREA, mdtol=1):
         """Perform regridding on an array of data.
@@ -245,10 +324,10 @@ class Regridder:
         norm_type = check_norm(norm_type)
 
         array_shape = src_array.shape
-        main_shape = array_shape[-self.src.dims :]
-        if main_shape != self.src.shape:
+        main_shape = array_shape[-self.src_dims :]
+        if main_shape != self.src_shape:
             e_msg = (
-                f"Expected an array whose shape ends in {self.src.shape}, "
+                f"Expected an array whose shape ends in {self.src_shape}, "
                 f"got an array with shape ending in {main_shape}."
             )
             raise ValueError(e_msg)

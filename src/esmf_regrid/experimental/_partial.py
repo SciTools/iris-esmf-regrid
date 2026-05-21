@@ -71,7 +71,7 @@ class PartialRegridder(_ESMFRegridder):
         num_dims = len(dims)
         standard_in_dims = [-1, -2][:num_dims]
         data = np.moveaxis(src.data, dims, standard_in_dims)
-        result = self.regridder._gen_weights_and_data(data)
+        result = self.regridder.minimal_regridder._gen_weights_and_data(data)
         return result
 
     def finish_regridding(self, src_cube, weights, data, extra):
@@ -93,7 +93,9 @@ class PartialRegridder(_ESMFRegridder):
         """
         src_dims = self._get_cube_dims(src_cube)
 
-        result_data = self.regridder._regrid_from_weights_and_data(weights, data, extra)
+        result_data = self.regridder.minimal_regridder._regrid_from_weights_and_data(
+            weights, data, extra
+        )
 
         num_out_dims = self.regridder.tgt.dims
         num_dims = len(src_dims)

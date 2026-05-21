@@ -670,7 +670,7 @@ def _regrid_rectilinear_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     """
     grid_x_dim, grid_y_dim = regrid_info.dims
     grid_x, grid_y = regrid_info.target
-    regridder = regrid_info.regridder
+    regridder = regrid_info.regridder.minimal_regridder
 
     out_dtype = regridder._out_dtype(src_cube.dtype)
 
@@ -757,7 +757,7 @@ def _regrid_unstructured_to_rectilinear__perform(src_cube, regrid_info, mdtol):
     """
     (mesh_dim,) = regrid_info.dims
     grid_x, grid_y = regrid_info.target
-    regridder = regrid_info.regridder
+    regridder = regrid_info.regridder.minimal_regridder
 
     out_dtype = regridder._out_dtype(src_cube.dtype)
 
@@ -852,7 +852,7 @@ def _regrid_rectilinear_to_unstructured__perform(src_cube, regrid_info, mdtol):
     """
     grid_x_dim, grid_y_dim = regrid_info.dims
     mesh, location = regrid_info.target
-    regridder = regrid_info.regridder
+    regridder = regrid_info.regridder.minimal_regridder
 
     if location == "face":
         face_node = mesh.face_node_connectivity
@@ -952,7 +952,7 @@ def _regrid_unstructured_to_unstructured__perform(src_cube, regrid_info, mdtol):
     """
     (mesh_dim,) = regrid_info.dims
     mesh, location = regrid_info.target
-    regridder = regrid_info.regridder
+    regridder = regrid_info.regridder.minimal_regridder
 
     out_dtype = regridder._out_dtype(src_cube.dtype)
 
