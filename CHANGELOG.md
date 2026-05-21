@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- [PR#655](https://github.com/SciTools/iris-esmf-regrid/pull/655)
+  Enabled the use of Dask distributed and processes schedulers.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ### Added
 
 - [PR#649](https://github.com/SciTools/iris-esmf-regrid/pull/649)
