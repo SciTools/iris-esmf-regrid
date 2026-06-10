@@ -253,6 +253,8 @@ def _test_dtype_handling(scheme, src_type, tgt_type, in_dtype):
     assert result.lazy_data().dtype == expected_dtype
     assert result.data.dtype == expected_dtype
 
+    assert not np.ma.is_masked(result.data)
+
 
 def _test_esmf_args(scheme):
     """Test regridding scheme handles esmf_args as expected."""
