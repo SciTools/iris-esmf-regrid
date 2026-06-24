@@ -54,6 +54,8 @@ This regridder can then be called by::
 which can be reused on any cube defined on the same horizontal
 coordinates as ``source_cube``.
 
+.. caution:: The following classes are deprecated and will be removed in version 1.0.0.
+
 There are also the experimental regridders
 :class:`~esmf_regrid.experimental.unstructured_scheme.MeshToGridESMFRegridder` and
 :class:`~esmf_regrid.experimental.unstructured_scheme.GridToMeshESMFRegridder`.
@@ -71,6 +73,8 @@ consistency with regridders saved from older versions.
 
 Overview: Miscellaneous Functions
 ---------------------------------
+
+.. caution:: These functions are all deprecated and will be removed in version 1.0.0.
 
 The functions :func:`~esmf_regrid.schemes.regrid_rectilinear_to_rectilinear`,
 :func:`~esmf_regrid.experimental.unstructured_scheme.regrid_unstructured_to_rectilinear` and
