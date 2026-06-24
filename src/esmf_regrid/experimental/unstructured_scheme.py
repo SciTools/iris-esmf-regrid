@@ -9,7 +9,7 @@ except ImportError as exc:
     except ImportError:
         raise exc from None
 from esmf_regrid import Constants, check_method
-from esmf_regrid._deprecations import warn_deprecated
+from esmf_regrid._deprecation import warn_deprecated
 from esmf_regrid.schemes import (
     _ESMFRegridder,
     _get_mask,
@@ -20,7 +20,6 @@ from esmf_regrid.schemes import (
     _regrid_unstructured_to_unstructured__perform,
     _regrid_unstructured_to_unstructured__prepare,
 )
-
 
 warn_deprecated(
     "esmf_regrid.experimental.unstructured_scheme has been deprecated "

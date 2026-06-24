@@ -20,7 +20,7 @@ except ImportError as exc:
         raise exc from None
 
 from esmf_regrid import Constants, check_method, esmpy
-from esmf_regrid._deprecations import warn_deprecated
+from esmf_regrid._deprecation import warn_deprecated
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
