@@ -4,5 +4,5 @@ import warnings
 
 
 def warn_deprecated(msg, stacklevel=2):
-    """Issues a deprecation warning."""
+    """Issue a deprecation warning."""
     warnings.warn(msg, category=DeprecationWarning, stacklevel=stacklevel)
