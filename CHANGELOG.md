@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [PR#652](https://github.com/SciTools/iris-esmf-regrid/pull/652)
   Fixed issue causing Nearest neighbour regridding to incorrectly mask data when
   dtype was float32.
+  [@stephenworsley](https://github.com/stephenworsley)
 
 ### Deprecated
 
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Deprecated the classes `GridToMeshESMFRegridder` and `MeshToGridESMFRegridder`
   and the functions `regrid_unstructured_to_rectilinear`,
   `regrid_rectilinear_to_unstructured` and `regrid_rectilinear_to_rectilinear`.
+  [@stephenworsley](https://github.com/stephenworsley)
 
 ## [0.14.0] - 2026-02-11
 
