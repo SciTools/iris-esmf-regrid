@@ -8,8 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.15.0] - 2026-06-26
 
-### Fixed
-
 ### Added
 
 - [PR#649](https://github.com/SciTools/iris-esmf-regrid/pull/649)
