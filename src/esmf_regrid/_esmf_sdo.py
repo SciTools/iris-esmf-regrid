@@ -72,25 +72,6 @@ class SDO(ABC):
         """Return the mask."""
         return self._mask
 
-    def _array_to_matrix(self, array):
-        """Reshape data to a form that is compatible with weight matrices.
-
-        The data should be presented in the form of a matrix (i.e. 2D) in order
-        to be compatible with the weight matrix.
-        Weight matrices deriving from ESMF use fortran ordering when flattening
-        grids to determine cell indices so we use the same order for reshaping.
-        We then take the transpose so that matrix multiplication happens over
-        the appropriate axes.
-        """
-        return array.T.reshape((self.size, -1))
-
-    def _matrix_to_array(self, array, extra_dims):
-        """Reshape data to restore original dimensions.
-
-        This is the inverse operation of `_array_to_matrix`.
-        """
-        return array.reshape((extra_dims + self._shape)[::-1]).T
-
 
 class GridInfo(SDO):
     """Class for handling structured grids.
