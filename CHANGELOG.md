@@ -10,10 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- [PR#655](https://github.com/SciTools/iris-esmf-regrid/pull/655)
-  Enabled the use of Dask distributed and processes schedulers.
-  [@stephenworsley](https://github.com/stephenworsley)
-
 ### Added
 
 - [PR#649](https://github.com/SciTools/iris-esmf-regrid/pull/649)
@@ -25,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [PR#652](https://github.com/SciTools/iris-esmf-regrid/pull/652)
   Fixed issue causing Nearest neighbour regridding to incorrectly mask data when
   dtype was float32.
+  [@stephenworsley](https://github.com/stephenworsley)
+
+- [PR#655](https://github.com/SciTools/iris-esmf-regrid/pull/655)
+  Enabled the use of Dask distributed and processes schedulers.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ### Deprecated
