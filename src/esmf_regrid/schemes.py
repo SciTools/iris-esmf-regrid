@@ -20,6 +20,7 @@ except ImportError as exc:
         raise exc from None
 
 from esmf_regrid import Constants, check_method, esmpy
+from esmf_regrid._deprecation import warn_deprecated
 from esmf_regrid.esmf_regridder import GridInfo, RefinedGridInfo, Regridder
 from esmf_regrid.experimental.unstructured_regrid import MeshInfo
 
@@ -1032,6 +1033,12 @@ def regrid_rectilinear_to_rectilinear(
         A new :class:`~iris.cube.Cube` instance.
 
     """
+    warn_deprecated(
+        "regrid_rectilinear_to_rectilinear has been deprecated and will be removed "
+        "in 1.0.0. The recommended pattern for regridding is now "
+        "`src.regrid(tgt, Scheme())`."
+    )
+
     regrid_info = _regrid_rectilinear_to_rectilinear__prepare(
         src_cube,
         grid_cube,
@@ -1530,9 +1537,9 @@ class _ESMFRegridder:
         """
         method = check_method(method)
         if mdtol is None:
-            if method == Constants.Method.CONSERVATIVE:
+            if method in (Constants.Method.CONSERVATIVE, Constants.Method.NEAREST):
                 mdtol = 1
-            elif method in (Constants.Method.BILINEAR, Constants.Method.NEAREST):
+            elif method == Constants.Method.BILINEAR:
                 mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
@@ -1878,7 +1885,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
             src,
             tgt,
             Constants.Method.NEAREST,
-            mdtol=0,
+            mdtol=1,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,
