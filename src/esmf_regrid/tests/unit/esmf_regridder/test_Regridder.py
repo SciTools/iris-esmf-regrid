@@ -234,9 +234,11 @@ def test_Regridder_dtype_handling():
     """
     lon, lat, lon_bounds, lat_bounds = make_grid_args(2, 3)
     src_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    src_grid_nearest = GridInfo(lon, lat, lon_bounds, lat_bounds, center=True)
 
     lon, lat, lon_bounds, lat_bounds = make_grid_args(3, 2)
     tgt_grid = GridInfo(lon, lat, lon_bounds, lat_bounds)
+    tgt_grid_nearest = GridInfo(lon, lat, lon_bounds, lat_bounds, center=True)
 
     # Set up the regridder with precomputed weights.
     rg_64 = Regridder(src_grid, tgt_grid, precomputed_weights=_expected_weights())
@@ -250,10 +252,9 @@ def test_Regridder_dtype_handling():
     src_int_64 = np.ones([3, 2], dtype=np.int64)
 
     rg_nearest = Regridder(
-        src_grid,
-        tgt_grid,
+        src_grid_nearest,
+        tgt_grid_nearest,
         method=Constants.Method.NEAREST,
-        precomputed_weights=_expected_weights(),
     )
 
     assert rg_64.regrid(src_64).dtype == np.float64

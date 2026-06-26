@@ -1537,9 +1537,9 @@ class _ESMFRegridder:
         """
         method = check_method(method)
         if mdtol is None:
-            if method == Constants.Method.CONSERVATIVE:
+            if method in (Constants.Method.CONSERVATIVE, Constants.Method.NEAREST):
                 mdtol = 1
-            elif method in (Constants.Method.BILINEAR, Constants.Method.NEAREST):
+            elif method == Constants.Method.BILINEAR:
                 mdtol = 0
         if not (0 <= mdtol <= 1):
             msg = "Value for mdtol must be in range 0 - 1, got {}."
@@ -1885,7 +1885,7 @@ class ESMFNearestRegridder(_ESMFRegridder):
             src,
             tgt,
             Constants.Method.NEAREST,
-            mdtol=0,
+            mdtol=1,
             precomputed_weights=precomputed_weights,
             use_src_mask=use_src_mask,
             use_tgt_mask=use_tgt_mask,

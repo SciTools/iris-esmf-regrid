@@ -14,6 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Added a utility for finding areas of cells on a cube.
   [@stephenworsley](https://github.com/stephenworsley)
 
+### Fixed
+
+- [PR#652](https://github.com/SciTools/iris-esmf-regrid/pull/652)
+  Fixed issue causing Nearest neighbour regridding to incorrectly mask data when
+  dtype was float32.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ### Deprecated
 
 - [PR#666](https://github.com/SciTools/iris-esmf-regrid/pull/666)
