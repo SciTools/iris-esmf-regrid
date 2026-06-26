@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
-## [Unreleased]
+## [0.15.0] - 2026-06-26
 
 ### Fixed
 
@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - [PR#649](https://github.com/SciTools/iris-esmf-regrid/pull/649)
-  Added a utility for finding areas of cells on a cube.
+  Added a utility `find_area` for finding areas of cells on a cube.
   [@stephenworsley](https://github.com/stephenworsley)
 
 ### Fixed
