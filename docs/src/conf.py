@@ -1,3 +1,8 @@
+# Copyright Iris-esmf-regrid contributors
+#
+# This file is part of Iris-esmf-regrid and is released under the BSD license.
+# See LICENSE in the root of the repository for full licensing details.
+
 """Configuration file for the Sphinx documentation builder.
 
 Created originally using sphinx-quickstart on 2022-02-21.

@@ -1,3 +1,8 @@
+# Copyright SciTools contributors
+#
+# This file is part of SciTools and is released under the BSD license.
+# See LICENSE in the root of the repository for full licensing details.
+
 """Benchmarks for :mod:`esmf_regrid.esmf_regridder`."""
 
 import os

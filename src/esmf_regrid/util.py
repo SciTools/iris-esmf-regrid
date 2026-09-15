@@ -1,3 +1,7 @@
+# Copyright Iris-esmf-regrid contributors
+#
+# This file is part of Iris-esmf-regrid and is released under the BSD license.
+# See LICENSE in the root of the repository for full licensing details.
 """Miscellaneous utility functions."""
 
 from esmf_regrid.schemes import _cube_to_GridInfo, _mesh_to_MeshInfo
