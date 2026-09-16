@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- [PR#686](https://github.com/SciTools/iris-esmf-regrid/pull/686)
+  Added the ability for ``Partition`` objects to work on meshes.
+  [@stephenworsley](https://github.com/stephenworsley)
+
 ## [0.15.0] - 2026-06-26
 
 ### Added

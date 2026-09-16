@@ -113,19 +113,23 @@ def test_Partition_mesh_src(tmp_path):
     scheme = ESMFAreaWeighted(mdtol=1)
 
     src_chunks = (15000,)
-    with pytest.raises(NotImplementedError):
-        _ = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
+    partition = Partition(src, tgt, scheme, files, src_chunks=src_chunks)
 
-    # TODO: when mesh partitioning becomes possible, uncomment.
-    # expected_src_chunks = [[[0, 15000]], [[15000, 30000]], [[30000, 45000]], [[45000, 60000]], [[60000, 75000]]]
-    # assert partition.src_blocks == expected_src_chunks
-    #
-    # partition.generate_files()
-    #
-    # result = partition.apply_regridders(src)
-    # expected = src.regrid(tgt, scheme)
-    # assert np.allclose(result.data, expected.data)
-    # assert result == expected
+    expected_src_chunks = [
+        [[0, 15000]],
+        [[15000, 30000]],
+        [[30000, 45000]],
+        [[45000, 60000]],
+        [[60000, 75000]],
+    ]
+    assert partition.src_blocks == expected_src_chunks
+
+    partition.generate_files()
+
+    result = partition.apply_regridders(src)
+    expected = src.regrid(tgt, scheme)
+    assert np.allclose(result.data, expected.data)
+    assert result == expected
 
 
 def test_Partition_curv_src(tmp_path):

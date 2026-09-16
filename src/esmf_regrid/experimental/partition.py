@@ -1,6 +1,7 @@
 """Provides an interface for splitting up a large regridding task."""
 
 import esmpy
+from iris.experimental.mesh_coord_indexing import SETTING, Options
 import numpy as np
 
 from esmf_regrid.constants import Constants
@@ -17,7 +18,9 @@ def _get_chunk(cube, sl):
     full_slice = [np.s_[:]] * len(cube.shape)
     for s, d in zip(sl, grid_dims, strict=True):
         full_slice[d] = np.s_[s[0] : s[1]]
-    return cube[*full_slice]
+    with SETTING.context(Options.NEW_MESH):
+        result = cube[*full_slice]
+    return result
 
 
 def _determine_blocks(shape, chunks, num_chunks, explicit_blocks):
@@ -53,16 +56,11 @@ def _determine_blocks(shape, chunks, num_chunks, explicit_blocks):
                 raise ValueError(msg)
         bounds = [np.cumsum([0, *chunk]) for chunk in chunks]
         if len(bounds) == 1:
-            msg = "Chunks must have exactly two dimensions."
-            raise ValueError(msg)
-            # TODO: This is currently blocked by the fact that slicing an Iris cube on its mesh dimension
-            #  does not currently yield another cube with a mesh. When this is fixed, the following
-            #  code can be uncommented and the noqa on the following line can be removed.
-            # explicit_blocks = [
-            #     [[int(lower), int(upper)]]
-            #     for lower, upper in zip(bounds[0][:-1], bounds[0][1:], strict=True)
-            # ]
-        elif len(bounds) == 2:  # noqa: RET506
+            explicit_blocks = [
+                [[int(lower), int(upper)]]
+                for lower, upper in zip(bounds[0][:-1], bounds[0][1:], strict=True)
+            ]
+        elif len(bounds) == 2:
             explicit_blocks = [
                 [[int(ly), int(uy)], [int(lx), int(ux)]]
                 for ly, uy in zip(bounds[0][:-1], bounds[0][1:], strict=True)
@@ -159,12 +157,7 @@ class Partition:
         if src.mesh is None:
             grid_dims = _get_grid_dims(src)
         else:
-            msg = "Partition does not yet support source meshes."
-            raise NotImplementedError(msg)
-            # TODO: This is currently blocked by the fact that slicing an Iris cube on its mesh dimension
-            #  does not currently yield another cube with a mesh. When this is fixed, the following
-            #  code can be uncommented.
-            # grid_dims = (src.mesh_dim(),)
+            grid_dims = (src.mesh_dim(),)
         shape = tuple(src.shape[i] for i in grid_dims)
         self.tgt = tgt
         self.scheme = scheme
