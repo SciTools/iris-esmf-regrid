@@ -129,3 +129,8 @@ repos:
       # Detect mistake of inline code touching normal text in rst.
     - id: text-unicode-replacement-char
       # Forbid files which have a UTF-8 Unicode replacement character.
+
+-   repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.26.1
+    hooks:
+      - id: zizmor
