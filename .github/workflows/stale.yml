@@ -4,6 +4,8 @@ on:
   schedule:
   - cron: "00 6 * * *"
 
+permissions: {}
+
 jobs:
   stale:
 
