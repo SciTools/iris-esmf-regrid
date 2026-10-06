@@ -14,6 +14,7 @@ ci:
 # Alphabetised, for lack of a better order.
 files: |
     (?x)(
+        .github\/.*|
         benchmarks\/.+\.py|
         docs\/.+\.py|
         src\/.+\.py|
@@ -24,6 +25,8 @@ files: |
 minimum_pre_commit_version: 1.21.0
 
 repos:
+
+# Hook for pre-commit's  built-in checks
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: 'v6.0.0'
     hooks:
@@ -52,6 +55,9 @@ repos:
         # Duplicates Ruff W291 but also works on non-Python files.
     -   id: trailing-whitespace
 
+# Hooks from all other repos
+# In terms of ordering: hooks that modify files should be placed before hooks that do not.
+
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.16.6"
     hooks:
@@ -59,6 +65,12 @@ repos:
         types: [file, python]
         args: [--fix, --show-fixes]
     -   id: ruff-format
+        types: [file, python]
+
+-   repo: https://github.com/aio-libs/sort-all
+    rev: v1.3.0
+    hooks:
+    -   id: sort-all
         types: [file, python]
 
 -   repo: https://github.com/codespell-project/codespell
@@ -73,12 +85,6 @@ repos:
     hooks:
     -   id: blacken-docs
         types: [file, rst]
-
--   repo: https://github.com/aio-libs/sort-all
-    rev: v1.3.0
-    hooks:
-    -   id: sort-all
-        types: [file, python]
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v2.3.1'
