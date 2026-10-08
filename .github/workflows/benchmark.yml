@@ -24,6 +24,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   benchmark:
     runs-on: ubuntu-latest
@@ -42,32 +44,34 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install run dependencies
         run: pip install asv nox!=2025.05.01
 
       - name: Cache environment directories
         id: cache-env-dir
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             .nox
             benchmarks/.asv/env
             $CONDA/pkgs
           key: ${{ runner.os }}-${{ hashFiles('requirements/locks/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}
+          lookup-only: true
 
       - name: Benchmark this pull request
         run: |
-          if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/${{ github.base_ref }}"; fi;
+          if ${{ github.event_name != 'pull_request' }}; then export COMPARE="HEAD~"; else export COMPARE="origin/${GITHUB_BASE_REF}"; fi;
           python benchmarks/bm_runner.py branch ${COMPARE}
 
       - name: Archive asv results
         # Store the raw ASV database(s) to help manual investigations.
         if: ${{ always() }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: asv-raw-results
           path: benchmarks/.asv/results

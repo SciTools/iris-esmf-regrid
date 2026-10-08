@@ -19,4 +19,5 @@ updates:
     commit-message:
       prefix: "chore: "
       include: "scope"
-
+    cooldown:
+      default-days: 7

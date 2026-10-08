@@ -23,6 +23,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions: {}
+
 jobs:
   tests:
     name: "${{ matrix.session }} (py${{ matrix.python-version }} ${{ matrix.os }})"
@@ -55,7 +57,9 @@ jobs:
 
     steps:
       - name: "checkout"
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - name: Install Nox
         run: |
@@ -63,7 +67,7 @@ jobs:
 
       - name: Cache environment directories
         id: cache-env-dir
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # zizmor: ignore[cache-poisoning]
         with:
           path: |
             .nox
@@ -72,7 +76,7 @@ jobs:
 
       - name: Cache test data directory
         id: cache-test-data
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # zizmor: ignore[cache-poisoning]
         with:
           path: |
             ${{ env.IRIS_TEST_DATA_PATH }}
@@ -99,7 +103,7 @@ jobs:
           nox --session tests -- --verbose
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5
         if: ${{ matrix.coverage }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
