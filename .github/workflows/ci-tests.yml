@@ -73,7 +73,6 @@ jobs:
             .nox
             $CONDA/pkgs
           key: ${{ runner.os }}-${{ hashFiles('requirements/locks/') }}-${{ env.ENV_CACHE_BUILD }}-${{ env.IRIS_SOURCE }}-${{ matrix.python-version }}
-          lookup-only: true
 
       - name: Cache test data directory
         id: cache-test-data
@@ -83,7 +82,6 @@ jobs:
             ${{ env.IRIS_TEST_DATA_PATH }}
           key:
             test-data-${{ env.IRIS_TEST_DATA_VERSION }}-${{ env.TEST_DATA_CACHE_BUILD }}
-          lookup-only: true
 
       - name: Fetch the test data
         if: steps.cache-test-data.outputs.cache-hit != 'true'
