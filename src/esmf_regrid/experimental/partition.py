@@ -137,8 +137,8 @@ class Partition:
         possible, there is no guarantee that the structure of any generated files will remain
         consistent and compatible with future versions.
 
-        Note
-        ----
+        Notes
+        -----
         The source is partitioned into blocks using one of the four mutually exclusive arguments,
         `use_dask_src_chunks`, `src_chunks`, `num_src_chunks`, or `explicit_src_blocks`. These
         describe a partition into a number of blocks which must equal the number of `file_names`.
